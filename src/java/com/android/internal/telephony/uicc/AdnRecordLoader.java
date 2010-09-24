@@ -209,7 +209,8 @@ public class AdnRecordLoader extends Handler {
                     adn = new AdnRecord(mEf, mRecordNumber, data);
                     mResult = adn;
 
-                    if (adn.hasExtendedRecord()) {
+                    // Read ext1 number only if the file id is valid
+                    if (mExtensionEF != 0 && adn.hasExtendedRecord()) {
                         // If we have a valid value in the ext record field,
                         // we're not done yet: we need to read the corresponding
                         // ext record and append it
@@ -258,8 +259,8 @@ public class AdnRecordLoader extends Handler {
                     for(int i = 0, s = datas.size() ; i < s ; i++) {
                         adn = new AdnRecord(mEf, 1 + i, datas.get(i));
                         mAdns.add(adn);
-
-                        if (adn.hasExtendedRecord()) {
+                        // Read ext1 number only if the file id is valid
+                        if (mExtensionEF != 0 && adn.hasExtendedRecord()) {
                             // If we have a valid value in the ext record field,
                             // we're not done yet: we need to read the corresponding
                             // ext record and append it
