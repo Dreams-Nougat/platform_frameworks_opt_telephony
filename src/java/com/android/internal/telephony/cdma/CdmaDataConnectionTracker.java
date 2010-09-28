@@ -31,19 +31,19 @@ import android.text.TextUtils;
 import android.util.EventLog;
 import android.telephony.Rlog;
 
-import com.android.internal.telephony.DataProfile;
-import com.android.internal.telephony.cdma.DataProfileCdma;
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.DataCallState;
 import com.android.internal.telephony.DataConnection.FailCause;
 import com.android.internal.telephony.DataConnection;
 import com.android.internal.telephony.DataConnectionAc;
 import com.android.internal.telephony.DataConnectionTracker;
+import com.android.internal.telephony.DataProfile;
 import com.android.internal.telephony.DctConstants;
 import com.android.internal.telephony.EventLogTags;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.RetryManager;
+import com.android.internal.telephony.cdma.CdmaDataProfileTracker;
 import com.android.internal.telephony.RILConstants;
 import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.UiccCard;
@@ -70,6 +70,8 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
     private static final int TIME_DELAYED_TO_RESTART_RADIO =
             SystemProperties.getInt("ro.cdma.timetoradiorestart", 60000);
 
+    private CdmaDataProfileTracker mDpt = null;
+
     /**
      * Pool size of CdmaDataConnection objects.
      */
@@ -80,22 +82,6 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
 
     private static final String INTENT_DATA_STALL_ALARM =
         "com.android.internal.telephony.cdma-data-stall";
-
-    private static final String[] mSupportedApnTypes = {
-            PhoneConstants.APN_TYPE_DEFAULT,
-            PhoneConstants.APN_TYPE_MMS,
-            PhoneConstants.APN_TYPE_DUN,
-            PhoneConstants.APN_TYPE_HIPRI };
-
-    private static final String[] mDefaultApnTypes = {
-            PhoneConstants.APN_TYPE_DEFAULT,
-            PhoneConstants.APN_TYPE_MMS,
-            PhoneConstants.APN_TYPE_HIPRI };
-
-    private String[] mDunApnTypes = {
-            PhoneConstants.APN_TYPE_DUN };
-
-    private static final int mDefaultApnId = DctConstants.APN_DEFAULT_ID;
 
     /* Constructor */
 
@@ -118,22 +104,11 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
 
         mDataConnectionTracker = this;
 
+        mDpt = new CdmaDataProfileTracker(p);
+        mDpt.registerForModemProfileReady(this, DctConstants.EVENT_MODEM_DATA_PROFILE_READY, null);
+
         createAllDataConnectionList();
         broadcastMessenger();
-
-        Context c = mCdmaPhone.getContext();
-        String[] t = c.getResources().getStringArray(
-                com.android.internal.R.array.config_cdma_dun_supported_types);
-        if (t != null && t.length > 0) {
-            ArrayList<String> temp = new ArrayList<String>();
-            for(int i=0; i< t.length; i++) {
-                if (!PhoneConstants.APN_TYPE_DUN.equalsIgnoreCase(t[i])) {
-                    temp.add(t[i]);
-                }
-            }
-            temp.add(0,PhoneConstants.APN_TYPE_DUN);
-            mDunApnTypes = temp.toArray(t);
-        }
 
     }
 
@@ -157,6 +132,7 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
         mCdmaPhone.mSST.unregisterForRoamingOff(this);
         mCdmaSSM.dispose(this);
         mPhone.mCM.unregisterForCdmaOtaProvision(this);
+        mDpt.unregisterForModemProfileReady(this);
 
         destroyAllDataConnectionList();
     }
@@ -189,6 +165,11 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
         }
     }
 
+    /* API provided for CdmaDataProfileTracker */
+    public int apnTypeToId(String apnType) {
+        return super.apnTypeToId(apnType);
+    }
+
     @Override
     public synchronized DctConstants.State getState(String apnType) {
         return mState;
@@ -201,12 +182,7 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
 
     @Override
     protected boolean isApnTypeAvailable(String type) {
-        for (String s : mSupportedApnTypes) {
-            if (TextUtils.equals(type, s)) {
-                return true;
-            }
-        }
-        return false;
+        return mDpt.isApnTypeAvailable(type);
     }
 
     @Override
@@ -376,22 +352,17 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
 
         /** TODO: We probably want the connection being setup to a parameter passed around */
         mPendingDataConnection = conn;
-        String[] types;
-        int apnId;
-        if (mRequestedApnType.equals(PhoneConstants.APN_TYPE_DUN)) {
-            types = mDunApnTypes;
-            apnId = DctConstants.APN_DUN_ID;
-        } else {
-            types = mDefaultApnTypes;
-            apnId = mDefaultApnId;
-        }
 
         String ipProto = SystemProperties.get("persist.telephony.cdma.protocol", "IP");
         String roamingIpProto = SystemProperties.get("persist.telephony.cdma.rproto", "IP");
 
-        mActiveApn = (DataProfile)new DataProfileCdma(apnId, null, null, null, null,
-                RILConstants.SETUP_DATA_AUTH_PAP_CHAP, types, ipProto, roamingIpProto,
-                mPhone.getServiceState().getRadioTechnology());
+        mActiveApn = mDpt.getDataProfile(mRequestedApnType);
+
+        if (mActiveApn == null) {
+            if (DBG) log("mActiveApn is null, unable to initiate data call");
+            return false;
+        }
+
         if (DBG) log("call conn.bringUp mActiveApn=" + mActiveApn);
 
         Message msg = obtainMessage();
@@ -497,14 +468,22 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
         setState(DctConstants.State.IDLE);
         notifyDataConnection(reason);
         mActiveApn = null;
+        mDpt.clearActiveDataProfile();
     }
 
     protected void onRecordsLoaded() {
+        log("OMH: onRecordsLoaded(): calling readDataProfilesFromModem()");
+        /* query for data profiles stored in the modem */
+        boolean needModemProfiles = mDpt.readDataProfilesFromModem();
+
         if (mState == DctConstants.State.FAILED) {
             cleanUpAllConnections(null);
         }
 
-        sendMessage(obtainMessage(DctConstants.EVENT_TRY_SETUP_DATA, Phone.REASON_SIM_LOADED));
+        if (!needModemProfiles) {
+            log("OMH: " + Phone.REASON_SIM_LOADED);
+            sendMessage(obtainMessage(DctConstants.EVENT_TRY_SETUP_DATA, Phone.REASON_SIM_LOADED));
+        }
     }
 
     protected void onNVReady() {
@@ -664,6 +643,7 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
 
         notifyDataConnection(reason);
         mActiveApn = null;
+        mDpt.clearActiveDataProfile();
         if (retryAfterDisconnected(reason)) {
           // Wait a bit before trying, so we're not tying up RIL command channel.
           startAlarmForReconnect(APN_DELAY_MILLIS, reason);
@@ -805,6 +785,15 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
         }
     }
 
+    private void onModemDataProfileReady() {
+        if (mState == DctConstants.State.FAILED) {
+            cleanUpConnection(false, null, false);
+        }
+
+        log("OMH: onModemDataProfileReady(): Setting up data call");
+        sendMessage(obtainMessage(DctConstants.EVENT_TRY_SETUP_DATA));
+    }
+
     private void writeEventLogCdmaDataDrop() {
         CdmaCellLocation loc = (CdmaCellLocation)(mPhone.getCellLocation());
         EventLog.writeEvent(EventLogTags.CDMA_DATA_DROP,
@@ -915,6 +904,10 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
                 onRestartRadio();
                 break;
 
+            case DctConstants.EVENT_MODEM_DATA_PROFILE_READY:
+                onModemDataProfileReady();
+                break;
+
             default:
                 // handle the message in the super class DataConnectionTracker
                 super.handleMessage(msg);
@@ -984,9 +977,5 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
         pw.println(" mCdmaSSM=" + mCdmaSSM);
         pw.println(" mPendingDataConnection=" + mPendingDataConnection);
         pw.println(" mPendingRestartRadio=" + mPendingRestartRadio);
-        pw.println(" mSupportedApnTypes=" + mSupportedApnTypes);
-        pw.println(" mDefaultApnTypes=" + mDefaultApnTypes);
-        pw.println(" mDunApnTypes=" + mDunApnTypes);
-        pw.println(" mDefaultApnId=" + mDefaultApnId);
     }
 }
