@@ -49,7 +49,6 @@ import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.IccCard;
 import com.android.internal.telephony.IccPhoneBookInterfaceManager;
-import com.android.internal.telephony.IccSmsInterfaceManager;
 import com.android.internal.telephony.MccTable;
 import com.android.internal.telephony.MmiCode;
 import com.android.internal.telephony.OperatorInfo;
@@ -108,7 +107,6 @@ public class CDMAPhone extends PhoneBase {
     CdmaSubscriptionSourceManager mCdmaSSM;
     ArrayList <CdmaMmiCode> mPendingMmis = new ArrayList<CdmaMmiCode>();
     RuimPhoneBookInterfaceManager mRuimPhoneBookInterfaceManager;
-    RuimSmsInterfaceManager mRuimSmsInterfaceManager;
     int mCdmaSubscriptionSource = CdmaSubscriptionSourceManager.SUBSCRIPTION_SOURCE_UNKNOWN;
     PhoneSubInfo mSubInfo;
     EriManager mEriManager;
@@ -167,10 +165,8 @@ public class CDMAPhone extends PhoneBase {
         mCT = new CdmaCallTracker(this);
         mCdmaSSM = CdmaSubscriptionSourceManager.getInstance(context, mCM, this,
                 EVENT_CDMA_SUBSCRIPTION_SOURCE_CHANGED, null);
-        mSMS = new CdmaSMSDispatcher(this, mSmsStorageMonitor, mSmsUsageMonitor);
         mDataConnectionTracker = new CdmaDataConnectionTracker (this);
         mRuimPhoneBookInterfaceManager = new RuimPhoneBookInterfaceManager(this);
-        mRuimSmsInterfaceManager = new RuimSmsInterfaceManager(this, mSMS);
         mSubInfo = new PhoneSubInfo(this);
         mEriManager = new EriManager(this, context, EriManager.ERI_FROM_XML);
 
@@ -243,9 +239,7 @@ public class CDMAPhone extends PhoneBase {
             mDataConnectionTracker.dispose();
             mSST.dispose();
             mCdmaSSM.dispose(this);
-            mSMS.dispose();
             mRuimPhoneBookInterfaceManager.dispose();
-            mRuimSmsInterfaceManager.dispose();
             mSubInfo.dispose();
             mEriManager.dispose();
         }
@@ -255,7 +249,6 @@ public class CDMAPhone extends PhoneBase {
     public void removeReferences() {
         log("removeReferences");
         mRuimPhoneBookInterfaceManager = null;
-        mRuimSmsInterfaceManager = null;
         mSubInfo = null;
         mCT = null;
         mSST = null;
@@ -1126,13 +1119,6 @@ public class CDMAPhone extends PhoneBase {
     }
 
     /**
-     * Retrieves the IccSmsInterfaceManager of the CDMAPhone
-     */
-    public IccSmsInterfaceManager getIccSmsInterfaceManager() {
-        return mRuimSmsInterfaceManager;
-    }
-
-    /**
      * Retrieves the IccPhoneBookInterfaceManager of the CDMAPhone
      */
     public IccPhoneBookInterfaceManager getIccPhoneBookInterfaceManager() {
@@ -1522,7 +1508,6 @@ public class CDMAPhone extends PhoneBase {
         pw.println(" mCdmaSSM=" + mCdmaSSM);
         pw.println(" mPendingMmis=" + mPendingMmis);
         pw.println(" mRuimPhoneBookInterfaceManager=" + mRuimPhoneBookInterfaceManager);
-        pw.println(" mRuimSmsInterfaceManager=" + mRuimSmsInterfaceManager);
         pw.println(" mCdmaSubscriptionSource=" + mCdmaSubscriptionSource);
         pw.println(" mSubInfo=" + mSubInfo);
         pw.println(" mEriManager=" + mEriManager);
