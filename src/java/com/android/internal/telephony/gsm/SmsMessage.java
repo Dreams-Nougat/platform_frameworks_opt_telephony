@@ -107,6 +107,9 @@ public class SmsMessage extends SmsMessageBase {
         } catch (RuntimeException ex) {
             Rlog.e(LOG_TAG, "SMS PDU parsing failed: ", ex);
             return null;
+        } catch (OutOfMemoryError e) {
+            Rlog.e(LOG_TAG, "SMS PDU parsing failed with out of memory: ", e);
+            return null;
         }
     }
 
