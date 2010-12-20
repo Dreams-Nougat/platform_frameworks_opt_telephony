@@ -108,7 +108,6 @@ public abstract class PhoneBase extends Handler implements Phone {
     protected static final int EVENT_CDMA_SUBSCRIPTION_SOURCE_CHANGED = 27;
     // other
     protected static final int EVENT_SET_NETWORK_AUTOMATIC          = 28;
-    protected static final int EVENT_NEW_ICC_SMS                    = 29;
     protected static final int EVENT_ICC_RECORD_EVENTS              = 30;
 
     // Key used to read/write current CLIR setting
@@ -130,7 +129,6 @@ public abstract class PhoneBase extends Handler implements Phone {
     protected AtomicReference<IccCard> mIccCard = new AtomicReference<IccCard>();
     public SmsStorageMonitor mSmsStorageMonitor;
     public SmsUsageMonitor mSmsUsageMonitor;
-    public SMSDispatcher mSMS;
 
     /**
      * Set a system property, unless we're in unit test mode
@@ -268,7 +266,6 @@ public abstract class PhoneBase extends Handler implements Phone {
     public void removeReferences() {
         mSmsStorageMonitor = null;
         mSmsUsageMonitor = null;
-        mSMS = null;
         mIccRecords = null;
         mIccCard.set(null);
         mDataConnectionTracker = null;
@@ -1162,7 +1159,6 @@ public abstract class PhoneBase extends Handler implements Phone {
         pw.println(" mIccCard=" + mIccCard.get());
         pw.println(" mSmsStorageMonitor=" + mSmsStorageMonitor);
         pw.println(" mSmsUsageMonitor=" + mSmsUsageMonitor);
-        pw.println(" mSMS=" + mSMS);
         pw.flush();
         pw.println(" mLooper=" + mLooper);
         pw.println(" mContext=" + mContext);
