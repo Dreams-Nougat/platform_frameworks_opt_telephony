@@ -1651,4 +1651,10 @@ public final class ImsPhoneMmiCode extends Handler implements MmiCode {
         sb.append("}");
         return sb.toString();
     }
+
+    @Override
+    public boolean isNetworkInitiated() {
+        Rlog.w(LOG_TAG, "isNetworkInitiated is not implemented in ImsPhoneMmiCode");
+        return false;
+    }
 }

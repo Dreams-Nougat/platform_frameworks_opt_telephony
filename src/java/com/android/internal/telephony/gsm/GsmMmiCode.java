@@ -133,6 +133,9 @@ public final class GsmMmiCode extends Handler implements MmiCode {
     private boolean mIsUssdRequest;
 
     private boolean mIsCallFwdReg;
+
+    private boolean mIsNetworkInitiated;
+
     State mState = State.PENDING;
     CharSequence mMessage;
     private boolean mIsSsInfo = false;
@@ -241,6 +244,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
 
         ret.mMessage = ussdMessage;
         ret.mIsUssdRequest = isUssdRequest;
+        ret.mIsNetworkInitiated = true;
 
         // If it's a request, set to PENDING so that it's cancelable.
         if (isUssdRequest) {
@@ -261,6 +265,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
         ret.mMessage = ussdMessge;
         ret.mState = State.PENDING;
         ret.mIsPendingUSSD = true;
+        ret.mIsNetworkInitiated = false;
 
         return ret;
     }
@@ -606,6 +611,11 @@ public final class GsmMmiCode extends Handler implements MmiCode {
     public boolean isCancelable() {
         /* Can only cancel pending USSD sessions. */
         return mIsPendingUSSD;
+    }
+
+    @Override
+    public boolean isNetworkInitiated(){
+        return mIsNetworkInitiated;
     }
 
     //***** Instance Methods

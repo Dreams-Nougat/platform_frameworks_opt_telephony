@@ -61,6 +61,11 @@ public interface MmiCode
     public boolean isUssdRequest();
 
     /**
+     * @return true if the MMICode request was initiated by the network
+     */
+    public boolean isNetworkInitiated();
+
+    /**
      * @return true if an outstanding request can be canceled.
      */
     public boolean isCancelable();
