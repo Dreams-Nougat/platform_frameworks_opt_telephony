@@ -179,6 +179,12 @@ public class PhoneNumberUtilsTest extends AndroidTestCase {
         assertEquals("*21#+17005550020",
             PhoneNumberUtils.calledPartyBCDToString(b, 0, 9));
 
+        b[0] = (byte) 0x91; b[1] = (byte) 0xAA; b[2] = (byte) 0x16; b[3] = (byte) 0x4A;
+        b[4] = (byte) 0x79; b[5] = (byte) 0x13; b[6] = (byte) 0xA2; b[7] = (byte) 0x1A;
+        b[8] = (byte) 0xB5;
+        assertEquals("**61*+497312**15#",
+            PhoneNumberUtils.calledPartyBCDToString(b, 0, 9));
+
         assertNull(PhoneNumberUtils.extractNetworkPortion(null));
         assertNull(PhoneNumberUtils.extractPostDialPortion(null));
         assertTrue(PhoneNumberUtils.compare(null, null));
