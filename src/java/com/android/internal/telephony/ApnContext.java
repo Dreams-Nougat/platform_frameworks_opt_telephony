@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -201,7 +202,7 @@ public class ApnContext {
     }
 
     public boolean isReady() {
-        return mDataEnabled.get() && mDependencyMet.get();
+        return mDataEnabled.get() && mDependencyMet.get() && !getTetheredCallOn();
     }
 
     public void setEnabled(boolean enabled) {
@@ -242,5 +243,13 @@ public class ApnContext {
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
         pw.println("ApnContext: " + this.toString());
+    }
+
+    public void setTetheredCallOn(boolean tetheredCallOn) {
+        if (mApnSetting != null) mApnSetting.mTetheredCallOn = tetheredCallOn;
+    }
+
+    public boolean getTetheredCallOn() {
+        return mApnSetting == null ? false : mApnSetting.mTetheredCallOn;
     }
 }

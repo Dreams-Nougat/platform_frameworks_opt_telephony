@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1270,6 +1271,13 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
                         log("onDataStateChanged(ar): inactive, cleanup apns=" + connectedApns);
                     }
                     apnsToCleanup.addAll(connectedApns);
+                    if (FailCause.fromInt(newState.status) == FailCause.TETHERED_CALL_ACTIVE) {
+                        // Mark apnContexts as busy in a tethered call
+                        for (ApnContext apnc : connectedApns) {
+                            if (DBG) log("setTetheredCallOn for apncontext:" + apnc.toString());
+                            apnc.setTetheredCallOn(true);
+                        }
+                    }
                 } else {
                     // Its active so update the DataConnections link properties
                     UpdateLinkPropertyResult result =
@@ -1453,12 +1461,16 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
                     // We've re-registerd once now just retry forever.
                     apnContext.getDataConnection().retryForeverUsingLastTimeout();
                 } else {
-                    // Try to Re-register to the network.
-                    if (DBG) log("reconnectAfterFail: activate failed, Reregistering to network");
-                    mReregisterOnReconnectFailure = true;
-                    mPhone.getServiceStateTracker().reRegisterNetwork(null);
-                    apnContext.setRetryCount(0);
-                    return;
+                    if (!apnContext.getTetheredCallOn()) {
+                        // Try to Re-register to the network.
+                        if (DBG) log("reconnectAfterFail: activate failed, Reregistering to network");
+                        mReregisterOnReconnectFailure = true;
+                        mPhone.getServiceStateTracker().reRegisterNetwork(null);
+                        apnContext.getDataConnection().resetRetryCount();
+                        return;
+                    } else {
+                        if (DBG) log("Tethered mode ON, skip re-registering");
+                    }
                 }
             }
 
@@ -2408,6 +2420,14 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
                 newIccRecords.registerForRecordsLoaded(
                         this, DctConstants.EVENT_RECORDS_LOADED, null);
             }
+        }
+    }
+
+    @Override
+    protected void clearTetheredStateOnStatus() {
+        if (DBG) log("clearTetheredStateOnStatus()");
+        for (ApnContext apnc : mApnContexts.values()) {
+            apnc.setTetheredCallOn(false);
         }
     }
 

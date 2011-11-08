@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,6 +125,13 @@ public interface CommandsInterface {
 
     void registerForVoiceRadioTechChanged(Handler h, int what, Object obj);
     void unregisterForVoiceRadioTechChanged(Handler h);
+
+    /**
+     * Indications for tethered mode calls. ON/OFF indications should trigger
+     * immediate data call retries.
+     */
+    void registerForTetheredModeStateChanged(Handler h, int what, Object obj);
+    void unregisterForTetheredModeStateChanged(Handler h);
 
     /**
      * Fires on any transition into RadioState.isOn()

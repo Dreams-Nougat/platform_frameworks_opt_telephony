@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,6 +72,7 @@ public abstract class BaseCommands implements CommandsInterface {
     protected RegistrantList mExitEmergencyCallbackModeRegistrants = new RegistrantList();
     protected RegistrantList mRilConnectedRegistrants = new RegistrantList();
     protected RegistrantList mIccRefreshRegistrants = new RegistrantList();
+    protected RegistrantList mTetheredModeStateRegistrants = new RegistrantList();
 
     protected Registrant mGsmSmsRegistrant;
     protected Registrant mCdmaSmsRegistrant;
@@ -506,6 +508,16 @@ public abstract class BaseCommands implements CommandsInterface {
 
     public void unregisterForRingbackTone(Handler h) {
         mRingbackToneRegistrants.remove(h);
+    }
+
+    public void registerForTetheredModeStateChanged(Handler h, int what,
+            Object obj) {
+        Registrant r = new Registrant(h, what, obj);
+        mTetheredModeStateRegistrants.add(r);
+    }
+
+    public void unregisterForTetheredModeStateChanged(Handler h) {
+        mTetheredModeStateRegistrants.remove(h);
     }
 
     public void registerForResendIncallMute(Handler h, int what, Object obj) {

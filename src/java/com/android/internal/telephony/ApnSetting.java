@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +51,8 @@ public class ApnSetting {
       * but currently only used for LTE(14) and EHRPD(13).
       */
     public final int bearer;
+
+    public boolean mTetheredCallOn = false;
 
     public ApnSetting(int id, String numeric, String carrier, String apn,
             String proxy, String port,
