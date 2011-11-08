@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -430,6 +431,9 @@ public abstract class DataConnectionTracker extends Handler {
         mUiccController = UiccController.getInstance();
         mUiccController.registerForIccChanged(this, DctConstants.EVENT_ICC_CHANGED, null);
 
+        mPhone.mCM.registerForTetheredModeStateChanged(this,
+                DctConstants.EVENT_TETHERED_MODE_STATE_CHANGED, null);
+
         IntentFilter filter = new IntentFilter();
         filter.addAction(getActionIntentReconnectAlarm());
         filter.addAction(Intent.ACTION_SCREEN_ON);
@@ -475,6 +479,7 @@ public abstract class DataConnectionTracker extends Handler {
         mPhone.getContext().unregisterReceiver(this.mIntentReceiver);
         mDataRoamingSettingObserver.unregister(mPhone.getContext());
         mUiccController.unregisterForIccChanged(this);
+        mPhone.mCM.unregisterForTetheredModeStateChanged(this);
     }
 
     protected void broadcastMessenger() {
@@ -595,6 +600,7 @@ public abstract class DataConnectionTracker extends Handler {
     protected abstract void onCleanUpAllConnections(String cause);
     protected abstract boolean isDataPossible(String apnType);
     protected abstract void onUpdateIcc();
+    protected abstract void clearTetheredStateOnStatus();
 
     @Override
     public void handleMessage(Message msg) {
@@ -704,7 +710,9 @@ public abstract class DataConnectionTracker extends Handler {
             case DctConstants.EVENT_ICC_CHANGED:
                 onUpdateIcc();
                 break;
-
+            case DctConstants.EVENT_TETHERED_MODE_STATE_CHANGED:
+                onTetheredModeStateChanged((AsyncResult) msg.obj);
+                break;
             default:
                 Log.e("DATA", "Unidentified event msg=" + msg);
                 break;
@@ -1133,6 +1141,44 @@ public abstract class DataConnectionTracker extends Handler {
             } else {
                 return SystemProperties.get("ro.gsm.2nd_data_retry_config");
             }
+        }
+    }
+
+    private void onTetheredModeStateChanged(AsyncResult ar) {
+        int[] ret = (int[]) ar.result;
+
+        if (ret == null || ret.length != 1) {
+            if (DBG)
+                log("Error: Invalid Tethered mode received");
+            return;
+        }
+
+        int mode = ret[0];
+        if (DBG)
+            log("onTetheredModeStateChanged: mode:" + mode);
+
+        switch (mode) {
+        case RILConstants.RIL_TETHERED_MODE_ON:
+            // Indicates that an internal data call was created in the modem.
+            if (DBG)
+                log("Unsol Indication: RIL_TETHERED_MODE_ON");
+            break;
+        case RILConstants.RIL_TETHERED_MODE_OFF:
+            if (DBG)
+                log("Unsol Indication: RIL_TETHERED_MODE_OFF");
+            /*
+             * This indicates that an internal modem data call (e.g. tethered)
+             * had ended. Reset the retry count for all Data Connections and
+             * attempt to bring up all data calls
+             */
+            resetAllRetryCounts();
+            clearTetheredStateOnStatus();
+            sendMessage(obtainMessage(DctConstants.EVENT_TRY_SETUP_DATA, 0, 0,
+                    Phone.REASON_TETHERED_MODE_STATE_CHANGED));
+            break;
+        default:
+            if (DBG)
+            log("Error: Invalid Tethered mode:" + mode);
         }
     }
 
