@@ -97,18 +97,6 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     private int mNewReasonDataDenied = -1;
 
     /**
-     * GSM roaming status solely based on TS 27.007 7.2 CREG. Only used by
-     * handlePollStateResult to store CREG roaming result.
-     */
-    private boolean mGsmRoaming = false;
-
-    /**
-     * Data roaming status solely based on TS 27.007 10.1.19 CGREG. Only used by
-     * handlePollStateResult to store CGREG roaming result.
-     */
-    private boolean mDataRoaming = false;
-
-    /**
      * Mark when service state is in emergency call only mode
      */
     private boolean mEmergencyOnly = false;
@@ -638,7 +626,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                         }
                     }
 
-                    mGsmRoaming = regCodeIsRoaming(regState);
+                    mVoiceRoaming = regCodeIsRoaming(regState);
                     mNewSS.setState(regCodeToServiceState(regState));
                     mNewSS.setRilVoiceRadioTechnology(type);
 
@@ -688,7 +676,9 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                     }
                     int dataRegState = regCodeToServiceState(regState);
                     mNewSS.setDataRegState(dataRegState);
-                    mDataRoaming = regCodeIsRoaming(regState);
+                    if (dataRegState == ServiceState.STATE_IN_SERVICE) {
+                        mDataRoaming = regCodeIsRoaming(regState);
+                    }
                     mNewSS.setRilDataRadioTechnology(type);
                     if (DBG) {
                         log("handlPollStateResultMessage: GsmSST setDataRegState=" + dataRegState
@@ -730,8 +720,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
              *  as roaming while gsm service reports roaming but indeed it is
              *  not roaming between operators.
              */
-            boolean roaming = (mGsmRoaming || mDataRoaming);
-            if (mGsmRoaming && !isRoamingBetweenOperators(mGsmRoaming, mNewSS)) {
+            boolean roaming = (mVoiceRoaming || mDataRoaming);
+            if (mVoiceRoaming && !isRoamingBetweenOperators(mVoiceRoaming, mNewSS)) {
                 roaming = false;
             }
             mNewSS.setRoaming(roaming);
@@ -1770,7 +1760,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         pw.println(" mNewMaxDataCalls=" + mNewMaxDataCalls);
         pw.println(" mReasonDataDenied=" + mReasonDataDenied);
         pw.println(" mNewReasonDataDenied=" + mNewReasonDataDenied);
-        pw.println(" mGsmRoaming=" + mGsmRoaming);
+        pw.println(" mVoiceRoaming=" + mVoiceRoaming);
         pw.println(" mDataRoaming=" + mDataRoaming);
         pw.println(" mEmergencyOnly=" + mEmergencyOnly);
         pw.println(" mNeedFixZoneAfterNitz=" + mNeedFixZoneAfterNitz);

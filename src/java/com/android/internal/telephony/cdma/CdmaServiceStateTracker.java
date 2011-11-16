@@ -92,10 +92,9 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
     private int mNitzUpdateDiff = SystemProperties.getInt("ro.nitz_update_diff",
             NITZ_UPDATE_DIFF_DEFAULT);
 
-    private boolean mCdmaRoaming = false;
-    private int mRoamingIndicator;
+    private int mRoamingIndicator = EriInfo.ROAMING_INDICATOR_OFF;
     private boolean mIsInPrl;
-    private int mDefaultRoamingIndicator;
+    private int mDefaultRoamingIndicator = EriInfo.ROAMING_INDICATOR_OFF;
 
     /**
      * Initially assume no data connection.
@@ -665,9 +664,10 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
                 mRegistrationState = registrationState;
                 // When registration state is roaming and TSB58
                 // roaming indicator is not in the carrier-specified
-                // list of ERIs for home system, mCdmaRoaming is true.
-                mCdmaRoaming =
+                // list of ERIs for home system, mVoiceRoaming is true.
+                mVoiceRoaming =
                         regCodeIsRoaming(registrationState) && !isRoamIndForHomeSystem(states[10]);
+                mVoiceRoaming = mVoiceRoaming || mDataRoaming;
                 mNewSS.setState (regCodeToServiceState(registrationState));
 
                 mNewSS.setRilVoiceRadioTechnology(radioTechnology);
@@ -783,9 +783,9 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
 
             // Setting SS Roaming (general)
             if (mIsSubscriptionFromRuim) {
-                mNewSS.setRoaming(isRoamingBetweenOperators(mCdmaRoaming, mNewSS));
+                mNewSS.setRoaming(isRoamingBetweenOperators(mVoiceRoaming, mNewSS));
             } else {
-                mNewSS.setRoaming(mCdmaRoaming);
+                mNewSS.setRoaming(mVoiceRoaming);
             }
 
             // Setting SS CdmaRoamingIndicator and CdmaDefaultRoamingIndicator
@@ -823,12 +823,12 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
             mNewSS.setCdmaEriIconMode(mPhone.mEriManager.getCdmaEriIconMode(roamingIndicator,
                     mDefaultRoamingIndicator));
 
-            // NOTE: Some operator may require overriding mCdmaRoaming
+            // NOTE: Some operator may require overriding mVoiceRoaming
             // (set by the modem), depending on the mRoamingIndicator.
 
             if (DBG) {
                 log("Set CDMA Roaming Indicator to: " + mNewSS.getCdmaRoamingIndicator()
-                    + ". mCdmaRoaming = " + mCdmaRoaming + ", isPrlLoaded = " + isPrlLoaded
+                    + ". mVoiceRoaming = " + mVoiceRoaming + ", isPrlLoaded = " + isPrlLoaded
                     + ". namMatch = " + namMatch + " , mIsInPrl = " + mIsInPrl
                     + ", mRoamingIndicator = " + mRoamingIndicator
                     + ", mDefaultRoamingIndicator= " + mDefaultRoamingIndicator);
@@ -1220,7 +1220,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
      * code is registration state 0-5 from TS 27.007 7.2
      * returns true if registered roam, false otherwise
      */
-    private boolean
+    protected boolean
     regCodeIsRoaming (int code) {
         // 5 is  "in service -- roam"
         return 5 == code;
@@ -1753,7 +1753,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
         pw.println(" mCellLoc=" + mCellLoc);
         pw.println(" mNewCellLoc=" + mNewCellLoc);
         pw.println(" mCurrentOtaspMode=" + mCurrentOtaspMode);
-        pw.println(" mCdmaRoaming=" + mCdmaRoaming);
+        pw.println(" mVoiceRoaming=" + mVoiceRoaming);
         pw.println(" mRoamingIndicator=" + mRoamingIndicator);
         pw.println(" mIsInPrl=" + mIsInPrl);
         pw.println(" mDefaultRoamingIndicator=" + mDefaultRoamingIndicator);

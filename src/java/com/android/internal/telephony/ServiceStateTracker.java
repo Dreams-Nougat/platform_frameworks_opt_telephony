@@ -56,6 +56,9 @@ public abstract class ServiceStateTracker extends Handler {
 
     protected boolean mVoiceCapable;
 
+    protected boolean mVoiceRoaming = false;
+    protected boolean mDataRoaming = false;
+
     public ServiceState mSS = new ServiceState();
     protected ServiceState mNewSS = new ServiceState();
 
