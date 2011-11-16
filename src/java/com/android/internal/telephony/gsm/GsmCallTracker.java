@@ -87,6 +87,7 @@ public final class GsmCallTracker extends CallTracker {
 
     PhoneConstants.State mState = PhoneConstants.State.IDLE;
 
+    boolean mCallSwitchPending = false;
 
 
     //***** Events
@@ -282,9 +283,12 @@ public final class GsmCallTracker extends CallTracker {
         // Should we bother with this check?
         if (mRingingCall.getState() == GsmCall.State.INCOMING) {
             throw new CallStateException("cannot be in the incoming state");
-        } else {
+        } else if (mCallSwitchPending == false) {
             mCi.switchWaitingOrHoldingAndActive(
                     obtainCompleteMessage(EVENT_SWITCH_RESULT));
+            mCallSwitchPending = true;
+        } else {
+            Log.w(LOG_TAG, "Call Switch request ignored due to pending response");
         }
     }
 
@@ -862,6 +866,7 @@ public final class GsmCallTracker extends CallTracker {
             break;
 
             case EVENT_SWITCH_RESULT:
+                mCallSwitchPending = false;
             case EVENT_CONFERENCE_RESULT:
             case EVENT_SEPARATE_RESULT:
             case EVENT_ECT_RESULT:
