@@ -688,7 +688,9 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                     }
                     int dataRegState = regCodeToServiceState(regState);
                     mNewSS.setDataRegState(dataRegState);
-                    mDataRoaming = regCodeIsRoaming(regState);
+                    if (dataRegState == ServiceState.STATE_IN_SERVICE) {
+                        mDataRoaming = regCodeIsRoaming(regState);
+                    }
                     mNewSS.setRilDataRadioTechnology(type);
                     if (DBG) {
                         log("handlPollStateResultMessage: GsmSST setDataRegState=" + dataRegState

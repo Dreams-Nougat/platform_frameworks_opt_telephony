@@ -93,9 +93,10 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
             NITZ_UPDATE_DIFF_DEFAULT);
 
     private boolean mCdmaRoaming = false;
-    private int mRoamingIndicator;
+    protected boolean mDataRoaming = false;
+    private int mRoamingIndicator = EriInfo.ROAMING_INDICATOR_OFF;
     private boolean mIsInPrl;
-    private int mDefaultRoamingIndicator;
+    private int mDefaultRoamingIndicator = EriInfo.ROAMING_INDICATOR_OFF;
 
     /**
      * Initially assume no data connection.
@@ -668,6 +669,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
                 // list of ERIs for home system, mCdmaRoaming is true.
                 mCdmaRoaming =
                         regCodeIsRoaming(registrationState) && !isRoamIndForHomeSystem(states[10]);
+                mCdmaRoaming = mCdmaRoaming || mDataRoaming;
                 mNewSS.setState (regCodeToServiceState(registrationState));
 
                 mNewSS.setRilVoiceRadioTechnology(radioTechnology);
@@ -1220,7 +1222,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
      * code is registration state 0-5 from TS 27.007 7.2
      * returns true if registered roam, false otherwise
      */
-    private boolean
+    protected boolean
     regCodeIsRoaming (int code) {
         // 5 is  "in service -- roam"
         return 5 == code;
