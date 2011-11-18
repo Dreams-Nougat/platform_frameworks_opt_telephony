@@ -37,6 +37,8 @@ public class ApnContext {
 
     private DctConstants.State mState;
 
+    private final int mPriority;
+
     private ArrayList<DataProfile> mWaitingApns = null;
 
     /** A zero indicates that all waiting APNs had a permanent error */
@@ -65,6 +67,7 @@ public class ApnContext {
     public ApnContext(String apnType, String logTag) {
         mApnType = apnType;
         mState = DctConstants.State.IDLE;
+        mPriority = DataConnectionTracker.mApnPriorities.get(apnType);
         setReason(Phone.REASON_DATA_ENABLED);
         setRetryCount(0);
         mDataEnabled = new AtomicBoolean(false);
@@ -148,6 +151,22 @@ public class ApnContext {
 
     public synchronized ArrayList<DataProfile> getWaitingApns() {
         return mWaitingApns;
+    }
+
+    public synchronized int getPriority() {
+        return mPriority;
+    }
+
+    public synchronized boolean isHigherPriority(ApnContext context) {
+        return this.mPriority > context.getPriority();
+    }
+
+    public synchronized boolean isLowerPriority(ApnContext context) {
+        return this.mPriority < context.getPriority();
+    }
+
+    public synchronized boolean isEqualPriority(ApnContext context) {
+        return this.mPriority == context.getPriority();
     }
 
     public synchronized void setState(DctConstants.State s) {

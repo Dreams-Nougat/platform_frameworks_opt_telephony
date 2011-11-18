@@ -33,7 +33,7 @@ import com.android.internal.telephony.test.SimulatedRadioControl;
 import com.android.internal.telephony.uicc.IsimRecords;
 import com.android.internal.telephony.uicc.UsimServiceTable;
 
-import com.android.internal.telephony.PhoneConstants.*; // ???? 
+import com.android.internal.telephony.PhoneConstants.*; // ????
 
 import java.util.List;
 
@@ -103,6 +103,9 @@ public interface Phone {
     static final String REASON_NW_TYPE_CHANGED = "nwTypeChanged";
     static final String REASON_DATA_DEPENDENCY_MET = "dependencyMet";
     static final String REASON_DATA_DEPENDENCY_UNMET = "dependencyUnmet";
+    static final String REASON_LINK_PROPERTIES_CHANGED = "linkPropertiesChanged";
+    static final String REASON_TETHERED_MODE_STATE_CHANGED = "tetheredModeStateChanged";
+    static final String REASON_SINGLE_PDN_ARBITRATION = "SinglePdnArbitration";
 
     // Used for band mode selection methods
     static final int BM_UNSPECIFIED = 0; // selected by baseband automatically
