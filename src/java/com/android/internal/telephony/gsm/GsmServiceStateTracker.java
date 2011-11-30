@@ -174,6 +174,12 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            if (!phone.mIsTheCurrentActivePhone) {
+                Rlog.e(LOG_TAG, "Received Intent " + intent +
+                        " while being destroyed. Ignoring.");
+                return;
+            }
+
             if (intent.getAction().equals(Intent.ACTION_LOCALE_CHANGED)) {
                 // update emergency string whenever locale changed
                 updateSpnDisplay();
@@ -243,6 +249,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     @Override
     public void dispose() {
         checkCorrectThread();
+        log("ServiceStateTracker dispose");
+
         // Unregister for all events.
         cm.unregisterForAvailable(this);
         cm.unregisterForRadioStateChanged(this);
@@ -273,7 +281,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         Message message;
 
         if (!phone.mIsTheCurrentActivePhone) {
-            Rlog.e(LOG_TAG, "Received message " + msg +
+            loge("Received message " + msg +
                     "[" + msg.what + "] while being destroyed. Ignoring.");
             return;
         }
