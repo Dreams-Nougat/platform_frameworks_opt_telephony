@@ -422,7 +422,8 @@ public class CdmaConnection extends Connection {
                     return DisconnectCause.OUT_OF_SERVICE;
                 } else if (phone.mCdmaSubscriptionSource ==
                                CdmaSubscriptionSourceManager.SUBSCRIPTION_FROM_RUIM
-                           && phone.getIccCard().getState() != IccCardConstants.State.READY) {
+                               && (phone.getCurrentUiccAppState() !=
+                                          IccCardApplicationStatus.AppState.APPSTATE_READY)) {
                     return DisconnectCause.ICC_ERROR;
                 } else if (causeCode==CallFailCause.NORMAL_CLEARING) {
                     return DisconnectCause.NORMAL;
