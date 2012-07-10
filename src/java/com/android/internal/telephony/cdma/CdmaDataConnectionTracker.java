@@ -42,13 +42,13 @@ import com.android.internal.telephony.DataConnectionTracker;
 import com.android.internal.telephony.DctConstants;
 import com.android.internal.telephony.EventLogTags;
 import com.android.internal.telephony.PhoneConstants;
-import com.android.internal.telephony.IccCard;
 import com.android.internal.telephony.IccRecords;
+import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.RetryManager;
 import com.android.internal.telephony.RILConstants;
-import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.UiccCard;
+import com.android.internal.telephony.uicc.UiccController;
 import com.android.internal.util.AsyncChannel;
-import com.android.internal.telephony.RILConstants;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -1015,11 +1015,7 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
             return;
         }
 
-        IccCard newIccCard = mUiccController.getIccCard();
-        IccRecords newIccRecords = null;
-        if (newIccCard != null) {
-            newIccRecords = newIccCard.getIccRecords();
-        }
+        IccRecords newIccRecords = mUiccController.getIccRecords(UiccController.APP_FAM_3GPP2);
 
         IccRecords r = mIccRecords.get();
         if (r != newIccRecords) {
@@ -1029,7 +1025,7 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
                 mIccRecords.set(null);
             }
             if (newIccRecords != null) {
-                log("New card found");
+                log("New records found");
                 mIccRecords.set(newIccRecords);
                 newIccRecords.registerForRecordsLoaded(
                         this, DctConstants.EVENT_RECORDS_LOADED, null);
