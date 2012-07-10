@@ -52,6 +52,7 @@ import com.android.internal.telephony.DctConstants;
 import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.UiccController;
 import com.android.internal.util.AsyncChannel;
+import com.android.internal.telephony.DataProfile;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -236,13 +237,13 @@ public abstract class DataConnectionTracker extends Handler {
                                     new ConcurrentHashMap<String, ApnContext>();
 
     /* Currently active APN */
-    protected ApnSetting mActiveApn;
+    protected DataProfile mActiveApn;
 
     /** allApns holds all apns */
-    protected ArrayList<ApnSetting> mAllApns = null;
+    protected ArrayList<DataProfile> mAllApns = null;
 
     /** preferred apn */
-    protected ApnSetting mPreferredApn = null;
+    protected DataProfile mPreferredApn = null;
 
     /** Is packet service restricted by network */
     protected boolean mIsPsRestricted = false;
@@ -491,15 +492,15 @@ public abstract class DataConnectionTracker extends Handler {
     public boolean isApnTypeActive(String type) {
         // TODO: support simultaneous with List instead
         if (PhoneConstants.APN_TYPE_DUN.equals(type)) {
-            ApnSetting dunApn = fetchDunApn();
+            DataProfile dunApn = fetchDunApn();
             if (dunApn != null) {
-                return ((mActiveApn != null) && (dunApn.toString().equals(mActiveApn.toString())));
+                return ((mActiveApn != null) && (dunApn.toHash().equals(mActiveApn.toHash())));
             }
         }
         return mActiveApn != null && mActiveApn.canHandleType(type);
     }
 
-    protected ApnSetting fetchDunApn() {
+    protected DataProfile fetchDunApn() {
         if (SystemProperties.getBoolean("net.tethering.noprovisioning", false)) {
             log("fetchDunApn: net.tethering.noprovisioning=true ret: null");
             return null;
