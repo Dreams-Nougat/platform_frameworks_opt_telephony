@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 The Android Open Source Project
+ * Copyright (C) 2011-2012 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,20 @@
 
 package com.android.internal.telephony.uicc;
 
-import com.android.internal.telephony.CommandsInterface;
-import com.android.internal.telephony.IccCard;
-import com.android.internal.telephony.IccCardStatus;
-import com.android.internal.telephony.IccCardStatus.CardState;
-import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.sip.SipPhone;
-
+import android.content.Context;
 import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Registrant;
 import android.os.RegistrantList;
 import android.util.Log;
+
+import com.android.internal.telephony.CommandsInterface;
+import com.android.internal.telephony.IccCardStatus;
+import com.android.internal.telephony.IccFileHandler;
+import com.android.internal.telephony.IccRecords;
+import com.android.internal.telephony.UiccCard;
+import com.android.internal.telephony.UiccCardApplication;
 
 /* This class is responsible for keeping all knowledge about
  * ICCs in the system. It is also used as API to get appropriate
@@ -38,34 +39,68 @@ public class UiccController extends Handler {
     private static final boolean DBG = true;
     private static final String LOG_TAG = "RIL_UiccController";
 
+    public static final int APP_FAM_3GPP =  1;
+    public static final int APP_FAM_3GPP2 = 2;
+    public static final int APP_FAM_IMS   = 3;
+
     private static final int EVENT_ICC_STATUS_CHANGED = 1;
     private static final int EVENT_GET_ICC_STATUS_DONE = 2;
 
     private static UiccController mInstance;
 
-    private PhoneBase mCurrentPhone;
+    private Context mContext;
     private CommandsInterface mCi;
-    private IccCard mIccCard;
-    private boolean mRegisteredWithCi = false;
+    private UiccCard mUiccCard;
 
     private RegistrantList mIccChangedRegistrants = new RegistrantList();
 
-    public static synchronized UiccController getInstance(PhoneBase phone) {
+    public static synchronized UiccController make(Context c, CommandsInterface ci) {
+        if (mInstance != null) {
+            throw new RuntimeException("UiccController.make() should only be called once");
+        }
+        mInstance = new UiccController(c, ci);
+        return mInstance;
+    }
+
+    public static synchronized UiccController getInstance() {
         if (mInstance == null) {
-            mInstance = new UiccController(phone);
-        } else if (phone != null) {
-            mInstance.setNewPhone(phone);
+            throw new RuntimeException("UiccController.getInstance can't be called before make()");
         }
         return mInstance;
     }
 
-    // This method is not synchronized as getInstance(PhoneBase) is.
-    public static UiccController getInstance() {
-        return getInstance(null);
+    public synchronized UiccCard getUiccCard() {
+        return mUiccCard;
     }
 
-    public synchronized IccCard getIccCard() {
-        return mIccCard;
+    // Easy to use API
+    public UiccCardApplication getUiccCardApplication(int family) {
+        if (mUiccCard != null) {
+            return mUiccCard.getApplication(family);
+        }
+        return null;
+    }
+
+    // Easy to use API
+    public IccRecords getIccRecords(int family) {
+        if (mUiccCard != null) {
+            UiccCardApplication app = mUiccCard.getApplication(family);
+            if (app != null) {
+                return app.getIccRecords();
+            }
+        }
+        return null;
+    }
+
+    // Easy to use API
+    public IccFileHandler getIccFileHandler(int family) {
+        if (mUiccCard != null) {
+            UiccCardApplication app = mUiccCard.getApplication(family);
+            if (app != null) {
+                return app.getIccFileHandler();
+            }
+        }
+        return null;
     }
 
     //Notifies when card status changes
@@ -97,9 +132,13 @@ public class UiccController extends Handler {
         }
     }
 
-    private UiccController(PhoneBase phone) {
+    private UiccController(Context c, CommandsInterface ci) {
         if (DBG) log("Creating UiccController");
-        setNewPhone(phone);
+        mContext = c;
+        mCi = ci;
+        mCi.registerForIccStatusChanged(this, EVENT_ICC_STATUS_CHANGED, null);
+        // TODO remove this once modem correctly notifies the unsols
+        mCi.registerForOn(this, EVENT_ICC_STATUS_CHANGED, null);
     }
 
     private synchronized void onGetIccCardStatusDone(AsyncResult ar) {
@@ -112,53 +151,16 @@ public class UiccController extends Handler {
 
         IccCardStatus status = (IccCardStatus)ar.result;
 
-        //Update already existing card
-        if (mIccCard != null) {
-            mIccCard.update(mCurrentPhone, status);
-        }
-
-        //Create new card
-        if (mIccCard == null) {
-            mIccCard = new IccCard(mCurrentPhone, status, mCurrentPhone.getPhoneName(), true);
+        if (mUiccCard == null) {
+            //Create new card
+            mUiccCard = new UiccCard(mContext, mCi, status);
+        } else {
+            //Update already existing card
+            mUiccCard.update(mContext, mCi , status);
         }
 
         if (DBG) log("Notifying IccChangedRegistrants");
         mIccChangedRegistrants.notifyRegistrants();
-    }
-
-    private void setNewPhone(PhoneBase phone) {
-        if (phone == null) {
-            throw new RuntimeException("Phone can't be null in UiccController");
-            //return;
-        }
-
-        if (DBG) log("setNewPhone");
-        // TODO: remove this
-        if (phone instanceof SipPhone) {
-            if (DBG) log("Got SipPhone. Ignore.");
-            return;
-        }
-
-        if (mCurrentPhone != phone) {
-            if (mIccCard != null) {
-                // Refresh card if phone changed
-                // TODO: Remove once card is simplified
-                if (DBG) log("Disposing card since phone object changed");
-                mIccCard.dispose();
-                mIccCard = null;
-            }
-            sendMessage(obtainMessage(EVENT_ICC_STATUS_CHANGED));
-            mCurrentPhone = phone;
-
-            if (!mRegisteredWithCi) {
-                // This needs to be done only once after we have valid phone object
-                mCi = mCurrentPhone.mCM;
-                mCi.registerForIccStatusChanged(this, EVENT_ICC_STATUS_CHANGED, null);
-                // TODO remove this once modem correctly notifies the unsols
-                mCi.registerForOn(this, EVENT_ICC_STATUS_CHANGED, null);
-                mRegisteredWithCi = true;
-            }
-        }
     }
 
     private void log(String string) {
