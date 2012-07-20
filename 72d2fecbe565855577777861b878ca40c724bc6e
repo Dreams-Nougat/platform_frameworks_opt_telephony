@@ -11,3 +11,11 @@ In CdmaDataConnectionTracker newActivity this same line appears in else if (sent
 
 Also, I'd like to see if we can promote this data stall handling logic into DCT and out of GsmDCT and CdmaDCT, what do you think?
 
+1591
+Fri Jul 20 00:59:42 2012 +0000
+Author: Naveen K <1003413@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAHqH///yo=
+UUID: AAAHs3///1M=
+Bytes: 81
+We should be able to promote it up. Will take a look at that and get back to you.
+
