@@ -1,0 +1,14 @@
+Revision: 21e06a92c40aa9253d087799d034a23eea2a0890
+Patch-set: 1
+File: /COMMIT_MSG
+
+12
+Tue Jul 24 23:19:50 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAHvX///3s=
+Bytes: 86
+Please add a "Bug"  line immediately above Change-Id.
+
+Bug: 6872958
+Change-Id: 19e....
+
