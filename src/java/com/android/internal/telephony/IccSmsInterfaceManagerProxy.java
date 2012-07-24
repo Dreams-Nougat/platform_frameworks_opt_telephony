@@ -86,6 +86,24 @@ public class IccSmsInterfaceManagerProxy extends ISms.Stub {
         return mIccSmsInterfaceManager.disableCellBroadcastRange(startMessageId, endMessageId);
     }
 
+    public boolean enableCdmaBroadcast(int messageIdentifier) throws android.os.RemoteException {
+        return mIccSmsInterfaceManager.enableCdmaBroadcast(messageIdentifier);
+    }
+
+    public boolean disableCdmaBroadcast(int messageIdentifier) throws android.os.RemoteException {
+        return mIccSmsInterfaceManager.disableCdmaBroadcast(messageIdentifier);
+    }
+
+    public boolean enableCdmaBroadcastRange(int startMessageId, int endMessageId)
+            throws android.os.RemoteException {
+        return mIccSmsInterfaceManager.enableCdmaBroadcastRange(startMessageId, endMessageId);
+    }
+
+    public boolean disableCdmaBroadcastRange(int startMessageId, int endMessageId)
+            throws android.os.RemoteException {
+        return mIccSmsInterfaceManager.disableCdmaBroadcastRange(startMessageId, endMessageId);
+    }
+
     public int getPremiumSmsPermission(String packageName) {
         return mIccSmsInterfaceManager.getPremiumSmsPermission(packageName);
     }

@@ -278,6 +278,30 @@ public class SimSmsInterfaceManager extends IccSmsInterfaceManager {
         return true;
     }
 
+    public boolean enableCdmaBroadcast(int messageIdentifier) {
+        // Not implemented
+        Log.e(LOG_TAG, "Error! Not implemented for GSM.");
+        return false;
+    }
+
+    public boolean disableCdmaBroadcast(int messageIdentifier) {
+        // Not implemented
+        Log.e(LOG_TAG, "Error! Not implemented for GSM.");
+        return false;
+    }
+
+    public boolean enableCdmaBroadcastRange(int startMessageId, int endMessageId) {
+        // Not implemented
+        Log.e(LOG_TAG, "Error! Not implemented for GSM.");
+        return false;
+    }
+
+    public boolean disableCdmaBroadcastRange(int startMessageId, int endMessageId) {
+        // Not implemented
+        Log.e(LOG_TAG, "Error! Not implemented for GSM.");
+        return false;
+    }
+
     class CellBroadcastRangeManager extends IntRangeManager {
         private ArrayList<SmsBroadcastConfigInfo> mConfigList =
                 new ArrayList<SmsBroadcastConfigInfo>();
