@@ -68,6 +68,7 @@ import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.RILConstants;
 import com.android.internal.telephony.RetryManager;
 import com.android.internal.telephony.UiccCard;
+import com.android.internal.telephony.uicc.UiccController;
 import com.android.internal.util.AsyncChannel;
 
 import java.io.FileDescriptor;
@@ -2632,11 +2633,7 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
             return;
         }
 
-        UiccCard newUiccCard = mUiccController.getUiccCard();
-        IccRecords newIccRecords = null;
-        if (newUiccCard != null) {
-            newIccRecords = newUiccCard.getIccRecords();
-        }
+        IccRecords newIccRecords = mUiccController.getIccRecords(UiccController.APP_FAM_3GPP);
 
         IccRecords r = mIccRecords.get();
         if (r != newIccRecords) {
@@ -2646,7 +2643,7 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
                 mIccRecords.set(null);
             }
             if (newIccRecords != null) {
-                log("New card found");
+                log("New records found");
                 mIccRecords.set(newIccRecords);
                 newIccRecords.registerForRecordsLoaded(
                         this, DctConstants.EVENT_RECORDS_LOADED, null);
