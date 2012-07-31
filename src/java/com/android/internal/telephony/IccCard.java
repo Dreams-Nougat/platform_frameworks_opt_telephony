@@ -169,7 +169,7 @@ public interface IccCard {
      */
     public String getServiceProviderName ();
     public State getIccCardState();
-    public boolean isApplicationOnIcc(IccCardApplication.AppType type);
+    public boolean isApplicationOnIcc(IccCardApplicationStatus.AppType type);
 
     /**
      * @return true if a ICC card is present
