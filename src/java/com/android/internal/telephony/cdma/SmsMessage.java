@@ -25,7 +25,6 @@ import android.telephony.cdma.CdmaSmsCbProgramData;
 import android.util.Log;
 
 import com.android.internal.telephony.GsmAlphabet.TextEncodingDetails;
-import com.android.internal.telephony.IccUtils;
 import com.android.internal.telephony.SmsConstants;
 import com.android.internal.telephony.SmsHeader;
 import com.android.internal.telephony.SmsMessageBase;
@@ -35,6 +34,7 @@ import com.android.internal.telephony.cdma.sms.CdmaSmsAddress;
 import com.android.internal.telephony.cdma.sms.CdmaSmsSubaddress;
 import com.android.internal.telephony.cdma.sms.SmsEnvelope;
 import com.android.internal.telephony.cdma.sms.UserData;
+import com.android.internal.telephony.uicc.IccUtils;
 import com.android.internal.util.BitwiseInputStream;
 import com.android.internal.util.HexDump;
 
