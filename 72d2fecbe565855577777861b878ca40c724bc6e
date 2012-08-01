@@ -19,3 +19,13 @@ UUID: AAAHs3///1M=
 Bytes: 81
 We should be able to promote it up. Will take a look at that and get back to you.
 
+1591
+Wed Aug 01 07:10:16 2012 +0000
+Author: Naveen K <1003413@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAHqH///yo=
+UUID: AAAH7X///MY=
+Bytes: 375
+GsmDataConnectionTracker doesn't keep track of mSentSinceLastRecv. So there is no need to add the 'else if (sent == 0 && received == 0)'.
+
+Also am working on pulling up data stall handling into DCT as a separate change. As this change mainly brings in a new feature. But pulling up is more of a clean up change and I do not want this feature to be lost in the cleanup change.
+
