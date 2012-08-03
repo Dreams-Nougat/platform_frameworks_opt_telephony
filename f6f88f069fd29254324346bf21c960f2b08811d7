@@ -1,0 +1,19 @@
+Revision: f6f88f069fd29254324346bf21c960f2b08811d7
+Patch-set: 1
+File: src/java/com/android/internal/telephony/cdma/CdmaLteUiccRecords.java
+
+119
+Fri Aug 03 01:08:11 2012 +0000
+Author: Nick Kralevich <1003966@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAH/H///Go=
+Bytes: 502
+Let's break this into multiple lines.
+
+int len = ((data.length - 3) < 32) ? (data.length - 3) : 32;
+
+System.arraycopy(data, 3, spnData, 0, len);
+
+Per http://www.oracle.com/technetwork/java/javase/documentation/codeconventions-137265.html#331 , please make sure all code has proper parenthesis. See example above.
+
+Per http://www.oracle.com/technetwork/java/javase/documentation/codeconventions-141388.html#682 , all binary operators should be separated from their operands by spaces. See example above.
+
