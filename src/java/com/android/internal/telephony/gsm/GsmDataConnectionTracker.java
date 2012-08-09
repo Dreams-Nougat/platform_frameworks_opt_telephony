@@ -501,12 +501,12 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
 
         // If already active, return
         if (DBG) log("enableApnType: " + apnType + " mState(" + apnContext.getState() + ")");
+        setEnabled(apnTypeToId(apnType), true);
 
         if (apnContext.getState() == DctConstants.State.CONNECTED) {
             if (DBG) log("enableApnType: return APN_ALREADY_ACTIVE");
             return PhoneConstants.APN_ALREADY_ACTIVE;
         }
-        setEnabled(apnTypeToId(apnType), true);
         if (DBG) {
             log("enableApnType: new apn request for type " + apnType +
                     " return APN_REQUEST_STARTED");
