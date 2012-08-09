@@ -1852,9 +1852,10 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
         if (DBG) {
             log("applyNewState(" + apnContext.getApnType() + ", " + enabled +
                     "(" + apnContext.isEnabled() + "), " + met + "(" +
-                    apnContext.getDependencyMet() +"))");
+                    apnContext.getDependencyMet() +"))" +
+                    " apnContext.getState()=" + apnContext.getState());
         }
-        if (apnContext.isReady()) {
+        if (apnContext.isReady() && !apnContext.isDisconnected()) {
             if (enabled && met) return;
             if (!enabled) {
                 apnContext.setReason(Phone.REASON_DATA_DISABLED);
