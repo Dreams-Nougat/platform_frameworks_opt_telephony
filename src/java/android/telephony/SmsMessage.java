@@ -134,10 +134,20 @@ public class SmsMessage {
      * such as dual-mode GSM/CDMA and CDMA/LTE phones.
      */
     public static SmsMessage createFromPdu(byte[] pdu) {
+	// need initialization
+        SmsMessage message = null;
+        // cdma vs gsm encoding info was not given, guess from active voice phone type
         int activePhone = TelephonyManager.getDefault().getCurrentPhoneType();
         String format = (PHONE_TYPE_CDMA == activePhone) ?
                 SmsConstants.FORMAT_3GPP2 : SmsConstants.FORMAT_3GPP;
-        return createFromPdu(pdu, format);
+        message = createFromPdu(pdu, format);
+        if (null == message) {
+            // decoding pdu failed based on activePhone type, must be other encoding
+	        format = (PHONE_TYPE_CDMA == activePhone) ?
+                SmsConstants.FORMAT_3GPP2 : SmsConstants.FORMAT_3GPP;
+            message = createFromPdu(pdu, format);
+        }
+        return message;
     }
 
     /**
@@ -151,7 +161,8 @@ public class SmsMessage {
      * @hide pending API council approval
      */
     public static SmsMessage createFromPdu(byte[] pdu, String format) {
-        SmsMessageBase wrappedMessage;
+	// need initialization
+        SmsMessageBase wrappedMessage = null;
 
         if (SmsConstants.FORMAT_3GPP2.equals(format)) {
             wrappedMessage = com.android.internal.telephony.cdma.SmsMessage.createFromPdu(pdu);
@@ -159,6 +170,11 @@ public class SmsMessage {
             wrappedMessage = com.android.internal.telephony.gsm.SmsMessage.createFromPdu(pdu);
         } else {
             Log.e(LOG_TAG, "createFromPdu(): unsupported message format " + format);
+        }
+	// handle exception
+	if(wrappedMessage == null)
+	{
+            Log.e(LOG_TAG, "createFromPdu(): wrappedMessage is null");
             return null;
         }
 
