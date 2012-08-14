@@ -224,7 +224,7 @@ public class SimSmsInterfaceManager extends IccSmsInterfaceManager {
         return disableCellBroadcastRange(messageIdentifier, messageIdentifier);
     }
 
-    public boolean enableCellBroadcastRange(int startMessageId, int endMessageId) {
+    synchronized public boolean enableCellBroadcastRange(int startMessageId, int endMessageId) {
         if (DBG) log("enableCellBroadcastRange");
 
         Context context = mPhone.getContext();
@@ -251,7 +251,7 @@ public class SimSmsInterfaceManager extends IccSmsInterfaceManager {
         return true;
     }
 
-    public boolean disableCellBroadcastRange(int startMessageId, int endMessageId) {
+    synchronized public boolean disableCellBroadcastRange(int startMessageId, int endMessageId) {
         if (DBG) log("disableCellBroadcastRange");
 
         Context context = mPhone.getContext();
