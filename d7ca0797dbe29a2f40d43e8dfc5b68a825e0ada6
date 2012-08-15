@@ -1,0 +1,18 @@
+Revision: d7ca0797dbe29a2f40d43e8dfc5b68a825e0ada6
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/SimSmsInterfaceManager.java
+
+227
+Wed Aug 15 17:18:45 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAIbH///so=
+Bytes: 10
+Use mLock?
+
+254
+Wed Aug 15 17:18:45 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAIbH///sk=
+Bytes: 10
+Use mLock?
+
