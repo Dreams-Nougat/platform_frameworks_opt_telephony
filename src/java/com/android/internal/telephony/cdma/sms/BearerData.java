@@ -1106,6 +1106,10 @@ public final class BearerData {
         case UserData.ENCODING_LATIN:
             userData.payloadStr = decodeLatin(userData.payload, offset, userData.numFields);
             break;
+	// Support Shitf_JIS Encoding Type  (See 3GPP2 C.R1001-E, v1.0, table 9.1-1)
+        case UserData.ENCODING_SHIFT_JIS:
+            userData.payloadStr = decodeShiftJis(userData.payload, offset, userData.numFields);
+            break;
         default:
             throw new CodingException("unsupported user data encoding ("
                                       + userData.msgEncoding + ")");
@@ -1934,5 +1938,22 @@ public final class BearerData {
             Log.e(LOG_TAG, "BearerData decode failed: " + ex);
         }
         return null;
+    }
+    /**
+     * Converts the byte[] to a string using SHIFT_JIS
+     *
+     * @param data payload of userData
+     * @param offset  the starting offset in data
+     * @param numFields length of data
+     * @return String  Converted character string
+     */
+    private static String decodeShiftJis(byte[] data, int offset, int numFields)
+        throws CodingException
+    {
+        try {
+            return new String(data, 0, data.length, "SJIS");
+        } catch (java.io.UnsupportedEncodingException ex) {
+            throw new CodingException("SJIS decode failed: " + ex);
+        }
     }
 }
