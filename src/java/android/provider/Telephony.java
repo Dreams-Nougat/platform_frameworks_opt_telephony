@@ -697,7 +697,7 @@ public final class Telephony {
                 SmsMessage[] msgs = new SmsMessage[pduCount];
                 for (int i = 0; i < pduCount; i++) {
                     pdus[i] = pduObjs[i];
-                    msgs[i] = SmsMessage.createFromPdu(pdus[i], format);
+                    msgs[i] = SmsMessage.createFromPdu(pdus[i]);
                 }
                 return msgs;
             }
