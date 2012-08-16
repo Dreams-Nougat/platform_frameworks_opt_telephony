@@ -414,6 +414,34 @@ public class SmsMessage extends SmsMessageBase {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    protected void parseMessageBody() {
+        // originatingAddress could be null if this message is from a status
+        // report.
+        if (originatingAddress != null && originatingAddress.couldBeEmailGateway()) {
+            extractEmailAddressFromMessageBody();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected void extractEmailAddressFromMessageBody() {
+        /* Some carriers may use " /" delimiter as below
+         *
+         * 1. [x@y][ ]/[subject][ ]/[body]
+         * -or-
+         * 2. [x@y][ ]/[body]
+         */
+        String[] parts = messageBody.split("( /)|( )", 2);
+        if (parts.length < 2) return;
+        emailFrom = parts[0];
+        emailBody = parts[1];
+        isEmail = true;
+    }
+
+    /**
      * Returns the status for a previously submitted message.
      * For not interfering with status codes from GSM, this status code is
      * shifted to the bits 31-16.
