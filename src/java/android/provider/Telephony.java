@@ -697,7 +697,11 @@ public final class Telephony {
                 SmsMessage[] msgs = new SmsMessage[pduCount];
                 for (int i = 0; i < pduCount; i++) {
                     pdus[i] = pduObjs[i];
-                    msgs[i] = SmsMessage.createFromPdu(pdus[i], format);
+		// change the function for GSM/CDMA FORMAT interworking
+		// When receive irregularly concatenated msgs with GSM/CDMA Format, 
+		// The device can't parse normally. because intent has format of last msg and parse all msg with same format type.
+	        //msgs[i] = SmsMessage.createFromPdu(pdus[i], format);
+	        msgs[i] = SmsMessage.createFromPdu(pdus[i]);
                 }
                 return msgs;
             }
