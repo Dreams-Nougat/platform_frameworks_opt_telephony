@@ -85,6 +85,8 @@ public abstract class SMSDispatcher extends Handler {
     static final String TAG = "SMS";    // accessed from inner class
     private static final String SEND_NEXT_MSG_EXTRA = "SendNextMsg";
 
+    /** Default timeout for SMS sent query */
+    private static final int DEFAULT_SMS_TIMEOUT = 6000;
     /** Permission required to receive SMS and SMS-CB messages. */
     public static final String RECEIVE_SMS_PERMISSION = "android.permission.RECEIVE_SMS";
 
@@ -108,9 +110,20 @@ public abstract class SMSDispatcher extends Handler {
             "destination_port"
     };
 
+    /** Query projection for combining concatenated message segments. */
+    private static final String[] PDU_SEQUENCE_PORT_DATE_PROJECTION = new String[] {
+            "pdu",
+            "sequence",
+            "destination_port",
+            "date"
+    };
+
+    /** Max time value between concatenated SMS segments */
+    private static final int MAX_CONCATENATED_SEGMENT_TIME = 256000;
     private static final int PDU_COLUMN = 0;
     private static final int SEQUENCE_COLUMN = 1;
     private static final int DESTINATION_PORT_COLUMN = 2;
+    private static final int DATE_COLUMN = 3;
 
     private static final int PREMIUM_RULE_USE_SIM = 1;
     private static final int PREMIUM_RULE_USE_NETWORK = 2;
@@ -598,6 +611,8 @@ public abstract class SMSDispatcher extends Handler {
         byte[][] pdus = null;
         Cursor cursor = null;
         try {
+            // When true the related concatenated data will be discarded.
+            boolean discard = false;
             // used by several query selection arguments
             String refNumber = Integer.toString(referenceNumber);
             String seqNumber = Integer.toString(sequenceNumber);
@@ -613,11 +628,33 @@ public abstract class SMSDispatcher extends Handler {
                         + " refNumber=" + refNumber + " seqNumber=" + seqNumber);
                 String oldPduString = cursor.getString(PDU_COLUMN);
                 byte[] oldPdu = HexDump.hexStringToByteArray(oldPduString);
-                if (!Arrays.equals(oldPdu, pdu)) {
-                    Rlog.e(TAG, "Warning: dup message segment PDU of length " + pdu.length
-                            + " is different from existing PDU of length " + oldPdu.length);
+
+                // Discard duplicated PDU segments.
+                if (Arrays.equals(oldPdu, pdu)) {
+                    cursor.close();
+                    return Intents.RESULT_SMS_HANDLED;
                 }
-                return Intents.RESULT_SMS_HANDLED;
+                Rlog.w(TAG, "Warning: dup message segment PDU is different"
+                        + " from existing PDU. OldLen " + oldPdu.length + ", NewLen" + pdu.length);
+                discard = true;
+            }
+            cursor.close();
+
+            // Check the validity time of this segments message.
+            cursor = mResolver.query(mRawUri,PDU_SEQUENCE_PORT_DATE_PROJECTION,
+                    "reference_number=?", new String[] {refNumber}, null);
+            if (cursor.moveToNext()) {
+                // There is a next segment, validate its not to old.
+                long diffTime = Math.abs(timestamp - cursor.getLong(DATE_COLUMN));
+                if (diffTime >= MAX_CONCATENATED_SEGMENT_TIME) {
+                    Rlog.w(TAG, "Warning: Existing segments is too old");
+                    discard = true;
+                }
+             }
+            if (discard) {
+                Rlog.w(TAG, "Discard PDU");
+                mResolver.delete(mRawUri, "reference_number=?",
+                        new String[] {refNumber});
             }
             cursor.close();
 
