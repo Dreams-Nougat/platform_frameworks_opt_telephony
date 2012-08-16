@@ -539,7 +539,12 @@ public class SmsMessage extends SmsMessageBase {
 
             while (dis.available() > 0) {
                 int parameterId = dis.readByte();
-                int parameterLen = dis.readByte();
+				 /* Received Message's Length can be over 127 bytes (ex.UserData)
+ 				  * So, read parameter Length used readUnsignedByte() 
+  			      */
+					int parameterLen =dis.readUnsignedByte();
+					/* originate code
+					int parameterLen = dis.readByte(); */
                 byte[] parameterData = new byte[parameterLen];
 
                 switch (parameterId) {
