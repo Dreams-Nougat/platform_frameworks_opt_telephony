@@ -547,7 +547,7 @@ public class SmsMessage extends SmsMessageBase {
 
             while (dis.available() > 0) {
                 int parameterId = dis.readByte();
-                int parameterLen = dis.readByte();
+                int parameterLen = dis.readUnsignedByte();
                 byte[] parameterData = new byte[parameterLen];
 
                 switch (parameterId) {
