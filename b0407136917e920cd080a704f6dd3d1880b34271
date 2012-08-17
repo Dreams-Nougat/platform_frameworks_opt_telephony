@@ -9,3 +9,17 @@ UUID: AAAIk3///hk=
 Bytes: 38
 Why does this need to be configurable?
 
+142
+Fri Aug 17 23:44:00 2012 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAIk3///hk=
+UUID: AAAIkn///Ks=
+Bytes: 697
+When RIL gets an indication from WMS in the Submit Report that the network is not ready, it returns failure indicating retry.
+
+This is because the network not being ready is often a temporary condition.  This can happen when the network releases the call in order to setup an incoming voice call. 
+
+This fix has the effect of creating a delay.  Android will delay retrying the message for several seconds.  Currently the Android default delay is 2 second.
+
+Hence, when the SMS cannot be sent because the network is not ready, there will be a delay of several seconds before the message is retried, the delay is configurable, and this should give enough time for incoming voice calls to be received
+
