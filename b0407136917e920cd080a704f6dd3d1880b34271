@@ -23,3 +23,11 @@ This fix has the effect of creating a delay.  Android will delay retrying the me
 
 Hence, when the SMS cannot be sent because the network is not ready, there will be a delay of several seconds before the message is retried, the delay is configurable, and this should give enough time for incoming voice calls to be received
 
+142
+Fri Aug 17 23:53:28 2012 +0000
+Author: John Huang <1000718@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAIkn///Ks=
+UUID: AAAIlH///Xs=
+Bytes: 176
+Not sure I follow:  when/how is this configured?  At build time, or do you plan to change this dynamically at runtime (ie, via the RIL, depending on specific error conditions)?
+
