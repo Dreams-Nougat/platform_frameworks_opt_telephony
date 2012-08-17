@@ -1,0 +1,11 @@
+Revision: 249b1f15c5e7e644a457b54c30986f69c6aee23e
+Patch-set: 2
+File: src/java/com/android/internal/telephony/gsm/SmsMessage.java
+
+899
+Fri Aug 17 22:42:17 2012 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAIkn///X8=
+Bytes: 70
+Typo: firstRigthParenthesisIndex should be firstRightParenthesisIndex.
+
