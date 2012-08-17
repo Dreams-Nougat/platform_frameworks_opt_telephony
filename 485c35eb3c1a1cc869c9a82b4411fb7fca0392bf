@@ -1,0 +1,11 @@
+Revision: 485c35eb3c1a1cc869c9a82b4411fb7fca0392bf
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/SmsMessage.java
+
+902
+Fri Aug 17 00:55:47 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAIf3///JA=
+Bytes: 53
+This should be indented more, for better readability.
+
