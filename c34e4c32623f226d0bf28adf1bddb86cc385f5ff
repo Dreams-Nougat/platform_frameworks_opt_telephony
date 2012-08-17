@@ -1,0 +1,11 @@
+Revision: c34e4c32623f226d0bf28adf1bddb86cc385f5ff
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/GsmSMSDispatcher.java
+
+297
+Fri Aug 17 21:55:27 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAIk3///kE=
+Bytes: 40
+Maybe move this inside the if statement?
+
