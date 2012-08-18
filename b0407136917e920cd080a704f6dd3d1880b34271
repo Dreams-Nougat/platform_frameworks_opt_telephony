@@ -31,3 +31,15 @@ UUID: AAAIlH///Xs=
 Bytes: 176
 Not sure I follow:  when/how is this configured?  At build time, or do you plan to change this dynamically at runtime (ie, via the RIL, depending on specific error conditions)?
 
+142
+Sat Aug 18 00:21:50 2012 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAIlH///Xs=
+UUID: AAAIkn///Hg=
+Bytes: 212
+static final String PROPERTY_SMS_RETRY_DELAY = "persist.radio.sms_retry_delay"
+
+from  https://android-review.googlesource.com/#/c/37643
+
+This should be set at build time and NOT based on specific error condition.
+
