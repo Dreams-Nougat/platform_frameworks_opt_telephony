@@ -1,0 +1,11 @@
+Revision: a63bf4237dfc3c9b81f7d5eff57c5500b8b8215d
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/VoiceMailConstants.java
+
+118
+Sun Aug 19 15:49:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAIu3///5U=
+Bytes: 126
+Wondering whether we should log that one. Knowingly leaking g a fed would worth knowing if that causes problems down the line.
+
