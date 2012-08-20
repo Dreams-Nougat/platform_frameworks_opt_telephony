@@ -43,3 +43,11 @@ from  https://android-review.googlesource.com/#/c/37643
 
 This should be set at build time and NOT based on specific error condition.
 
+142
+Mon Aug 20 20:25:45 2012 +0000
+Author: John Huang <1000718@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAIkn///Hg=
+UUID: AAAIrn///e8=
+Bytes: 222
+So.... why does this need to be configurable?  If 2000ms is too short, why not change SEND_RETRY_DELAY to something more reasonable?  Under what scenarios would we expect different values between different builds/products?
+
