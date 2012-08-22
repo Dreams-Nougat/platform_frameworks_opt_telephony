@@ -24,6 +24,7 @@ import android.os.Message;
 import android.util.Log;
 
 import com.android.internal.telephony.IccConstants;
+import com.android.internal.telephony.IccFileHandler;
 import com.android.internal.telephony.IccSmsInterfaceManager;
 import com.android.internal.telephony.IccUtils;
 import com.android.internal.telephony.PhoneProxy;
@@ -69,6 +70,8 @@ public class RuimSmsInterfaceManager extends IccSmsInterfaceManager {
                     synchronized (mLock) {
                         if (ar.exception == null) {
                             mSms = buildValidRawData((ArrayList<byte[]>) ar.result);
+                            //Mark SMS as read after importing it from Ruim.
+                            markMessagesAsRead((ArrayList<byte[]>) ar.result);
                         } else {
                             if(DBG) log("Cannot load Sms records");
                             if (mSms != null)
@@ -122,11 +125,17 @@ public class RuimSmsInterfaceManager extends IccSmsInterfaceManager {
             if (status == STATUS_ON_ICC_FREE) {
                 // Special case FREE: call deleteSmsOnRuim instead of
                 // manipulating the RUIM record
+                // Will eventually fail if icc card is not present.
                 mPhone.mCM.deleteSmsOnRuim(index, response);
             } else {
+                //IccFilehandler can be null if ICC card is not present.
+                IccFileHandler fh = mPhone.getIccFileHandler();
+                if (fh == null) {
+                    response.recycle();
+                    return mSuccess; /* is false */
+                }
                 byte[] record = makeSmsRecordData(status, pdu);
-                mPhone.getIccFileHandler().updateEFLinearFixed(
-                        IccConstants.EF_SMS, index, record, null, response);
+                fh.updateEFLinearFixed(IccConstants.EF_SMS, index, record, null, response);
             }
             try {
                 mLock.wait();
@@ -179,8 +188,17 @@ public class RuimSmsInterfaceManager extends IccSmsInterfaceManager {
                 "android.permission.RECEIVE_SMS",
                 "Reading messages from RUIM");
         synchronized(mLock) {
+            IccFileHandler fh = mPhone.getIccFileHandler();
+            if (fh == null) {
+                Log.e(LOG_TAG, "Cannot load Sms records. No icc card?");
+                if (mSms != null) {
+                    mSms.clear();
+                    return mSms;
+                }
+            }
+
             Message response = mHandler.obtainMessage(EVENT_LOAD_DONE);
-            mPhone.getIccFileHandler().loadEFLinearFixedAll(IccConstants.EF_SMS, response);
+            fh.loadEFLinearFixedAll(IccConstants.EF_SMS, response);
 
             try {
                 mLock.wait();

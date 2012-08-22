@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static android.telephony.SmsManager.STATUS_ON_ICC_FREE;
+import static android.telephony.SmsManager.STATUS_ON_ICC_READ;
+import static android.telephony.SmsManager.STATUS_ON_ICC_UNREAD;
 
 /**
  * IccSmsInterfaceManager to provide an inter-process communication to
@@ -39,6 +41,39 @@ public abstract class IccSmsInterfaceManager extends ISms.Stub {
     protected IccSmsInterfaceManager(PhoneBase phone){
         mPhone = phone;
         mContext = phone.getContext();
+    }
+
+    protected void markMessagesAsRead(ArrayList<byte[]> messages) {
+        if (messages == null) {
+            return;
+        }
+
+        //IccFileHandler can be null, if icc card is absent.
+        IccFileHandler fh = mPhone.getIccFileHandler();
+        if (fh == null) {
+            //shouldn't really happen, as messages are marked as read, only
+            //after importing it from icc.
+            if (Log.isLoggable("SMS", Log.DEBUG)) {
+                log("markMessagesAsRead - aborting, no icc card present.");
+            }
+            return;
+        }
+
+        int count = messages.size();
+
+        for (int i = 0; i < count; i++) {
+             byte[] ba = messages.get(i);
+             if (ba[0] == STATUS_ON_ICC_UNREAD) {
+                 int n = ba.length;
+                 byte[] nba = new byte[n - 1];
+                 System.arraycopy(ba, 1, nba, 0, n - 1);
+                 byte[] record = makeSmsRecordData(STATUS_ON_ICC_READ, nba);
+                 fh.updateEFLinearFixed(IccConstants.EF_SMS, i + 1, record, null, null);
+                 if (Log.isLoggable("SMS", Log.DEBUG)) {
+                     log("SMS " + (i + 1) + " marked as read");
+                 }
+             }
+        }
     }
 
     protected void enforceReceiveAndSend(String message) {
