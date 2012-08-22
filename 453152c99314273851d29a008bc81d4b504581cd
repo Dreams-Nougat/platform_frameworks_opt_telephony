@@ -9,3 +9,11 @@ UUID: AAAI2H///ko=
 Bytes: 79
 Could this be written (a != b) || (c != d) instead of !((a == b) && (c == d)) ?
 
+528
+Wed Aug 22 16:17:13 2012 +0000
+Author: Jeevaka Prabu Badrappan <1010938@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI2H///ko=
+UUID: AAAI13///ZY=
+Bytes: 37
+yes can be written like that as well.
+
