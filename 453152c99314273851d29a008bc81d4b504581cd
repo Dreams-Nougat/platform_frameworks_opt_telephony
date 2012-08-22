@@ -1,0 +1,11 @@
+Revision: 453152c99314273851d29a008bc81d4b504581cd
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/GsmMmiCode.java
+
+528
+Wed Aug 22 15:35:48 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI2H///ko=
+Bytes: 79
+Could this be written (a != b) || (c != d) instead of !((a == b) && (c == d)) ?
+
