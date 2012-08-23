@@ -1,0 +1,27 @@
+Revision: 58aa22c8ec0a848860ef555b70a250a43d354cd1
+Patch-set: 2
+File: src/java/android/provider/Telephony.java
+
+700
+Thu Aug 23 20:30:18 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI2X//+co=
+Bytes: 38
+Style: please preserve the indentation
+
+File: src/java/android/telephony/SmsMessage.java
+
+145
+Thu Aug 23 20:30:18 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI2X//+ck=
+Bytes: 30
+Please indent this by 8 spaces
+
+171
+Thu Aug 23 20:30:18 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI2X//+cc=
+Bytes: 29
+Please add a space after "if"
+
