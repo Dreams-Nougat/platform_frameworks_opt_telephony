@@ -1,0 +1,91 @@
+Revision: 798716112357ecc6f0903b6bd42f56fc7c876bb4
+Patch-set: 2
+File: src/java/com/android/internal/telephony/SMSDispatcher.java
+
+108
+Thu Aug 23 04:06:40 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+o0=
+Bytes: 68
+Maybe reword as:
+
+  Max time value between concatenated SMS segments
+
+109
+Thu Aug 23 04:06:40 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+ow=
+Bytes: 39
+Rename to MAX_CONCATENATED_SEGMENT_TIME
+
+113
+Thu Aug 23 04:06:40 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+o4=
+Bytes: 15
+Remove comment.
+
+556
+Thu Aug 23 04:06:40 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+ok=
+Bytes: 160
+All comments should be complete sentences and have a space following the "//". Maybe reword as:
+
+  // When true the related concatenated data will be discarded.
+
+573
+Thu Aug 23 04:06:40 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+o8=
+Bytes: 18
+Remove unused code
+
+580
+Thu Aug 23 04:06:40 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+os=
+Bytes: 144
+As mentioned above comments should be complete sentences and have a space after "//" so maybe rewrite as:
+
+  // Discard duplicated PDU segments.
+
+584
+Thu Aug 23 04:06:40 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+pE=
+Bytes: 56
+Comment not necessary as the log stement is good enough.
+
+586
+Thu Aug 23 04:06:40 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+og=
+Bytes: 98
+This should be "Log.w" as its not really critical. And instead reword:
+
+  "Discard duplicated ..."
+
+593
+Thu Aug 23 04:06:40 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+oY=
+Bytes: 19
+Delete unused code.
+
+611
+Thu Aug 23 04:06:40 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+oU=
+Bytes: 15
+Delete comment.
+
+614
+Thu Aug 23 04:06:40 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+oQ=
+Bytes: 47
+Log.w and reword:
+
+  Log.w(TAG, "Discard PDU");
+
