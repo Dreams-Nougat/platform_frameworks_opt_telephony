@@ -1,0 +1,11 @@
+Revision: 7e005b56e5c4bc2c09ddaceb4d9568423e05cb54
+Patch-set: 1
+File: src/java/com/android/internal/telephony/cdma/sms/BearerData.java
+
+954
+Thu Aug 23 20:00:54 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI2H//+nc=
+Bytes: 125
+I'm not sure if the 4 lines above are exactly in the canonical style, but they look unambiguously readable to me. No concern.
+
