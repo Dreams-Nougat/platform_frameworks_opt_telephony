@@ -1,0 +1,41 @@
+Revision: aaa5e7bc570bee4a61a82a35f2b46b9370564a16
+Patch-set: 1
+File: src/java/com/android/internal/telephony/SMSDispatcher.java
+
+556
+Thu Aug 23 01:03:54 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+tc=
+Bytes: 302
+long line and do not use tabs, only spaces please.
+
+Actually, this comment is probably unnecessary and its wording is more confusing then helpful. (I realize English is not your first language and even I, where English is my one and only language, make lots of mistakes, so please do not take offense).
+
+557
+Thu Aug 23 01:03:54 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+tY=
+Bytes: 105
+Remove all trailing white space, in the "Preferences" above be sure to check the "Whitespace Errors" box.
+
+579
+Thu Aug 23 01:03:54 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+tU=
+Bytes: 56
+Again no tabs and fix trailing ws on all of these lines.
+
+592
+Thu Aug 23 01:03:54 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+tQ=
+Bytes: 27
+delete these if not needed.
+
+597
+Thu Aug 23 01:03:54 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+tM=
+Bytes: 46
+long line and more tabs and trailing ws below.
+
