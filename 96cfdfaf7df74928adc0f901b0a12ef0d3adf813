@@ -1,0 +1,57 @@
+Revision: 96cfdfaf7df74928adc0f901b0a12ef0d3adf813
+Patch-set: 3
+File: /COMMIT_MSG
+
+8
+Thu Aug 23 15:52:25 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+i8=
+Bytes: 78
+The wording here is poor, please work with your colleagues and try to improve.
+
+File: src/java/com/android/internal/telephony/SMSDispatcher.java
+
+557
+Thu Aug 23 15:52:25 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+jc=
+Bytes: 87
+Lets call this "discard", discarded is past tense but the usage is really future tense.
+
+574
+Thu Aug 23 15:52:25 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+jY=
+Bytes: 19
+align with if below
+
+579
+Thu Aug 23 15:52:25 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+jU=
+Bytes: 114
+shift to right so "+" is under "T" in TAG. If the line be becomes too long move " from existing" to previous line.
+
+590
+Thu Aug 23 15:52:25 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+jM=
+Bytes: 156
+This is the "true" path so if a comment is necessary we should talk about it. I suggest just saying:
+
+  // There is a next segment, validate its not to old.
+
+597
+Thu Aug 23 15:52:25 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+jQ=
+Bytes: 15
+Align properly.
+
+600
+Thu Aug 23 15:52:25 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//+jI=
+Bytes: 66
+If we delete a segment here, won't the cursorCount below be wrong?
+
