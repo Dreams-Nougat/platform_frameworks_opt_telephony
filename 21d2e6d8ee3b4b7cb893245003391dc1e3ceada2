@@ -1,0 +1,41 @@
+Revision: 21d2e6d8ee3b4b7cb893245003391dc1e3ceada2
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/UiccController.java
+
+31
+Fri Aug 24 21:53:02 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//9fU=
+Bytes: 150
+Lets define ICC for us less educated and maybe it should read:
+
+  "about Universal Integrated Circuit Card (UICC), also know as SIM's, in the system."
+
+33
+Fri Aug 24 21:53:02 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//9f4=
+Bytes: 2
+ws
+
+34
+Fri Aug 24 21:53:02 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//9e8=
+Bytes: 123
+Mention UiccController is a singleton and make() must only be called once and throws an exception if called multiple times.
+
+39
+Fri Aug 24 21:53:02 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//9fQ=
+Bytes: 2
+ws
+
+42
+Fri Aug 24 21:53:02 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//9fw=
+Bytes: 86
+Beautiful!!! How do you get the fancy characters, are these standard ASCII characters?
+
