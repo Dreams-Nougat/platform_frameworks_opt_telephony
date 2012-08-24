@@ -1,0 +1,11 @@
+Revision: 211efe3838855405d7bc3ea676f42a1d730f4a70
+Patch-set: 4
+File: src/java/com/android/internal/telephony/SMSDispatcher.java
+
+597
+Fri Aug 24 18:12:44 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI2H//93w=
+Bytes: 15
+Trailing space.
+
