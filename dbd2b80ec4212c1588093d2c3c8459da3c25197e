@@ -9,3 +9,12 @@ UUID: AAAI13//9uw=
 Bytes: 112
 Looks to be identical to the code in SimSmsInterfaceManager. Should we promot this and others to the base class?
 
+116
+Fri Aug 24 21:53:27 2012 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI13//9uw=
+UUID: AAAI2X//9fo=
+Bytes: 129
+Extracted common functions from Sim/RuimSmsInterfaceManager to their parent
+class IccSmsInterfaceManager.  Please review patch 2.
+
