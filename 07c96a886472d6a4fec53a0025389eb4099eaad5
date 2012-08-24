@@ -1,0 +1,11 @@
+Revision: 07c96a886472d6a4fec53a0025389eb4099eaad5
+Patch-set: 2
+File: src/java/com/android/internal/telephony/gsm/GsmSMSDispatcher.java
+
+297
+Fri Aug 24 17:20:47 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//9v0=
+Bytes: 97
+No, I meant inside the if (tracker.mRetryCount > 0) below and then you can print it all the time.
+
