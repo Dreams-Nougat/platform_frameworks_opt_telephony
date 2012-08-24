@@ -1,0 +1,11 @@
+Revision: 552740b98427ab824a46e6c934149b14e5da1c49
+Patch-set: 3
+File: src/java/android/telephony/SmsMessage.java
+
+144
+Fri Aug 24 21:42:27 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//9gQ=
+Bytes: 68
+This format assignment looks the same as the above, what did I miss?
+
