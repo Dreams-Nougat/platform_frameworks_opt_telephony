@@ -26,9 +26,37 @@ import android.util.Log;
 
 import com.android.internal.telephony.CommandsInterface;
 
-/* This class is responsible for keeping all knowledge about
+/**
+ * This class is responsible for keeping all knowledge about
  * ICCs in the system. It is also used as API to get appropriate
  * applications to pass them to phone and service trackers.
+ * 
+ * It is created with the call to make() function. Once created
+ * UiccController registers with RIL for "on" and "unsol_sim_status_changed"
+ * notifications. When such notification arrives UiccController will call
+ * getIccCardStatus (GET_SIM_STATUS). Based on the response of GET_SIM_STATUS
+ * request appropriate tree of uicc objects will be created.
+ * 
+ * Following is class diagram for uicc classes:
+ *
+ *                       UiccController
+ *                            ◆
+ *                            │
+ *                        UiccCard
+ *                          ◆   ◆
+ *                          │   └─────────────┐
+ *                    UiccCardApplication    CatService
+ *                      ◆            ◆
+ *                      │            │
+ *                 IccRecords    IccFileHandler
+ *                 △ △ △           △ △ △ △ △
+ *    SIMRecords───┘ │ │           │ │ │ │ └────SIMFileHandler
+ *    RuimRecords────┘ │           │ │ │ └───RuimFileHandler
+ *    IsimUiccRecords──┘           │ │ └───UsimFileHandler
+ *                                 │ └───CsimFileHandler
+ *                                 └──IsimFileHandler
+ *
+ *
  */
 public class UiccController extends Handler {
     private static final boolean DBG = true;
