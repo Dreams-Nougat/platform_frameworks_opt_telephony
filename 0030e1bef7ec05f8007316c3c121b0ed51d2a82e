@@ -1,0 +1,27 @@
+Revision: 0030e1bef7ec05f8007316c3c121b0ed51d2a82e
+Patch-set: 2
+File: src/java/com/android/internal/telephony/IntRangeManager.java
+
+122
+Sat Aug 25 16:39:07 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63///9Y=
+Bytes: 17
+spaces around "+"
+
+223
+Sat Aug 25 16:39:07 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///7o=
+Bytes: 16
+space after "if"
+
+File: tests/telephonytests/src/com/android/internal/telephony/IntRangeManagerTest.java
+
+242
+Sat Aug 25 16:39:07 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n///7w=
+Bytes: 11
+100 columns
+
