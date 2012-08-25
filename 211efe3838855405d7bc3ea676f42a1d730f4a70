@@ -1,5 +1,14 @@
 Revision: 211efe3838855405d7bc3ea676f42a1d730f4a70
 Patch-set: 4
+File: /COMMIT_MSG
+
+18
+Sat Aug 25 01:30:50 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI13//9TQ=
+Bytes: 44
+Please add a blank line after this sentence.
+
 File: src/java/com/android/internal/telephony/SMSDispatcher.java
 
 597
