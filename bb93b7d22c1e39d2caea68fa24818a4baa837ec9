@@ -1,0 +1,130 @@
+Revision: bb93b7d22c1e39d2caea68fa24818a4baa837ec9
+Patch-set: 2
+File: src/java/com/android/internal/telephony/cdma/sms/BearerData.java
+
+1114
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63///+c=
+Bytes: 28
+add a space after each comma
+
+1962
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n///84=
+Bytes: 14
+trailing space
+
+1977
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63///+k=
+Bytes: 18
+indent by 8 spaces
+
+1985
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63///+U=
+Bytes: 8
+4 spaces
+
+1989
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63///+Y=
+Bytes: 18
+indent by 8 spaces
+
+2000
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///8w=
+Bytes: 18
+indent by 4 spaces
+
+2003
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///8s=
+Bytes: 18
+indent by 4 spaces
+
+2006
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63///+g=
+Bytes: 18
+indent by 8 spaces
+
+2022
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n///80=
+Bytes: 8
+8 spaces
+
+2027
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n///8w=
+Bytes: 10
+misaligned
+
+2036
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///8o=
+Bytes: 17
+spaces around "+"
+
+2037
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///8k=
+Bytes: 4
+same
+
+2038
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n///8s=
+Bytes: 4
+same
+
+2043
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///8g=
+Bytes: 17
+spaces around "="
+
+2046
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///8c=
+Bytes: 25
+spaces around "=" and "-"
+
+2047
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///8Y=
+Bytes: 28
+spaces around "=", after ","
+
+2048
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n///8o=
+Bytes: 18
+indent by 8 spaces
+
+2056
+Sat Aug 25 15:55:05 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63///+Q=
+Bytes: 9
+alignment
+
