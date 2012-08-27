@@ -1,0 +1,124 @@
+Revision: ad8d4482f2df2a80c1e99a61f0850cb5a7b2236d
+Patch-set: 3
+File: src/java/com/android/internal/telephony/cdma/sms/BearerData.java
+
+1115
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///wE=
+Bytes: 58
+This should be indented by 8 spaces from the previous line
+
+1961
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63///yU=
+Bytes: 27
+8 spaces from previous line
+
+1968
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///wA=
+Bytes: 15
+space after "="
+
+1972
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n///2g=
+Bytes: 85
+We don't usually use reversed conditionals, especially for anything that's not a "=="
+
+1977
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n///2Y=
+Bytes: 27
+8 spaces from previous line
+
+1989
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n///2U=
+Bytes: 27
+8 spaces from previous line
+
+2022
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///v4=
+Bytes: 8
+8 spaces
+
+2027
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///v8=
+Bytes: 14
+trailing space
+
+2032
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63///yE=
+Bytes: 23
+missing space after ","
+
+2035
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n///1o=
+Bytes: 244
+At least, this is missing parentheses around the conditional.
+
+There's probably a more readable way to write this:
+
+  if ((headerBits % 7) > 0) headerSeptets++;
+
+possibly combined with the previous line:
+
+  headerSeptets = (offset * 8 + 6) / 7;
+
+2037
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n///1k=
+Bytes: 23
+missing space after ","
+
+2038
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63///yA=
+Bytes: 15
+space after ","
+
+2039
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///v0=
+Bytes: 15
+space after ","
+
+2047
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///vw=
+Bytes: 17
+Spaces around "="
+
+2052
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6X///vs=
+Bytes: 15
+space after ","
+
+2056
+Mon Aug 27 16:02:49 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n///1g=
+Bytes: 17
+spaces around "+"
+
