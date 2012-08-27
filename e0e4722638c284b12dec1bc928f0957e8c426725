@@ -17,6 +17,14 @@ UUID: AAAI63///+M=
 Bytes: 228
 Not sure if it is being used. But just to make sure I did not break anything, I did override this in GsmDCT and called it gsm.radioreset. We can remove it if you can confirm that it is not used. I am sure we dont use it for now.
 
+153
+Mon Aug 27 16:59:38 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///+M=
+UUID: AAAI6n///y8=
+Bytes: 58
+lets leave it for now, but just have it be gsm.radioreset.
+
 File: src/java/com/android/internal/telephony/cdma/CdmaDataConnectionTracker.java
 
 83
