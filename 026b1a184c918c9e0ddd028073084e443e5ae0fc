@@ -1,0 +1,11 @@
+Revision: 026b1a184c918c9e0ddd028073084e443e5ae0fc
+Base-for-patch-set: 4
+File: src/java/com/android/internal/telephony/gsm/SIMRecords.java
+
+1280
+Mon Aug 27 21:58:22 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63///O0=
+Bytes: 51
+And why don't we need to broadcast this ICC_LOADED?
+
