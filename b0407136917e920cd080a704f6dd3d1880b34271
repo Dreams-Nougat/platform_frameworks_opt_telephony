@@ -51,3 +51,11 @@ UUID: AAAIrn///e8=
 Bytes: 222
 So.... why does this need to be configurable?  If 2000ms is too short, why not change SEND_RETRY_DELAY to something more reasonable?  Under what scenarios would we expect different values between different builds/products?
 
+142
+Tue Aug 28 17:40:57 2012 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAIrn///e8=
+UUID: AAAI63//+og=
+Bytes: 242
+OEM requested that this delay value to be configurable, that is why it is implemented as such.  Also, this delay value may be dependent on underlying modem, hence it is better to have this as configurable.  Please approve the change.  Thanks.
+
