@@ -326,6 +326,14 @@ Bytes: 195
 Not sure. All other filehandlers have it. Some time after phone switch (gsm->cdma, and back) I see these prints. Not sure how useful this is, though.
 Should I remove these from all file handlers?
 
+37
+Tue Aug 28 00:45:11 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI6X///Yk=
+UUID: AAAI6n///TY=
+Bytes: 13
+Remove please
+
 41
 Mon Aug 27 19:11:49 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
