@@ -371,8 +371,8 @@ public class IccCard {
 
          mDesiredPinLocked = enabled;
 
-         mPhone.mCM.setFacilityLock(CommandsInterface.CB_FACILITY_BA_SIM,
-                 enabled, password, serviceClassX,
+         mPhone.mCM.setFacilityLockForApp(CommandsInterface.CB_FACILITY_BA_SIM,
+                 enabled, password, serviceClassX, getAid(),
                  mHandler.obtainMessage(EVENT_CHANGE_FACILITY_LOCK_DONE, onComplete));
      }
 
@@ -397,8 +397,8 @@ public class IccCard {
 
          mDesiredFdnEnabled = enabled;
 
-         mPhone.mCM.setFacilityLock(CommandsInterface.CB_FACILITY_BA_FD,
-                 enabled, password, serviceClassX,
+         mPhone.mCM.setFacilityLockForApp(CommandsInterface.CB_FACILITY_BA_FD,
+                 enabled, password, serviceClassX, getAid(),
                  mHandler.obtainMessage(EVENT_CHANGE_FACILITY_FDN_DONE, onComplete));
      }
 
@@ -674,17 +674,17 @@ public class IccCard {
                     break;
                 case EVENT_ICC_READY:
                     if(isSubscriptionFromIccCard) {
-                        mPhone.mCM.queryFacilityLock (
-                                CommandsInterface.CB_FACILITY_BA_SIM, "", serviceClassX,
+                        mPhone.mCM.queryFacilityLockForApp (
+                                CommandsInterface.CB_FACILITY_BA_SIM, "", serviceClassX, getAid(),
                                 obtainMessage(EVENT_QUERY_FACILITY_LOCK_DONE));
-                        mPhone.mCM.queryFacilityLock (
-                                CommandsInterface.CB_FACILITY_BA_FD, "", serviceClassX,
+                        mPhone.mCM.queryFacilityLockForApp (
+                                CommandsInterface.CB_FACILITY_BA_FD, "", serviceClassX, getAid(),
                                 obtainMessage(EVENT_QUERY_FACILITY_FDN_DONE));
                     }
                     break;
                 case EVENT_ICC_LOCKED:
-                    mPhone.mCM.queryFacilityLock (
-                             CommandsInterface.CB_FACILITY_BA_SIM, "", serviceClassX,
+                    mPhone.mCM.queryFacilityLockForApp (
+                             CommandsInterface.CB_FACILITY_BA_SIM, "", serviceClassX, getAid(),
                              obtainMessage(EVENT_QUERY_FACILITY_LOCK_DONE));
                      break;
                 case EVENT_GET_ICC_STATUS_DONE:
