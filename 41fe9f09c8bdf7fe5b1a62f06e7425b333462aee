@@ -1,0 +1,18 @@
+Revision: 41fe9f09c8bdf7fe5b1a62f06e7425b333462aee
+Patch-set: 4
+File: src/java/com/android/internal/telephony/cdma/sms/BearerData.java
+
+1943
+Wed Aug 29 15:27:46 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n//+hM=
+Bytes: 30
+Extra spaces should be removed
+
+2012
+Wed Aug 29 15:27:46 2012 +0000
+Author: Jean-Baptiste Queru <1000660@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n//+hI=
+Bytes: 30
+extra spaces should be removed
+
