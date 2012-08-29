@@ -9,12 +9,28 @@ UUID: AAAI63///sk=
 Bytes: 114
 Add java doc for the class explaining the purpose of this interface and how objects implementing it are retrieved.
 
+25
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///sk=
+UUID: AAAI6n//+K8=
+Bytes: 4
+Done
+
 28
 Mon Aug 27 19:11:49 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63///sg=
 Bytes: 29
 Add java doc for each method.
+
+28
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///sg=
+UUID: AAAI6n//+LA=
+Bytes: 4
+Done
 
 File: src/java/com/android/internal/telephony/IccCardProxy.java
 
@@ -87,6 +103,14 @@ Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63///rQ=
 Bytes: 224
 Add @override for all methods implementing the interface. Also, I like them in the same order as the interface declaration and if it makes sense have them together. Maybe its easier to change IccCard order, pick your poison.
+
+554
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///rQ=
+UUID: AAAI6n//+Gw=
+Bytes: 4
+Done
 
 File: src/java/com/android/internal/telephony/IccCardStatus.java
 
@@ -194,6 +218,14 @@ UUID: AAAI63///nk=
 Bytes: 159
 This calls looks to be used by different thread so is seems we have race conditions. I think need to add an mLock object to synchronize all the public methods.
 
+60
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///nk=
+UUID: AAAI6n//+CY=
+Bytes: 4
+Done
+
 147
 Mon Aug 27 19:11:49 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -218,12 +250,28 @@ UUID: AAAI63///lA=
 Bytes: 112
 As with UiccCard this implementation has race conditions, use mLock style synchronization on all public methods?
 
+41
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///lA=
+UUID: AAAI6n//+B0=
+Bytes: 4
+Done
+
 71
 Mon Aug 27 19:11:49 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63///ng=
 Bytes: 9
 long line
+
+71
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///ng=
+UUID: AAAI6n//+CM=
+Bytes: 4
+Done
 
 93
 Mon Aug 27 19:11:49 2012 +0000
@@ -232,12 +280,28 @@ UUID: AAAI63///mQ=
 Bytes: 39
 needs to be "synchronized" (use mLock).
 
+93
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///mQ=
+UUID: AAAI6n//+B8=
+Bytes: 4
+Done
+
 138
 Mon Aug 27 19:11:49 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63///mU=
 Bytes: 61
 Lets used an Object mLock instead of synchronized statements.
+
+138
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///mU=
+UUID: AAAI6n//+B4=
+Bytes: 4
+Done
 
 280
 Mon Aug 27 19:11:49 2012 +0000
@@ -264,6 +328,14 @@ UUID: AAAI63///lk=
 Bytes: 177
 This is synchronized but the list can change because the add/remove is not synchronized. I believe u need to not have this synchronized and the callers should use mLock instead.
 
+284
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///lk=
+UUID: AAAI6n//+Bw=
+Bytes: 4
+Done
+
 289
 Mon Aug 27 19:11:49 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -286,6 +358,14 @@ UUID: AAAI63///lc=
 Bytes: 60
 Callers should use mLock and this shouldn't be synchronized?
 
+308
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///lc=
+UUID: AAAI6n//+Bs=
+Bytes: 4
+Done
+
 315
 Mon Aug 27 19:11:49 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -307,6 +387,14 @@ Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63///lQ=
 Bytes: 45
 Don't synchronize here, callers should do so?
+
+334
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///lQ=
+UUID: AAAI6n//+Bo=
+Bytes: 4
+Done
 
 File: src/java/com/android/internal/telephony/UsimFileHandler.java
 
@@ -539,12 +627,28 @@ UUID: AAAI63///VA=
 Bytes: 33
 Add @Override here and else where
 
+219
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///VA=
+UUID: AAAI6n//+BA=
+Bytes: 4
+Done
+
 242
 Mon Aug 27 21:58:22 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63///V8=
 Bytes: 7
 No tabs
+
+242
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///V8=
+UUID: AAAI6n//+A8=
+Bytes: 11
+Oops. Done.
 
 File: src/java/com/android/internal/telephony/uicc/UiccController.java
 
@@ -555,6 +659,14 @@ UUID: AAAI63///Uk=
 Bytes: 26
 Use mLock style everywhere
 
+57
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///Uk=
+UUID: AAAI6n//+Ak=
+Bytes: 4
+Done
+
 77
 Mon Aug 27 21:58:22 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -562,10 +674,26 @@ UUID: AAAI63///TU=
 Bytes: 21
 Needs synchronization
 
+77
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///TU=
+UUID: AAAI6n//+Ag=
+Bytes: 4
+Done
+
 85
 Mon Aug 27 21:58:22 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63///TM=
 Bytes: 21
 Needs synchronization
+
+85
+Wed Aug 29 23:56:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///TM=
+UUID: AAAI6n//+Ac=
+Bytes: 4
+Done
 
