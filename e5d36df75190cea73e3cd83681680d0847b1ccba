@@ -334,6 +334,14 @@ UUID: AAAI6n///TY=
 Bytes: 13
 Remove please
 
+37
+Wed Aug 29 18:57:54 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI6X///Yk=
+UUID: AAAI6X///WI=
+Bytes: 14
+Done (removed)
+
 41
 Mon Aug 27 19:11:49 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -382,6 +390,14 @@ UUID: AAAI63///iU=
 Bytes: 2
 ll
 
+272
+Wed Aug 29 18:57:54 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///iU=
+UUID: AAAI6X///Og=
+Bytes: 4
+Done
+
 File: src/java/com/android/internal/telephony/cdma/CDMAPhone.java
 
 1076
@@ -390,6 +406,14 @@ Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63///hM=
 Bytes: 2
 ws
+
+1076
+Wed Aug 29 18:57:54 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///hM=
+UUID: AAAI6X///Mw=
+Bytes: 4
+Done
 
 File: src/java/com/android/internal/telephony/cdma/CdmaConnection.java
 
@@ -400,6 +424,14 @@ UUID: AAAI63///g8=
 Bytes: 63
 Should phone.getCurrentUiccState be getCurrentIccCardAppStatus?
 
+425
+Wed Aug 29 18:57:54 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///g8=
+UUID: AAAI6X///MM=
+Bytes: 29
+Done (getCurrentUiccAppState)
+
 File: src/java/com/android/internal/telephony/cdma/RuimRecords.java
 
 324
@@ -408,6 +440,14 @@ Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63///XI=
 Bytes: 20
 doc reference please
+
+324
+Wed Aug 29 18:57:54 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///XI=
+UUID: AAAI6X///Ms=
+Bytes: 4
+Done
 
 File: src/java/com/android/internal/telephony/gsm/GSMPhone.java
 
@@ -418,6 +458,14 @@ UUID: AAAI63///Qs=
 Bytes: 2
 ws
 
+1350
+Wed Aug 29 18:57:54 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///Qs=
+UUID: AAAI6X///MI=
+Bytes: 4
+Done
+
 File: src/java/com/android/internal/telephony/gsm/GsmMmiCode.java
 
 237
@@ -427,12 +475,28 @@ UUID: AAAI63///QE=
 Bytes: 2
 ll
 
+237
+Wed Aug 29 18:57:54 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///QE=
+UUID: AAAI6X///L8=
+Bytes: 4
+Done
+
 775
 Mon Aug 27 21:58:22 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63///PQ=
 Bytes: 14
 Could be null?
+
+775
+Wed Aug 29 18:57:54 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///PQ=
+UUID: AAAI6X///L0=
+Bytes: 48
+Really shouldn't. Added null check anyway. Done.
 
 File: src/java/com/android/internal/telephony/ims/IsimFileHandler.java
 
@@ -443,6 +507,14 @@ UUID: AAAI63///Os=
 Bytes: 24
 @Override as appropriate
 
+41
+Wed Aug 29 18:57:54 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///Os=
+UUID: AAAI6X///Ks=
+Bytes: 4
+Done
+
 File: src/java/com/android/internal/telephony/ims/IsimUiccRecords.java
 
 206
@@ -451,6 +523,14 @@ Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63///V0=
 Bytes: 111
 Lets move these log methods at the end of the file and add @Override's as appropriate everywhere on "new code".
+
+206
+Wed Aug 29 18:57:54 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///V0=
+UUID: AAAI6X///KE=
+Bytes: 4
+Done
 
 219
 Mon Aug 27 21:58:22 2012 +0000

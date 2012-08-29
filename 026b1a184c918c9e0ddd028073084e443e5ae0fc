@@ -9,3 +9,12 @@ UUID: AAAI63///O0=
 Bytes: 51
 And why don't we need to broadcast this ICC_LOADED?
 
+1280
+Wed Aug 29 18:57:54 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63///O0=
+UUID: AAAI6X///Kw=
+Bytes: 291
+We now have simultaneously multiple instances of IccRecords objects. Hence we can't allow all of them to start broadcasting the "LOADED" event. We broadcast the LOADED event only for the "current" app (which is decided based on the phone type).
+IccCardProxy handles all the broadcasting now.
+
