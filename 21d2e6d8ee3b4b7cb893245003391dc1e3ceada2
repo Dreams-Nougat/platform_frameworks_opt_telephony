@@ -11,12 +11,28 @@ Lets define ICC for us less educated and maybe it should read:
 
   "about Universal Integrated Circuit Card (UICC), also know as SIM's, in the system."
 
+31
+Thu Aug 30 18:04:48 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI13//9fU=
+UUID: AAAI6n//9q0=
+Bytes: 4
+Done
+
 33
 Fri Aug 24 21:53:02 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI13//9f4=
 Bytes: 2
 ws
+
+33
+Thu Aug 30 18:04:48 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI13//9f4=
+UUID: AAAI6n//9qw=
+Bytes: 4
+Done
 
 34
 Fri Aug 24 21:53:02 2012 +0000
@@ -25,6 +41,14 @@ UUID: AAAI13//9e8=
 Bytes: 123
 Mention UiccController is a singleton and make() must only be called once and throws an exception if called multiple times.
 
+34
+Thu Aug 30 18:04:48 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI13//9e8=
+UUID: AAAI6n//9qs=
+Bytes: 4
+Done
+
 39
 Fri Aug 24 21:53:02 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -32,10 +56,26 @@ UUID: AAAI13//9fQ=
 Bytes: 2
 ws
 
+39
+Thu Aug 30 18:04:48 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI13//9fQ=
+UUID: AAAI6n//9qo=
+Bytes: 4
+Done
+
 42
 Fri Aug 24 21:53:02 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI13//9fw=
 Bytes: 86
 Beautiful!!! How do you get the fancy characters, are these standard ASCII characters?
+
+42
+Thu Aug 30 18:04:48 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI13//9fw=
+UUID: AAAI6n//9qg=
+Bytes: 93
+After discussion had to revert from these UTF8 characters to less appealing ASCII characters.
 
