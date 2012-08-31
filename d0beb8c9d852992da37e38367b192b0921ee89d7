@@ -1,0 +1,113 @@
+Revision: d0beb8c9d852992da37e38367b192b0921ee89d7
+Patch-set: 7
+File: src/java/com/android/internal/telephony/IccCard.java
+
+34
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//8rc=
+Bytes: 60
+Add:
+
+ * @Deprecated use UiccController.getUiccCard instead.
+
+File: src/java/com/android/internal/telephony/IccCardProxy.java
+
+49
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//8rM=
+Bytes: 50
+Add:
+
+  @Deprecated use UiccController.getUiccCard
+
+52
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//8rI=
+Bytes: 26
+Add mLock synchronization.
+
+464
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//8rA=
+Bytes: 89
+mReadyRegistrants isn't being used to notify anyone, maybe it can be deleted if not used?
+
+File: src/java/com/android/internal/telephony/UiccCard.java
+
+148
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//86s=
+Bytes: 9
+long line
+
+219
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//84w=
+Bytes: 14
+use mLock here
+
+235
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//840=
+Bytes: 17
+Use a mLock here.
+
+263
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//844=
+Bytes: 64
+Put this in onIccSwap so it can manage the locking if necessary.
+
+File: src/java/com/android/internal/telephony/UiccCardApplication.java
+
+218
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//84o=
+Bytes: 69
+I'd rather have the mLock in the individual methods rather than here.
+
+330
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//82o=
+Bytes: 310
+Add comment:
+
+  Notifies specified registrant, mLock not held.
+
+I'd rather this info be in the name, the convention in Android it have a "Locked" suffix See ActivityThread#getDisplayMetricsLocked. But this name is already long and already has "Locked" in the name. So adding the comment is the next best thing.
+
+358
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//82M=
+Bytes: 21
+New comment as above.
+
+File: src/java/com/android/internal/telephony/cdma/CDMAPhone.java
+
+809
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//82E=
+Bytes: 124
+Why is this call getCurrentUiccStateP (specifically what is the "P"? Seems that should be called getCurrentUiccAppState too?
+
+File: src/java/com/android/internal/telephony/uicc/UiccController.java
+
+67
+Fri Aug 31 00:09:48 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//8tU=
+Bytes: 118
+Please add some information that IccCard/IccCardProxy is a translation layer for the PhoneApp which is now deprecated.
+
