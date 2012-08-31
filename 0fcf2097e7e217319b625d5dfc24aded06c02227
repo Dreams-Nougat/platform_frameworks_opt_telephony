@@ -12,3 +12,11 @@ This look fine to me, but it has been in here since 2010-01-27:
   sha1: c9790716f0c759d8bb197f4237a2901e5f561b5b
   change-Id: I0eb3f9ac287aa7cb53312777c4be54b1939fa857
 
+509
+Fri Aug 31 08:37:05 2012 +0000
+Author: Johan Redestig <1002951@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//8uM=
+UUID: AAAI33//+1Q=
+Bytes: 55
+We have had that patch in our devices since 2010-11-19.
+
