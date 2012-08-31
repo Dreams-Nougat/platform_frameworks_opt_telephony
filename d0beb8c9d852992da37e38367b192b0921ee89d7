@@ -11,6 +11,14 @@ Add:
 
  * @Deprecated use UiccController.getUiccCard instead.
 
+34
+Fri Aug 31 22:32:43 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//8rc=
+UUID: AAAI6n//8oo=
+Bytes: 4
+Done
+
 File: src/java/com/android/internal/telephony/IccCardProxy.java
 
 49
@@ -22,6 +30,14 @@ Add:
 
   @Deprecated use UiccController.getUiccCard
 
+49
+Fri Aug 31 22:32:43 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//8rM=
+UUID: AAAI6n//8ok=
+Bytes: 4
+Done
+
 52
 Fri Aug 31 00:09:48 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -29,12 +45,29 @@ UUID: AAAI63//8rI=
 Bytes: 26
 Add mLock synchronization.
 
+52
+Fri Aug 31 22:32:43 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//8rI=
+UUID: AAAI6n//8iU=
+Bytes: 95
+Done
+I have few concerns in handleMessage though. (those cases where we touch member variables)
+
 464
 Fri Aug 31 00:09:48 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63//8rA=
 Bytes: 89
 mReadyRegistrants isn't being used to notify anyone, maybe it can be deleted if not used?
+
+464
+Fri Aug 31 22:32:43 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//8rA=
+UUID: AAAI6n//8oQ=
+Bytes: 4
+Done
 
 File: src/java/com/android/internal/telephony/UiccCard.java
 
@@ -45,12 +78,28 @@ UUID: AAAI63//86s=
 Bytes: 9
 long line
 
+148
+Fri Aug 31 22:32:43 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//86s=
+UUID: AAAI6n//8oM=
+Bytes: 4
+Done
+
 219
 Fri Aug 31 00:09:48 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63//84w=
 Bytes: 14
 use mLock here
+
+219
+Fri Aug 31 22:32:43 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//84w=
+UUID: AAAI6n//8n8=
+Bytes: 4
+Done
 
 235
 Fri Aug 31 00:09:48 2012 +0000
@@ -66,6 +115,14 @@ UUID: AAAI63//844=
 Bytes: 64
 Put this in onIccSwap so it can manage the locking if necessary.
 
+263
+Fri Aug 31 22:32:43 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//844=
+UUID: AAAI6n//8n4=
+Bytes: 4
+Done
+
 File: src/java/com/android/internal/telephony/UiccCardApplication.java
 
 218
@@ -74,6 +131,14 @@ Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63//84o=
 Bytes: 69
 I'd rather have the mLock in the individual methods rather than here.
+
+218
+Fri Aug 31 22:32:43 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//84o=
+UUID: AAAI6n//8mw=
+Bytes: 4
+Done
 
 330
 Fri Aug 31 00:09:48 2012 +0000
@@ -85,6 +150,14 @@ Add comment:
   Notifies specified registrant, mLock not held.
 
 I'd rather this info be in the name, the convention in Android it have a "Locked" suffix See ActivityThread#getDisplayMetricsLocked. But this name is already long and already has "Locked" in the name. So adding the comment is the next best thing.
+
+330
+Fri Aug 31 22:32:43 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//82o=
+UUID: AAAI6n//8mQ=
+Bytes: 117
+Not clear about this. Why we need to add this comment? To signify the fact that whoever calls it needs to hold mLock?
 
 358
 Fri Aug 31 00:09:48 2012 +0000
@@ -102,6 +175,21 @@ UUID: AAAI63//82E=
 Bytes: 124
 Why is this call getCurrentUiccStateP (specifically what is the "P"? Seems that should be called getCurrentUiccAppState too?
 
+809
+Fri Aug 31 22:32:43 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//82E=
+UUID: AAAI6n//8ko=
+Bytes: 324
+P stands for something like this: "protected which we would love to be package-scoped".
+Just following same style as for
+PhoneBase.notifyPreciseCallStateChangedP
+PhoneBase.notifyDisconnectP
+PhoneBase.notifyServiceStateChangedP
+PhoneBase.notifyNewRingingConnectionP
+
+Added comment /* we'd love it if this was package-scoped*/
+
 File: src/java/com/android/internal/telephony/uicc/UiccController.java
 
 67
@@ -110,4 +198,12 @@ Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAI63//8tU=
 Bytes: 118
 Please add some information that IccCard/IccCardProxy is a translation layer for the PhoneApp which is now deprecated.
+
+67
+Fri Aug 31 22:32:43 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//8tU=
+UUID: AAAI6n//8jI=
+Bytes: 131
+Added references to IccCard and IccCardProxy. Also modified IccCardProxy and IccCard doc to have this translation layer information
 
