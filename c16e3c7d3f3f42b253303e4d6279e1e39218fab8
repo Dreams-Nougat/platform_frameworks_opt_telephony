@@ -1,0 +1,47 @@
+Revision: c16e3c7d3f3f42b253303e4d6279e1e39218fab8
+Patch-set: 8
+File: src/java/com/android/internal/telephony/IccCardProxy.java
+
+47
+Sat Sep 01 06:12:20 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n//8R4=
+Bytes: 12
+Nice, THANKS
+
+File: src/java/com/android/internal/telephony/PhoneBase.java
+
+694
+Sat Sep 01 06:12:20 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n//8R0=
+Bytes: 49
+What does the trailing "P" mean can we remove it?
+
+File: src/java/com/android/internal/telephony/UiccCard.java
+
+234
+Sat Sep 01 06:12:20 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n//8Rw=
+Bytes: 78
+The mLock above is not related to this onClickListener, it needs its own mLock
+
+File: src/java/com/android/internal/telephony/UiccCardApplication.java
+
+362
+Sat Sep 01 06:12:20 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n//8Ro=
+Bytes: 40
+Please add: ", mLock not held" as above.
+
+File: src/java/com/android/internal/telephony/cdma/CDMAPhone.java
+
+810
+Sat Sep 01 06:12:20 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI6n//8Rk=
+Bytes: 42
+I hope we can get rid of the trailing "P".
+
