@@ -497,10 +497,19 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         if (rule != curSpnRule
                 || !TextUtils.equals(spn, curSpn)
                 || !TextUtils.equals(plmn, curPlmn)) {
-            boolean showSpn = !mEmergencyOnly && !TextUtils.isEmpty(spn)
-                && (rule & SIMRecords.SPN_RULE_SHOW_SPN) == SIMRecords.SPN_RULE_SHOW_SPN;
-            boolean showPlmn = !TextUtils.isEmpty(plmn) &&
-                (rule & SIMRecords.SPN_RULE_SHOW_PLMN) == SIMRecords.SPN_RULE_SHOW_PLMN;
+            boolean showSpn = false;
+            boolean showPlmn = false;
+            if (SystemProperties.getBoolean("ro.operator.use-plmn", false)) {
+                showSpn = false;
+                showPlmn = true;
+                Log.d(LOG_TAG, "updateSpnDisplay: using plmn");
+            } else {
+                showSpn = !mEmergencyOnly && !TextUtils.isEmpty(spn) &&
+                        (rule & SIMRecords.SPN_RULE_SHOW_SPN) == SIMRecords.SPN_RULE_SHOW_SPN &&
+                        (ss.getState() == ServiceState.STATE_IN_SERVICE);
+                showPlmn = !TextUtils.isEmpty(plmn) &&
+                        (rule & SIMRecords.SPN_RULE_SHOW_PLMN) == SIMRecords.SPN_RULE_SHOW_PLMN;
+            }
 
             if (DBG) {
                 log(String.format("updateSpnDisplay: changed sending intent" + " rule=" + rule +
