@@ -966,18 +966,24 @@ public class SmsMessage extends SmsMessageBase {
                 // additional TP-PI octets.
                 moreExtraParams = p.getByte();
             }
-            // TP-Protocol-Identifier
-            if ((extraParams & 0x01) != 0) {
-                protocolIdentifier = p.getByte();
-            }
-            // TP-Data-Coding-Scheme
-            if ((extraParams & 0x02) != 0) {
-                dataCodingScheme = p.getByte();
-            }
-            // TP-User-Data-Length (implies existence of TP-User-Data)
-            if ((extraParams & 0x04) != 0) {
-                boolean hasUserDataHeader = (firstByte & 0x40) == 0x40;
-                parseUserData(p, hasUserDataHeader);
+            // TP-PI, check if the reserved bits are set to "1", there are
+            // four bits reserved, bit3 to bit6, so 0x78=01111000b will
+            // check all of these. For more detail, please read 3GPP TS 23.040,
+            // 9.2.3.27 TP-Parameter-Indicator (TP-PI).
+            if ((extraParams & 0x78) == 0) {
+                // TP-Protocol-Identifier
+                if ((extraParams & 0x01) != 0) {
+                    protocolIdentifier = p.getByte();
+                }
+                // TP-Data-Coding-Scheme
+                if ((extraParams & 0x02) != 0) {
+                    dataCodingScheme = p.getByte();
+                }
+                // TP-User-Data-Length (implies existence of TP-User-Data)
+                if ((extraParams & 0x04) != 0) {
+                    boolean hasUserDataHeader = (firstByte & 0x40) == 0x40;
+                    parseUserData(p, hasUserDataHeader);
+                }
             }
         }
     }
