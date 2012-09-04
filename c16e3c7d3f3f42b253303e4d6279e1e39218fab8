@@ -18,6 +18,14 @@ UUID: AAAI6n//8R0=
 Bytes: 49
 What does the trailing "P" mean can we remove it?
 
+694
+Tue Sep 04 18:45:06 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI6n//8R0=
+UUID: AAAI63//7fA=
+Bytes: 289
+So the "P" means "protected" and this method provides common code used by XxxPhone#getCurrentAppState(). This is somewhat obtuse. Lets see if we can remove this and XxxPhone#getCurrentUiccAppState and instead have objects desiring the app state use UiccCardApplicaiton#getState() directly.
+
 File: src/java/com/android/internal/telephony/UiccCard.java
 
 234
