@@ -16,6 +16,15 @@ UUID: AAAI63//690=
 Bytes: 4
 dito
 
+1518
+Wed Sep 05 18:28:04 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI63//690=
+UUID: AAAI6n//7S4=
+Bytes: 138
+These will get in once I rebase on top of original change that has these modifications:
+https://android-review.googlesource.com/#/c/39339/
+
 1536
 Wed Sep 05 16:13:34 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
