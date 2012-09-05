@@ -417,6 +417,16 @@ public interface CommandsInterface {
     void unregisterForSignalInfo(Handler h);
 
     /**
+     * Sets the handler for Event Notifications for oem unsolicited Info.
+     *
+     * @param h Handler for notification message.
+     * @param what User-defined message code.
+     * @param obj User object.
+     */
+    public void setOnUnsolOemHookRaw(Handler h, int what, Object obj);
+    public void unSetOnUnsolOemHookRaw(Handler h);
+
+    /**
      * Registers the handler for CDMA number information record
      * Unlike the register* methods, there's only one notification handler
      *

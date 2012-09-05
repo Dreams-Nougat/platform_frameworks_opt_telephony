@@ -782,6 +782,42 @@ public abstract class PhoneBase extends Handler implements Phone {
         mCM.invokeOemRilRequestStrings(strings, response);
     }
 
+   /**
+    * Initiates the unsolicited communication for oem ril. This is
+    * specific to oems hook libraries to use to accomplish communication
+    * from native ril to android ril and provide further communication to
+    * java application layer.
+    *
+    * @param Handler h
+    *          MessageHandler is part of client application,
+    *          which will monitor for event id (int what)
+    * @param int what
+    *          Event Id on which client will be interested to get a
+    *          unsolicited request
+    * @param Object obj not used
+    *
+    * @return void
+    */
+    public void initiateUnsolOemHookRaw(Handler h, int what, Object obj) {
+        mCM.setOnUnsolOemHookRaw(h, what, obj);
+    }
+
+    /**
+    * Releases the object created for unsolicited communication
+    * The application which calls InitiateUnsolOemHookRaw should call
+    * this function to release when applicaiton no longer need unsol-
+    * cited communication from the native and the android RIL.
+    *
+    * @param Handler h
+    *          MessageHandler is part of client application,
+    *          which will monitor for event id (int what)
+    *
+    * @return void
+    */
+    public void releaseUnsolOemHookRaw(Handler h) {
+        mCM.unSetOnUnsolOemHookRaw(h);
+    }
+
     public void notifyDataActivity() {
         mNotifier.notifyDataActivity(this);
     }

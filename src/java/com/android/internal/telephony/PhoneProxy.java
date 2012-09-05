@@ -677,6 +677,14 @@ public class PhoneProxy extends Handler implements Phone {
         mActivePhone.invokeOemRilRequestStrings(strings, response);
     }
 
+    public void initiateUnsolOemHookRaw(Handler h, int what, Object obj) {
+        mActivePhone.initiateUnsolOemHookRaw(h, what, obj);
+    }
+
+    public void releaseUnsolOemHookRaw(Handler h) {
+        mActivePhone.releaseUnsolOemHookRaw(h);
+    }
+
     public void getDataCallList(Message response) {
         mActivePhone.getDataCallList(response);
     }
