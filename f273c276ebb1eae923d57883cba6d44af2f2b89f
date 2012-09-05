@@ -1,0 +1,25 @@
+Revision: f273c276ebb1eae923d57883cba6d44af2f2b89f
+Patch-set: 10
+File: src/java/com/android/internal/telephony/gsm/SIMRecords.java
+
+1495
+Wed Sep 05 16:13:34 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//694=
+Bytes: 42
+last parameter should be just data.length?
+
+1518
+Wed Sep 05 16:13:34 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//690=
+Bytes: 4
+dito
+
+1536
+Wed Sep 05 16:13:34 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI63//69w=
+Bytes: 4
+dito
+
