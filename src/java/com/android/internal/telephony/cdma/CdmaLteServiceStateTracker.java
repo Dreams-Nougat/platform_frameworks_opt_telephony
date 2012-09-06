@@ -135,6 +135,7 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
         switch (cm.getRadioState()) {
             case RADIO_UNAVAILABLE:
                 newSS.setStateOutOfService();
+                mLteSS.setStateOutOfService();
                 newCellLoc.setStateInvalid();
                 setSignalStrengthDefaultValues();
                 mGotCountryCode = false;
@@ -144,6 +145,7 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
 
             case RADIO_OFF:
                 newSS.setStateOff();
+                mLteSS.setStateOff();
                 newCellLoc.setStateInvalid();
                 setSignalStrengthDefaultValues();
                 mGotCountryCode = false;
