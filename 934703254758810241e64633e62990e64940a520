@@ -9,6 +9,14 @@ UUID: AAAI9H///lk=
 Bytes: 41
 Maybe remove comment at least remove pin.
 
+560
+Fri Sep 07 17:09:45 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI9H///lk=
+UUID: AAAI9n///ao=
+Bytes: 4
+Done
+
 666
 Fri Sep 07 16:36:07 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -17,6 +25,14 @@ Bytes: 42
 Change to:
   log("changeIccLockPassword");
 
+666
+Fri Sep 07 17:09:45 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI9H///ls=
+UUID: AAAI9n///ak=
+Bytes: 4
+Done
+
 686
 Fri Sep 07 16:36:07 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -24,4 +40,12 @@ UUID: AAAI9H///lo=
 Bytes: 41
 Change to:
   log("changeIccFdnPassword");
+
+686
+Fri Sep 07 17:09:45 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI9H///lo=
+UUID: AAAI9n///ag=
+Bytes: 4
+Done
 
