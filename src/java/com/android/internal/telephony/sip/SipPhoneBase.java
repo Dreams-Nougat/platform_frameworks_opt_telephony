@@ -316,6 +316,21 @@ abstract class SipPhoneBase extends PhoneBase {
             int timerSeconds, Message onComplete) {
     }
 
+    public void getCallBarringOption(String facility, String password, int serviceClass,
+            Message onComplete) {
+        Log.e(LOG_TAG, "Error! getCallBarringOption is not implemented for SIP.");
+    }
+
+    public void setCallBarringOption(String facility, boolean lockState, String password,
+            int serviceClass, Message onComplete) {
+        Log.e(LOG_TAG, "Error! setCallBarringOption is not implemented for SIP.");
+    }
+
+    public void changeCallBarringPassword(String facility, String oldPwd, String newPwd,
+            Message onComplete) {
+        Log.e(LOG_TAG, "Error! changeCallBarringPassword is not implemented for SIP.");
+    }
+
     public void getOutgoingCallerIdDisplay(Message onComplete) {
         // FIXME: what to reply?
         AsyncResult.forMessage(onComplete, null, null);

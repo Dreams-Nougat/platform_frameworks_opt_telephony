@@ -611,6 +611,21 @@ public class PhoneProxy extends Handler implements Phone {
             commandInterfaceCFAction, dialingNumber, timerSeconds, onComplete);
     }
 
+    public void getCallBarringOption(String facility, String password, int serviceClass,
+            Message onComplete) {
+        mActivePhone.getCallBarringOption(facility, password, serviceClass, onComplete);
+    }
+
+    public void setCallBarringOption(String facility, boolean lockState, String password,
+            int serviceClass, Message onComplete) {
+        mActivePhone.setCallBarringOption(facility, lockState, password, serviceClass, onComplete);
+    }
+
+    public void changeCallBarringPassword(String facility, String oldPwd, String newPwd,
+            Message onComplete) {
+        mActivePhone.changeCallBarringPassword(facility, oldPwd, newPwd, onComplete);
+    }
+
     public void getOutgoingCallerIdDisplay(Message onComplete) {
         mActivePhone.getOutgoingCallerIdDisplay(onComplete);
     }
