@@ -959,6 +959,21 @@ public class GSMPhone extends PhoneBase {
         }
     }
 
+    public void getCallBarringOption(String facility, String password, int serviceClass,
+            Message onComplete) {
+        mCM.queryFacilityLock(facility, password, serviceClass, onComplete);
+    }
+
+    public void setCallBarringOption(String facility, boolean lockState, String password,
+            int serviceClass, Message onComplete) {
+        mCM.setFacilityLock(facility, lockState, password, serviceClass, onComplete);
+    }
+
+    public void changeCallBarringPassword(String facility, String oldPwd, String newPwd,
+            Message onComplete) {
+        mCM.changeBarringPassword(facility, oldPwd, newPwd, onComplete);
+    }
+
     public void getOutgoingCallerIdDisplay(Message onComplete) {
         mCM.getCLIR(onComplete);
     }

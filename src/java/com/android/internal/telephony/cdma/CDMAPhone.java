@@ -783,6 +783,21 @@ public class CDMAPhone extends PhoneBase {
         Rlog.e(LOG_TAG, "setCallForwardingOption: not possible in CDMA");
     }
 
+    public void getCallBarringOption(String facility, String password, int serviceClass,
+            Message onComplete) {
+        Rlog.e(LOG_TAG, "getCallBarringOption: not possible in CDMA");
+    }
+
+    public void setCallBarringOption(String facility, boolean lockState, String password,
+            int serviceClass, Message onComplete) {
+        Rlog.e(LOG_TAG, "setCallCallBarringOption: not possible in CDMA");
+    }
+
+    public void changeCallBarringPassword(String facility, String oldPwd, String newPwd,
+            Message onComplete) {
+        Rlog.e(LOG_TAG, "changeCallBarringPassword: not possible in CDMA");
+    }
+
     public void
     getOutgoingCallerIdDisplay(Message onComplete) {
         Rlog.e(LOG_TAG, "getOutgoingCallerIdDisplay: not possible in CDMA");
