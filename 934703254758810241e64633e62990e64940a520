@@ -1,0 +1,27 @@
+Revision: 934703254758810241e64633e62990e64940a520
+Patch-set: 21
+File: src/java/com/android/internal/telephony/UiccCardApplication.java
+
+560
+Fri Sep 07 16:36:07 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI9H///lk=
+Bytes: 41
+Maybe remove comment at least remove pin.
+
+666
+Fri Sep 07 16:36:07 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI9H///ls=
+Bytes: 42
+Change to:
+  log("changeIccLockPassword");
+
+686
+Fri Sep 07 16:36:07 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI9H///lo=
+Bytes: 41
+Change to:
+  log("changeIccFdnPassword");
+
