@@ -225,6 +225,9 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     // EVENT_SEND and decreases while handling EVENT_SEND. It gets cleared while
     // WAKE_LOCK_TIMEOUT occurs.
     int mRequestMessagesPending;
+
+    private final Object mPendingLock = new Object();
+
     // The number of requests sent out but waiting for response. It increases while
     // sending request and decreases while handling response. It should match
     // mRequestList.size() unless there are requests no replied while
@@ -311,8 +314,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                         if (s == null) {
                             rr.onError(RADIO_NOT_AVAILABLE, null);
                             rr.release();
-                            if (mRequestMessagesPending > 0)
-                                mRequestMessagesPending--;
+                            synchronized (mPendingLock) {
+                                if (mRequestMessagesPending > 0)
+                                    mRequestMessagesPending--;
+                            }
                             alreadySubtracted = true;
                             return;
                         }
@@ -322,8 +327,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                             mRequestMessagesWaiting++;
                         }
 
-                        if (mRequestMessagesPending > 0)
-                            mRequestMessagesPending--;
+                        synchronized (mPendingLock) {
+                            if (mRequestMessagesPending > 0)
+                                mRequestMessagesPending--;
+                        }
                         alreadySubtracted = true;
 
                         byte[] data;
@@ -372,8 +379,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                         releaseWakeLockIfDone();
                     }
 
-                    if (!alreadySubtracted && mRequestMessagesPending > 0) {
-                        mRequestMessagesPending--;
+                    synchronized (mPendingLock) {
+                        if (!alreadySubtracted && mRequestMessagesPending > 0) {
+                            mRequestMessagesPending--;
+                        }
                     }
 
                     break;
@@ -2079,9 +2088,11 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
     private void
     acquireWakeLock() {
+        synchronized (mPendingLock) {
+            mRequestMessagesPending++;
+        }
         synchronized (mWakeLock) {
             mWakeLock.acquire();
-            mRequestMessagesPending++;
 
             mSender.removeMessages(EVENT_WAKE_LOCK_TIMEOUT);
             Message msg = mSender.obtainMessage(EVENT_WAKE_LOCK_TIMEOUT);
