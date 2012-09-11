@@ -1,0 +1,18 @@
+Revision: 781355e010e3b2b2445be7486a6c73e9a1943a8d
+Patch-set: 1
+File: src/java/com/android/internal/telephony/RIL.java
+
+432
+Tue Sep 11 23:54:49 2012 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI9n//9VE=
+Bytes: 33
+need to synchronize this code too
+
+2107
+Tue Sep 11 23:54:49 2012 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAI9n//9VA=
+Bytes: 28
+need to sync on mPendingLock
+
