@@ -225,6 +225,9 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     // EVENT_SEND and decreases while handling EVENT_SEND. It gets cleared while
     // WAKE_LOCK_TIMEOUT occurs.
     int mRequestMessagesPending;
+
+    private final Object mPendingLock = new Object();
+
     // The number of requests sent out but waiting for response. It increases while
     // sending request and decreases while handling response. It should match
     // mRequestList.size() unless there are requests no replied while
@@ -311,8 +314,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                         if (s == null) {
                             rr.onError(RADIO_NOT_AVAILABLE, null);
                             rr.release();
-                            if (mRequestMessagesPending > 0)
-                                mRequestMessagesPending--;
+                            synchronized (mPendingLock) {
+                                if (mRequestMessagesPending > 0)
+                                    mRequestMessagesPending--;
+                            }
                             alreadySubtracted = true;
                             return;
                         }
@@ -322,8 +327,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                             mRequestMessagesWaiting++;
                         }
 
-                        if (mRequestMessagesPending > 0)
-                            mRequestMessagesPending--;
+                        synchronized (mPendingLock) {
+                            if (mRequestMessagesPending > 0)
+                                mRequestMessagesPending--;
+                        }
                         alreadySubtracted = true;
 
                         byte[] data;
@@ -372,8 +379,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                         releaseWakeLockIfDone();
                     }
 
-                    if (!alreadySubtracted && mRequestMessagesPending > 0) {
-                        mRequestMessagesPending--;
+                    synchronized (mPendingLock) {
+                        if (!alreadySubtracted && mRequestMessagesPending > 0) {
+                            mRequestMessagesPending--;
+                        }
                     }
 
                     break;
@@ -420,11 +429,12 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                             // is the expected time to get response, all requests
                             // should already sent out (i.e.
                             // mRequestMessagesPending is 0 )while TIMEOUT occurs.
-                            if (mRequestMessagesPending != 0) {
-                                Log.e(LOG_TAG, "ERROR: mReqPending is NOT 0 but"
-                                        + mRequestMessagesPending + " at TIMEOUT, reset!");
-                                mRequestMessagesPending = 0;
-
+                            synchronized (mPendingLock) {
+                                if (mRequestMessagesPending != 0) {
+                                    Log.e(LOG_TAG, "ERROR: mReqPending is NOT 0 but"
+                                            + mRequestMessagesPending + " at TIMEOUT, reset!");
+                                    mRequestMessagesPending = 0;
+                                }
                             }
                             mWakeLock.release();
                         }
@@ -2081,19 +2091,26 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     acquireWakeLock() {
         synchronized (mWakeLock) {
             mWakeLock.acquire();
-            mRequestMessagesPending++;
 
             mSender.removeMessages(EVENT_WAKE_LOCK_TIMEOUT);
             Message msg = mSender.obtainMessage(EVENT_WAKE_LOCK_TIMEOUT);
             mSender.sendMessageDelayed(msg, mWakeLockTimeout);
         }
+        synchronized (mPendingLock) {
+            mRequestMessagesPending++;
+        }
     }
 
     private void
     releaseWakeLockIfDone() {
+        boolean hasMessagesPending = true;
+
+        synchronized (mPendingLock) {
+            if (mRequestMessagesPending == 0) hasMessagesPending = false;
+        }
         synchronized (mWakeLock) {
             if (mWakeLock.isHeld() &&
-                (mRequestMessagesPending == 0) &&
+                !hasMessagesPending &&
                 (mRequestMessagesWaiting == 0)) {
                 mSender.removeMessages(EVENT_WAKE_LOCK_TIMEOUT);
                 mWakeLock.release();
