@@ -2,6 +2,13 @@ Revision: 1a7b7c3e08d8a63a9051b66a82396fed88289c00
 Patch-set: 2
 File: src/java/com/android/internal/telephony/RIL.java
 
+432
+Thu Sep 13 02:31:56 2012 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAJCH////4=
+Bytes: 268
+Need not this change, as for TIME OUT, there is some problem in modem side that can not response RIL request any more. So FW need release RILJ wakelock immediately despite of race condition. You can find that mRequestMessagesWaiting also have no lock in this scenario.
+
 2108
 Wed Sep 12 16:13:18 2012 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -19,4 +26,51 @@ UUID: AAAI73///nc=
 Bytes: 362
 Agree with your comments. I do not think we need change releaseWakeLockIfDone in this commit. As the change is for RILJ wake lock will never released when mRequestMessagesPending have race condition.
 For releaseWakeLockIfDone, even in original logic, the RILJ wake lock will still be released some time. So I agree with you to remove this part of change. Thanks!
+
+2108
+Thu Sep 13 02:31:56 2012 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI9n//9GU=
+UUID: AAAJCH////8=
+Bytes: 1506
+Robert,
+
+I think releaseWakeLockIfDone will always be called in RIL.java. But it have precondition to release wake lock.
+
+This is in main thread:
+    private void
+    acquireWakeLock() {
+        synchronized (mWakeLock) {
+            mWakeLock.acquire();
+            mRequestMessagesPending++;
+
+            mSender.removeMessages(EVENT_WAKE_LOCK_TIMEOUT);
+            Message msg = mSender.obtainMessage(EVENT_WAKE_LOCK_TIMEOUT);
+            mSender.sendMessageDelayed(msg, mWakeLockTimeout);
+        }
+    }
+This is in send thread
+class RILSender extends Handler implements Runnable {
+....
+handleMessage(Message msg) {
+switch (msg.what) {
+                case EVENT_SEND:
+                ....
+                 if (mRequestMessagesPending > 0)
+                            mRequestMessagesPending--;
+
+The two threads have race condition because did not use lock to protect mRequestMessagesPending , so it may cause mRequestMessagesPending is always > 0 and then mWakeLock can not be released
+    private void
+    releaseWakeLockIfDone() {
+        synchronized (mWakeLock) {
+            if (mWakeLock.isHeld() &&
+                (mRequestMessagesPending == 0) &&
+                (mRequestMessagesWaiting == 0)) {
+                mSender.removeMessages(EVENT_WAKE_LOCK_TIMEOUT);
+                mWakeLock.release();
+            }
+        }
+    }
+
+So I think beside the change in releaseWakeLockIfDone and EVENT_WAKE_LOCK_TIMEOUT, all other changes are mandatory. Can you please let me know your point? Thanks!
 
