@@ -1,0 +1,11 @@
+Revision: f526c9482bac670db810acad088565507c7976b6
+Patch-set: 1
+File: src/java/com/android/internal/telephony/IccCardProxy.java
+
+204
+Thu Sep 13 22:21:14 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAJBH///cw=
+Bytes: 40
+Can we call updateExternalState instead?
+
