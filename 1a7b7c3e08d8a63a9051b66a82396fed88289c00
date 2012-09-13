@@ -11,3 +11,12 @@ this isn't going to work.  You have a window between the two sync blocks in whic
 
 The safe/easy way is to using a single lock object.  There may be another safe way to do it using two locks.  I'm not sure if the optimization of using two locks is worth it - take a look.
 
+2108
+Thu Sep 13 01:33:22 2012 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAI9n//9GU=
+UUID: AAAI73///nc=
+Bytes: 362
+Agree with your comments. I do not think we need change releaseWakeLockIfDone in this commit. As the change is for RILJ wake lock will never released when mRequestMessagesPending have race condition.
+For releaseWakeLockIfDone, even in original logic, the RILJ wake lock will still be released some time. So I agree with you to remove this part of change. Thanks!
+
