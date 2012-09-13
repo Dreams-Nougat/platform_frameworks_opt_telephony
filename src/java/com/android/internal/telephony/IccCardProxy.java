@@ -201,8 +201,10 @@ public class IccCardProxy extends Handler implements IccCard {
                 }
                 break;
             case EVENT_ICC_ABSENT:
-                mAbsentRegistrants.notifyRegistrants();
-                setExternalState(State.ABSENT);
+                if (mRadioOn) {
+                    mAbsentRegistrants.notifyRegistrants();
+                    setExternalState(State.ABSENT);
+                }
                 break;
             case EVENT_ICC_LOCKED:
                 processLockedState();
