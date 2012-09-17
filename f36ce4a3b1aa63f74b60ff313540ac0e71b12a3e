@@ -1,0 +1,25 @@
+Revision: f36ce4a3b1aa63f74b60ff313540ac0e71b12a3e
+Patch-set: 1
+File: src/java/com/android/internal/telephony/MccTable.java
+
+171
+Mon Sep 17 15:48:34 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAJJX///pI=
+Bytes: 283
+This comment is now wrong. Also, there is now no undefined value for MNC, should we say that MNC is undefined if MCC is zero?
+
+I wonder if we should be able to set MCC/MNC to undefined in the configuration, according the comment you can't so probably not, but seems a little strange?
+
+196
+Mon Sep 17 15:48:34 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAJJX///pM=
+Bytes: 115
+How about:
+
+  if (mcc != 0) {
+    config.mcc = mcc;
+    config.mnc = (mnc == 0) ? Configuration.MNC_ZERO : mnc;
+  }
+
