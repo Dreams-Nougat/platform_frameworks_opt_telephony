@@ -198,6 +198,8 @@ public final class MccTable
                 }
                 if (mnc != 0) {
                     config.mnc = mnc;
+                } else if (mnc == 0) {
+                    config.mnc = Configuration.MNC_ZERO;
                 }
                 ActivityManagerNative.getDefault().updateConfiguration(config);
             } catch (RemoteException e) {
