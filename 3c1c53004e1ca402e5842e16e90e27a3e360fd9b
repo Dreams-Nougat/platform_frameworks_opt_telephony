@@ -1,0 +1,16 @@
+Revision: 3c1c53004e1ca402e5842e16e90e27a3e360fd9b
+Patch-set: 1
+File: /COMMIT_MSG
+
+17
+Wed Sep 26 19:39:45 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAJa3///CQ=
+Bytes: 119
+Please add Bug line so it reads like this
+
+ with the previously sent CMAS msg id 4097
+
+ Bug: 7238888
+ Change-Id: Id4...
+
