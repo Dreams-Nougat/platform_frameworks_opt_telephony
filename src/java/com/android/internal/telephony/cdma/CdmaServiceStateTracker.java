@@ -216,6 +216,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
         cr.unregisterContentObserver(mAutoTimeZoneObserver);
         mCdmaSSM.dispose(this);
         cm.unregisterForCdmaPrlChanged(this);
+        super.dispose();
     }
 
     @Override

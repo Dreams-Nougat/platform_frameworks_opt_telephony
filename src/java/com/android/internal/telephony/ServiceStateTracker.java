@@ -182,6 +182,10 @@ public abstract class ServiceStateTracker extends Handler {
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
     }
 
+    public void dispose() {
+        mUiccController.unregisterForIccChanged(this);
+    }
+
     public boolean getDesiredPowerState() {
         return mDesiredPowerState;
     }

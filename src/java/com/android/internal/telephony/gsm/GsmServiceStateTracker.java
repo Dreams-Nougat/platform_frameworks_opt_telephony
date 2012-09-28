@@ -251,6 +251,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         cr.unregisterContentObserver(this.mAutoTimeObserver);
         cr.unregisterContentObserver(this.mAutoTimeZoneObserver);
         phone.getContext().unregisterReceiver(mIntentReceiver);
+        super.dispose();
     }
 
     protected void finalize() {
