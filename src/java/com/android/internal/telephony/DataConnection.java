@@ -705,11 +705,18 @@ public abstract class DataConnection extends StateMachine {
                 }
                 case DataConnectionAc.REQ_UPDATE_LINK_PROPERTIES_DATA_CALL_STATE: {
                     DataCallState newState = (DataCallState) msg.obj;
-                    UpdateLinkPropertyResult result =
-                                             updateLinkProperty(newState);
-                    if (VDBG) {
+                    UpdateLinkPropertyResult result;
+                    if (getCurrentState() == mInactiveState) {
+                        result = new UpdateLinkPropertyResult(mLinkProperties);
+                        result.setupResult = DataCallState.SetupResult.ERR_Stale;
                         log("REQ_UPDATE_LINK_PROPERTIES_DATA_CALL_STATE result="
-                            + result + " newState=" + newState);
+                            + result + " state is Inactive no changes on LinkProperty");
+                    } else {
+                        result = updateLinkProperty(newState);
+                        if (VDBG) {
+                            log("REQ_UPDATE_LINK_PROPERTIES_DATA_CALL_STATE result="
+                                + result + " newState=" + newState);
+                        }
                     }
                     mAc.replyToMessage(msg,
                                    DataConnectionAc.RSP_UPDATE_LINK_PROPERTIES_DATA_CALL_STATE,
