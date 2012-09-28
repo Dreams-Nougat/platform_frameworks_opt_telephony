@@ -604,8 +604,8 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public boolean getIccLockEnabled() {
         synchronized (mLock) {
-            /* defaults to true, if ICC is absent */
-            Boolean retValue = mUiccApplication != null ? mUiccApplication.getIccLockEnabled() : true;
+            /* defaults to false, if ICC is absent */
+            Boolean retValue = mUiccApplication != null ? mUiccApplication.getIccLockEnabled() : false;
             return retValue;
         }
     }
