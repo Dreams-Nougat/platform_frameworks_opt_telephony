@@ -3009,7 +3009,13 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         for (int i = 0 ; i < numApplications ; i++) {
             appStatus = new IccCardApplicationStatus();
             appStatus.app_type       = appStatus.AppTypeFromRILInt(p.readInt());
-            appStatus.app_state      = appStatus.AppStateFromRILInt(p.readInt());
+            int appstate      = p.readInt();
+            appStatus.app_state      = appStatus.AppStateFromRILInt(appstate);
+            if (appstate == -1) {
+                if (RILJ_LOGD) riljLog(
+                        "Illegal app, Mark it READY! RIL_APPSTATE_ILLEGAL "
+                        + appstate + " modified to " + appStatus.app_state);
+            }
             appStatus.perso_substate = appStatus.PersoSubstateFromRILInt(p.readInt());
             appStatus.aid            = p.readString();
             appStatus.app_label      = p.readString();
