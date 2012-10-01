@@ -505,4 +505,9 @@ public abstract class IccRecords extends Handler implements IccConstants {
         pw.println(" spn=" + spn);
         pw.flush();
     }
+
+    protected boolean powerOffOnSimReset() {
+        return !mContext.getResources().getBoolean(
+                com.android.internal.R.bool.skip_radio_power_off_on_sim_refresh_reset);
+    }
 }
