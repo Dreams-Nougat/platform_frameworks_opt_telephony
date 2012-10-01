@@ -9,6 +9,16 @@ UUID: AAAJt3///lw=
 Bytes: 170
 Would the logs be redirected to adb main log if we do not add RIL  as a prefix to the log tag? To redirect these logs to radio log, the tag may have to have a RIL prefix.
 
+93
+Mon Oct 01 21:36:50 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAJt3///lw=
+UUID: AAAJuH//+7k=
+Bytes: 197
+Yes the RIL_ is needed.
+
+Something I've wanted to do for a long time is add Rlog like we now have Slog so we don't need to special TAG's. I've created a bug for this, hopefully in a future release.
+
 173
 Mon Oct 01 13:48:55 2012 +0000
 Author: Naveen K <1003413@85c56323-6fa9-3386-8a01-6480fb634889>
