@@ -84,9 +84,13 @@ public class IccCardProxy extends Handler implements IccCard {
 
     private int mCurrentAppType = UiccController.APP_FAM_3GPP; //default to 3gpp?
     private UiccController mUiccController = null;
-    private UiccCard mUiccCard = null;
-    private UiccCardApplication mUiccApplication = null;
-    private IccRecords mIccRecords = null;
+    // Index 0 is unused. Index 1 is 3GPP. Index 2 is 3GPP2
+    // This is done in such a way so that we can use mCurrentAppType as index an into these arrays
+    private UiccCard[] mUiccCard = new UiccCard[UiccController.APP_FAM_3GPP2 + 1];
+    private UiccCardApplication[] mUiccApplication =
+            new UiccCardApplication[UiccController.APP_FAM_3GPP2 + 1];
+    private IccRecords[] mIccRecords = new IccRecords[UiccController.APP_FAM_3GPP2 + 1];
+
     private CdmaSubscriptionSourceManager mCdmaSSM = null;
     private boolean mRadioOn = false;
     private boolean mCdmaSubscriptionFromNv = false;
@@ -185,6 +189,16 @@ public class IccCardProxy extends Handler implements IccCard {
     }
 
     public void handleMessage(Message msg) {
+        int appType = -1;
+        if (msg.obj instanceof AsyncResult) {
+            AsyncResult ar = (AsyncResult)msg.obj;
+            if (ar != null && ar.userObj instanceof Integer) {
+                appType = (Integer)ar.userObj;
+                log("appType is " + appType);
+            }
+        }
+        log ("handleMessage msg.what=" + msg.what + " appType=" + appType + " mCurrentAppType=" +
+                mCurrentAppType);
         switch (msg.what) {
             case EVENT_RADIO_OFF_OR_UNAVAILABLE:
                 mRadioOn = false;
@@ -201,24 +215,33 @@ public class IccCardProxy extends Handler implements IccCard {
                 }
                 break;
             case EVENT_ICC_ABSENT:
-                mAbsentRegistrants.notifyRegistrants();
-                setExternalState(State.ABSENT);
+                if (appType == mCurrentAppType) {
+                    mAbsentRegistrants.notifyRegistrants();
+                }
+                updateExternalState();
                 break;
             case EVENT_ICC_LOCKED:
-                processLockedState();
+                mPinLockedRegistrants.notifyRegistrants();
+                updateExternalState();
                 break;
             case EVENT_APP_READY:
-                setExternalState(State.READY);
+                updateExternalState();
                 break;
             case EVENT_RECORDS_LOADED:
-                broadcastIccStateChangedIntent(IccCardConstants.INTENT_VALUE_ICC_LOADED, null);
+                if (appType == mCurrentAppType) {
+                    broadcastIccStateChangedIntent(IccCardConstants.INTENT_VALUE_ICC_LOADED, null);
+                }
                 break;
             case EVENT_IMSI_READY:
-                broadcastIccStateChangedIntent(IccCardConstants.INTENT_VALUE_ICC_IMSI, null);
+                if (appType == mCurrentAppType) {
+                    broadcastIccStateChangedIntent(IccCardConstants.INTENT_VALUE_ICC_IMSI, null);
+                }
                 break;
             case EVENT_NETWORK_LOCKED:
-                mNetworkLockedRegistrants.notifyRegistrants();
-                setExternalState(State.NETWORK_LOCKED);
+                if (appType == mCurrentAppType) {
+                    mNetworkLockedRegistrants.notifyRegistrants();
+                    setExternalState(State.NETWORK_LOCKED);
+                }
                 break;
             case EVENT_CDMA_SUBSCRIPTION_SOURCE_CHANGED:
                 updateQuietMode();
@@ -231,33 +254,37 @@ public class IccCardProxy extends Handler implements IccCard {
 
     private void updateIccAvailability() {
         synchronized (mLock) {
-            UiccCard newCard = mUiccController.getUiccCard();
-            CardState state = CardState.CARDSTATE_ABSENT;
-            UiccCardApplication newApp = null;
-            IccRecords newRecords = null;
-            if (newCard != null) {
-                state = newCard.getCardState();
-                newApp = newCard.getApplication(mCurrentAppType);
-                if (newApp != null) {
-                    newRecords = newApp.getIccRecords();
+            for (int i = UiccController.APP_FAM_3GPP; i <= UiccController.APP_FAM_3GPP2; i++) {
+                UiccCard newCard = mUiccController.getUiccCard();
+                CardState state = CardState.CARDSTATE_ABSENT;
+                UiccCardApplication newApp = null;
+                IccRecords newRecords = null;
+                if (newCard != null) {
+                    state = newCard.getCardState();
+                    newApp = newCard.getApplication(i);
+                    if (newApp != null) {
+                        newRecords = newApp.getIccRecords();
+                    }
+                }
+
+                if (mIccRecords[i] != newRecords ||
+                        mUiccApplication[i] != newApp ||
+                        mUiccCard[i] != newCard) {
+                    if (DBG) log("Icc changed. Reregestering.");
+                    unregisterUiccCardEvents(i);
+                    mUiccCard[i] = newCard;
+                    mUiccApplication[i] = newApp;
+                    mIccRecords[i] = newRecords;
+                    registerUiccCardEvents(i);
                 }
             }
-
-            if (mIccRecords != newRecords || mUiccApplication != newApp || mUiccCard != newCard) {
-                if (DBG) log("Icc changed. Reregestering.");
-                unregisterUiccCardEvents();
-                mUiccCard = newCard;
-                mUiccApplication = newApp;
-                mIccRecords = newRecords;
-                registerUiccCardEvents();
-            }
-
+            // Once we have all uicc apps queried we can update external state
             updateExternalState();
         }
     }
 
     private void updateExternalState() {
-        if (mUiccCard == null || mUiccCard.getCardState() == CardState.CARDSTATE_ABSENT) {
+        if (mUiccCard[mCurrentAppType] == null || mUiccCard[mCurrentAppType].getCardState() == CardState.CARDSTATE_ABSENT) {
             if (mRadioOn) {
                 setExternalState(State.ABSENT);
             } else {
@@ -266,25 +293,35 @@ public class IccCardProxy extends Handler implements IccCard {
             return;
         }
 
-        if (mUiccCard.getCardState() == CardState.CARDSTATE_ERROR ||
-                mUiccApplication == null) {
+        if (mUiccCard[mCurrentAppType].getCardState() == CardState.CARDSTATE_ERROR ||
+                mUiccApplication[mCurrentAppType] == null) {
             setExternalState(State.UNKNOWN);
             return;
         }
 
-        switch (mUiccApplication.getState()) {
+        // If any of the app is pin/puk/permanently blocked - display that info
+        if (mUiccApplication[UiccController.APP_FAM_3GPP].getState() == AppState.APPSTATE_PIN ||
+                mUiccApplication[UiccController.APP_FAM_3GPP2].getState() == AppState.APPSTATE_PIN) {
+            setExternalState(State.PIN_REQUIRED);
+            return;
+        } else if (mUiccApplication[UiccController.APP_FAM_3GPP].getState() == AppState.APPSTATE_PUK ||
+                mUiccApplication[UiccController.APP_FAM_3GPP2].getState() == AppState.APPSTATE_PUK) {
+            if (mUiccApplication[UiccController.APP_FAM_3GPP].getPin1State() == PinState.PINSTATE_ENABLED_PERM_BLOCKED ||
+                    mUiccApplication[UiccController.APP_FAM_3GPP2].getPin1State() == PinState.PINSTATE_ENABLED_PERM_BLOCKED) {
+                setExternalState(State.PERM_DISABLED);
+                return;
+            } else {
+                setExternalState(State.PUK_REQUIRED);
+                return;
+            }
+        }
+        switch (mUiccApplication[mCurrentAppType].getState()) {
             case APPSTATE_UNKNOWN:
             case APPSTATE_DETECTED:
                 setExternalState(State.UNKNOWN);
                 break;
-            case APPSTATE_PIN:
-                setExternalState(State.PIN_REQUIRED);
-                break;
-            case APPSTATE_PUK:
-                setExternalState(State.PUK_REQUIRED);
-                break;
             case APPSTATE_SUBSCRIPTION_PERSO:
-                if (mUiccApplication.getPersoSubState() == PersoSubState.PERSOSUBSTATE_SIM_NETWORK) {
+                if (mUiccApplication[mCurrentAppType].getPersoSubState() == PersoSubState.PERSOSUBSTATE_SIM_NETWORK) {
                     setExternalState(State.NETWORK_LOCKED);
                 } else {
                     setExternalState(State.UNKNOWN);
@@ -296,26 +333,28 @@ public class IccCardProxy extends Handler implements IccCard {
         }
     }
 
-    private void registerUiccCardEvents() {
-        if (mUiccCard != null) mUiccCard.registerForAbsent(this, EVENT_ICC_ABSENT, null);
-        if (mUiccApplication != null) {
-            mUiccApplication.registerForReady(this, EVENT_APP_READY, null);
-            mUiccApplication.registerForLocked(this, EVENT_ICC_LOCKED, null);
-            mUiccApplication.registerForNetworkLocked(this, EVENT_NETWORK_LOCKED, null);
+    private void registerUiccCardEvents(int appFamily) {
+        int i = appFamily; //index
+        if (mUiccCard[i] != null) mUiccCard[i].registerForAbsent(this, EVENT_ICC_ABSENT, i);
+        if (mUiccApplication[i] != null) {
+            mUiccApplication[i].registerForReady(this, EVENT_APP_READY, i);
+            mUiccApplication[i].registerForLocked(this, EVENT_ICC_LOCKED, i);
+            mUiccApplication[i].registerForNetworkLocked(this, EVENT_NETWORK_LOCKED, i);
         }
-        if (mIccRecords != null) {
-            mIccRecords.registerForImsiReady(this, EVENT_IMSI_READY, null);
-            mIccRecords.registerForRecordsLoaded(this, EVENT_RECORDS_LOADED, null);
+        if (mIccRecords[i] != null) {
+            mIccRecords[i].registerForImsiReady(this, EVENT_IMSI_READY, i);
+            mIccRecords[i].registerForRecordsLoaded(this, EVENT_RECORDS_LOADED, i);
         }
     }
 
-    private void unregisterUiccCardEvents() {
-        if (mUiccCard != null) mUiccCard.unregisterForAbsent(this);
-        if (mUiccApplication != null) mUiccApplication.unregisterForReady(this);
-        if (mUiccApplication != null) mUiccApplication.unregisterForLocked(this);
-        if (mUiccApplication != null) mUiccApplication.unregisterForNetworkLocked(this);
-        if (mIccRecords != null) mIccRecords.unregisterForImsiReady(this);
-        if (mIccRecords != null) mIccRecords.unregisterForRecordsLoaded(this);
+    private void unregisterUiccCardEvents(int appFamily) {
+        int i = appFamily; //index
+        if (mUiccCard[i] != null) mUiccCard[i].unregisterForAbsent(this);
+        if (mUiccApplication[i] != null) mUiccApplication[i].unregisterForReady(this);
+        if (mUiccApplication[i] != null) mUiccApplication[i].unregisterForLocked(this);
+        if (mUiccApplication[i] != null) mUiccApplication[i].unregisterForNetworkLocked(this);
+        if (mIccRecords[i] != null) mIccRecords[i].unregisterForImsiReady(this);
+        if (mIccRecords[i] != null) mIccRecords[i].unregisterForRecordsLoaded(this);
     }
 
     private void broadcastIccStateChangedIntent(String value, String reason) {
@@ -338,19 +377,19 @@ public class IccCardProxy extends Handler implements IccCard {
         }
     }
 
-    private void processLockedState() {
+    private void processLockedState(int appType) {
         synchronized (mLock) {
-            if (mUiccApplication == null) {
+            if (mUiccApplication[appType] == null) {
                 //Don't need to do anything if non-existent application is locked
                 return;
             }
-            PinState pin1State = mUiccApplication.getPin1State();
+            PinState pin1State = mUiccApplication[appType].getPin1State();
             if (pin1State == PinState.PINSTATE_ENABLED_PERM_BLOCKED) {
                 setExternalState(State.PERM_DISABLED);
                 return;
             }
 
-            AppState appState = mUiccApplication.getState();
+            AppState appState = mUiccApplication[appType].getState();
             switch (appState) {
                 case APPSTATE_PIN:
                     mPinLockedRegistrants.notifyRegistrants();
@@ -360,6 +399,12 @@ public class IccCardProxy extends Handler implements IccCard {
                     setExternalState(State.PUK_REQUIRED);
                     break;
             }
+        }
+    }
+
+    private void processAppReady(int appType) {
+        if (appType == mCurrentAppType) {
+            setExternalState(State.READY);
         }
     }
 
@@ -381,8 +426,8 @@ public class IccCardProxy extends Handler implements IccCard {
 
     public boolean getIccRecordsLoaded() {
         synchronized (mLock) {
-            if (mIccRecords != null) {
-                return mIccRecords.getRecordsLoaded();
+            if (mIccRecords[mCurrentAppType] != null) {
+                return mIccRecords[mCurrentAppType].getRecordsLoaded();
             }
             return false;
         }
@@ -426,7 +471,7 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public IccRecords getIccRecords() {
         synchronized (mLock) {
-            return mIccRecords;
+            return mIccRecords[mCurrentAppType];
         }
     }
 
@@ -434,7 +479,7 @@ public class IccCardProxy extends Handler implements IccCard {
     public IccFileHandler getIccFileHandler() {
         synchronized (mLock) {
             if (mUiccApplication != null) {
-                return mUiccApplication.getIccFileHandler();
+                return mUiccApplication[mCurrentAppType].getIccFileHandler();
             }
             return null;
         }
@@ -512,8 +557,16 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public void supplyPin(String pin, Message onComplete) {
         synchronized (mLock) {
-            if (mUiccApplication != null) {
-                mUiccApplication.supplyPin(pin, onComplete);
+            // If current app is not locked (or doesn't exist) while another
+            // app is locked - try to unlock another app
+            UiccCardApplication app = mUiccApplication[mCurrentAppType];
+            if ((app == null || !app.getState().isPinRequired()) &&
+                    mUiccApplication[3 - mCurrentAppType] != null &&
+                    mUiccApplication[3 - mCurrentAppType].getState().isPinRequired()) {
+                app = mUiccApplication[3 - mCurrentAppType];
+            }
+            if (app != null) {
+                app.supplyPin(pin, onComplete);
             } else if (onComplete != null) {
                 Exception e = new RuntimeException("ICC card is absent.");
                 AsyncResult.forMessage(onComplete).exception = e;
@@ -526,8 +579,16 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public void supplyPuk(String puk, String newPin, Message onComplete) {
         synchronized (mLock) {
-            if (mUiccApplication != null) {
-                mUiccApplication.supplyPuk(puk, newPin, onComplete);
+            // If current app is not locked (or doesn't exist) while another
+            // app is locked - try to unlock another app
+            UiccCardApplication app = mUiccApplication[mCurrentAppType];
+            if ((app == null || !app.getState().isPukRequired()) &&
+                    mUiccApplication[3 - mCurrentAppType] != null &&
+                    mUiccApplication[3 - mCurrentAppType].getState().isPukRequired()) {
+                app = mUiccApplication[3 - mCurrentAppType];
+            }
+            if (app != null) {
+                app.supplyPuk(puk, newPin, onComplete);
             } else if (onComplete != null) {
                 Exception e = new RuntimeException("ICC card is absent.");
                 AsyncResult.forMessage(onComplete).exception = e;
@@ -540,8 +601,8 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public void supplyPin2(String pin2, Message onComplete) {
         synchronized (mLock) {
-            if (mUiccApplication != null) {
-                mUiccApplication.supplyPin2(pin2, onComplete);
+            if (mUiccApplication[mCurrentAppType] != null) {
+                mUiccApplication[mCurrentAppType].supplyPin2(pin2, onComplete);
             } else if (onComplete != null) {
                 Exception e = new RuntimeException("ICC card is absent.");
                 AsyncResult.forMessage(onComplete).exception = e;
@@ -554,8 +615,8 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public void supplyPuk2(String puk2, String newPin2, Message onComplete) {
         synchronized (mLock) {
-            if (mUiccApplication != null) {
-                mUiccApplication.supplyPuk2(puk2, newPin2, onComplete);
+            if (mUiccApplication[mCurrentAppType] != null) {
+                mUiccApplication[mCurrentAppType].supplyPuk2(puk2, newPin2, onComplete);
             } else if (onComplete != null) {
                 Exception e = new RuntimeException("ICC card is absent.");
                 AsyncResult.forMessage(onComplete).exception = e;
@@ -568,8 +629,8 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public void supplyNetworkDepersonalization(String pin, Message onComplete) {
         synchronized (mLock) {
-            if (mUiccApplication != null) {
-                mUiccApplication.supplyNetworkDepersonalization(pin, onComplete);
+            if (mUiccApplication[mCurrentAppType] != null) {
+                mUiccApplication[mCurrentAppType].supplyNetworkDepersonalization(pin, onComplete);
             } else if (onComplete != null) {
                 Exception e = new RuntimeException("CommandsInterface is not set.");
                 AsyncResult.forMessage(onComplete).exception = e;
@@ -583,7 +644,8 @@ public class IccCardProxy extends Handler implements IccCard {
     public boolean getIccLockEnabled() {
         synchronized (mLock) {
             /* defaults to true, if ICC is absent */
-            Boolean retValue = mUiccApplication != null ? mUiccApplication.getIccLockEnabled() : true;
+            Boolean retValue = mUiccApplication[mCurrentAppType] != null ?
+                    mUiccApplication[mCurrentAppType].getIccLockEnabled() : true;
             return retValue;
         }
     }
@@ -591,7 +653,8 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public boolean getIccFdnEnabled() {
         synchronized (mLock) {
-            Boolean retValue = mUiccApplication != null ? mUiccApplication.getIccFdnEnabled() : false;
+            Boolean retValue = mUiccApplication[mCurrentAppType] != null ?
+                    mUiccApplication[mCurrentAppType].getIccFdnEnabled() : false;
             return retValue;
         }
     }
@@ -599,8 +662,8 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public void setIccLockEnabled(boolean enabled, String password, Message onComplete) {
         synchronized (mLock) {
-            if (mUiccApplication != null) {
-                mUiccApplication.setIccLockEnabled(enabled, password, onComplete);
+            if (mUiccApplication[mCurrentAppType] != null) {
+                mUiccApplication[mCurrentAppType].setIccLockEnabled(enabled, password, onComplete);
             } else if (onComplete != null) {
                 Exception e = new RuntimeException("ICC card is absent.");
                 AsyncResult.forMessage(onComplete).exception = e;
@@ -613,8 +676,8 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public void setIccFdnEnabled(boolean enabled, String password, Message onComplete) {
         synchronized (mLock) {
-            if (mUiccApplication != null) {
-                mUiccApplication.setIccFdnEnabled(enabled, password, onComplete);
+            if (mUiccApplication[mCurrentAppType] != null) {
+                mUiccApplication[mCurrentAppType].setIccFdnEnabled(enabled, password, onComplete);
             } else if (onComplete != null) {
                 Exception e = new RuntimeException("ICC card is absent.");
                 AsyncResult.forMessage(onComplete).exception = e;
@@ -627,8 +690,9 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public void changeIccLockPassword(String oldPassword, String newPassword, Message onComplete) {
         synchronized (mLock) {
-            if (mUiccApplication != null) {
-                mUiccApplication.changeIccLockPassword(oldPassword, newPassword, onComplete);
+            if (mUiccApplication[mCurrentAppType] != null) {
+                mUiccApplication[mCurrentAppType].changeIccLockPassword(oldPassword,
+                        newPassword, onComplete);
             } else if (onComplete != null) {
                 Exception e = new RuntimeException("ICC card is absent.");
                 AsyncResult.forMessage(onComplete).exception = e;
@@ -641,8 +705,9 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public void changeIccFdnPassword(String oldPassword, String newPassword, Message onComplete) {
         synchronized (mLock) {
-            if (mUiccApplication != null) {
-                mUiccApplication.changeIccFdnPassword(oldPassword, newPassword, onComplete);
+            if (mUiccApplication[mCurrentAppType] != null) {
+                mUiccApplication[mCurrentAppType].changeIccFdnPassword(oldPassword,
+                        newPassword, onComplete);
             } else if (onComplete != null) {
                 Exception e = new RuntimeException("ICC card is absent.");
                 AsyncResult.forMessage(onComplete).exception = e;
@@ -655,8 +720,8 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public String getServiceProviderName() {
         synchronized (mLock) {
-            if (mIccRecords != null) {
-                return mIccRecords.getServiceProviderName();
+            if (mIccRecords[mCurrentAppType] != null) {
+                return mIccRecords[mCurrentAppType].getServiceProviderName();
             }
             return null;
         }
@@ -665,7 +730,8 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public boolean isApplicationOnIcc(IccCardApplicationStatus.AppType type) {
         synchronized (mLock) {
-            Boolean retValue = mUiccCard != null ? mUiccCard.isApplicationOnIcc(type) : false;
+            Boolean retValue = mUiccCard[mCurrentAppType] != null ?
+                    mUiccCard[mCurrentAppType].isApplicationOnIcc(type) : false;
             return retValue;
         }
     }
@@ -673,7 +739,7 @@ public class IccCardProxy extends Handler implements IccCard {
     @Override
     public boolean hasIccCard() {
         synchronized (mLock) {
-            if (mUiccCard != null && mUiccCard.getCardState() != CardState.CARDSTATE_ABSENT) {
+            if (mUiccCard[mCurrentAppType] != null && mUiccCard[mCurrentAppType].getCardState() != CardState.CARDSTATE_ABSENT) {
                 return true;
             }
             return false;

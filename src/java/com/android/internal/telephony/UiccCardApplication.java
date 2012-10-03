@@ -214,7 +214,7 @@ public class UiccCardApplication {
             int[] ints = (int[])ar.result;
             if(ints.length != 0) {
                 mIccFdnEnabled = (0!=ints[0]);
-                if (DBG) log("Query facility lock : "  + mIccFdnEnabled);
+                if (DBG) log("Query facility lock fd : "  + mIccFdnEnabled);
             } else {
                 loge("Bogus facility lock response");
             }
@@ -256,7 +256,7 @@ public class UiccCardApplication {
 
             int[] ints = (int[])ar.result;
             if(ints.length != 0) {
-                if (DBG) log("Query facility lock : "  + ints[0]);
+                if (DBG) log("Query facility lock sc: "  + ints[0]);
 
                 mIccLockEnabled = (ints[0] != 0);
 
