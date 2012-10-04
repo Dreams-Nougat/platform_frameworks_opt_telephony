@@ -152,6 +152,13 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     /** waiting period before recheck gprs and voice registration. */
     static final int DEFAULT_GPRS_CHECK_PERIOD_MILLIS = 60 * 1000;
 
+    private int mDataRadioTechnology = 0;
+    private int mTAC = -1;
+
+    /** EONS enabled flag. */
+    private boolean mEonsEnabled =
+            SystemProperties.getBoolean(TelephonyProperties.PROPERTY_EONS_ENABLED, true);
+
     /** Notification type. */
     static final int PS_ENABLED = 1001;            // Access Control blocks data service
     static final int PS_DISABLED = 1002;           // Access Control enables data service
@@ -235,6 +242,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
 
         // Gsm doesn't support OTASP so its not needed
         phone.notifyOtaspChanged(OTASP_NOT_NEEDED);
+        Log.i(LOG_TAG,"Is EONS enabled: " + mEonsEnabled);
     }
 
     public void dispose() {
@@ -244,7 +252,10 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         cm.unregisterForRadioStateChanged(this);
         cm.unregisterForVoiceNetworkStateChanged(this);
         if (mUiccApplcation != null) {mUiccApplcation.unregisterForReady(this);}
-        if (mIccRecords != null) {mIccRecords.unregisterForRecordsLoaded(this);}
+        if (mIccRecords != null) {
+            mIccRecords.unregisterForRecordsLoaded(this);
+            mIccRecords.unregisterForRecordsEvents(this);
+        }
         cm.unSetOnSignalStrengthUpdate(this);
         cm.unSetOnRestrictedStateChanged(this);
         cm.unSetOnNITZTime(this);
@@ -389,6 +400,11 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 updateSpnDisplay();
                 break;
 
+            case EVENT_ICC_RECORD_EVENTS:
+                ar = (AsyncResult)msg.obj;
+                processIccRecordEvents((Integer)ar.result);
+                break;
+
             case EVENT_LOCATION_UPDATES_ENABLED:
                 ar = (AsyncResult) msg.obj;
 
@@ -483,6 +499,47 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         cm.setRadioPower(false, null);
     }
 
+    private void processIccRecordEvents(int eventCode) {
+        switch (eventCode) {
+            case SIMRecords.EVENT_SPN:
+                updateSpnDisplay();
+                break;
+            case SIMRecords.EVENT_EONS:
+                if (mEonsEnabled) {
+                    int lactac = getLacOrTac();
+                    boolean needsSpnUpdate =
+                       ((SIMRecords)mIccRecords).updateEons(ss.getOperatorNumeric(), lactac);
+                    if (needsSpnUpdate) {
+                        updateSpnDisplay();
+                    }
+                }
+                break;
+        }
+    }
+
+    public void updateEons() {
+        boolean needsUpdate = false;
+        int lactac = -1;
+
+        if (mIccRecords == null) return;
+
+        lactac = getLacOrTac();
+
+        needsUpdate = ((SIMRecords)mIccRecords).updateEons(ss.getOperatorNumeric(), lactac);
+        Log.d(LOG_TAG, "[EONS] updateEons() lactac = " + lactac + " , needsUpdate = " +
+                needsUpdate + " , OperatorNumeric = " + ss.getOperatorNumeric());
+        if (needsUpdate) {
+            String eonsLong = ((SIMRecords)mIccRecords).getEons();
+            Log.d(LOG_TAG, "[EONS] updateEons() eonsLong = " + eonsLong);
+            if (eonsLong != null) {
+                // Update operator long name with EONS Long.
+                ss.setOperatorName(eonsLong, ss.getOperatorAlphaShort(),
+                      ss.getOperatorNumeric());
+            }
+            updateSpnDisplay();
+        }
+    }
+
     protected void updateSpnDisplay() {
         if (mIccRecords == null) {
             return;
@@ -502,7 +559,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 || !TextUtils.equals(spn, curSpn)
                 || !TextUtils.equals(plmn, curPlmn)) {
             boolean showSpn = !mEmergencyOnly && !TextUtils.isEmpty(spn)
-                && (rule & SIMRecords.SPN_RULE_SHOW_SPN) == SIMRecords.SPN_RULE_SHOW_SPN;
+                && (rule & SIMRecords.SPN_RULE_SHOW_SPN) == SIMRecords.SPN_RULE_SHOW_SPN
+                && (ss.getState() == ServiceState.STATE_IN_SERVICE);
             boolean showPlmn = !TextUtils.isEmpty(plmn) &&
                 (rule & SIMRecords.SPN_RULE_SHOW_PLMN) == SIMRecords.SPN_RULE_SHOW_PLMN;
 
@@ -523,6 +581,18 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         curSpnRule = rule;
         curSpn = spn;
         curPlmn = plmn;
+    }
+
+    private int getLacOrTac() {
+        int lactac = -1;
+        if ((mDataRadioTechnology == ServiceState.RIL_RADIO_TECHNOLOGY_LTE) &&
+                (gprsState == ServiceState.STATE_IN_SERVICE) &&
+                (mTAC >= 0)) {
+            lactac = mTAC;
+        } else {
+            if (cellLoc != null) lactac = cellLoc.getLac();
+        }
+        return lactac;
     }
 
     /**
@@ -623,6 +693,10 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                             if (states.length >= 6) {
                                 mNewMaxDataCalls = Integer.parseInt(states[5]);
                             }
+                            if (states[1] != null && states[1].length() > 0) {
+                                mTAC = Integer.parseInt(states[1], 16);
+                                Log.d(LOG_TAG, "[EONS] Received TAC = " + mTAC);
+                            }
                         } catch (NumberFormatException ex) {
                             loge("error parsing GprsRegistrationState: " + ex);
                         }
@@ -631,6 +705,9 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                     mDataRoaming = regCodeIsRoaming(regState);
                     mNewRilRadioTechnology = type;
                     newSS.setRadioTechnology(type);
+                    mDataRadioTechnology = mNewRilRadioTechnology;
+                    Log.d(LOG_TAG, "[EONS] EVENT_POLL_STATE_GPRS newGPRSState ="
+                        + newGPRSState + " , mDataRadioTechnology =" + mDataRadioTechnology + " , mTAC =" + mTAC);
                 break;
 
                 case EVENT_POLL_STATE_OPERATOR:
@@ -831,6 +908,14 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                         mNitzUpdatedTime + " changing to false");
             }
             mNitzUpdatedTime = false;
+        }
+
+         if (mEonsEnabled) {
+            Log.i(LOG_TAG,"Network State Changed, get EONS and update operator name display");
+            updateEons();
+        } else {
+            Log.i(LOG_TAG,"Network State Changed, update operator name display");
+            updateSpnDisplay();
         }
 
         if (hasChanged) {
@@ -1632,6 +1717,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 mUiccApplcation.unregisterForReady(this);
                 if (mIccRecords != null) {
                     mIccRecords.unregisterForRecordsLoaded(this);
+                    mIccRecords.unregisterForRecordsEvents(this);
                 }
                 mIccRecords = null;
                 mUiccApplcation = null;
@@ -1643,6 +1729,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 mUiccApplcation.registerForReady(this, EVENT_SIM_READY, null);
                 if (mIccRecords != null) {
                     mIccRecords.registerForRecordsLoaded(this, EVENT_SIM_RECORDS_LOADED, null);
+                    mIccRecords.registerForRecordsEvents(this, EVENT_ICC_RECORD_EVENTS, null);
                 }
             }
         }
