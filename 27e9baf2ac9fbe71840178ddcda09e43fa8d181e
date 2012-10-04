@@ -1,0 +1,16 @@
+Revision: 27e9baf2ac9fbe71840178ddcda09e43fa8d181e
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/GsmDataConnectionTracker.java
+
+1853
+Thu Oct 04 22:12:00 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAJ23//++0=
+Bytes: 292
+Make this:
+
+              log("applyNewState(" + apnContext.getApnType() + ", " + enabled +
+                    "(" + apnContext.isEnabled() + "), " + met + "(" +
+                    apnContext.getDependencyMet() +"))" +
+                    " apnContext.getState()=" + apnContext.getState());
+
