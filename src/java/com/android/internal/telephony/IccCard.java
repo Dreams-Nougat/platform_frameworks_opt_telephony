@@ -58,10 +58,10 @@ public interface IccCard {
     public void unregisterForAbsent(Handler h);
 
     /**
-     * Notifies handler of any transition into IccCardConstants.State.NETWORK_LOCKED
+     * Notifies handler of any transition into State.PERSO_LOCKED
      */
-    public void registerForNetworkLocked(Handler h, int what, Object obj);
-    public void unregisterForNetworkLocked(Handler h);
+    public void registerForPersoLocked(Handler h, int what, Object obj);
+    public void unregisterForPersoLocked(Handler h);
 
     /**
      * Notifies handler of any transition into IccCardConstants.State.isPinLocked()
@@ -107,7 +107,7 @@ public interface IccCard {
     /**
      * Supply Network depersonalization code to the RIL
      */
-    public void supplyNetworkDepersonalization (String pin, Message onComplete);
+    public void supplyDepersonalization (String pin, int type, Message onComplete);
 
     /**
      * Check whether ICC pin lock is enabled

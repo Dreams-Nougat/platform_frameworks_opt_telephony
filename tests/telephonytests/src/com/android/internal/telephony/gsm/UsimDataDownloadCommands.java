@@ -214,7 +214,7 @@ class UsimDataDownloadCommands extends BaseCommands {
     }
 
     @Override
-    public void supplyNetworkDepersonalization(String netpin, Message result) {
+    public void supplyDepersonalization(String pin, int type, Message onComplete) {
     }
 
     @Override
