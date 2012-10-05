@@ -35,12 +35,11 @@ public class GsmSmsCbTest extends AndroidTestCase {
 
     private static final SmsCbLocation sTestLocation = new SmsCbLocation("94040", 1234, 5678);
 
-    private static SmsCbMessage createFromPdu(byte[] pdu) {
+    private static SmsCbMessage createFromPdu(byte[] pdu, int type) {
         try {
-            SmsCbHeader header = new SmsCbHeader(pdu);
             byte[][] pdus = new byte[1][];
             pdus[0] = pdu;
-            return GsmSmsCbMessage.createSmsCbMessage(header, sTestLocation, pdus);
+            return GsmSmsCbMessage.createSmsCbMessage(sTestLocation, pdus, type);
         } catch (IllegalArgumentException e) {
             return null;
         }
@@ -48,26 +47,26 @@ public class GsmSmsCbTest extends AndroidTestCase {
 
     private static void doTestGeographicalScopeValue(byte[] pdu, byte b, int expectedGs) {
         pdu[0] = b;
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_GSM);
 
         assertEquals("Unexpected geographical scope decoded", expectedGs, msg
                 .getGeographicalScope());
     }
 
     public void testCreateNullPdu() {
-        SmsCbMessage msg = createFromPdu(null);
+        SmsCbMessage msg = createFromPdu(null, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UNKNOWN);
         assertNull("createFromPdu(byte[] with null pdu should return null", msg);
     }
 
     public void testCreateTooShortPdu() {
         byte[] pdu = new byte[4];
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UNKNOWN);
 
         assertNull("createFromPdu(byte[] with too short pdu should return null", msg);
     }
 
     public void testGetGeographicalScope() {
-        byte[] pdu = {
+        byte[] pdu = { //gsm
                 (byte)0xC0, (byte)0x00, (byte)0x00, (byte)0x32, (byte)0x40, (byte)0x11, (byte)0x41,
                 (byte)0xD0, (byte)0x71, (byte)0xDA, (byte)0x04, (byte)0x91, (byte)0xCB, (byte)0xE6,
                 (byte)0x70, (byte)0x9D, (byte)0x4D, (byte)0x07, (byte)0x85, (byte)0xD9, (byte)0x70,
@@ -91,7 +90,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
     }
 
     public void testGetGeographicalScopeUmts() {
-        byte[] pdu = {
+        byte[] pdu = { //umts
                 (byte)0x01, (byte)0x00, (byte)0x32, (byte)0xC0, (byte)0x00, (byte)0x40,
 
                 (byte)0x01,
@@ -114,7 +113,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x34
         };
 
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UMTS);
 
         assertEquals("Unexpected geographical scope decoded",
                 SmsCbMessage.GEOGRAPHICAL_SCOPE_CELL_WIDE, msg.getGeographicalScope());
@@ -136,7 +135,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x46, (byte)0xA3, (byte)0xD1, (byte)0x68, (byte)0x34, (byte)0x1A, (byte)0x8D,
                 (byte)0x46, (byte)0xA3, (byte)0xD1, (byte)0x00
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_GSM);
 
         assertEquals("Unexpected 7-bit string decoded",
                 "A GSM default alphabet message with carriage return padding",
@@ -166,7 +165,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
 
                 (byte)0x34
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UMTS);
 
         assertEquals("Unexpected 7-bit string decoded",
                 "A GSM default alphabet message with carriage return padding",
@@ -213,7 +212,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
 
                 (byte)0x0A
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UMTS);
 
         assertEquals("Unexpected multipage 7-bit string decoded",
                 "First page+Second page",
@@ -236,7 +235,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x90, (byte)0xFB, (byte)0x0D, (byte)0x82, (byte)0x87, (byte)0xC9, (byte)0xE4,
                 (byte)0xB4, (byte)0xFB, (byte)0x1C, (byte)0x02
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_GSM);
 
         assertEquals(
                 "Unexpected 7-bit string decoded",
@@ -268,7 +267,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
 
                 (byte)0x52
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UMTS);
 
         assertEquals(
                 "Unexpected 7-bit string decoded",
@@ -293,7 +292,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x46, (byte)0xA3, (byte)0xD1, (byte)0x68, (byte)0x34, (byte)0x1A, (byte)0x8D,
                 (byte)0x46, (byte)0xA3, (byte)0xD1, (byte)0x00
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_GSM);
 
         assertEquals("Unexpected 7-bit string decoded",
                 "A GSM default alphabet message with carriage return padding",
@@ -318,7 +317,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x46, (byte)0xA3, (byte)0xD1, (byte)0x68, (byte)0x34, (byte)0x1A, (byte)0x8D,
                 (byte)0x46, (byte)0xA3, (byte)0xD1, (byte)0x00
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_GSM);
 
         assertEquals("Unexpected 7-bit string decoded",
                 "A GSM default alphabet message with carriage return padding",
@@ -350,7 +349,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
 
                 (byte)0x37
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UMTS);
 
         assertEquals("Unexpected 7-bit string decoded",
                 "A GSM default alphabet message with carriage return padding",
@@ -375,7 +374,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x42, (byte)0x43, (byte)0x44, (byte)0x45, (byte)0x46, (byte)0x47, (byte)0x41,
                 (byte)0x42, (byte)0x43, (byte)0x44, (byte)0x45
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_GSM);
 
         assertEquals("8-bit message body should be empty", "", msg.getMessageBody());
     }
@@ -396,7 +395,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x63, (byte)0x00, (byte)0x74, (byte)0x00, (byte)0x65, (byte)0x00, (byte)0x72,
                 (byte)0x00, (byte)0x0D, (byte)0x00, (byte)0x0D
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_GSM);
 
         assertEquals("Unexpected 7-bit string decoded",
                 "A UCS2 message containing a \u0434 character", msg.getMessageBody());
@@ -425,7 +424,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
 
                 (byte)0x4E
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UMTS);
 
         assertEquals("Unexpected 7-bit string decoded",
                 "A UCS2 message containing a \u0434 character", msg.getMessageBody());
@@ -471,7 +470,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
 
                 (byte)0x06
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UMTS);
 
         assertEquals("Unexpected multipage UCS2 string decoded",
                 "AAABBB", msg.getMessageBody());
@@ -493,7 +492,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x61, (byte)0x00, (byte)0x63, (byte)0x00, (byte)0x74, (byte)0x00, (byte)0x65,
                 (byte)0x00, (byte)0x72, (byte)0x00, (byte)0x0D
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_GSM);
 
         assertEquals("Unexpected 7-bit string decoded",
                 "A UCS2 message containing a \u0434 character", msg.getMessageBody());
@@ -524,7 +523,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
 
                 (byte)0x50
         };
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UMTS);
 
         assertEquals("Unexpected 7-bit string decoded",
                 "A UCS2 message containing a \u0434 character", msg.getMessageBody());
@@ -549,7 +548,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x46, (byte)0xA3, (byte)0xD1, (byte)0x00
         };
 
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_GSM);
 
         assertEquals("Unexpected message identifier decoded", 12345, msg.getServiceCategory());
     }
@@ -578,7 +577,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x34
         };
 
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UMTS);
 
         assertEquals("Unexpected message identifier decoded", 12345, msg.getServiceCategory());
     }
@@ -600,7 +599,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x46, (byte)0xA3, (byte)0xD1, (byte)0x00
         };
 
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_GSM);
         int messageCode = (msg.getSerialNumber() & 0x3ff0) >> 4;
 
         assertEquals("Unexpected message code decoded", 682, messageCode);
@@ -630,7 +629,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x34
         };
 
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UMTS);
         int messageCode = (msg.getSerialNumber() & 0x3ff0) >> 4;
 
         assertEquals("Unexpected message code decoded", 682, messageCode);
@@ -653,7 +652,7 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x46, (byte)0xA3, (byte)0xD1, (byte)0x00
         };
 
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_GSM);
         int updateNumber = msg.getSerialNumber() & 0x000f;
 
         assertEquals("Unexpected update number decoded", 5, updateNumber);
@@ -683,13 +682,13 @@ public class GsmSmsCbTest extends AndroidTestCase {
                 (byte)0x34
         };
 
-        SmsCbMessage msg = createFromPdu(pdu);
+        SmsCbMessage msg = createFromPdu(pdu, GsmSmsCbMessage.CB_NOTIFICATION_TYPE_UMTS);
         int updateNumber = msg.getSerialNumber() & 0x000f;
 
         assertEquals("Unexpected update number decoded", 5, updateNumber);
     }
 
-    /* ETWS Test message including header */
+    /* Secondary ETWS Gsm Test message including header */
     private static final byte[] etwsMessageNormal = IccUtils.hexStringToBytes("000011001101" +
             "0D0A5BAE57CE770C531790E85C716CBF3044573065B930675730" +
             "9707767A751F30025F37304463FA308C306B5099304830664E0B30553044FF086C178C615E81FF09" +
@@ -708,7 +707,8 @@ public class GsmSmsCbTest extends AndroidTestCase {
     // FIXME: add example of ETWS primary notification PDU
 
     public void testEtwsMessageNormal() {
-        SmsCbMessage msg = createFromPdu(etwsMessageNormal);
+        SmsCbMessage msg = createFromPdu(etwsMessageNormal,
+                GsmSmsCbMessage.ETWS_NOTIFICATION_TYPE_SECONDARY_GSM);
         Log.d(TAG, msg.toString());
         assertEquals("GS mismatch", 0, msg.getGeographicalScope());
         assertEquals("serial number mismatch", 0, msg.getSerialNumber());
@@ -718,7 +718,8 @@ public class GsmSmsCbTest extends AndroidTestCase {
     }
 
     public void testEtwsMessageCancel() {
-        SmsCbMessage msg = createFromPdu(etwsMessageCancel);
+        SmsCbMessage msg = createFromPdu(etwsMessageCancel,
+                GsmSmsCbMessage.ETWS_NOTIFICATION_TYPE_SECONDARY_GSM);
         Log.d(TAG, msg.toString());
         assertEquals("GS mismatch", 0, msg.getGeographicalScope());
         assertEquals("serial number mismatch", 0, msg.getSerialNumber());
@@ -728,7 +729,8 @@ public class GsmSmsCbTest extends AndroidTestCase {
     }
 
     public void testEtwsMessageTest() {
-        SmsCbMessage msg = createFromPdu(etwsMessageTest);
+        SmsCbMessage msg = createFromPdu(etwsMessageTest,
+                GsmSmsCbMessage.ETWS_NOTIFICATION_TYPE_SECONDARY_GSM);
         Log.d(TAG, msg.toString());
         assertEquals("GS mismatch", 0, msg.getGeographicalScope());
         assertEquals("serial number mismatch", 0, msg.getSerialNumber());
@@ -748,7 +750,8 @@ public class GsmSmsCbTest extends AndroidTestCase {
             }
             try {
                 // this should return a SmsCbMessage object or null for invalid data
-                SmsCbMessage msg = createFromPdu(data);
+                // set type with some random number
+                SmsCbMessage msg = createFromPdu(data, r.nextInt(10));
             } catch (Exception e) {
                 Log.d(TAG, "exception thrown", e);
                 fail("Exception in decoder at run " + run + " length " + len + ": " + e);

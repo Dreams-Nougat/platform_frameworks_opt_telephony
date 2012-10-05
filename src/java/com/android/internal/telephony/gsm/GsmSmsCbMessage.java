@@ -27,9 +27,29 @@ import java.io.UnsupportedEncodingException;
 
 /**
  * Parses a GSM or UMTS format SMS-CB message into an {@link SmsCbMessage} object. The class is
- * public because {@link #createSmsCbMessage(SmsCbLocation, byte[][])} is used by some test cases.
+ * public because {@link #createSmsCbMessage(SmsCbLocation, byte[][], int)}
+ * is used by some test cases.
  */
 public class GsmSmsCbMessage {
+
+    /** Unknown type */
+    public static final int CB_NOTIFICATION_TYPE_UNKNOWN = -1;
+
+    /** 0x00 - ETWS Primary */
+    public static final int ETWS_NOTIFICATION_TYPE_PRIMARY = 0;
+
+    /** 0x01 - ETWS Secondary GSM */
+    public static final int ETWS_NOTIFICATION_TYPE_SECONDARY_GSM = 1;
+
+    /** 0x02 - ETWS Secondary UMTS */
+    public static final int ETWS_NOTIFICATION_TYPE_SECONDARY_UMTS = 2;
+
+    /** 0x03 - GSM CB */
+    public static final int CB_NOTIFICATION_TYPE_GSM = 3;
+
+    /** 0x04 - UMTS CB */
+    public static final int CB_NOTIFICATION_TYPE_UMTS = 4;
+
 
     /**
      * Languages in the 0000xxxx DCS group as defined in 3GPP TS 23.038, section 5.
@@ -51,8 +71,60 @@ public class GsmSmsCbMessage {
 
     private static final int PDU_BODY_PAGE_LENGTH = 82;
 
-    /** Utility class with only static methods. */
+    private int type;
+    private byte[] pdu;
+
     private GsmSmsCbMessage() { }
+
+    public GsmSmsCbMessage(int type, byte[] pdu) {
+        this.pdu = pdu;
+
+        switch (type) {
+            case ETWS_NOTIFICATION_TYPE_PRIMARY:
+            case ETWS_NOTIFICATION_TYPE_SECONDARY_GSM:
+            case ETWS_NOTIFICATION_TYPE_SECONDARY_UMTS:
+            case CB_NOTIFICATION_TYPE_GSM:
+            case CB_NOTIFICATION_TYPE_UMTS:
+                this.type = type;
+                break;
+
+            default:
+                this.type = CB_NOTIFICATION_TYPE_UNKNOWN;
+
+        }
+    }
+
+    byte[] getPdu() {
+        return this.pdu;
+    }
+
+    int getType() {
+        return this.type;
+    }
+
+    boolean isEtwsPrimary() {
+        return (ETWS_NOTIFICATION_TYPE_PRIMARY == getType());
+    }
+
+    boolean isEtwsSecondaryGsm() {
+        return (ETWS_NOTIFICATION_TYPE_SECONDARY_GSM == getType());
+    }
+
+    boolean isEtwsSecondaryUmts() {
+        return (ETWS_NOTIFICATION_TYPE_SECONDARY_UMTS == getType());
+    }
+
+    boolean isCbGsm() {
+        return (CB_NOTIFICATION_TYPE_GSM == getType());
+    }
+
+    boolean isCbUmts() {
+        return (CB_NOTIFICATION_TYPE_UMTS == getType());
+    }
+
+    boolean isUnknownType() {
+        return (CB_NOTIFICATION_TYPE_UNKNOWN == getType());
+    }
 
     /**
      * Create a new SmsCbMessage object from a header object plus one or more received PDUs.
@@ -91,10 +163,27 @@ public class GsmSmsCbMessage {
      *
      * @param location the location (geographical scope) for the message
      * @param pdus PDU bytes
+     * @deprecated
      */
     public static SmsCbMessage createSmsCbMessage(SmsCbLocation location, byte[][] pdus)
             throws IllegalArgumentException {
-        SmsCbHeader header = new SmsCbHeader(pdus[0]);
+        GsmSmsCbMessage sms = new GsmSmsCbMessage(CB_NOTIFICATION_TYPE_UNKNOWN, pdus[0]);
+        SmsCbHeader header = new SmsCbHeader(sms);
+        return createSmsCbMessage(header, location, pdus);
+    }
+
+    /**
+     * Create a new SmsCbMessage object from one or more received PDUs. This is used by some
+     * CellBroadcastReceiver test cases, because SmsCbHeader is now package local.
+     *
+     * @param location the location (geographical scope) for the message
+     * @param pdus PDU bytes
+     * @param type of pdu (etws primary, etws gsm secondary, ....)
+     */
+    public static SmsCbMessage createSmsCbMessage(SmsCbLocation location, byte[][] pdus, int type)
+            throws IllegalArgumentException {
+        GsmSmsCbMessage sms = new GsmSmsCbMessage(type, pdus[0]);
+        SmsCbHeader header = new SmsCbHeader(sms);
         return createSmsCbMessage(header, location, pdus);
     }
 
