@@ -61,12 +61,12 @@ class SmsCbHeader {
     /**
      * Length of GSM pdus
      */
-    private static final int PDU_LENGTH_GSM = 88;
+    static final int PDU_LENGTH_GSM = 88;
 
     /**
      * Maximum length of ETWS primary message GSM pdus
      */
-    private static final int PDU_LENGTH_ETWS = 56;
+    static final int PDU_LENGTH_ETWS = 56;
 
     private final int geographicalScope;
 
@@ -90,12 +90,16 @@ class SmsCbHeader {
     /** CMAS warning notification info. */
     private final SmsCbCmasInfo mCmasInfo;
 
-    public SmsCbHeader(byte[] pdu) throws IllegalArgumentException {
+    public SmsCbHeader(GsmSmsCbMessage sms) throws IllegalArgumentException {
+        byte[] pdu = sms.getPdu();
         if (pdu == null || pdu.length < PDU_HEADER_LENGTH) {
             throw new IllegalArgumentException("Illegal PDU");
         }
+        if (sms.isUnknownType()) {
+            throw new IllegalArgumentException("Illegal pdu type");
+        }
 
-        if (pdu.length <= PDU_LENGTH_ETWS) {
+        if (sms.isEtwsPrimary()) {
             format = FORMAT_ETWS_PRIMARY;
             geographicalScope = (pdu[0] & 0xc0) >> 6;
             serialNumber = ((pdu[0] & 0xff) << 8) | (pdu[1] & 0xff);
@@ -117,7 +121,7 @@ class SmsCbHeader {
                     warningSecurityInfo);
             mCmasInfo = null;
             return;     // skip the ETWS/CMAS initialization code for regular notifications
-        } else if (pdu.length <= PDU_LENGTH_GSM) {
+        } else if (sms.isCbGsm() || sms.isEtwsSecondaryGsm()) {
             // GSM pdus are no more than 88 bytes
             format = FORMAT_GSM;
             geographicalScope = (pdu[0] & 0xc0) >> 6;
