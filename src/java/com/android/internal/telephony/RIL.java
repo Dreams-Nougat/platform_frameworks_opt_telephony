@@ -49,6 +49,7 @@ import android.telephony.SmsMessage;
 import android.text.TextUtils;
 import android.telephony.Rlog;
 
+import com.android.internal.telephony.gsm.GsmSmsCbMessage;
 import com.android.internal.telephony.gsm.SmsBroadcastConfigInfo;
 import com.android.internal.telephony.gsm.SuppServiceNotification;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus;
@@ -2502,7 +2503,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_RESTRICTED_STATE_CHANGED: ret = responseInts(p); break;
             case RIL_UNSOL_RESPONSE_SIM_STATUS_CHANGED:  ret =  responseVoid(p); break;
             case RIL_UNSOL_RESPONSE_CDMA_NEW_SMS:  ret =  responseCdmaSms(p); break;
-            case RIL_UNSOL_RESPONSE_NEW_BROADCAST_SMS:  ret =  responseRaw(p); break;
+            case RIL_UNSOL_RESPONSE_NEW_BROADCAST_SMS:  ret =  responseBroadcastSms(p); break;
             case RIL_UNSOL_CDMA_RUIM_SMS_STORAGE_FULL:  ret =  responseVoid(p); break;
             case RIL_UNSOL_ENTER_EMERGENCY_CALLBACK_MODE: ret = responseVoid(p); break;
             case RIL_UNSOL_CDMA_CALL_WAITING: ret = responseCdmaCallWaiting(p); break;
@@ -2952,6 +2953,15 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         SmsMessage sms;
         sms = SmsMessage.newFromParcel(p);
 
+        return sms;
+    }
+
+    private Object
+    responseBroadcastSms(Parcel p) {
+        int type = p.readInt();
+        byte[] pdu = p.createByteArray();
+
+        GsmSmsCbMessage sms = new GsmSmsCbMessage(type, pdu);
         return sms;
     }
 

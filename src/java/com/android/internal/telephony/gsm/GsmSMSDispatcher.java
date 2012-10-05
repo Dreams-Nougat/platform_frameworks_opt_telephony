@@ -376,9 +376,11 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
      */
     private void handleBroadcastSms(AsyncResult ar) {
         try {
-            byte[] receivedPdu = (byte[])ar.result;
+            GsmSmsCbMessage sms = (GsmSmsCbMessage)ar.result;
+            byte[] receivedPdu = sms.getPdu();
 
-            if (false) {
+            if (true) {
+                Rlog.d(TAG, "type=" + sms.getType());
                 for (int i = 0; i < receivedPdu.length; i += 8) {
                     StringBuilder sb = new StringBuilder("SMS CB pdu data: ");
                     for (int j = i; j < i + 8 && j < receivedPdu.length; j++) {
@@ -392,7 +394,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                 }
             }
 
-            SmsCbHeader header = new SmsCbHeader(receivedPdu);
+            SmsCbHeader header = new SmsCbHeader(sms);
             String plmn = SystemProperties.get(TelephonyProperties.PROPERTY_OPERATOR_NUMERIC);
             int lac = -1;
             int cid = -1;

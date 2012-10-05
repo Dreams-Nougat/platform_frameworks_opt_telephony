@@ -61,12 +61,12 @@ class SmsCbHeader {
     /**
      * Length of GSM pdus
      */
-    private static final int PDU_LENGTH_GSM = 88;
+    static final int PDU_LENGTH_GSM = 88;
 
     /**
      * Maximum length of ETWS primary message GSM pdus
      */
-    private static final int PDU_LENGTH_ETWS = 56;
+    static final int PDU_LENGTH_ETWS = 56;
 
     private final int geographicalScope;
 
@@ -90,55 +90,56 @@ class SmsCbHeader {
     /** CMAS warning notification info. */
     private final SmsCbCmasInfo mCmasInfo;
 
-    public SmsCbHeader(byte[] pdu) throws IllegalArgumentException {
+    public SmsCbHeader(GsmSmsCbMessage sms) throws IllegalArgumentException {
+        byte[] pdu = sms.getPdu();
         if (pdu == null || pdu.length < PDU_HEADER_LENGTH) {
             throw new IllegalArgumentException("Illegal PDU");
         }
+        if (sms.isUnknownType()) {
+            throw new IllegalArgumentException("Illegal pdu type");
+        }
 
-        if (pdu.length <= PDU_LENGTH_GSM) {
-            // can be ETWS or GSM format.
-            // Per TS23.041 9.4.1.2 and 9.4.1.3.2, GSM and ETWS format both
-            // contain serial number which contains GS, Message Code, and Update Number
-            // per 9.4.1.2.1, and message identifier in same octets
+        if (sms.isEtwsPrimary()) {
+            format = FORMAT_ETWS_PRIMARY;
             geographicalScope = (pdu[0] & 0xc0) >>> 6;
             serialNumber = ((pdu[0] & 0xff) << 8) | (pdu[1] & 0xff);
             messageIdentifier = ((pdu[2] & 0xff) << 8) | (pdu[3] & 0xff);
-            if (isEtwsMessage() && pdu.length <= PDU_LENGTH_ETWS) {
-                format = FORMAT_ETWS_PRIMARY;
-                dataCodingScheme = -1;
-                pageIndex = -1;
-                nrOfPages = -1;
-                boolean emergencyUserAlert = (pdu[4] & 0x1) != 0;
-                boolean activatePopup = (pdu[5] & 0x80) != 0;
-                int warningType = (pdu[4] & 0xfe) >>> 1;
-                byte[] warningSecurityInfo;
-                // copy the Warning-Security-Information, if present
-                if (pdu.length > PDU_HEADER_LENGTH) {
-                    warningSecurityInfo = Arrays.copyOfRange(pdu, 6, pdu.length);
-                } else {
-                    warningSecurityInfo = null;
-                }
-                mEtwsInfo = new SmsCbEtwsInfo(warningType, emergencyUserAlert, activatePopup,
-                        warningSecurityInfo);
-                mCmasInfo = null;
-                return;     // skip the ETWS/CMAS initialization code for regular notifications
+            dataCodingScheme = -1;
+            pageIndex = -1;
+            nrOfPages = -1;
+            boolean emergencyUserAlert = (pdu[4] & 0x1) != 0;
+            boolean activatePopup = (pdu[5] & 0x80) != 0;
+            int warningType = (pdu[4] & 0xfe) >>> 1;
+            byte[] warningSecurityInfo;
+            // copy the Warning-Security-Information, if present
+            if (pdu.length > PDU_HEADER_LENGTH) {
+                warningSecurityInfo = Arrays.copyOfRange(pdu, 6, pdu.length);
             } else {
-                // GSM pdus are no more than 88 bytes
-                format = FORMAT_GSM;
-                dataCodingScheme = pdu[4] & 0xff;
-
-                // Check for invalid page parameter
-                int pageIndex = (pdu[5] & 0xf0) >>> 4;
-                int nrOfPages = pdu[5] & 0x0f;
-
-                if (pageIndex == 0 || nrOfPages == 0 || pageIndex > nrOfPages) {
-                    pageIndex = 1;
-                    nrOfPages = 1;
-                }
-
-                this.pageIndex = pageIndex;
-                this.nrOfPages = nrOfPages;
+                warningSecurityInfo = null;
             }
+            mEtwsInfo = new SmsCbEtwsInfo(warningType, emergencyUserAlert, activatePopup,
+                    warningSecurityInfo);
+            mCmasInfo = null;
+            return;     // skip the ETWS/CMAS initialization code for regular notifications
+        } else if (sms.isCbGsm() || sms.isEtwsSecondaryGsm()) {
+            // GSM pdus are no more than 88 bytes
+            format = FORMAT_GSM;
+            geographicalScope = (pdu[0] & 0xc0) >>> 6;
+            serialNumber = ((pdu[0] & 0xff) << 8) | (pdu[1] & 0xff);
+            messageIdentifier = ((pdu[2] & 0xff) << 8) | (pdu[3] & 0xff);
+            dataCodingScheme = pdu[4] & 0xff;
+
+            // Check for invalid page parameter
+            int pageIndex = (pdu[5] & 0xf0) >>> 4;
+            int nrOfPages = pdu[5] & 0x0f;
+
+            if (pageIndex == 0 || nrOfPages == 0 || pageIndex > nrOfPages) {
+                pageIndex = 1;
+                nrOfPages = 1;
+            }
+
+            this.pageIndex = pageIndex;
+            this.nrOfPages = nrOfPages;
         } else {
             // UMTS pdus are always at least 90 bytes since the payload includes
             // a number-of-pages octet and also one length octet per page
