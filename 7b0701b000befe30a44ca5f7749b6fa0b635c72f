@@ -47,3 +47,13 @@ This should probably be  getEFPath(fileid) instead of  getEFPath(EF_IMG).
 
 Please refer to TS 31.102, for displaying of Icon, under DF Telecom and DF Graphics , EF instance(s) (4FXX,transparent files) are present. The possible image file identifiers (EF instance) for EF img ( 4F20, linear fixed file) are : 4F01 ... 4F05.
 
+244
+Mon Oct 08 04:31:24 2012 +0000
+Author: linda luo <1013627@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAJt3///lo=
+UUID: AAAJ73///y8=
+Bytes: 224
+But the path of all the image file identifiers is same with the EF_IMG (MF_SIM + DF_TELECOM + DF_GRAPHICS).
+
+if use getEFPath(fileid) instead of getEFPath(EF_IMG), it will return null not (MF_SIM + DF_TELECOM + DF_GRAPHICS).
+
