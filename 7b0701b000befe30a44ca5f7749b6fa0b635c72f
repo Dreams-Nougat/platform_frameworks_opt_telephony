@@ -28,6 +28,16 @@ Should this be
 
 mCi.iccIOForApp(COMMAND_GET_RESPONSE, IccConstants.EF_IMG, getEFPath(EF_IMG), recordNum, READ_RECORD_MODE_ABSOLUTE,                GET_RESPONSE_EF_IMG_SIZE_BYTES, null, null, mAid, response);
 
+173
+Mon Oct 08 02:38:35 2012 +0000
+Author: linda luo <1013627@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAJt3///lk=
+UUID: AAAJ7n///+o=
+Bytes: 130
+Transmission oriented commands(GET RESPONSE)
+The provisions of ETSI TS 102 221 [1] clause 12 apply.
+p1 is '00' and p2 is '00' too.
+
 244
 Mon Oct 01 13:48:55 2012 +0000
 Author: Naveen K <1003413@85c56323-6fa9-3386-8a01-6480fb634889>
