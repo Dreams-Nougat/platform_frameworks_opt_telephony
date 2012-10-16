@@ -721,6 +721,9 @@ public class GSMPhone extends PhoneBase {
             return mCT.dial(newDialString, uusInfo);
         } else if (mmi.isTemporaryModeCLIR()) {
             return mCT.dial(mmi.dialingNumber, mmi.getCLIRMode(), uusInfo);
+        } else if (SystemProperties.getBoolean("ro.config.multimode_cdma", false) &&
+                   mmi.isGlobalDevMmi()) {
+            return mCT.dial(mmi.dialingNumber, uusInfo);
         } else {
             mPendingMMIs.add(mmi);
             mMmiRegistrants.notifyRegistrants(new AsyncResult(null, mmi, null));
@@ -871,6 +874,9 @@ public class GSMPhone extends PhoneBase {
         return (r != null) ? r.getMsisdnNumber() : "";
     }
 
+    public String getMdn() {
+        return mSST.getMdnNumber();
+    }
     public String getLine1AlphaTag() {
         IccRecords r = mIccRecords.get();
         return (r != null) ? r.getMsisdnAlphaTag() : "";
