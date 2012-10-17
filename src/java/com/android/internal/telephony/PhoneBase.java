@@ -138,6 +138,10 @@ public abstract class PhoneBase extends Handler implements Phone {
             new AtomicReference<UiccCardApplication>();
     public SMSDispatcher mSMS;
 
+    // Flag that indicates that Out Of Service is considered as data call disconnect
+    protected boolean mOosIsDisconnect = SystemProperties.getBoolean(
+            TelephonyProperties.PROPERTY_OOS_IS_DISCONNECT, true);
+
     /**
      * Set a system property, unless we're in unit test mode
      */
@@ -259,6 +263,7 @@ public abstract class PhoneBase extends Handler implements Phone {
         mSmsUsageMonitor = new SmsUsageMonitor(context);
         mUiccController = UiccController.getInstance();
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
+        Log.d(LOG_TAG, "mOosIsDisconnect=" + mOosIsDisconnect);
     }
 
     public void dispose() {
