@@ -78,6 +78,14 @@ public interface Phone {
     static final String FEATURE_ENABLE_CBS = "enableCBS";
 
     /**
+     * Return codes for supplyPinReturnResult and
+     * supplyPukReturnResult APIs
+     */
+    static final int PIN_RESULT_SUCCESS = 0;
+    static final int PIN_PASSWORD_INCORRECT = 1;
+    static final int PIN_GENERAL_FAILURE = 2;
+
+    /**
      * Optional reasons for disconnect and connect
      */
     static final String REASON_ROAMING_ON = "roamingOn";
