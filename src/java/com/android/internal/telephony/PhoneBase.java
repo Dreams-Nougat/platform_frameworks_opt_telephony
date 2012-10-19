@@ -114,6 +114,7 @@ public abstract class PhoneBase extends Handler implements Phone {
     protected static final int EVENT_NEW_ICC_SMS                    = 29;
     protected static final int EVENT_ICC_RECORD_EVENTS              = 30;
     protected static final int EVENT_ICC_CHANGED                    = 31;
+    protected static final int EVENT_SS                             = 31;
 
     // Key used to read/write current CLIR setting
     public static final String CLIR_KEY = "clir_key";

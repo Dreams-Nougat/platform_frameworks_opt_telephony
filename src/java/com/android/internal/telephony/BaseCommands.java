@@ -81,6 +81,8 @@ public abstract class BaseCommands implements CommandsInterface {
     protected Registrant mRingRegistrant;
     protected Registrant mRestrictedStateRegistrant;
     protected Registrant mGsmBroadcastSmsRegistrant;
+    protected Registrant mCatCcAlphaRegistrant;
+    protected Registrant mSsRegistrant;
 
     // Preferred network type received from PhoneFactory.
     // This is used when establishing a connection to the
@@ -430,6 +432,26 @@ public abstract class BaseCommands implements CommandsInterface {
     @Override
     public void unSetOnCallRing(Handler h) {
         mRingRegistrant.clear();
+    }
+
+    @Override
+    public void setOnSs(Handler h, int what, Object obj) {
+        mSsRegistrant = new Registrant (h, what, obj);
+    }
+
+    @Override
+    public void unSetOnSs(Handler h) {
+        mSsRegistrant.clear();
+    }
+
+    @Override
+    public void setOnCatCcAlphaNotify(Handler h, int what, Object obj) {
+        mCatCcAlphaRegistrant = new Registrant (h, what, obj);
+    }
+
+    @Override
+    public void unSetOnCatCcAlphaNotify(Handler h) {
+        mCatCcAlphaRegistrant.clear();
     }
 
     @Override
