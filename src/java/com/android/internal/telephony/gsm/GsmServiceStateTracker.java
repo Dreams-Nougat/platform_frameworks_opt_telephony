@@ -23,6 +23,7 @@ import com.android.internal.telephony.EventLogTags;
 import com.android.internal.telephony.IccCard;
 import com.android.internal.telephony.IccCardConstants;
 import com.android.internal.telephony.IccCardStatus;
+import com.android.internal.telephony.IccRecords;
 import com.android.internal.telephony.MccTable;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.RestrictedState;
@@ -484,11 +485,12 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     }
 
     protected void updateSpnDisplay() {
-        if (mIccRecords == null) {
+        IccRecords iccRecords = phone.mIccRecords.get();
+        if (iccRecords == null) {
             return;
         }
-        int rule = mIccRecords.getDisplayRule(ss.getOperatorNumeric());
-        String spn = mIccRecords.getServiceProviderName();
+        int rule = iccRecords.getDisplayRule(ss.getOperatorNumeric());
+        String spn = iccRecords.getServiceProviderName();
         String plmn = ss.getOperatorAlphaLong();
 
         // For emergency calls only, pass the EmergencyCallsOnly string via EXTRA_PLMN
