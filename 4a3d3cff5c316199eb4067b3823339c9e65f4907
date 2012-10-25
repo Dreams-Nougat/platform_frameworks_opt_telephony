@@ -9,3 +9,28 @@ UUID: AAAK2X///8E=
 Bytes: 16
 remove conflicts
 
+File: src/java/com/android/internal/telephony/ApnContext.java
+
+110
+Thu Oct 25 19:09:52 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAK2X///3w=
+Bytes: 16
+getDataProfile ?
+
+File: src/java/com/android/internal/telephony/DataProfile.java
+
+42
+Thu Oct 25 19:09:52 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAK2X///6g=
+Bytes: 16
+convert to ints.
+
+108
+Thu Oct 25 19:09:52 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAK2X///3U=
+Bytes: 51
+Add dump() function and call it from parents object
+
