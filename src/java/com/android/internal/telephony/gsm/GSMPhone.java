@@ -416,6 +416,16 @@ public class GSMPhone extends PhoneBase {
     }
 
     @Override
+    public void registerForSimRecordsLoaded(Handler h, int what, Object obj) {
+        mSimRecordsLoadedRegistrants.addUnique(h, what, obj);
+    }
+
+    @Override
+    public void unregisterForSimRecordsLoaded(Handler h) {
+        mSimRecordsLoadedRegistrants.remove(h);
+    }
+
+    @Override
     public void
     acceptCall() throws CallStateException {
         mCT.acceptCall();
@@ -1232,6 +1242,7 @@ public class GSMPhone extends PhoneBase {
                     setVmSimImsi(null);
                 }
 
+                mSimRecordsLoadedRegistrants.notifyRegistrants();
             break;
 
             case EVENT_GET_BASEBAND_VERSION_DONE:
