@@ -31,6 +31,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Registrant;
 import android.os.SystemProperties;
+import android.telephony.MSimTelephonyManager;
 import android.util.Log;
 
 import com.android.internal.telephony.AdnRecord;
@@ -617,10 +618,12 @@ public final class RuimRecords extends IccRecords {
         String operator = getRUIMOperatorNumeric();
         log("RuimRecords: onAllRecordsLoaded set 'gsm.sim.operator.numeric' to operator='" +
                 operator + "'");
-        SystemProperties.set(PROPERTY_ICC_OPERATOR_NUMERIC, operator);
+        if (operator != null) {
+            setSystemProperty(PROPERTY_ICC_OPERATOR_NUMERIC, operator);
+        }
 
         if (mImsi != null) {
-            SystemProperties.set(PROPERTY_ICC_OPERATOR_ISO_COUNTRY,
+            setSystemProperty(PROPERTY_ICC_OPERATOR_ISO_COUNTRY,
                     MccTable.countryCodeForMcc(Integer.parseInt(mImsi.substring(0,3))));
         }
 
@@ -805,5 +808,13 @@ public final class RuimRecords extends IccRecords {
     @Override
     protected void loge(String s) {
         Log.e(LOG_TAG, "[RuimRecords] " + s);
+    }
+
+    private void setSystemProperty(String key, String val) {
+        // Update the system properties only in case NON-DSDS.
+        // TODO: Shall have a better approach!
+        if (!MSimTelephonyManager.getDefault().isMultiSimEnabled()) {
+            SystemProperties.set(key, val);
+        }
     }
 }

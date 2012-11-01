@@ -621,4 +621,16 @@ class UsimDataDownloadCommands extends BaseCommands {
     public void iccIOForApp(int command, int fileid, String path, int p1, int p2, int p3,
             String data, String pin2, String aid, Message response) {
     }
+
+    public void setSubscriptionMode (int subscriptionMode, Message result) {
+    }
+
+    @Override
+    public void setUiccSubscription(int slotId, int appIndex, int subId, int subStatus,
+            Message result) {
+    }
+
+    @Override
+    public void setDataSubscription (Message result) {
+    }
 }

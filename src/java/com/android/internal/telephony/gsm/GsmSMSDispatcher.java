@@ -47,7 +47,7 @@ import com.android.internal.telephony.TelephonyProperties;
 import java.util.HashMap;
 import java.util.Iterator;
 
-public final class GsmSMSDispatcher extends SMSDispatcher {
+public class GsmSMSDispatcher extends SMSDispatcher {
     private static final String TAG = "GSM";
 
     /** Status report received */

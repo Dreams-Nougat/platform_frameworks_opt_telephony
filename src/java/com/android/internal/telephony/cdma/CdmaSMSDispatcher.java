@@ -64,8 +64,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 
 
-final class CdmaSMSDispatcher extends SMSDispatcher {
-    private static final String TAG = "CDMA";
+public class CdmaSMSDispatcher extends SMSDispatcher {
+    protected static final String TAG = "CDMA";
 
     private byte[] mLastDispatchedSmsFingerprint;
     private byte[] mLastAcknowledgedSmsFingerprint;
@@ -73,7 +73,7 @@ final class CdmaSMSDispatcher extends SMSDispatcher {
     private final boolean mCheckForDuplicatePortsInOmadmWapPush = Resources.getSystem().getBoolean(
             com.android.internal.R.bool.config_duplicate_port_omadm_wappush);
 
-    CdmaSMSDispatcher(CDMAPhone phone, SmsStorageMonitor storageMonitor,
+    public CdmaSMSDispatcher(CDMAPhone phone, SmsStorageMonitor storageMonitor,
             SmsUsageMonitor usageMonitor) {
         super(phone, storageMonitor, usageMonitor);
         mCm.setOnNewCdmaSms(this, EVENT_NEW_SMS, null);

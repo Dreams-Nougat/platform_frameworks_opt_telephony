@@ -1,5 +1,8 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2012 Code Aurora Forum. All rights reserved
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +17,8 @@
  * limitations under the License.
  */
 
-package com.android.internal.telephony;
+package com.android.internal.telephony.msim;
 
-import android.content.ContentProvider;
 import android.content.UriMatcher;
 import android.content.ContentValues;
 import android.database.Cursor;
@@ -25,66 +27,60 @@ import android.net.Uri;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.text.TextUtils;
+import android.telephony.MSimTelephonyManager;
 import android.util.Log;
 
 import java.util.List;
 
-import com.android.internal.telephony.IccConstants;
+import com.android.internal.telephony.IccProvider;
+import com.android.internal.telephony.MSimConstants;
+import com.android.internal.telephony.msim.IIccPhoneBookMSim;
 import com.android.internal.telephony.AdnRecord;
-import com.android.internal.telephony.IIccPhoneBook;
-
+import com.android.internal.telephony.IccConstants;
 
 /**
  * {@hide}
  */
-public class IccProvider extends ContentProvider {
-    private static final String TAG = "IccProvider";
+public class MSimIccProvider extends IccProvider {
+    private static final String TAG = "MSimIccProvider";
     private static final boolean DBG = false;
 
-
-    protected static final String[] ADDRESS_BOOK_COLUMN_NAMES = new String[] {
-        "name",
-        "number",
-        "emails",
-        "_id"
-    };
-
-    private static final int ADN = 1;
-    private static final int FDN = 2;
-    private static final int SDN = 3;
-
-    protected static final String STR_TAG = "tag";
-    protected static final String STR_NUMBER = "number";
-    protected static final String STR_EMAILS = "emails";
-    protected static final String STR_PIN2 = "pin2";
+    private static final int ADN_SUB1 = 1;
+    private static final int ADN_SUB2 = 2;
+    private static final int FDN_SUB1 = 3;
+    private static final int FDN_SUB2 = 4;
+    private static final int SDN      = 5;
 
     private static final UriMatcher URL_MATCHER =
                             new UriMatcher(UriMatcher.NO_MATCH);
 
     static {
-        URL_MATCHER.addURI("icc", "adn", ADN);
-        URL_MATCHER.addURI("icc", "fdn", FDN);
-        URL_MATCHER.addURI("icc", "sdn", SDN);
-    }
-
-
-    @Override
-    public boolean onCreate() {
-        return true;
+        URL_MATCHER.addURI("iccmsim", "adn", ADN_SUB1);
+        URL_MATCHER.addURI("iccmsim", "adn_sub2", ADN_SUB2);
+        URL_MATCHER.addURI("iccmsim", "fdn", FDN_SUB1);
+        URL_MATCHER.addURI("iccmsim", "fdn_sub2", FDN_SUB2);
+        URL_MATCHER.addURI("iccmsim", "sdn", SDN);
     }
 
     @Override
     public Cursor query(Uri url, String[] projection, String selection,
             String[] selectionArgs, String sort) {
         switch (URL_MATCHER.match(url)) {
-            case ADN:
-                return loadFromEf(IccConstants.EF_ADN);
+            case ADN_SUB1:
+                return loadFromEf(IccConstants.EF_ADN, MSimConstants.SUB1);
 
-            case FDN:
-                return loadFromEf(IccConstants.EF_FDN);
+            case ADN_SUB2:
+                return loadFromEf(IccConstants.EF_ADN, MSimConstants.SUB2);
+
+            case FDN_SUB1:
+                return loadFromEf(IccConstants.EF_FDN, MSimConstants.SUB1);
+
+            case FDN_SUB2:
+                return loadFromEf(IccConstants.EF_FDN, MSimConstants.SUB2);
 
             case SDN:
-                return loadFromEf(IccConstants.EF_SDN);
+                return loadFromEf(IccConstants.EF_SDN,
+                    MSimTelephonyManager.getDefault().getDefaultSubscription());
 
             default:
                 throw new IllegalArgumentException("Unknown URL " + url);
@@ -94,8 +90,10 @@ public class IccProvider extends ContentProvider {
     @Override
     public String getType(Uri url) {
         switch (URL_MATCHER.match(url)) {
-            case ADN:
-            case FDN:
+            case ADN_SUB1:
+            case ADN_SUB2:
+            case FDN_SUB1:
+            case FDN_SUB2:
             case SDN:
                 return "vnd.android.cursor.dir/sim-contact";
 
@@ -109,18 +107,27 @@ public class IccProvider extends ContentProvider {
         Uri resultUri;
         int efType;
         String pin2 = null;
+        int subscription = 0;
 
         if (DBG) log("insert");
 
         int match = URL_MATCHER.match(url);
         switch (match) {
-            case ADN:
+            case ADN_SUB1:
+                subscription = MSimConstants.SUB1;
                 efType = IccConstants.EF_ADN;
                 break;
 
-            case FDN:
+            case ADN_SUB2:
+                subscription = MSimConstants.SUB2;
+                efType = IccConstants.EF_ADN;
+                break;
+
+            case FDN_SUB1:
+            case FDN_SUB2:
                 efType = IccConstants.EF_FDN;
                 pin2 = initialValues.getAsString("pin2");
+                subscription = initialValues.getAsInteger(MSimConstants.SUBSCRIPTION_KEY);
                 break;
 
             default:
@@ -131,20 +138,28 @@ public class IccProvider extends ContentProvider {
         String tag = initialValues.getAsString("tag");
         String number = initialValues.getAsString("number");
         // TODO(): Read email instead of sending null.
-        boolean success = addIccRecordToEf(efType, tag, number, null, pin2);
+        boolean success = addIccRecordToEf(efType, tag, number, null, pin2, subscription);
 
         if (!success) {
             return null;
         }
 
-        StringBuilder buf = new StringBuilder("content://icc/");
+        StringBuilder buf = new StringBuilder("content://iccmsim/");
         switch (match) {
-            case ADN:
+            case ADN_SUB1:
                 buf.append("adn/");
                 break;
 
-            case FDN:
+            case ADN_SUB2:
+                buf.append("adn_sub2/");
+                break;
+
+            case FDN_SUB1:
                 buf.append("fdn/");
+                break;
+
+            case FDN_SUB2:
+                buf.append("fdn_sub2/");
                 break;
         }
 
@@ -162,30 +177,32 @@ public class IccProvider extends ContentProvider {
         return resultUri;
     }
 
-    protected String normalizeValue(String inVal) {
-        int len = inVal.length();
-        String retVal = inVal;
-
-        if (inVal.charAt(0) == '\'' && inVal.charAt(len-1) == '\'') {
-            retVal = inVal.substring(1, len-1);
-        }
-
-        return retVal;
-    }
-
     @Override
     public int delete(Uri url, String where, String[] whereArgs) {
         int efType;
+        int subscription = 0;
 
         if (DBG) log("delete");
 
         int match = URL_MATCHER.match(url);
         switch (match) {
-            case ADN:
+            case ADN_SUB1:
+                subscription = MSimConstants.SUB1;
                 efType = IccConstants.EF_ADN;
                 break;
 
-            case FDN:
+            case ADN_SUB2:
+                subscription = MSimConstants.SUB2;
+                efType = IccConstants.EF_ADN;
+                break;
+
+            case FDN_SUB1:
+                subscription = MSimConstants.SUB1;
+                efType = IccConstants.EF_FDN;
+                break;
+
+            case FDN_SUB2:
+                subscription = MSimConstants.SUB2;
                 efType = IccConstants.EF_FDN;
                 break;
 
@@ -233,11 +250,11 @@ public class IccProvider extends ContentProvider {
             return 0;
         }
 
-        if (efType == IccConstants.EF_FDN && TextUtils.isEmpty(pin2)) {
+        if (((efType == FDN_SUB1) || efType == FDN_SUB2) && TextUtils.isEmpty(pin2)) {
             return 0;
         }
 
-        boolean success = deleteIccRecordFromEf(efType, tag, number, emails, pin2);
+        boolean success = deleteIccRecordFromEf(efType, tag, number, emails, pin2, subscription);
         if (!success) {
             return 0;
         }
@@ -249,18 +266,26 @@ public class IccProvider extends ContentProvider {
     public int update(Uri url, ContentValues values, String where, String[] whereArgs) {
         int efType;
         String pin2 = null;
+        int subscription = 0;
 
         if (DBG) log("update");
 
         int match = URL_MATCHER.match(url);
         switch (match) {
-            case ADN:
+            case ADN_SUB1:
+                subscription = MSimConstants.SUB1;
+                efType = IccConstants.EF_ADN;
+                break;
+            case ADN_SUB2:
+                subscription = MSimConstants.SUB2;
                 efType = IccConstants.EF_ADN;
                 break;
 
-            case FDN:
+            case FDN_SUB1:
+            case FDN_SUB2:
                 efType = IccConstants.EF_FDN;
                 pin2 = values.getAsString("pin2");
+                subscription = values.getAsInteger(MSimConstants.SUBSCRIPTION_KEY);
                 break;
 
             default:
@@ -276,7 +301,7 @@ public class IccProvider extends ContentProvider {
         String[] newEmails = null;
         // TODO(): Update for email.
         boolean success = updateIccRecordInEf(efType, tag, number,
-                newTag, newNumber, pin2);
+                newTag, newNumber, pin2, subscription);
 
         if (!success) {
             return 0;
@@ -285,22 +310,22 @@ public class IccProvider extends ContentProvider {
         return 1;
     }
 
-    private MatrixCursor loadFromEf(int efType) {
-        if (DBG) log("loadFromEf: efType=" + efType);
-
+    protected MatrixCursor loadFromEf(int efType, int subscription) {
         List<AdnRecord> adnRecords = null;
+
+        if (DBG) log("loadFromEf: efType=" + efType + "subscription = " + subscription);
+
         try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
+            IIccPhoneBookMSim iccIpb = IIccPhoneBookMSim.Stub.asInterface(
+                    ServiceManager.getService("simphonebook_msim"));
             if (iccIpb != null) {
-                adnRecords = iccIpb.getAdnRecordsInEf(efType);
+                adnRecords = iccIpb.getAdnRecordsInEf(efType, subscription);
             }
         } catch (RemoteException ex) {
             // ignore it
         } catch (SecurityException ex) {
             if (DBG) log(ex.toString());
         }
-
         if (adnRecords != null) {
             // Load the results
             final int N = adnRecords.size();
@@ -318,9 +343,11 @@ public class IccProvider extends ContentProvider {
     }
 
     private boolean
-    addIccRecordToEf(int efType, String name, String number, String[] emails, String pin2) {
+    addIccRecordToEf(int efType, String name, String number, String[] emails,
+            String pin2, int subscription) {
         if (DBG) log("addIccRecordToEf: efType=" + efType + ", name=" + name +
-                ", number=" + number + ", emails=" + emails);
+                ", number=" + number + ", emails=" + emails +
+                ", subscription=" + subscription);
 
         boolean success = false;
 
@@ -330,11 +357,11 @@ public class IccProvider extends ContentProvider {
         // hopefully, we can remove this requirement.
 
         try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
+            IIccPhoneBookMSim iccIpb = IIccPhoneBookMSim.Stub.asInterface(
+                    ServiceManager.getService("simphonebook_msim"));
             if (iccIpb != null) {
-                success = iccIpb.updateAdnRecordsInEfBySearch(efType, "", "",
-                        name, number, pin2);
+                success = iccIpb.updateAdnRecordsInEfBySearch(efType,
+                        "", "", name, number, pin2, subscription);
             }
         } catch (RemoteException ex) {
             // ignore it
@@ -347,18 +374,19 @@ public class IccProvider extends ContentProvider {
 
     private boolean
     updateIccRecordInEf(int efType, String oldName, String oldNumber,
-            String newName, String newNumber, String pin2) {
+            String newName, String newNumber, String pin2, int subscription) {
         if (DBG) log("updateIccRecordInEf: efType=" + efType +
                 ", oldname=" + oldName + ", oldnumber=" + oldNumber +
-                ", newname=" + newName + ", newnumber=" + newNumber);
+                ", newname=" + newName + ", newnumber=" + newNumber +
+                ", subscription=" + subscription);
         boolean success = false;
 
         try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
+            IIccPhoneBookMSim iccIpb = IIccPhoneBookMSim.Stub.asInterface(
+                    ServiceManager.getService("simphonebook_msim"));
             if (iccIpb != null) {
-                success = iccIpb.updateAdnRecordsInEfBySearch(efType,
-                        oldName, oldNumber, newName, newNumber, pin2);
+                success = iccIpb.updateAdnRecordsInEfBySearch(efType, oldName,
+                        oldNumber, newName, newNumber, pin2, subscription);
             }
         } catch (RemoteException ex) {
             // ignore it
@@ -369,20 +397,20 @@ public class IccProvider extends ContentProvider {
         return success;
     }
 
-
     private boolean deleteIccRecordFromEf(int efType, String name, String number, String[] emails,
-            String pin2) {
+            String pin2, int subscription) {
         if (DBG) log("deleteIccRecordFromEf: efType=" + efType +
-                ", name=" + name + ", number=" + number + ", emails=" + emails + ", pin2=" + pin2);
+                ", name=" + name + ", number=" + number + ", emails=" + emails +
+                ", pin2=" + pin2 + ", subscription=" + subscription);
 
         boolean success = false;
 
         try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
+            IIccPhoneBookMSim iccIpb = IIccPhoneBookMSim.Stub.asInterface(
+                    ServiceManager.getService("simphonebook_msim"));
             if (iccIpb != null) {
                 success = iccIpb.updateAdnRecordsInEfBySearch(efType,
-                        name, number, "", "", pin2);
+                          name, number, "", "", pin2, subscription);
             }
         } catch (RemoteException ex) {
             // ignore it
@@ -393,39 +421,9 @@ public class IccProvider extends ContentProvider {
         return success;
     }
 
-    /**
-     * Loads an AdnRecord into a MatrixCursor. Must be called with mLock held.
-     *
-     * @param record the ADN record to load from
-     * @param cursor the cursor to receive the results
-     */
-    protected void loadRecord(AdnRecord record, MatrixCursor cursor, int id) {
-        if (!record.isEmpty()) {
-            Object[] contact = new Object[4];
-            String alphaTag = record.getAlphaTag();
-            String number = record.getNumber();
-
-            if (DBG) log("loadRecord: " + alphaTag + ", " + number + ",");
-            contact[0] = alphaTag;
-            contact[1] = number;
-
-            String[] emails = record.getEmails();
-            if (emails != null) {
-                StringBuilder emailString = new StringBuilder();
-                for (String email: emails) {
-                    if (DBG) log("Adding email:" + email);
-                    emailString.append(email);
-                    emailString.append(",");
-                }
-                contact[2] = emailString.toString();
-            }
-            contact[3] = id;
-            cursor.addRow(contact);
-        }
-    }
-
+    @Override
     protected void log(String msg) {
-        Log.d(TAG, "[IccProvider] " + msg);
+        Log.d(TAG, "[MSimIccProvider] " + msg);
     }
 
 }

@@ -56,7 +56,7 @@ import java.util.ArrayList;
 /**
  * {@hide}
  */
-public final class CdmaDataConnectionTracker extends DataConnectionTracker {
+public class CdmaDataConnectionTracker extends DataConnectionTracker {
     protected final String LOG_TAG = "CDMA";
 
     private CDMAPhone mCdmaPhone;
@@ -98,7 +98,7 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
 
     /* Constructor */
 
-    CdmaDataConnectionTracker(CDMAPhone p) {
+    protected CdmaDataConnectionTracker(CDMAPhone p) {
         super(p);
         mCdmaPhone = p;
 
@@ -305,7 +305,7 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
      * @param doAll Set RefCount to 0 and tear down data call even if
      *              multiple APN types are associated with it.
      */
-    private void cleanUpConnection(boolean tearDown, String reason, boolean doAll) {
+    protected void cleanUpConnection(boolean tearDown, String reason, boolean doAll) {
         if (DBG) log("cleanUpConnection: reason: " + reason);
 
         // Clear the reconnect alarm, if set.
@@ -915,13 +915,18 @@ public final class CdmaDataConnectionTracker extends DataConnectionTracker {
         }
     }
 
+    protected IccRecords getUiccCardApplication() {
+        return  mUiccController.getIccRecords(UiccController.APP_FAM_3GPP2);
+    }
+
     @Override
     protected void onUpdateIcc() {
         if (mUiccController == null ) {
             return;
         }
 
-        IccRecords newIccRecords = mUiccController.getIccRecords(UiccController.APP_FAM_3GPP2);
+        IccRecords newIccRecords = getUiccCardApplication();
+        if (newIccRecords == null) return;
 
         IccRecords r = mIccRecords.get();
         if (r != newIccRecords) {

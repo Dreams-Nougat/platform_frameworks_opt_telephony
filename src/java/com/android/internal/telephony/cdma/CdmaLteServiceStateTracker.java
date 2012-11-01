@@ -35,6 +35,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.util.EventLog;
 
+import com.android.internal.telephony.DataConnectionTracker;
 import com.android.internal.telephony.IccCardApplicationStatus.AppState;
 import com.android.internal.telephony.gsm.GsmDataConnectionTracker;
 import com.android.internal.telephony.IccCardConstants;
@@ -182,6 +183,14 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
         }
     }
 
+    protected DataConnectionTracker getNewGsmDataConnectionTracker(PhoneBase phone) {
+        return new GsmDataConnectionTracker(phone);
+    }
+
+    protected DataConnectionTracker getNewCdmaDataConnectionTracker(CDMAPhone phone) {
+        return new CdmaDataConnectionTracker(phone);
+    }
+
     @Override
     protected void pollStateDone() {
         // determine data RadioTechnology from both LET and CDMA SS
@@ -302,14 +311,14 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
                 && (phone.mDataConnectionTracker instanceof CdmaDataConnectionTracker)) {
             if (DBG) log("GsmDataConnectionTracker Created");
             phone.mDataConnectionTracker.dispose();
-            phone.mDataConnectionTracker = new GsmDataConnectionTracker(mCdmaLtePhone);
+            phone.mDataConnectionTracker = getNewGsmDataConnectionTracker(phone);
         }
 
         if ((hasLostMultiApnSupport)
                 && (phone.mDataConnectionTracker instanceof GsmDataConnectionTracker)) {
             if (DBG)log("GsmDataConnectionTracker disposed");
             phone.mDataConnectionTracker.dispose();
-            phone.mDataConnectionTracker = new CdmaDataConnectionTracker(phone);
+            phone.mDataConnectionTracker = getNewCdmaDataConnectionTracker(phone);
         }
 
         CdmaCellLocation tcl = cellLoc;

@@ -421,4 +421,14 @@ class SipCommandInterface extends BaseCommands implements CommandsInterface {
 
     public void getVoiceRadioTechnology(Message result) {
     }
+
+    public void setSubscriptionMode(int subscriptionMode, Message response) {
+    }
+
+    public void setUiccSubscription(int slotId, int appIndex, int subId, int subStatus,
+            Message response) {
+    }
+
+    public void setDataSubscription(Message response) {
+    }
 }

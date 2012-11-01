@@ -1,5 +1,8 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Copyright (c) 2011-12 Code Aurora Forum. All rights reserved.
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +17,7 @@
  * limitations under the License.
  */
 
-package com.android.internal.telephony;
+package com.android.internal.telephony.msim;
 
 import android.net.LinkCapabilities;
 import android.net.LinkProperties;
@@ -22,95 +25,135 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.telephony.CellInfo;
+import android.telephony.MSimTelephonyManager;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.android.internal.telephony.Call;
+import com.android.internal.telephony.DefaultPhoneNotifier;
+import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.ITelephonyRegistry;
+import com.android.internal.telephony.ITelephonyRegistryMSim;
+import com.android.internal.telephony.PhoneConstants;
 
 /**
  * broadcast intents
  */
-public class DefaultPhoneNotifier implements PhoneNotifier {
-
+public class MSimDefaultPhoneNotifier extends DefaultPhoneNotifier {
     static final String LOG_TAG = "GSM";
-    private static final boolean DBG = true;
-    protected ITelephonyRegistry mRegistry;
+    private ITelephonyRegistryMSim mMSimRegistry;
 
-    protected DefaultPhoneNotifier() {
+    /*package*/
+    MSimDefaultPhoneNotifier() {
+        mMSimRegistry = ITelephonyRegistryMSim.Stub.asInterface(ServiceManager.getService(
+                "telephony.msim.registry"));
         mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
-                    "telephony.registry"));
+                "telephony.registry"));
     }
 
+    @Override
     public void notifyPhoneState(Phone sender) {
         Call ringingCall = sender.getRingingCall();
+        int subscription = sender.getSubscription();
         String incomingNumber = "";
         if (ringingCall != null && ringingCall.getEarliestConnection() != null){
             incomingNumber = ringingCall.getEarliestConnection().getAddress();
         }
         try {
+            mMSimRegistry.notifyCallState(
+                    convertCallState(sender.getState()), incomingNumber, subscription);
             mRegistry.notifyCallState(convertCallState(sender.getState()), incomingNumber);
         } catch (RemoteException ex) {
             // system process is dead
         }
     }
 
+    @Override
     public void notifyServiceState(Phone sender) {
         ServiceState ss = sender.getServiceState();
+        int subscription = sender.getSubscription();
         if (ss == null) {
             ss = new ServiceState();
             ss.setStateOutOfService();
         }
         try {
+            mMSimRegistry.notifyServiceState(ss, subscription);
             mRegistry.notifyServiceState(ss);
         } catch (RemoteException ex) {
             // system process is dead
         }
     }
 
+    @Override
     public void notifySignalStrength(Phone sender) {
+        int subscription = sender.getSubscription();
         try {
+            mMSimRegistry.notifySignalStrength(sender.getSignalStrength(), subscription);
             mRegistry.notifySignalStrength(sender.getSignalStrength());
         } catch (RemoteException ex) {
             // system process is dead
         }
     }
 
+    @Override
     public void notifyMessageWaitingChanged(Phone sender) {
+        int subscription = sender.getSubscription();
         try {
+            mMSimRegistry.notifyMessageWaitingChanged(
+                    sender.getMessageWaitingIndicator(),
+                    subscription);
             mRegistry.notifyMessageWaitingChanged(sender.getMessageWaitingIndicator());
         } catch (RemoteException ex) {
             // system process is dead
         }
     }
 
+    @Override
     public void notifyCallForwardingChanged(Phone sender) {
+        int subscription = sender.getSubscription();
         try {
-            mRegistry.notifyCallForwardingChanged(sender.getCallForwardingIndicator());
+            mMSimRegistry.notifyCallForwardingChanged(
+                    sender.getCallForwardingIndicator(),
+                    subscription);
+            mRegistry.notifyCallForwardingChanged(
+                    sender.getCallForwardingIndicator());
         } catch (RemoteException ex) {
             // system process is dead
         }
     }
 
+    @Override
     public void notifyDataActivity(Phone sender) {
         try {
+            mMSimRegistry.notifyDataActivity(convertDataActivityState(
+                    sender.getDataActivityState()));
             mRegistry.notifyDataActivity(convertDataActivityState(sender.getDataActivityState()));
         } catch (RemoteException ex) {
             // system process is dead
         }
     }
 
+    @Override
     public void notifyDataConnection(Phone sender, String reason, String apnType,
             PhoneConstants.DataState state) {
         doNotifyDataConnection(sender, reason, apnType, state);
     }
 
-    private void doNotifyDataConnection(Phone sender, String reason, String apnType,
+    protected void doNotifyDataConnection(Phone sender, String reason, String apnType,
             PhoneConstants.DataState state) {
+        int subscription = sender.getSubscription();
+        int dds = MSimPhoneFactory.getDataSubscription();
+        log("subscription = " + subscription + ", DDS = " + dds);
+        if (subscription != dds) {
+            // This is not the current DDS, do not notify data connection state
+            return;
+        }
+
         // TODO
         // use apnType as the key to which connection we're talking about.
         // pass apnType back up to fetch particular for this one.
-        TelephonyManager telephony = TelephonyManager.getDefault();
+        MSimTelephonyManager telephony = MSimTelephonyManager.getDefault();
         LinkProperties linkProperties = null;
         LinkCapabilities linkCapabilities = null;
         boolean roaming = false;
@@ -123,6 +166,16 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
         if (ss != null) roaming = ss.getRoaming();
 
         try {
+            mMSimRegistry.notifyDataConnection(
+                    convertDataState(state),
+                    sender.isDataConnectivityPossible(apnType), reason,
+                    sender.getActiveApnHost(apnType),
+                    apnType,
+                    linkProperties,
+                    linkCapabilities,
+                    ((telephony!=null) ? telephony.getNetworkType(subscription) :
+                    TelephonyManager.NETWORK_TYPE_UNKNOWN),
+                    roaming);
             mRegistry.notifyDataConnection(
                     convertDataState(state),
                     sender.isDataConnectivityPossible(apnType), reason,
@@ -130,7 +183,7 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
                     apnType,
                     linkProperties,
                     linkCapabilities,
-                    ((telephony!=null) ? telephony.getNetworkType() :
+                    ((telephony!=null) ? telephony.getNetworkType(subscription) :
                     TelephonyManager.NETWORK_TYPE_UNKNOWN),
                     roaming);
         } catch (RemoteException ex) {
@@ -138,34 +191,44 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
         }
     }
 
+    @Override
     public void notifyDataConnectionFailed(Phone sender, String reason, String apnType) {
         try {
+            mMSimRegistry.notifyDataConnectionFailed(reason, apnType);
             mRegistry.notifyDataConnectionFailed(reason, apnType);
         } catch (RemoteException ex) {
             // system process is dead
         }
     }
 
+    @Override
     public void notifyCellLocation(Phone sender) {
+        int subscription = sender.getSubscription();
         Bundle data = new Bundle();
         sender.getCellLocation().fillInNotifierBundle(data);
         try {
+            mMSimRegistry.notifyCellLocation(data, subscription);
             mRegistry.notifyCellLocation(data);
         } catch (RemoteException ex) {
             // system process is dead
         }
     }
 
+    @Override
     public void notifyCellInfo(Phone sender, CellInfo cellInfo) {
+        int subscription = sender.getSubscription();
         try {
+            mMSimRegistry.notifyCellInfo(cellInfo, subscription);
             mRegistry.notifyCellInfo(cellInfo);
         } catch (RemoteException ex) {
 
         }
     }
 
+    @Override
     public void notifyOtaspChanged(Phone sender, int otaspMode) {
         try {
+            mMSimRegistry.notifyOtaspChanged(otaspMode);
             mRegistry.notifyOtaspChanged(otaspMode);
         } catch (RemoteException ex) {
             // system process is dead
@@ -173,108 +236,6 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
     }
 
     private void log(String s) {
-        Log.d(LOG_TAG, "[PhoneNotifier] " + s);
-    }
-
-    /**
-     * Convert the {@link State} enum into the TelephonyManager.CALL_STATE_* constants
-     * for the public API.
-     */
-    public static int convertCallState(PhoneConstants.State state) {
-        switch (state) {
-            case RINGING:
-                return TelephonyManager.CALL_STATE_RINGING;
-            case OFFHOOK:
-                return TelephonyManager.CALL_STATE_OFFHOOK;
-            default:
-                return TelephonyManager.CALL_STATE_IDLE;
-        }
-    }
-
-    /**
-     * Convert the TelephonyManager.CALL_STATE_* constants into the {@link State} enum
-     * for the public API.
-     */
-    public static PhoneConstants.State convertCallState(int state) {
-        switch (state) {
-            case TelephonyManager.CALL_STATE_RINGING:
-                return PhoneConstants.State.RINGING;
-            case TelephonyManager.CALL_STATE_OFFHOOK:
-                return PhoneConstants.State.OFFHOOK;
-            default:
-                return PhoneConstants.State.IDLE;
-        }
-    }
-
-    /**
-     * Convert the {@link DataState} enum into the TelephonyManager.DATA_* constants
-     * for the public API.
-     */
-    public static int convertDataState(PhoneConstants.DataState state) {
-        switch (state) {
-            case CONNECTING:
-                return TelephonyManager.DATA_CONNECTING;
-            case CONNECTED:
-                return TelephonyManager.DATA_CONNECTED;
-            case SUSPENDED:
-                return TelephonyManager.DATA_SUSPENDED;
-            default:
-                return TelephonyManager.DATA_DISCONNECTED;
-        }
-    }
-
-    /**
-     * Convert the TelephonyManager.DATA_* constants into {@link DataState} enum
-     * for the public API.
-     */
-    public static PhoneConstants.DataState convertDataState(int state) {
-        switch (state) {
-            case TelephonyManager.DATA_CONNECTING:
-                return PhoneConstants.DataState.CONNECTING;
-            case TelephonyManager.DATA_CONNECTED:
-                return PhoneConstants.DataState.CONNECTED;
-            case TelephonyManager.DATA_SUSPENDED:
-                return PhoneConstants.DataState.SUSPENDED;
-            default:
-                return PhoneConstants.DataState.DISCONNECTED;
-        }
-    }
-
-    /**
-     * Convert the {@link DataState} enum into the TelephonyManager.DATA_* constants
-     * for the public API.
-     */
-    public static int convertDataActivityState(Phone.DataActivityState state) {
-        switch (state) {
-            case DATAIN:
-                return TelephonyManager.DATA_ACTIVITY_IN;
-            case DATAOUT:
-                return TelephonyManager.DATA_ACTIVITY_OUT;
-            case DATAINANDOUT:
-                return TelephonyManager.DATA_ACTIVITY_INOUT;
-            case DORMANT:
-                return TelephonyManager.DATA_ACTIVITY_DORMANT;
-            default:
-                return TelephonyManager.DATA_ACTIVITY_NONE;
-        }
-    }
-
-    /**
-     * Convert the TelephonyManager.DATA_* constants into the {@link DataState} enum
-     * for the public API.
-     */
-    public static Phone.DataActivityState convertDataActivityState(int state) {
-        switch (state) {
-            case TelephonyManager.DATA_ACTIVITY_IN:
-                return Phone.DataActivityState.DATAIN;
-            case TelephonyManager.DATA_ACTIVITY_OUT:
-                return Phone.DataActivityState.DATAOUT;
-            case TelephonyManager.DATA_ACTIVITY_INOUT:
-                return Phone.DataActivityState.DATAINANDOUT;
-            case TelephonyManager.DATA_ACTIVITY_DORMANT:
-                return Phone.DataActivityState.DORMANT;
-            default:
-                return Phone.DataActivityState.NONE;
-        }
+        Log.d(LOG_TAG, "[MSimDefaultPhoneNotifier] " + s);
     }
 }
