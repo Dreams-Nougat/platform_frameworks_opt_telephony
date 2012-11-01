@@ -80,10 +80,10 @@ public class UiccCard {
     private static final int EVENT_CARD_REMOVED = 13;
     private static final int EVENT_CARD_ADDED = 14;
 
-    public UiccCard(Context c, CommandsInterface ci, IccCardStatus ics) {
+    public UiccCard(Context c, CommandsInterface ci, IccCardStatus ics, int slotId) {
         if (DBG) log("Creating");
         mCardState = ics.mCardState;
-        update(c, ci, ics);
+        update(c, ci, ics, slotId);
     }
 
     public void dispose() {
@@ -100,7 +100,7 @@ public class UiccCard {
         }
     }
 
-    public void update(Context c, CommandsInterface ci, IccCardStatus ics) {
+    public void update(Context c, CommandsInterface ci, IccCardStatus ics, int slotId) {
         synchronized (mLock) {
             if (mDestroyed) {
                 loge("Updated after destroyed! Fix me!");
@@ -133,16 +133,21 @@ public class UiccCard {
                 }
             }
 
-            if (mUiccApplications.length > 0 && mUiccApplications[0] != null) {
-                // Initialize or Reinitialize CatService
-                mCatService = CatService.getInstance(mCi,
-                                                     mContext,
-                                                     this);
-            } else {
-                if (mCatService != null) {
-                    mCatService.dispose();
+            if (mCatService == null) {
+                // Create CatService
+                mCatService = new CatService(mCi, mContext, slotId);
+            }
+
+            if (mCatService != null) {
+                if (mUiccApplications.length > 0 && mUiccApplications[0] != null) {
+                    // Initialize or Reinitialize CatService
+                    mCatService.update(mUiccApplications[0], mCardState);
+                } else {
+                    mCatService.update(null, mCardState);
                 }
-                mCatService = null;
+            } else {
+                // This is an error case.
+                loge("CatService is null");
             }
 
             sanitizeApplicationIndexes();
@@ -357,6 +362,10 @@ public class UiccCard {
             }
         }
         return count;
+    }
+
+    public CatService getCatService() {
+        return mCatService;
     }
 
     private void log(String msg) {
