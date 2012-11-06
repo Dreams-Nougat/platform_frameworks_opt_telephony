@@ -1,0 +1,13 @@
+Revision: 8caece998cc01c0c6584081d6bda783de1d0da97
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/SIMRecords.java
+
+1395
+Tue Nov 06 17:16:19 2012 +0000
+Author: John Huang <1000718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAALRn///D8=
+Bytes: 294
+The idea here to detect the case where EFSPN has not been loaded yet.  Seems possible to have EFSPN loaded with empty SPN.  If we change the logic here, we should update the comment below.
+
+Also, this change implies "" is not a valid SPN.  Perhaps "" is nonsensical, but is it actually invalid?
+
