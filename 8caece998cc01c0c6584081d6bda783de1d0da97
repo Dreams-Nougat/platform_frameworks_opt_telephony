@@ -11,3 +11,13 @@ The idea here to detect the case where EFSPN has not been loaded yet.  Seems pos
 
 Also, this change implies "" is not a valid SPN.  Perhaps "" is nonsensical, but is it actually invalid?
 
+1395
+Tue Nov 06 22:41:44 2012 +0000
+Author: Abhishek Adappa <1015528@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAALRn///D8=
+UUID: AAALRX//+vI=
+Bytes: 162
+Agree. We need to update the comment.
+
+We are not saying that "" is an invalid SPN. But if the SPN is an empty string then it would be better to fallback to PLMN.
+
