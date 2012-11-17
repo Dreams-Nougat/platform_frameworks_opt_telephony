@@ -100,6 +100,8 @@ public final class CallManager {
     // default phone as the first phone registered, which is PhoneBase obj
     private Phone mDefaultPhone;
 
+    private boolean mSpeedUpAudioForMtCall = false;
+
     // state registrants
     protected final RegistrantList mPreciseCallStateRegistrants
     = new RegistrantList();
@@ -384,6 +386,10 @@ public final class CallManager {
                         audioManager.requestAudioFocusForCall(AudioManager.STREAM_RING,
                                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
                     }
+                }
+                if(mSpeedUpAudioForMtCall) {
+                    audioManager.setMode(AudioManager.MODE_IN_CALL);
+                } else {
                     audioManager.setMode(AudioManager.MODE_RINGTONE);
                 }
                 break;
@@ -407,6 +413,7 @@ public final class CallManager {
                             AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
                     audioManager.setMode(newAudioMode);
                 }
+                mSpeedUpAudioForMtCall = false;
                 break;
             case IDLE:
                 if (audioManager.getMode() != AudioManager.MODE_NORMAL) {
@@ -415,6 +422,7 @@ public final class CallManager {
                     // abandon audio focus after the mode has been set back to normal
                     audioManager.abandonAudioFocusForCall();
                 }
+                mSpeedUpAudioForMtCall = false;
                 break;
         }
     }
@@ -526,6 +534,23 @@ public final class CallManager {
                 activePhone.switchHoldingAndActive();
             } else if (!sameChannel && hasBgCall) {
                 getActiveFgCall().hangup();
+            }
+        }
+
+        Context context = getContext();
+        if (context == null) {
+            Log.d(LOG_TAG, "Speedup Audio Path enhancement: Context is null");
+        } else if (context.getResources().getBoolean(
+                com.android.internal.R.bool.config_speed_up_audio_on_mt_calls)) {
+            Log.d(LOG_TAG, "Speedup Audio Path enhancement");
+            AudioManager audioManager = (AudioManager)
+                    context.getSystemService(Context.AUDIO_SERVICE);
+            int currMode = audioManager.getMode();
+            if ((currMode != AudioManager.MODE_IN_CALL) && !(ringingPhone instanceof SipPhone)) {
+                Log.d(LOG_TAG, "setAudioMode Setting audio mode from " +
+                                currMode + " to " + AudioManager.MODE_IN_CALL);
+                audioManager.setMode(AudioManager.MODE_IN_CALL);
+                mSpeedUpAudioForMtCall = true;
             }
         }
 
