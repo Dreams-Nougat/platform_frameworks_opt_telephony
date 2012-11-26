@@ -719,8 +719,10 @@ public final class GsmCallTracker extends CallTracker {
 
     /*package*/ void
     setMute(boolean mute) {
-        desiredMute = mute;
-        cm.setMute(desiredMute, null);
+        if (desiredMute != mute && foregroundCall.getState().isAlive()) {
+            desiredMute = mute;
+            cm.setMute(desiredMute, null);
+        }
     }
 
     /*package*/ boolean
