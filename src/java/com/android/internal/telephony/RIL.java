@@ -41,6 +41,8 @@ import android.os.Parcel;
 import android.os.PowerManager;
 import android.os.SystemProperties;
 import android.os.PowerManager.WakeLock;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.SignalStrength;
@@ -1712,8 +1714,13 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         RILRequest rr
                 = RILRequest.obtain(RIL_REQUEST_SEND_USSD, response);
 
-        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
-                            + " " + ussdString);
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA512");
+            if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
+                                   + " " + md.digest(ussdString.getBytes()));
+        } catch (NoSuchAlgorithmException e) {
+            throw new AssertionError(e);
+        }
 
         rr.mp.writeString(ussdString);
 
