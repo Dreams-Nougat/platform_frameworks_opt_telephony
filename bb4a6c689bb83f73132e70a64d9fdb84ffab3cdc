@@ -1,0 +1,17 @@
+Revision: bb4a6c689bb83f73132e70a64d9fdb84ffab3cdc
+Patch-set: 2
+File: src/java/com/android/internal/telephony/RIL.java
+
+1717
+Tue Dec 04 22:26:35 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: MkXQGBmA
+Bytes: 194
+Lets just change it to "xxxx" unless RILJ_LOGV is true.
+
+  if (RILJ_LOGD) {
+     String dbgUssdString = "xxxx"
+     if (RILJ_LOGV) dbgUssdString = ussdString
+     riljLog(.., dbgUssdString);
+  }
+
