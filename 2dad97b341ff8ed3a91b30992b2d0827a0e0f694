@@ -9,12 +9,28 @@ UUID: MeqvWtRU
 Bytes: 37
 bring back space before mAid, please.
 
+174
+Tue Dec 04 01:51:53 2012 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: MeqvWtRU
+UUID: Mb9M61OY
+Bytes: 4
+Done
+
 263
 Tue Dec 04 01:25:01 2012 +0000
 Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: Meqvvld0
 Bytes: 25
 Why 7 spaces indentation?
+
+263
+Tue Dec 04 01:51:53 2012 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: Meqvvld0
+UUID: Mb-M30Ps
+Bytes: 18
+use 8 spaces. done
 
 264
 Tue Dec 04 01:25:01 2012 +0000
@@ -23,6 +39,14 @@ UUID: MemvFnVo
 Bytes: 109
 Be consistent, either start line with "+" sign, or leave + on previous line. But same way on all these lines.
 
+264
+Tue Dec 04 01:51:53 2012 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: MemvFnVo
+UUID: MbxMkTMU
+Bytes: 4
+Done
+
 273
 Tue Dec 04 01:25:01 2012 +0000
 Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -30,10 +54,26 @@ UUID: MeksqmTI
 Bytes: 37
 bring back space before mAid, please.
 
+273
+Tue Dec 04 01:51:53 2012 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: MeksqmTI
+UUID: MbzMpSJ4
+Bytes: 4
+Done
+
 367
 Tue Dec 04 01:25:01 2012 +0000
 Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: MeosjsVk
 Bytes: 197
 Either make every argument in its own line, or combine all of them in chunks. (I don't see reasong for lc.recordNum and READ_RECORDS_MODE... to have a line for each - they would both fit in 1 line)
+
+367
+Tue Dec 04 01:51:53 2012 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: MeosjsVk
+UUID: Mb1MexHw
+Bytes: 54
+make the same combination with others. (like line 466)
 
