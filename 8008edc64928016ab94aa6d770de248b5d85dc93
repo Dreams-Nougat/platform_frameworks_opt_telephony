@@ -28,6 +28,14 @@ UUID: Me5stu5k
 Bytes: 32
 What if already in MODE_IN_CALL?
 
+391
+Tue Dec 04 18:48:43 2012 +0000
+Author: Eric Laurent <1003259@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: Me5stu5k
+UUID: MhJ7KvZs
+Bytes: 154
+please don't do that. changing the audio mode has implication on routing and volume policy. You should not select in call mode while the phone is ringing.
+
 393
 Tue Dec 04 16:43:02 2012 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
