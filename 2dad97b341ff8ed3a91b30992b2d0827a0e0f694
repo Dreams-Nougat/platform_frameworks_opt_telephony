@@ -1,0 +1,39 @@
+Revision: 2dad97b341ff8ed3a91b30992b2d0827a0e0f694
+Patch-set: 1
+File: src/java/com/android/internal/telephony/IccFileHandler.java
+
+174
+Tue Dec 04 01:25:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: MeqvWtRU
+Bytes: 37
+bring back space before mAid, please.
+
+263
+Tue Dec 04 01:25:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: Meqvvld0
+Bytes: 25
+Why 7 spaces indentation?
+
+264
+Tue Dec 04 01:25:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: MemvFnVo
+Bytes: 109
+Be consistent, either start line with "+" sign, or leave + on previous line. But same way on all these lines.
+
+273
+Tue Dec 04 01:25:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: MeksqmTI
+Bytes: 37
+bring back space before mAid, please.
+
+367
+Tue Dec 04 01:25:01 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: MeosjsVk
+Bytes: 197
+Either make every argument in its own line, or combine all of them in chunks. (I don't see reasong for lc.recordNum and READ_RECORDS_MODE... to have a line for each - they would both fit in 1 line)
+
