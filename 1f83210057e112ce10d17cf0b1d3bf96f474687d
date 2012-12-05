@@ -1,0 +1,11 @@
+Revision: 1f83210057e112ce10d17cf0b1d3bf96f474687d
+Patch-set: 3
+File: /COMMIT_MSG
+
+7
+Wed Dec 05 20:33:57 2012 +0000
+Author: Nick Kralevich <1003966@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: Mkv8j67w
+Bytes: 110
+This isn't really obfuscated anymore.  The log entries are gone. Can you please update the change description?
+
