@@ -15,3 +15,11 @@ Lets just change it to "xxxx" unless RILJ_LOGV is true.
      riljLog(.., dbgUssdString);
   }
 
+1717
+Wed Dec 05 00:06:36 2012 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: MkXQGBmA
+UUID: MkfcNWJ8
+Bytes: 294
+I agree with Wink's approach (which is used elsewhere to filter out PII from the radio log). Changing the value of RILJ_LOGV requires a recompile, so the USSD string will never be logged (in Wink's version) unless RILJ_LOGV is set to true and the framework is rebuilt and flashed to the device.
+
