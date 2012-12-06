@@ -1,0 +1,19 @@
+Revision: b11b632d35339ac3b17f18280f994ea25cacd064
+Patch-set: 3
+File: src/java/com/android/internal/telephony/CallManager.java
+
+390
+Thu Dec 06 23:49:47 2012 +0000
+Author: Eric Laurent <1003259@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: My9fKHJw
+Bytes: 347
+I am worried about this change that makes that we set the audio mode even if the current mode is already MODE_RINGTONE.
+Before this change we were only setting audio mode to MODE_RINGTONE if current was not. Now we do it regardless and this is true for all devices, this change is done what ever the value of  config_speed_up_audio_on_mt_calls is.
+
+391
+Thu Dec 06 23:49:47 2012 +0000
+Author: Eric Laurent <1003259@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: My1e3LCU
+Bytes: 145
+this change also implies that setAudioMode() is called while the state is still RINGING after acceptCall() has been executed which is surprising.
+
