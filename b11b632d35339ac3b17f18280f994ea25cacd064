@@ -17,3 +17,26 @@ UUID: My1e3LCU
 Bytes: 145
 this change also implies that setAudioMode() is called while the state is still RINGING after acceptCall() has been executed which is surprising.
 
+391
+Sat Dec 08 01:43:15 2012 +0000
+Author: Eric Laurent <1003259@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: My1e3LCU
+UUID: M1ZyCcVw
+Bytes: 630
+Changing as follows would be fine:
+
+if (audioManager.getMode() != AudioManager.MODE_RINGTONE) {
+    // only request audio focus if the ringtone is going to be heard
+    if (audioManager.getStreamVolume(AudioManager.STREAM_RING) > 0) {
+        if (VDBG) Log.d(LOG_TAG, "requestAudioFocus on STREAM_RING");
+        audioManager.requestAudioFocusForCall(AudioManager.STREAM_RING,
+                      AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+    }
+    if(!mSpeedUpAudioForMtCall) {
+        audioManager.setMode(AudioManager.MODE_RINGTONE);
+    }
+}
+if (mSpeedUpAudioForMtCall) {
+    audioManager.setMode(AudioManager.MODE_IN_CALL);
+}
+
