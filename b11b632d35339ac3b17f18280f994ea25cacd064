@@ -10,6 +10,13 @@ Bytes: 347
 I am worried about this change that makes that we set the audio mode even if the current mode is already MODE_RINGTONE.
 Before this change we were only setting audio mode to MODE_RINGTONE if current was not. Now we do it regardless and this is true for all devices, this change is done what ever the value of  config_speed_up_audio_on_mt_calls is.
 
+390
+Sat Dec 08 02:56:20 2012 +0000
+Author: SathishKumar Mani <1018018@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: M1TzaXT4
+Bytes: 112
+I think we should call setMode(IN_CALL) only when it is not sipCall. So we should have an additional check here,
+
 391
 Thu Dec 06 23:49:47 2012 +0000
 Author: Eric Laurent <1003259@85c56323-6fa9-3386-8a01-6480fb634889>
