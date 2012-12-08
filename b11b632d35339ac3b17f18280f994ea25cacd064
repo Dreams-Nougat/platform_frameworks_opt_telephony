@@ -25,6 +25,14 @@ UUID: M1aKCpFs
 Bytes: 100
 My understanding is that mSpeedUpAudioForMtCall is only true if no in SIP call. Do I miss something?
 
+390
+Sat Dec 08 22:39:35 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: M1aKCpFs
+UUID: M1IPjLCg
+Bytes: 103
+Your understanding is correct. Code on line 549 takes care of that: !(ringingPhone instanceof SipPhone)
+
 391
 Thu Dec 06 23:49:47 2012 +0000
 Author: Eric Laurent <1003259@85c56323-6fa9-3386-8a01-6480fb634889>
