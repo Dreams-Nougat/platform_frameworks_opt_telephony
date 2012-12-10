@@ -9,3 +9,11 @@ UUID: M12ODnac
 Bytes: 124
 For backwards compatibility with some devices using this internal file please keep a copy in com.android.internal.telephony.
 
+0
+Mon Dec 10 20:07:55 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: M12ODnac
+UUID: M1UUy5fA
+Bytes: 4
+Done
+
