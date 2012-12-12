@@ -1,0 +1,11 @@
+Revision: f6e57b442001211d2103c435661202b448c4d4cd
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/GsmDataConnectionTracker.java
+
+611
+Wed Dec 12 21:01:11 2012 +0000
+Author: John Huang <1000718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: M1AP3K1Q
+Bytes: 280
+Can you explain why you are setting this here, and not in the constructor?  This means framework will not send SETUP_DATA_CALL until after first attach.  If this is something we care about, then it probably makes sense to reset to false when radio powers down (ie, airplane mode).
+
