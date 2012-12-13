@@ -9,3 +9,15 @@ UUID: M1AP3K1Q
 Bytes: 280
 Can you explain why you are setting this here, and not in the constructor?  This means framework will not send SETUP_DATA_CALL until after first attach.  If this is something we care about, then it probably makes sense to reset to false when radio powers down (ie, airplane mode).
 
+611
+Thu Dec 13 01:18:27 2012 +0000
+Author: Jewon Lee <1014573@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: M1AP3K1Q
+UUID: M4bSJMX4
+Bytes: 656
+As you know, the flag is only set after first PS attach from boot.
+If the network deny PS attach during first boot, UE should not send SETUP_DATA_CALL because this SIM card is not allowed to attach PS network. In this case, the flag will be maintained with 'false' not to send SETUP_DATA_CALL.
+And the success of first PS attach means that the network allows this SIM card to use PS network and can use cellular data connection.
+If the PS attach will fail with 3(denied by network) after togglling airplane mode, framework will retry SETUP_DATA_CALL and will end the retry. 
+So, I think the flag does not need to be reset even if user toggle airplane mode.
+
