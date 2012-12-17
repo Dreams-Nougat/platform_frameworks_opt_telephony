@@ -263,6 +263,7 @@ public class WapPushOverSms {
         }
 
         Intent intent = new Intent(Intents.WAP_PUSH_RECEIVED_ACTION);
+        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         intent.setType(mimeType);
         intent.putExtra("transactionId", transactionId);
         intent.putExtra("pduType", pduType);
