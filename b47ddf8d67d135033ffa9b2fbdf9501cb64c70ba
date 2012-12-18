@@ -1,0 +1,18 @@
+Revision: b47ddf8d67d135033ffa9b2fbdf9501cb64c70ba
+Patch-set: 5
+File: src/java/com/android/internal/telephony/SMSDispatcher.java
+
+576
+Tue Dec 18 00:30:53 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: M1NErCYE
+Bytes: 47
+Before returning we should call cursor.close().
+
+585
+Tue Dec 18 00:30:53 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: M1JFQYQY
+Bytes: 58
+If discard is already true we don't need to do this check.
+
