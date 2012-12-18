@@ -1,0 +1,11 @@
+Revision: 133aa923bc687ffe90c74388fc1ddda835935bb3
+Patch-set: 1
+File: src/java/com/android/internal/telephony/IntRangeManager.java
+
+539
+Tue Dec 18 01:04:21 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: M1LHpHd8
+Bytes: 70
+I believe we should be calling startUpdate(), why have you removed it?
+
