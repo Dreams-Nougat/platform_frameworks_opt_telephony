@@ -1,0 +1,25 @@
+Revision: e19d4736feb067c82100052b0c7e4781953dc8e6
+Patch-set: 2
+File: /COMMIT_MSG
+
+7
+Wed Dec 19 16:52:54 2012 +0000
+Author: Magnus Bäck <1010973@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: NCzd.uNc
+Bytes: 154
+This commit message isn't very useful. It should state what build error is fixed and preferably also which commit introduced the error in the first place.
+
+File: Android.mk
+
+21
+Wed Dec 19 16:52:54 2012 +0000
+Author: Magnus Bäck <1010973@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: NC5cZBN8
+Bytes: 282
+You probably mean this:
+
+ $(call all-Iaidl-files-under, src/java) \
+ $(call all-logtags-files-under, src/java)
+
+I'd also recommend leaving off the \ at the end of the last line to avoid problems if someone happens to place another (unrelated) line immediately after this assignment.
+
