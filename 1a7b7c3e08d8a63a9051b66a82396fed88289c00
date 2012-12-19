@@ -2,12 +2,57 @@ Revision: 1a7b7c3e08d8a63a9051b66a82396fed88289c00
 Patch-set: 2
 File: src/java/com/android/internal/telephony/RIL.java
 
+229
+Wed Dec 19 17:51:21 2012 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: NFE4-c4w
+Bytes: 6
+remove
+
+317
+Wed Dec 19 17:51:21 2012 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: NFK7hNyI
+Bytes: 19
+sync with mWakeLock
+
+330
+Wed Dec 19 17:51:21 2012 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: NFI7ee2Q
+Bytes: 20
+synch with mWakeLock
+
+383
+Wed Dec 19 17:51:21 2012 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: AAAJBH///Tk=
+Bytes: 128
+pull alreadySubtracted out and check it first - don't need to enter the sync block at all most of the time.
+
+Sync with mWakeLock
+
 432
 Thu Sep 13 02:31:56 2012 +0000
 Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: AAAJCH////4=
 Bytes: 268
 Need not this change, as for TIME OUT, there is some problem in modem side that can not response RIL request any more. So FW need release RILJ wakelock immediately despite of race condition. You can find that mRequestMessagesWaiting also have no lock in this scenario.
+
+432
+Wed Dec 19 17:51:21 2012 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAJCH////4=
+UUID: AAAJBH///WE=
+Bytes: 66
+Don't need anything here as it's protected by mWakeLock sync block
+
+2099
+Wed Dec 19 17:51:21 2012 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: NFI63myY
+Bytes: 50
+revert - put this back in the mWakeLock sync block
 
 2108
 Wed Sep 12 16:13:18 2012 +0000
@@ -73,4 +118,11 @@ The two threads have race condition because did not use lock to protect mRequest
     }
 
 So I think beside the change in releaseWakeLockIfDone and EVENT_WAKE_LOCK_TIMEOUT, all other changes are mandatory. Can you please let me know your point? Thanks!
+
+2108
+Wed Dec 19 17:51:21 2012 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: NFG46L54
+Bytes: 48
+revert and put this back in mWakeLock sync block
 
