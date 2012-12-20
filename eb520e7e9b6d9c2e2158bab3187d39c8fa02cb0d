@@ -37,3 +37,16 @@ Bytes: 172
 As Magnus said, typo in call the functions.
 Wink, is com/android/internal/telephony/uicc/AdnRecord.aidl really needed in 	LOCAL_SRC_FILES? it's not in your original change.
 
+21
+Thu Dec 20 18:51:26 2012 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: NFCuqzm8
+UUID: NFqw22AA
+Bytes: 356
+AdnRecord  only contains a file comment and these two lines:
+
+ package com.android.internal.telephony.uicc;
+ parcelable AdnRecord;
+
+From a practical point of view it apparently isn't required, but I would have thought it should have been included and that I left it off by mistake. So my thought is that if its does no harm to add it then we should add it.
+
