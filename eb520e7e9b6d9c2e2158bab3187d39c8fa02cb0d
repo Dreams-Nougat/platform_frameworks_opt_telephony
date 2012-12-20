@@ -1,0 +1,14 @@
+Revision: eb520e7e9b6d9c2e2158bab3187d39c8fa02cb0d
+Patch-set: 3
+File: Android.mk
+
+21
+Thu Dec 20 14:40:10 2012 +0000
+Author: Magnus Bäck <1010973@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: NIqmChQc
+Bytes: 172
+I'd expect these two lines to evaluate to nothing. As I said in the previous comment:
+
+ $(call all-Iaidl-files-under, src/java) \
+ $(call all-logtags-files-under, src/java)
+
