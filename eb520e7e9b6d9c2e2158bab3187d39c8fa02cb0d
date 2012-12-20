@@ -28,3 +28,12 @@ Why do you say that, I expect them to find 4 files
  $ find . -name '*logtags' 
  ./com/android/internal/telephony/EventLogTags.logtags
 
+21
+Thu Dec 20 17:39:08 2012 +0000
+Author: Ying Wang <1003981@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: NFmlcYks
+UUID: NFCuqzm8
+Bytes: 172
+As Magnus said, typo in call the functions.
+Wink, is com/android/internal/telephony/uicc/AdnRecord.aidl really needed in 	LOCAL_SRC_FILES? it's not in your original change.
+
