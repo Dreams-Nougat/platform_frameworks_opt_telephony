@@ -9,6 +9,17 @@ UUID: NFE4-c4w
 Bytes: 6
 remove
 
+229
+Fri Dec 21 05:35:12 2012 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: NFE4-c4w
+UUID: NIFw1tUg
+Bytes: 187
+Lock mWakeLock is for mWakeLock operation.
+Lock mPendingLock is for mRequestMessagesPending operation.
+Lock mRequestsList is for mRequestMessagesWaiting operation.
+Suggest keep this lock.
+
 317
 Wed Dec 19 17:51:21 2012 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -31,6 +42,14 @@ Bytes: 128
 pull alreadySubtracted out and check it first - don't need to enter the sync block at all most of the time.
 
 Sync with mWakeLock
+
+383
+Fri Dec 21 05:35:12 2012 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAJBH///Tk=
+UUID: NIJwUna0
+Bytes: 43
+Separate from mWakeLock, in case dead lock.
 
 432
 Thu Sep 13 02:31:56 2012 +0000
