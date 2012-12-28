@@ -1,0 +1,12 @@
+Revision: b0ffedfb7d4806d0e9b606b69c44511b110c1b0e
+Patch-set: 2
+File: src/java/com/android/internal/telephony/gsm/SmsMessage.java
+
+1030
+Fri Dec 28 18:21:38 2012 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: NYmDHcpY
+Bytes: 143
+This function has a lot of ctrl-c ctrl-v from function above (parseSmsDeliver).
+Can the code be restructured to avoid duplicating so much code?
+
