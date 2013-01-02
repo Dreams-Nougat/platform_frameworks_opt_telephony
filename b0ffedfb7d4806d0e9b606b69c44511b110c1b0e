@@ -10,3 +10,22 @@ Bytes: 143
 This function has a lot of ctrl-c ctrl-v from function above (parseSmsDeliver).
 Can the code be restructured to avoid duplicating so much code?
 
+1030
+Wed Jan 02 19:22:51 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: NYmDHcpY
+UUID: NYGFi9-0
+Bytes: 122
+Bin, if you want to refactor fine, but as I see it its just enough different to not be worth the trouble. Bin your choice.
+
+1073
+Wed Jan 02 19:22:51 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: NYKFzH98
+Bytes: 72
+Change to:
+
+  while (validityPeriodLenght-- > 0) {
+     p.getByte();
+  }
+
