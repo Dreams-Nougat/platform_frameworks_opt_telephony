@@ -18,6 +18,16 @@ UUID: NYGFi9-0
 Bytes: 122
 Bin, if you want to refactor fine, but as I see it its just enough different to not be worth the trouble. Bin your choice.
 
+1030
+Fri Jan 04 01:50:14 2013 +0000
+Author: Bin Li <1018290@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: NYGFi9-0
+UUID: NqRxLOa4
+Bytes: 58
+Wink,
+
+I prefer to leaving this function as it is. Thanks.
+
 1073
 Wed Jan 02 19:22:51 2013 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -28,4 +38,12 @@ Change to:
   while (validityPeriodLenght-- > 0) {
      p.getByte();
   }
+
+1073
+Fri Jan 04 01:50:14 2013 +0000
+Author: Bin Li <1018290@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: NYKFzH98
+UUID: NqbxbLYE
+Bytes: 4
+Done
 
