@@ -1,0 +1,11 @@
+Revision: 700e7df9a0ac480e688d37786c0c146d5d1e406d
+Patch-set: 2
+File: src/java/com/android/internal/telephony/cdma/SmsMessage.java
+
+542
+Mon Jan 07 23:56:06 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: N70dL3iU
+Bytes: 61
+Code style: "=" should be separated by a space on both sides.
+
