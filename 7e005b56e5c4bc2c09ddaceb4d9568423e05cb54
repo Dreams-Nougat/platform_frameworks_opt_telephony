@@ -9,3 +9,19 @@ UUID: AAAI2H//+nc=
 Bytes: 125
 I'm not sure if the 4 lines above are exactly in the canonical style, but they look unambiguously readable to me. No concern.
 
+958
+Wed Jan 09 19:36:34 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: N8RrZPPE
+Bytes: 370
+"paramBits >= 0" is always true: the range of subparamLen is 0 - 255, so paramBits will always be 0 - 2040.
+
+You could remove the check completely, since the call to skip() will throw an exception if there aren't enough bits remaining, or you could change the check to "if (paramBits <= inStream.available())" so that the error logging will be more accurate if it fails.
+
+966
+Wed Jan 09 19:36:34 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: N8RqD-Nk
+Bytes: 45
+"had..." should be " had..." (missing space).
+
