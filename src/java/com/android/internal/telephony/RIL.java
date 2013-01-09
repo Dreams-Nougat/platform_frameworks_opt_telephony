@@ -224,15 +224,12 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     RILReceiver mReceiver;
     WakeLock mWakeLock;
     int mWakeLockTimeout;
-    // The number of requests pending to be sent out, it increases before calling
-    // EVENT_SEND and decreases while handling EVENT_SEND. It gets cleared while
+    // The number of requests outstanding - we've receive the request
+    // but haven't gotten the response yet.  It increases before calling
+    // EVENT_SEND and decreases while handling a response.  It should match
+    // mRequestList.size() unless there are requests not replied to when
     // WAKE_LOCK_TIMEOUT occurs.
-    int mRequestMessagesPending;
-    // The number of requests sent out but waiting for response. It increases while
-    // sending request and decreases while handling response. It should match
-    // mRequestList.size() unless there are requests no replied while
-    // WAKE_LOCK_TIMEOUT occurs.
-    int mRequestMessagesWaiting;
+    AtomicInteger mRequestMessagesOutstanding = new AtomicInteger(0);
 
     //I'd rather this be LinkedList or something
     ArrayList<RILRequest> mRequestList = new ArrayList<RILRequest>();
@@ -300,34 +297,22 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
             switch (msg.what) {
                 case EVENT_SEND:
-                    /**
-                     * mRequestMessagePending++ already happened for every
-                     * EVENT_SEND, thus we must make sure
-                     * mRequestMessagePending-- happens once and only once
-                     */
-                    boolean alreadySubtracted = false;
+                    LocalSocket s;
+
+                    s = mSocket;
+
+                    if (s == null) {
+                        rr.onError(RADIO_NOT_AVAILABLE, null);
+                        rr.release();
+                        decrementWithFloor(mRequestMessagesOutstanding);
+                        releaseWakeLockIfDone();
+                        return;
+                    }
+
                     try {
-                        LocalSocket s;
-
-                        s = mSocket;
-
-                        if (s == null) {
-                            rr.onError(RADIO_NOT_AVAILABLE, null);
-                            rr.release();
-                            if (mRequestMessagesPending > 0)
-                                mRequestMessagesPending--;
-                            alreadySubtracted = true;
-                            return;
-                        }
-
                         synchronized (mRequestList) {
                             mRequestList.add(rr);
-                            mRequestMessagesWaiting++;
                         }
-
-                        if (mRequestMessagesPending > 0)
-                            mRequestMessagesPending--;
-                        alreadySubtracted = true;
 
                         byte[] data;
 
@@ -355,7 +340,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                         req = findAndRemoveRequestFromList(rr.mSerial);
                         // make sure this request has not already been handled,
                         // eg, if RILReceiver cleared the list.
-                        if (req != null || !alreadySubtracted) {
+                        if (req != null) {
                             rr.onError(RADIO_NOT_AVAILABLE, null);
                             rr.release();
                         }
@@ -364,19 +349,15 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                         req = findAndRemoveRequestFromList(rr.mSerial);
                         // make sure this request has not already been handled,
                         // eg, if RILReceiver cleared the list.
-                        if (req != null || !alreadySubtracted) {
+                        if (req != null) {
                             rr.onError(GENERIC_FAILURE, null);
                             rr.release();
                         }
                     } finally {
                         // Note: We are "Done" only if there are no outstanding
-                        // requests or replies. Thus this code path will only release
+                        // requests. Thus this code path will only release
                         // the wake lock on errors.
                         releaseWakeLockIfDone();
-                    }
-
-                    if (!alreadySubtracted && mRequestMessagesPending > 0) {
-                        mRequestMessagesPending--;
                     }
 
                     break;
@@ -390,17 +371,15 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                             // new send request. So when WAKE_LOCK_TIMEOUT occurs
                             // all requests in mRequestList already waited at
                             // least DEFAULT_WAKE_LOCK_TIMEOUT but no response.
-                            // Reset mRequestMessagesWaiting to enable
+                            // Reset mRequestMessagesOutstanding to enable
                             // releaseWakeLockIfDone().
                             //
                             // Note: Keep mRequestList so that delayed response
                             // can still be handled when response finally comes.
-                            if (mRequestMessagesWaiting != 0) {
-                                Rlog.d(LOG_TAG, "NOTE: mReqWaiting is NOT 0 but"
-                                        + mRequestMessagesWaiting + " at TIMEOUT, reset!"
+                            if (mRequestMessagesOutstanding.getAndSet(0) != 0) {
+                                Rlog.d(LOG_TAG, "NOTE: mRequestMessagesOutstanding is NOT 0 but"
+                                        + mRequestMessagesOutstanding + " at TIMEOUT, reset!"
                                         + " There still msg waitng for response");
-
-                                mRequestMessagesWaiting = 0;
 
                                 if (RILJ_LOGD) {
                                     synchronized (mRequestList) {
@@ -415,19 +394,6 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                                         }
                                     }
                                 }
-                            }
-                            // mRequestMessagesPending shows how many
-                            // requests are waiting to be sent (and before
-                            // to be added in request list) since star the
-                            // WAKE_LOCK_TIMEOUT timer. Since WAKE_LOCK_TIMEOUT
-                            // is the expected time to get response, all requests
-                            // should already sent out (i.e.
-                            // mRequestMessagesPending is 0 )while TIMEOUT occurs.
-                            if (mRequestMessagesPending != 0) {
-                                Rlog.e(LOG_TAG, "ERROR: mReqPending is NOT 0 but"
-                                        + mRequestMessagesPending + " at TIMEOUT, reset!");
-                                mRequestMessagesPending = 0;
-
                             }
                             mWakeLock.release();
                         }
@@ -627,8 +593,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         mWakeLock.setReferenceCounted(false);
         mWakeLockTimeout = SystemProperties.getInt(TelephonyProperties.PROPERTY_WAKE_LOCK_TIMEOUT,
                 DEFAULT_WAKE_LOCK_TIMEOUT);
-        mRequestMessagesPending = 0;
-        mRequestMessagesWaiting = 0;
+        mRequestMessagesOutstanding.set(0);
 
         mSenderThread = new HandlerThread("RILSender");
         mSenderThread.start();
@@ -2089,10 +2054,19 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
 
     private void
+    decrementWithFloor(AtomicInteger i) {
+        /* note this function has a sync hole, but this whole file has a sync hole unless
+         * we introduce track generation numbers or something on list-clear.  We
+         * don't think it's worth the bother and this will self-correct in time */
+        int old = i.getAndDecrement();
+        if (old <= 0) i.incrementAndGet();
+    }
+
+    private void
     acquireWakeLock() {
         synchronized (mWakeLock) {
             mWakeLock.acquire();
-            mRequestMessagesPending++;
+            mRequestMessagesOutstanding.getAndIncrement();
 
             mSender.removeMessages(EVENT_WAKE_LOCK_TIMEOUT);
             Message msg = mSender.obtainMessage(EVENT_WAKE_LOCK_TIMEOUT);
@@ -2104,8 +2078,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     releaseWakeLockIfDone() {
         synchronized (mWakeLock) {
             if (mWakeLock.isHeld() &&
-                (mRequestMessagesPending == 0) &&
-                (mRequestMessagesWaiting == 0)) {
+                (mRequestMessagesOutstanding.get() <= 0)) {
                 mSender.removeMessages(EVENT_WAKE_LOCK_TIMEOUT);
                 mWakeLock.release();
             }
@@ -2155,7 +2128,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             int count = mRequestList.size();
             if (RILJ_LOGD && loggable) {
                 Rlog.d(LOG_TAG, "WAKE_LOCK_TIMEOUT " +
-                        " mReqPending=" + mRequestMessagesPending +
+                        " mRequestMessagesOutstanding=" + mRequestMessagesOutstanding.get() +
                         " mRequestList=" + count);
             }
 
@@ -2168,8 +2141,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 rr.onError(error, null);
                 rr.release();
             }
+            for(; count > 0; count--) {
+                decrementWithFloor(mRequestMessagesOutstanding);
+            }
             mRequestList.clear();
-            mRequestMessagesWaiting = 0;
         }
     }
 
@@ -2180,8 +2155,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
                 if (rr.mSerial == serial) {
                     mRequestList.remove(i);
-                    if (mRequestMessagesWaiting > 0)
-                        mRequestMessagesWaiting--;
+                    decrementWithFloor(mRequestMessagesOutstanding);
                     return rr;
                 }
             }
@@ -3881,8 +3855,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         pw.println(" mWakeLock=" + mWakeLock);
         pw.println(" mWakeLockTimeout=" + mWakeLockTimeout);
         synchronized (mRequestList) {
-          pw.println(" mRequestMessagesPending=" + mRequestMessagesPending);
-          pw.println(" mRequestMessagesWaiting=" + mRequestMessagesWaiting);
+          pw.println(" mRequestMessagesOutstanding=" + mRequestMessagesOutstanding.get());
             int count = mRequestList.size();
             pw.println(" mRequestList count=" + count);
             for (int i = 0; i < count; i++) {
