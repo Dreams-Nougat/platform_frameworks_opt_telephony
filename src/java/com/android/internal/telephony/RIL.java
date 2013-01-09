@@ -304,8 +304,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                     if (s == null) {
                         rr.onError(RADIO_NOT_AVAILABLE, null);
                         rr.release();
-                        if (mRequestMessagesOutstanding > 0) {
-                            mRequestMessagesOutstanding--;
+                        synchronized (mWakeLock) {
+                            if (mRequestMessagesOutstanding > 0) {
+                                mRequestMessagesOutstanding--;
+                            }
                         }
                         releaseWakeLockIfDone();
                         return;
@@ -2119,8 +2121,9 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
     private void clearRequestList(int error, boolean loggable) {
         RILRequest rr;
+        int count;
         synchronized (mRequestList) {
-            int count = mRequestList.size();
+            count = mRequestList.size();
             if (RILJ_LOGD && loggable) {
                 Rlog.d(LOG_TAG, "WAKE_LOCK_TIMEOUT " +
                         " mRequestMessagesOutstanding=" + mRequestMessagesOutstanding +
@@ -2136,27 +2139,34 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 rr.onError(error, null);
                 rr.release();
             }
+            mRequestList.clear();
+        }
+        synchronized (mWakeLock) {
             mRequestMessagesOutstanding -= count;
             if (mRequestMessagesOutstanding < 0) mRequestMessagesOutstanding = 0;
-            mRequestList.clear();
         }
     }
 
     private RILRequest findAndRemoveRequestFromList(int serial) {
+        RILRequest result = null;
         synchronized (mRequestList) {
             for (int i = 0, s = mRequestList.size() ; i < s ; i++) {
                 RILRequest rr = mRequestList.get(i);
 
                 if (rr.mSerial == serial) {
                     mRequestList.remove(i);
-                    if (mRequestMessagesOutstanding > 0)
-                        mRequestMessagesOutstanding--;
-                    return rr;
+                    result = rr;
                 }
             }
         }
 
-        return null;
+        if (result != null) {
+            synchronized (mWakeLock) {
+                if (mRequestMessagesOutstanding > 0) mRequestMessagesOutstanding--;
+            }
+        }
+
+        return result;
     }
 
     private void
@@ -3849,8 +3859,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         pw.println(" mReceiver=" + mReceiver);
         pw.println(" mWakeLock=" + mWakeLock);
         pw.println(" mWakeLockTimeout=" + mWakeLockTimeout);
+        synchronized (mWakeLock) {
+            pw.println(" mRequestMessagesOutstanding=" + mRequestMessagesOutstanding);
+        }
         synchronized (mRequestList) {
-          pw.println(" mRequestMessagesOutstanding=" + mRequestMessagesOutstanding);
             int count = mRequestList.size();
             pw.println(" mRequestList count=" + count);
             for (int i = 0; i < count; i++) {
