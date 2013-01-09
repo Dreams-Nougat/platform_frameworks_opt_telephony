@@ -1,0 +1,11 @@
+Revision: cd8fa6598073a84a500fa9b8aff9aae12beff14b
+Patch-set: 3
+File: src/java/com/android/internal/telephony/cdma/SmsMessage.java
+
+506
+Wed Jan 09 20:10:59 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: N8neDPw4
+Bytes: 38
+Change this also to readUnsignedByte()
+
