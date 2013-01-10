@@ -1,0 +1,11 @@
+Revision: 86defb91f6f281473da0e9362026bfa275952fde
+Patch-set: 2
+File: src/java/com/android/internal/telephony/cdma/sms/BearerData.java
+
+1953
+Thu Jan 10 00:02:58 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: N8RPtp.Y
+Bytes: 49
+The canonical name of the charset is "Shift_JIS".
+
