@@ -19,3 +19,11 @@ Thank you for your opinion.
 In my opinion, because the "length" variable is declared as a "byte", this part does not need to be modified. 
 Would you please consider again?
 
+506
+Thu Jan 10 17:35:43 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: N8lDboec
+UUID: N8uJz6A8
+Bytes: 145
+You're correct length is a byte but it should be an int and we should use readUnsignedByte() so we can support lengths > 127, wouldn't you agree?
+
