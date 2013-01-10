@@ -9,3 +9,13 @@ UUID: N8neDPw4
 Bytes: 38
 Change this also to readUnsignedByte()
 
+506
+Thu Jan 10 01:22:50 2013 +0000
+Author: kyunga1.kim <1013785@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: N8neDPw4
+UUID: N8lDboec
+Bytes: 173
+Thank you for your opinion.
+In my opinion, because the "length" variable is declared as a "byte", this part does not need to be modified. 
+Would you please consider again?
+
