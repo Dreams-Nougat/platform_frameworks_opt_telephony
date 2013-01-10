@@ -128,6 +128,11 @@ public final class GsmMmiCode extends Handler implements MmiCode {
 
     private boolean isUssdRequest;
 
+    /** Set to true to indicate a call forward register operation
+     * is in progress as opposed an enable
+     */
+    private boolean isCallFwdRegister = false;
+
     State state = State.PENDING;
     CharSequence message;
 
@@ -659,20 +664,25 @@ public final class GsmMmiCode extends Handler implements MmiCode {
             } else if (isServiceCodeCallForwarding(sc)) {
                 Rlog.d(LOG_TAG, "is CF");
 
-                String dialingNumber = sia;
+                String siaDialingNumber = sia;
                 int serviceClass = siToServiceClass(sib);
                 int reason = scToCallForwardReason(sc);
                 int time = siToTime(sic);
 
                 if (isInterrogate()) {
                     phone.mCM.queryCallForwardStatus(
-                            reason, serviceClass,  dialingNumber,
+                            reason, serviceClass,  siaDialingNumber,
                                 obtainMessage(EVENT_QUERY_CF_COMPLETE, this));
                 } else {
                     int cfAction;
 
                     if (isActivate()) {
-                        cfAction = CommandsInterface.CF_ACTION_ENABLE;
+                        if (siaDialingNumber != null) {
+                            isCallFwdRegister = true;
+                            cfAction = CommandsInterface.CF_ACTION_REGISTRATION;
+                        } else {
+                            cfAction = CommandsInterface.CF_ACTION_ENABLE;
+                        }
                     } else if (isDeactivate()) {
                         cfAction = CommandsInterface.CF_ACTION_DISABLE;
                     } else if (isRegister()) {
@@ -695,7 +705,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
 
                     Rlog.d(LOG_TAG, "is CF setCallForward");
                     phone.mCM.setCallForward(cfAction, reason, serviceClass,
-                            dialingNumber, time, obtainMessage(
+                            siaDialingNumber, time, obtainMessage(
                                     EVENT_SET_CFF_COMPLETE,
                                     isSettingUnconditionalVoice,
                                     isEnableDesired, this));
@@ -1021,8 +1031,13 @@ public final class GsmMmiCode extends Handler implements MmiCode {
             }
         } else if (isActivate()) {
             state = State.COMPLETE;
-            sb.append(context.getText(
-                    com.android.internal.R.string.serviceEnabled));
+            if (isCallFwdRegister) {
+                sb.append(context.getText(com.android.internal.R.string.serviceRegistered));
+                isCallFwdRegister = false;
+            } else {
+                sb.append(context.getText(
+                        com.android.internal.R.string.serviceEnabled));
+            }
             // Record CLIR setting
             if (sc.equals(SC_CLIR)) {
                 phone.saveClirSetting(CommandsInterface.CLIR_INVOCATION);
