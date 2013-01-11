@@ -1,4 +1,8 @@
 /*
+ * Copyright (c) 2013, Linux Foundation. All rights reserved.
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only.
+ *
  * Copyright (C) 2006 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,6 +40,7 @@ import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.SmsMessageBase;
 import com.android.internal.telephony.gsm.SimTlv;
 import com.android.internal.telephony.gsm.SmsMessage;
+import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -254,6 +259,23 @@ public class SIMRecords extends IccRecords {
         return mUsimServiceTable;
     }
 
+    private int getExtFromEf(int ef) {
+        int ext;
+        switch (ef) {
+            case EF_MSISDN:
+                /* For USIM apps use EXT5. (TS 31.102 Section 4.2.37) */
+                if (mParentApp.getType() == AppType.APPTYPE_USIM) {
+                    ext = EF_EXT5;
+                } else {
+                    ext = EF_EXT1;
+                }
+                break;
+            default:
+                ext = EF_EXT1;
+        }
+        return ext;
+    }
+
     /**
      * Set subscriber number to SIM record
      *
@@ -277,10 +299,9 @@ public class SIMRecords extends IccRecords {
 
         if(DBG) log("Set MSISDN: " + msisdnTag + " " + /*msisdn*/ "xxxxxxx");
 
-
         AdnRecord adn = new AdnRecord(msisdnTag, msisdn);
 
-        new AdnRecordLoader(mFh).updateEF(adn, EF_MSISDN, EF_EXT1, 1, null,
+        new AdnRecordLoader(mFh).updateEF(adn, EF_MSISDN, getExtFromEf(EF_MSISDN), 1, null,
                 obtainMessage(EVENT_SET_MSISDN_DONE, onComplete));
     }
 
@@ -1327,7 +1348,7 @@ public class SIMRecords extends IccRecords {
 
         // FIXME should examine EF[MSISDN]'s capability configuration
         // to determine which is the voice/data/fax line
-        new AdnRecordLoader(mFh).loadFromEF(EF_MSISDN, EF_EXT1, 1,
+        new AdnRecordLoader(mFh).loadFromEF(EF_MSISDN, getExtFromEf(EF_MSISDN), 1,
                     obtainMessage(EVENT_GET_MSISDN_DONE));
         recordsToLoad++;
 
