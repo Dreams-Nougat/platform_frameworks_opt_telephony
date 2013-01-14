@@ -18,10 +18,26 @@ Bytes: 370
 
 You could remove the check completely, since the call to skip() will throw an exception if there aren't enough bits remaining, or you could change the check to "if (paramBits <= inStream.available())" so that the error logging will be more accurate if it fails.
 
+958
+Mon Jan 14 18:35:27 2013 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: N8RrZPPE
+UUID: OKVik1Aw
+Bytes: 4
+Done
+
 966
 Wed Jan 09 19:36:34 2013 +0000
 Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: N8RqD-Nk
 Bytes: 45
 "had..." should be " had..." (missing space).
+
+966
+Mon Jan 14 18:35:27 2013 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: N8RqD-Nk
+UUID: OKfioSOI
+Bytes: 4
+Done
 
