@@ -71,6 +71,7 @@ public abstract class BaseCommands implements CommandsInterface {
     protected RegistrantList mExitEmergencyCallbackModeRegistrants = new RegistrantList();
     protected RegistrantList mRilConnectedRegistrants = new RegistrantList();
     protected RegistrantList mIccRefreshRegistrants = new RegistrantList();
+    protected RegistrantList mCellInfoListRegistrants = new RegistrantList();
 
     protected Registrant mGsmSmsRegistrant;
     protected Registrant mCdmaSmsRegistrant;
@@ -567,6 +568,17 @@ public abstract class BaseCommands implements CommandsInterface {
     @Override
     public void unregisterForRilConnected(Handler h) {
         mRilConnectedRegistrants.remove(h);
+    }
+
+    @Override
+    public void registerForRilCellInfoList(Handler h, int what, Object obj) {
+        Registrant r = new Registrant (h, what, obj);
+        mCellInfoListRegistrants.add(r);
+    }
+
+    @Override
+    public void unregisterForRilCellInfoList(Handler h) {
+        mCellInfoListRegistrants.remove(h);
     }
 
     /**

@@ -18,6 +18,7 @@ package com.android.internal.telephony;
 
 import com.android.internal.telephony.gsm.SmsBroadcastConfigInfo;
 import com.android.internal.telephony.uicc.IccCardStatus;
+import android.telephony.CellInfo;
 
 import android.os.Message;
 import android.os.Handler;
@@ -552,6 +553,20 @@ public interface CommandsInterface {
       */
      void registerForRilConnected(Handler h, int what, Object obj);
      void unregisterForRilConnected(Handler h);
+
+    /**
+     * Registers the handler for RIL_UNSOL_RIL_CONNECT events.
+     *
+     * When ril connects or disconnects a message is sent to the registrant
+     * which contains an AsyncResult, ar, in msg.obj. The ar.result is an
+     * Integer which is the version of the ril or -1 if the ril disconnected.
+     *
+     * @param h Handler for notification message.
+     * @param what User-defined message code.
+     * @param obj User object.
+     */
+    void registerForRilCellInfoList(Handler h, int what, Object obj);
+    void unregisterForRilCellInfoList(Handler h);
 
     /**
      * Supply the ICC PIN to the ICC card
@@ -1552,6 +1567,25 @@ public interface CommandsInterface {
      *          Callback message containing {@link IccCardStatus} structure for the card.
      */
     public void getIccCardStatus(Message result);
+
+    /**
+     * Request the current list of CellInfo
+     *
+     * @param result
+     *          Callback message containing an array of {@link CellInfo}.
+     */
+    public void getCellInfoList(Message result);
+
+    /**
+     * Set the minimum time between RIL_UNSOL_CELL_INFO_LIST in milliseconds.
+     * A value of 0 means return as quickly as possible, a value of MAX_INT (0x7fffffff)
+     * means no message shall be sent.
+     *
+     * @param minTimeMs time in milliseconds between RIL_UNSOL_CELL_INFO_LIST messages
+     * @param result
+     *          Callback message containing an array of {@link CellInfo}.
+     */
+    public void setUnsolCellInfoListRate(int minTimeMs, Message result);
 
     /**
      * Return if the current radio is LTE on CDMA. This

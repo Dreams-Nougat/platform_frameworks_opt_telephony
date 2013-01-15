@@ -41,6 +41,16 @@ import android.os.Parcel;
 import android.os.PowerManager;
 import android.os.SystemProperties;
 import android.os.PowerManager.WakeLock;
+import android.telephony.CellIdentityCdma;
+import android.telephony.CellIdentityGsm;
+import android.telephony.CellIdentityLte;
+import android.telephony.CellInfo;
+import android.telephony.CellInfoGsm;
+import android.telephony.CellInfoCdma;
+import android.telephony.CellInfoLte;
+import android.telephony.CellSignalStrengthCdma;
+import android.telephony.CellSignalStrengthGsm;
+import android.telephony.CellSignalStrengthLte;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.SignalStrength;
@@ -2036,6 +2046,33 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         send(rr);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void getCellInfoList(Message response) {
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_CELL_INFO_LIST, response);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+
+        send(rr);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setUnsolCellInfoListRate(int minTimeMs, Message response) {
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SET_UNSOL_CELL_INFO_LIST_RATE, response);
+
+        rr.mp.writeInt(1);
+        rr.mp.writeInt(minTimeMs);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+
+        send(rr);
+    }
+
     //***** Private Methods
 
     private void sendScreenState(boolean on) {
@@ -2335,6 +2372,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU: ret = responseVoid(p); break;
             case RIL_REQUEST_STK_SEND_ENVELOPE_WITH_STATUS: ret = responseICC_IO(p); break;
             case RIL_REQUEST_VOICE_RADIO_TECH: ret = responseInts(p); break;
+            case RIL_REQUEST_GET_CELL_INFO_LIST: ret = responseCellInfoList(p);
+            case RIL_REQUEST_SET_UNSOL_CELL_INFO_LIST_RATE: ret = responseVoid(p);
             default:
                 throw new RuntimeException("Unrecognized solicited response: " + rr.mRequest);
             //break;
@@ -2516,6 +2555,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_EXIT_EMERGENCY_CALLBACK_MODE: ret = responseVoid(p); break;
             case RIL_UNSOL_RIL_CONNECTED: ret = responseInts(p); break;
             case RIL_UNSOL_VOICE_RADIO_TECH_CHANGED: ret =  responseInts(p); break;
+            case RIL_UNSOL_CELL_INFO_LIST: ret = responseCellInfoList(p); break;
 
             default:
                 throw new RuntimeException("Unrecognized unsol response: " + response);
@@ -2871,6 +2911,16 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 setPreferredNetworkType(mPreferredNetworkType, null);
                 setCdmaSubscriptionSource(mCdmaSubscription, null);
                 notifyRegistrantsRilConnectionChanged(((int[])ret)[0]);
+                break;
+            }
+
+            case RIL_UNSOL_CELL_INFO_LIST: {
+                if (RILJ_LOGD) unsljLogRet(response, ret);
+
+                if (mCellInfoListRegistrants != null) {
+                    mCellInfoListRegistrants.notifyRegistrants(
+                            new AsyncResult (null, ret, null));
+                }
                 break;
             }
         }
@@ -3315,6 +3365,90 @@ public final class RIL extends BaseCommands implements CommandsInterface {
        return response;
     }
 
+    private CellInfo getCellInfo(Parcel p) {
+        CellInfo ci;
+        int cellInfoType = p.readInt();
+        int registered = p.readInt();
+        long time = p.readLong();
+        switch(cellInfoType) {
+            case CellInfo.TYPE_GSM: {
+                CellInfoGsm ciGsm = new CellInfoGsm();
+                ciGsm.setRegisterd(registered != 0);
+                ciGsm.setTimeStamp(time);
+                ciGsm.setCellIdentity(new CellIdentityGsm(
+                        p.readInt(),    // mcc
+                        p.readInt(),    // mnc
+                        p.readInt(),    // lac
+                        p.readInt(),    // cid
+                        p.readInt()));  // psc
+                ciGsm.setCellSignalStrength(new CellSignalStrengthGsm(
+                        p.readInt(),    // ss
+                        p.readInt()));  // ber
+                ci = ciGsm;
+                break;
+            }
+            case CellInfo.TYPE_CDMA: {
+                CellInfoCdma ciCdma = new CellInfoCdma();
+                ciCdma.setRegisterd(registered != 0);
+                ciCdma.setTimeStamp(time);
+                ciCdma.setCellIdentity(new CellIdentityCdma(
+                        p.readInt(),    // nid
+                        p.readInt(),    // sid
+                        p.readInt(),    // bid
+                        p.readInt(),    // lat
+                        p.readInt()));  // lon
+                ciCdma.setCellSignalStrength(new CellSignalStrengthCdma(
+                        p.readInt(),    // cdma dbm
+                        p.readInt(),    // cdma ecio
+                        p.readInt(),    // evdo dbm
+                        p.readInt(),    // evdo ecio
+                        p.readInt()));  // evdo signalNoiseRadio
+                ci = ciCdma;
+                break;
+            }
+            case CellInfo.TYPE_LTE: {
+                CellInfoLte ciLte = new CellInfoLte();
+                ciLte.setRegisterd(registered != 0);
+                ciLte.setTimeStamp(time);
+                ciLte.setCellIdentity(new CellIdentityLte(
+                        p.readInt(),    // mcc
+                        p.readInt(),    // mnc
+                        p.readInt(),    // ci
+                        p.readInt(),    // pci
+                        p.readInt()));  // tac
+                ciLte.setCellSignalStrength(new CellSignalStrengthLte(
+                        p.readInt(),    // signalStrengh
+                        p.readInt(),    // rsrp
+                        p.readInt(),    // rsrq
+                        p.readInt(),    // rssnr
+                        p.readInt(),    // cqi
+                        p.readInt()));  // timingAdvance
+                ci = ciLte;
+                break;
+            }
+            default:
+                riljLog("Unexpected CellInfoType=" + cellInfoType);
+                ci = null;
+                break;
+        }
+        return ci;
+    }
+
+    private Object
+    responseCellInfoList(Parcel p) {
+        ArrayList<CellInfo> response;
+
+        int num = p.readInt();
+        riljLog("responseCellInfoList num=" + num);
+
+        response = new ArrayList<CellInfo>(num);
+        for (int i = 0; i < num; i++) {
+            response.add(getCellInfo(p));
+        }
+
+        return response;
+    }
+
     private Object responseGetPreferredNetworkType(Parcel p) {
        int [] response = (int[]) responseInts(p);
 
@@ -3608,6 +3742,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU: return "RIL_REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU";
             case RIL_REQUEST_STK_SEND_ENVELOPE_WITH_STATUS: return "RIL_REQUEST_STK_SEND_ENVELOPE_WITH_STATUS";
             case RIL_REQUEST_VOICE_RADIO_TECH: return "RIL_REQUEST_VOICE_RADIO_TECH";
+            case RIL_REQUEST_GET_CELL_INFO_LIST: return "RIL_REQUEST_GET_CELL_INFO_LIST";
+            case RIL_REQUEST_SET_UNSOL_CELL_INFO_LIST_RATE: return "RIL_REQUEST_SET_UNSOL_CELL_INFO_LIST_RATE";
             default: return "<unknown request>";
         }
     }
@@ -3657,6 +3793,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_EXIT_EMERGENCY_CALLBACK_MODE: return "UNSOL_EXIT_EMERGENCY_CALLBACK_MODE";
             case RIL_UNSOL_RIL_CONNECTED: return "UNSOL_RIL_CONNECTED";
             case RIL_UNSOL_VOICE_RADIO_TECH_CHANGED: return "UNSOL_VOICE_RADIO_TECH_CHANGED";
+            case RIL_UNSOL_CELL_INFO_LIST: return "UNSOL_GET_CELL_INFO_LIST";
             default: return "<unknown reponse>";
         }
     }

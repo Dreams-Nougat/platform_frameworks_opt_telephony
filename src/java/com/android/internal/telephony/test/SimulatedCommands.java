@@ -1522,4 +1522,13 @@ public final class SimulatedCommands extends BaseCommands
     public void getVoiceRadioTechnology(Message response) {
         unimplemented(response);
     }
+    @Override
+    public void getCellInfoList(Message response) {
+        unimplemented(response);
+    }
+
+    @Override
+    public void setUnsolCellInfoListRate(int minTimeMs, Message response) {
+        unimplemented(response);
+    }
 }
