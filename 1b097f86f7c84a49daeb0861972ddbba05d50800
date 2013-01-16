@@ -1,0 +1,11 @@
+Revision: 1b097f86f7c84a49daeb0861972ddbba05d50800
+Patch-set: 3
+File: src/java/com/android/internal/telephony/RIL.java
+
+2059
+Wed Jan 16 23:57:14 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: OZeMOJj8
+Bytes: 251
+Since we're going to the trouble to fix this, lets remove the wholes. Lets add RILRequest.mGeneration and pass it and RilRequest.mSerial to rild/ril.cpp. Then in ril.cpp add RilRequest.generation and update the several places RilRequest.token is used.
+
