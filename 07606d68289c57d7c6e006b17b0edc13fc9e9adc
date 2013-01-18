@@ -1,0 +1,19 @@
+Revision: 07606d68289c57d7c6e006b17b0edc13fc9e9adc
+Patch-set: 4
+File: src/java/com/android/internal/telephony/IccSmsInterfaceManager.java
+
+77
+Fri Jan 18 01:48:58 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: Ocv8Wq6o
+Bytes: 132
+- Unnecessary cast from ArrayList<SmsRawData> to List<SmsRawData> can be removed.
+- extra space between mSms and '=' can be removed.
+
+207
+Fri Jan 18 01:48:58 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: Ocp9q-w8
+Bytes: 39
+typo in string: "smsm" should be "smsc"
+
