@@ -13,6 +13,14 @@ Lets add an abstract method so we don't have the if statement:
 
 Which would be implemented by sub classes and called from here without an if.
 
+169
+Fri Jan 18 00:45:10 2013 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: OZRXl-y0
+UUID: OZasXiEo
+Bytes: 4
+Done
+
 215
 Thu Jan 17 22:15:14 2013 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -21,4 +29,12 @@ Bytes: 116
 Add above lets add abstract method:
 
   protected void IccSsmInterfaceManager#writeSms(status, pdu,  smsc, response);
+
+215
+Fri Jan 18 00:45:10 2013 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: OZXXTo1k
+UUID: OZcsr9IM
+Bytes: 4
+Done
 
