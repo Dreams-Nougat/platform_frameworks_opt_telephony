@@ -21,6 +21,14 @@ UUID: N8kuD79g
 Bytes: 103
 This is hiding GsmMmiCode#dialingNumber, lets rename this to siaDialingNumber so there is no confusion.
 
+667
+Wed Jan 23 19:16:51 2013 +0000
+Author: Abhishek Adappa <1015528@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: N8kuD79g
+UUID: OvRkYLX4
+Bytes: 6
+Agree.
+
 674
 Thu Jan 10 23:28:01 2013 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
