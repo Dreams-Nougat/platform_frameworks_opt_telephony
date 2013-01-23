@@ -222,6 +222,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     RILSender mSender;
     Thread mReceiverThread;
     RILReceiver mReceiver;
+    PowerManager mPowerManager;
     WakeLock mWakeLock;
     int mWakeLockTimeout;
     // The number of requests pending to be sent out, it increases before calling
@@ -622,8 +623,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         mPreferredNetworkType = preferredNetworkType;
         mPhoneType = RILConstants.NO_PHONE;
 
-        PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
-        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, LOG_TAG);
+        mPowerManager = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
+        mWakeLock = mPowerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, LOG_TAG);
         mWakeLock.setReferenceCounted(false);
         mWakeLockTimeout = SystemProperties.getInt(TelephonyProperties.PROPERTY_WAKE_LOCK_TIMEOUT,
                 DEFAULT_WAKE_LOCK_TIMEOUT);
@@ -2054,9 +2055,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         // In case screen state was lost (due to process crash),
         // this ensures that the RIL knows the correct screen state.
 
-        // TODO: Should query Power Manager and send the actual
-        // screen state.  Just send true for now.
-        sendScreenState(true);
+        boolean isScreenOn = mPowerManager.isScreenOn();
+        sendScreenState(isScreenOn);
    }
 
     private RadioState getRadioStateFromInt(int stateInt) {
