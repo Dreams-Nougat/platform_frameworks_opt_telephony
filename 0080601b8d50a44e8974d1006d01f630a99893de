@@ -1,0 +1,13 @@
+Revision: 0080601b8d50a44e8974d1006d01f630a99893de
+Patch-set: 2
+File: src/java/com/android/internal/telephony/RIL.java
+
+2059
+Thu Jan 24 00:57:04 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: Ove3up30
+Bytes: 83
+Lets not create a the local variable and just:
+
+  sendScreenState(pm.isScreenOn());
+
