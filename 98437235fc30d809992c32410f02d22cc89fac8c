@@ -1,0 +1,20 @@
+Revision: 98437235fc30d809992c32410f02d22cc89fac8c
+Patch-set: 3
+File: src/java/com/android/internal/telephony/IccPhoneBookInterfaceManager.java
+
+119
+Thu Jan 24 22:17:25 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: OvL5ujYk
+Bytes: 113
+Should we be clearing fields here, like phone, adnCache ... (If so we'll need to protect the users of the fields.
+
+190
+Thu Jan 24 22:17:25 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: OvF5IuS0
+Bytes: 191
+Although I can see how these help solve an NPE, is this masking some bigger problem or just a consequence of the SIM going away unexpectedly?
+
+Are there other fields that should be protected?
+
