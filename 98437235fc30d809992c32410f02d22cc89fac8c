@@ -9,6 +9,14 @@ UUID: OvL5ujYk
 Bytes: 113
 Should we be clearing fields here, like phone, adnCache ... (If so we'll need to protect the users of the fields.
 
+119
+Fri Jan 25 19:06:14 2013 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: OvL5ujYk
+UUID: OxlyqvYc
+Bytes: 223
+Original code didn't have it, but we can add it. Either way when this happens whole CdmaPhone or GsmPhone is going away along with all its references including IccPhoneBookIfM. So I don't expect this to make any difference.
+
 190
 Thu Jan 24 22:17:25 2013 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -17,4 +25,12 @@ Bytes: 191
 Although I can see how these help solve an NPE, is this masking some bigger problem or just a consequence of the SIM going away unexpectedly?
 
 Are there other fields that should be protected?
+
+190
+Fri Jan 25 19:06:14 2013 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: OvF5IuS0
+UUID: OxryVwUc
+Bytes: 203
+We take adnCache from IccRecords. IccRecords can go away any moment (if use yanks the card, for instance). This code here is specifically for such case. (see updateIccRecords that gets called from Phone)
 
