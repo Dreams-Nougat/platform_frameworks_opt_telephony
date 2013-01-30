@@ -1,0 +1,25 @@
+Revision: cd17a8e56bf5fa1af49d4447e65dc69e4741e7bf
+Base-for-patch-set: 1
+File: tests/telephonytests/src/com/android/internal/telephony/TelephonyUtilsTest.java
+
+58
+Wed Jan 30 23:14:51 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PDhSiibE
+Bytes: 39
+Rather than deleting lets test for True
+
+206
+Wed Jan 30 23:14:51 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PDvSe7Ww
+Bytes: 20
+Change to assertTrue
+
+215
+Wed Jan 30 23:14:51 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PDhQhaQQ
+Bytes: 32
+This also needs to be assertTrue
+
