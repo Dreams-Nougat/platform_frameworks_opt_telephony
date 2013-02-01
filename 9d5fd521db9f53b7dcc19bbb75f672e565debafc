@@ -9,3 +9,17 @@ UUID: PDpLWkBU
 Bytes: 121
 It seems the range can be 0..65535, thus this could be huge, I think we need to create a new RIL command, other thoughts?
 
+3838
+Fri Feb 01 22:19:53 2013 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: PDpLWkBU
+UUID: PDdEuQ-4
+Bytes: 526
+For cdma, currently supported ID range is 0x1000 to 0x1004.  I see your concern if range is increased in future.  However, because currently supported IDs are limited, this would be a good start to enable OEM for cdma CMAS support.
+
+See my change in https://android-review.googlesource.com/#/c/46887/
+
+manager.enableCellBroadcastRange(
+                                SmsEnvelope.SERVICE_CATEGORY_CMAS_PRESIDENTIAL_LEVEL_ALERT, //0x1000
+                                SmsEnvelope.SERVICE_CATEGORY_CMAS_TEST_MESSAGE); //0x1004
+
