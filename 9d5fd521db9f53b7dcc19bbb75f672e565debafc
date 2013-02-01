@@ -1,0 +1,11 @@
+Revision: 9d5fd521db9f53b7dcc19bbb75f672e565debafc
+Patch-set: 3
+File: src/java/com/android/internal/telephony/RIL.java
+
+3838
+Fri Feb 01 15:47:06 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PDpLWkBU
+Bytes: 121
+It seems the range can be 0..65535, thus this could be huge, I think we need to create a new RIL command, other thoughts?
+
