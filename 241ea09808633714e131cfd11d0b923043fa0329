@@ -1,0 +1,27 @@
+Revision: 241ea09808633714e131cfd11d0b923043fa0329
+Patch-set: 4
+File: src/java/com/android/internal/telephony/CommandsInterface.java
+
+1531
+Sat Feb 02 00:39:39 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PDect-Jg
+Bytes: 75
+No one seems to be calling this, can we just delete it as well as the TODO?
+
+1532
+Sat Feb 02 00:39:39 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PDacnBLc
+Bytes: 45
+For that matter no one is calling this either
+
+File: src/java/com/android/internal/telephony/cdma/CdmaSmsBroadcastConfigInfo.java
+
+2
+Sat Feb 02 00:39:39 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PDYeAiZ0
+Bytes: 25
+Needs to be AOSP license.
+
