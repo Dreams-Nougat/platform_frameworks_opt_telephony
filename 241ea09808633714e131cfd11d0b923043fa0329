@@ -9,6 +9,14 @@ UUID: PDWfQzE4
 Bytes: 22
 Commit is out of date.
 
+7
+Mon Feb 04 18:45:04 2013 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: PDWfQzE4
+UUID: PTppmjUs
+Bytes: 4
+Done
+
 File: src/java/com/android/internal/telephony/CommandsInterface.java
 
 1531
@@ -18,12 +26,28 @@ UUID: PDect-Jg
 Bytes: 75
 No one seems to be calling this, can we just delete it as well as the TODO?
 
+1531
+Mon Feb 04 18:45:04 2013 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: PDect-Jg
+UUID: PTnotcUk
+Bytes: 4
+Done
+
 1532
 Sat Feb 02 00:39:39 2013 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: PDacnBLc
 Bytes: 45
 For that matter no one is calling this either
+
+1532
+Mon Feb 04 18:45:04 2013 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: PDacnBLc
+UUID: PTloyNak
+Bytes: 147
+right, it is not being used. however, if OEM wants to use this to query what is the current configuration set in modem, they can, so am leaving it.
 
 File: src/java/com/android/internal/telephony/cdma/CdmaSmsBroadcastConfigInfo.java
 
@@ -33,4 +57,12 @@ Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: PDYeAiZ0
 Bytes: 25
 Needs to be AOSP license.
+
+2
+Mon Feb 04 18:45:04 2013 +0000
+Author: Rika Brooks <1010410@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: PDYeAiZ0
+UUID: PTvrPwVA
+Bytes: 4
+Done
 
