@@ -11,6 +11,13 @@ remove conflicts
 
 File: src/java/com/android/internal/telephony/ApnContext.java
 
+40
+Tue Feb 05 22:40:52 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: Pfke-8NA
+Bytes: 22
+mWaitingDataProfiles ?
+
 110
 Thu Oct 25 19:09:52 2012 +0000
 Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -18,7 +25,40 @@ UUID: AAAK2X///3w=
 Bytes: 16
 getDataProfile ?
 
+110
+Tue Feb 05 22:40:52 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: AAAK2X///3w=
+UUID: Pf8bj5Ck
+Bytes: 10
+I'd say so
+
+File: src/java/com/android/internal/telephony/ApnSetting.java
+
+24
+Tue Feb 05 22:40:52 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PhZ1fY9s
+Bytes: 30
+Should this be DataProfileGsm?
+
+197
+Tue Feb 05 22:40:52 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: Phb0SH1w
+Bytes: 128
+Did you mean to override "hashCode()" ?
+
+Also if hashCode is overridden its usually a good idea that "equals" be overridden too.
+
 File: src/java/com/android/internal/telephony/DataProfile.java
+
+2
+Tue Feb 05 22:40:52 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PhX0tt5Y
+Bytes: 13
+Fix copyright
 
 42
 Thu Oct 25 19:09:52 2012 +0000
@@ -34,7 +74,32 @@ UUID: AAAK2X///3U=
 Bytes: 51
 Add dump() function and call it from parents object
 
+File: src/java/com/android/internal/telephony/cdma/CdmaDataConnection.java
+
+36
+Tue Feb 05 22:40:52 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: Phf0Jx.w
+Bytes: 26
+This is deleted internally
+
+File: src/java/com/android/internal/telephony/cdma/CdmaDataConnectionTracker.java
+
+60
+Tue Feb 05 22:40:52 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: Phd0OC-M
+Bytes: 27
+This is deleted internally.
+
 File: src/java/com/android/internal/telephony/gsm/GsmDataConnectionTracker.java
+
+1381
+Tue Feb 05 22:40:52 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: Phd1l66w
+Bytes: 2
+ws
 
 1383
 Thu Oct 25 22:35:48 2012 +0000
