@@ -955,6 +955,12 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
         ArrayList<ApnSetting> result = new ArrayList<ApnSetting>();
         if (cursor.moveToFirst()) {
             do {
+                String mvno_type = cursor.getString(
+                        cursor.getColumnIndexOrThrow(Telephony.Carriers.MVNO_TYPE));
+                if (!mvno_type.equals("")) {
+                    continue;
+                }
+
                 String[] types = parseTypes(
                         cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.TYPE)));
                 ApnSetting apn = new ApnSetting(
@@ -2015,6 +2021,98 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
         notifyOffApnsOfAvailability(reason);
     }
 
+   private boolean matchImsi(String imsiDB, String imsiSIM) {
+        // Note: imsiDB value has digit number or 'x' character for seperating USIM information
+        // for MVNO operator. And then digit number is matched at same order and 'x' character
+        // could replace by any digit number.
+        // ex) if imsiDB inserted '310260x10xxxxxx' for GG Operator,
+        //     that means first 6 digits, 8th and 9th digit
+        //     should be set in USIM for GG Operator.
+        int len = imsiDB.length();
+        int idxCompare = 0;
+
+        if (len <= 0) return false;
+        if (len >= imsiSIM.length()) len = imsiSIM.length();
+
+        for (int idx=0; idx<len; idx++) {
+            if ((imsiDB.charAt(idx) == 'x')
+                    || (imsiDB.charAt(idx) == 'X')
+                    || (imsiDB.charAt(idx) == imsiSIM.charAt(idx))) {
+                continue;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private ArrayList<ApnSetting> findMvno(Cursor cursor, IccRecords r) {
+        ArrayList<ApnSetting> result = new ArrayList<ApnSetting>();
+        if (cursor.moveToFirst()) {
+            do {
+                String mvno_type = cursor.getString(
+                        cursor.getColumnIndexOrThrow(Telephony.Carriers.MVNO_TYPE));
+                String mvno_match_data = cursor.getString(
+                        cursor.getColumnIndexOrThrow(Telephony.Carriers.MVNO_MATCH_DATA));
+
+                if (mvno_type.equals("") || mvno_match_data.equals("")) {
+                    continue;
+                }
+                if (mvno_type.equalsIgnoreCase("spn")) {
+                    if (r.getServiceProviderName() == null)
+                        continue;
+                    if (!r.getServiceProviderName().equalsIgnoreCase(mvno_match_data))
+                        continue;
+                } else if (mvno_type.equalsIgnoreCase("imsi")) {
+                    String imsiSIM = r.getIMSI();
+                    if ((imsiSIM == null) || imsiSIM.equals(""))
+                        continue;
+                    if (!matchImsi(mvno_match_data, imsiSIM))
+                        continue;
+                } else if (mvno_type.equalsIgnoreCase("gid")) {
+                    if (r.getGid1() == null)
+                        continue;
+                    if (!r.getGid1().substring(0,
+                                mvno_match_data.length()).equalsIgnoreCase(mvno_match_data))
+                        continue;
+                }
+
+                String[] types = parseTypes(
+                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.TYPE)));
+                ApnSetting apn = new ApnSetting(
+                        cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers._ID)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.NUMERIC)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.NAME)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.APN)),
+                        NetworkUtils.trimV4AddrZeros(
+                                cursor.getString(
+                                cursor.getColumnIndexOrThrow(Telephony.Carriers.PROXY))),
+                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.PORT)),
+                        NetworkUtils.trimV4AddrZeros(
+                                cursor.getString(
+                                cursor.getColumnIndexOrThrow(Telephony.Carriers.MMSC))),
+                        NetworkUtils.trimV4AddrZeros(
+                                cursor.getString(
+                                cursor.getColumnIndexOrThrow(Telephony.Carriers.MMSPROXY))),
+                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.MMSPORT)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.USER)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.PASSWORD)),
+                        cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers.AUTH_TYPE)),
+                        types,
+                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.PROTOCOL)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(
+                                Telephony.Carriers.ROAMING_PROTOCOL)),
+                        cursor.getInt(cursor.getColumnIndexOrThrow(
+                                Telephony.Carriers.CARRIER_ENABLED)) == 1,
+                        cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers.BEARER)));
+                result.add(apn);
+
+            } while (cursor.moveToNext());
+        }
+        if (DBG) log("findMvno: X result=" + result);
+        return result;
+    }
+
     /**
      * Based on the sim operator numeric, create a list for all possible
      * Data Connections and setup the preferredApn.
@@ -2035,7 +2133,12 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
 
             if (cursor != null) {
                 if (cursor.getCount() > 0) {
-                    mAllApns = createApnList(cursor);
+                    // first search with matched mvno_type and mvno_match_data
+                    mAllApns = findMvno(cursor, r);
+                    // if not exist, list without mvno_type
+                    if (mAllApns.isEmpty()) {
+                        mAllApns = createApnList(cursor);
+                    }
                 }
                 cursor.close();
             }
