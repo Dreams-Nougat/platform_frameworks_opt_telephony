@@ -88,4 +88,7 @@ public interface IccConstants {
 
     //UICC access
     static final String DF_ADF = "7FFF";
+
+    // USIM SIM file ids from GSM 11.11 and TS 31.102
+    static final int EF_GID1 = 0x6F3E;
 }
