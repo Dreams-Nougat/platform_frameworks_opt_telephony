@@ -951,39 +951,113 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
         return result;
     }
 
+   private boolean imsiMatches(String imsiDB, String imsiSIM) {
+        // Note: imsiDB value has digit number or 'x' character for seperating USIM information
+        // for MVNO operator. And then digit number is matched at same order and 'x' character
+        // could replace by any digit number.
+        // ex) if imsiDB inserted '310260x10xxxxxx' for GG Operator,
+        //     that means first 6 digits, 8th and 9th digit
+        //     should be set in USIM for GG Operator.
+        int len = imsiDB.length();
+        int idxCompare = 0;
+
+        if (len <= 0) return false;
+        if (len >= imsiSIM.length()) len = imsiSIM.length();
+
+        for (int idx=0; idx<len; idx++) {
+            if ((imsiDB.charAt(idx) == 'x')
+                    || (imsiDB.charAt(idx) == 'X')
+                    || (imsiDB.charAt(idx) == imsiSIM.charAt(idx))) {
+                continue;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean mvnoMatches(IccRecords r, String mvno_type, String mvno_match_data) {
+        if (mvno_type.equals("")) {
+            return false;
+        }
+        if (mvno_type.equalsIgnoreCase("spn")) {
+            if (r.getServiceProviderName() == null)
+                return false;
+            if (!r.getServiceProviderName().equalsIgnoreCase(mvno_match_data))
+                return false;
+        } else if (mvno_type.equalsIgnoreCase("imsi")) {
+            String imsiSIM = r.getIMSI();
+            if ((imsiSIM == null) || imsiSIM.equals(""))
+                return false;
+            if (!imsiMatches(mvno_match_data, imsiSIM))
+                return false;
+        } else if (mvno_type.equalsIgnoreCase("gid")) {
+            if (r.getGid1() == null)
+                return false;
+            if (!r.getGid1().substring(0,
+                    mvno_match_data.length()).equalsIgnoreCase(mvno_match_data))
+                return false;
+        }
+        return true;
+    }
+
+    private ApnSetting makeApnSetting(Cursor cursor) {
+        String[] types = parseTypes(
+                cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.TYPE)));
+        ApnSetting apn = new ApnSetting(
+                cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers._ID)),
+                cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.NUMERIC)),
+                cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.NAME)),
+                cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.APN)),
+                NetworkUtils.trimV4AddrZeros(
+                        cursor.getString(
+                        cursor.getColumnIndexOrThrow(Telephony.Carriers.PROXY))),
+                cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.PORT)),
+                NetworkUtils.trimV4AddrZeros(
+                        cursor.getString(
+                        cursor.getColumnIndexOrThrow(Telephony.Carriers.MMSC))),
+                NetworkUtils.trimV4AddrZeros(
+                        cursor.getString(
+                        cursor.getColumnIndexOrThrow(Telephony.Carriers.MMSPROXY))),
+                cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.MMSPORT)),
+                cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.USER)),
+                cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.PASSWORD)),
+                cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers.AUTH_TYPE)),
+                types,
+                cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.PROTOCOL)),
+                cursor.getString(cursor.getColumnIndexOrThrow(
+                        Telephony.Carriers.ROAMING_PROTOCOL)),
+                cursor.getInt(cursor.getColumnIndexOrThrow(
+                        Telephony.Carriers.CARRIER_ENABLED)) == 1,
+                cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers.BEARER)));
+        return apn;
+    }
+
     private ArrayList<ApnSetting> createApnList(Cursor cursor) {
         ArrayList<ApnSetting> result = new ArrayList<ApnSetting>();
         if (cursor.moveToFirst()) {
+            String mvnoType = null;
+            String mvnoMatchData = null;
             do {
-                String[] types = parseTypes(
-                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.TYPE)));
-                ApnSetting apn = new ApnSetting(
-                        cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers._ID)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.NUMERIC)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.NAME)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.APN)),
-                        NetworkUtils.trimV4AddrZeros(
-                                cursor.getString(
-                                cursor.getColumnIndexOrThrow(Telephony.Carriers.PROXY))),
-                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.PORT)),
-                        NetworkUtils.trimV4AddrZeros(
-                                cursor.getString(
-                                cursor.getColumnIndexOrThrow(Telephony.Carriers.MMSC))),
-                        NetworkUtils.trimV4AddrZeros(
-                                cursor.getString(
-                                cursor.getColumnIndexOrThrow(Telephony.Carriers.MMSPROXY))),
-                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.MMSPORT)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.USER)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.PASSWORD)),
-                        cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers.AUTH_TYPE)),
-                        types,
-                        cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.PROTOCOL)),
-                        cursor.getString(cursor.getColumnIndexOrThrow(
-                                Telephony.Carriers.ROAMING_PROTOCOL)),
-                        cursor.getInt(cursor.getColumnIndexOrThrow(
-                                Telephony.Carriers.CARRIER_ENABLED)) == 1,
-                        cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers.BEARER)));
-                result.add(apn);
+                String cursorMvnoType = cursor.getString(
+                        cursor.getColumnIndexOrThrow(Telephony.Carriers.MVNO_TYPE));
+                String cursorMvnoMatchData = cursor.getString(
+                        cursor.getColumnIndexOrThrow(Telephony.Carriers.MVNO_MATCH_DATA));
+                if (mvnoType != null) {
+                    if (mvnoType.equals(cursorMvnoType) &&
+                            mvnoMatchData.equals(cursorMvnoMatchData)) {
+                        result.add(makeApnSetting(cursor));
+                    }
+                } else {
+                    // no mvno match yet
+                    if (mvnoMatches(mIccRecords.get(), cursorMvnoType, cursorMvnoMatchData)) {
+                        // first match - toss out non-mvno data
+                        result.clear();
+                        mvnoType = cursorMvnoType;
+                        mvnoMatchData = cursorMvnoMatchData;
+                    }
+                    result.add(makeApnSetting(cursor));
+                }
             } while (cursor.moveToNext());
         }
         if (DBG) log("createApnList: X result=" + result);
