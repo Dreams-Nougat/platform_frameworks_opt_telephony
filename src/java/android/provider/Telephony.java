@@ -1820,6 +1820,14 @@ public final class Telephony {
           * but currently only used for LTE(14) and EHRPD(13).
           */
         public static final String BEARER = "bearer";
+
+        public static final String MVNO_MATCH_DATA = "mvno_match_data";
+        /**
+          * MVNO type
+          * spn(Service Provider Name), imsi, gid(Group Identifier Level 1)
+          */
+        public static final String MVNO_TYPE = "mvno_type";
+
     }
 
     /**
