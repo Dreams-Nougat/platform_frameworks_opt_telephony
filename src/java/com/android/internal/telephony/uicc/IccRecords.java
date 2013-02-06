@@ -214,6 +214,14 @@ public abstract class IccRecords extends Handler implements IccConstants {
     }
 
     /**
+     * Get the Group Identifier Level 1 (GID1) on a SIM for GSM.
+     * @return null if SIM is not yet ready
+     */
+    public String getGid1() {
+        return null;
+    }
+
+    /**
      * Set subscriber number to SIM record
      *
      * The subscriber number is stored in EF_MSISDN (TS 51.011)
