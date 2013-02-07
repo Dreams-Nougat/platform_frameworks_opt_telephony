@@ -61,6 +61,9 @@ import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoGsm;
+import android.telephony.CellInfoLte;
+import android.telephony.CellSignalStrengthLte;
+import android.telephony.CellIdentityLte;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
 import android.telephony.gsm.GsmCellLocation;
@@ -77,6 +80,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.TimeZone;
 
 /**
@@ -90,6 +94,10 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     GsmCellLocation cellLoc;
     GsmCellLocation newCellLoc;
     int mPreferredNetworkType;
+
+    private final CellInfoLte mCellInfoLte = new CellInfoLte();
+    private CellIdentityLte mNewCellIdentityLte = new CellIdentityLte();
+    private CellIdentityLte mLasteCellIdentityLte = new CellIdentityLte();
 
     private int gprsState = ServiceState.STATE_OUT_OF_SERVICE;
     private int newGPRSState = ServiceState.STATE_OUT_OF_SERVICE;
@@ -203,6 +211,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         this.phone = phone;
         cellLoc = new GsmCellLocation();
         newCellLoc = new GsmCellLocation();
+        mCellInfoLte.setCellSignalStrength(new CellSignalStrengthLte());
+        mCellInfoLte.setCellIdentity(new CellIdentityLte());
 
         PowerManager powerManager =
                 (PowerManager)phone.getContext().getSystemService(Context.POWER_SERVICE);
@@ -651,6 +661,11 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 case EVENT_POLL_STATE_GPRS:
                     states = (String[])ar.result;
 
+                    if (DBG) {
+                        log("handlePollStateResult: EVENT_POLL_STATE_GPRS states.length=" +
+                                states.length + " states=" + states);
+                    }
+
                     int type = 0;
                     regState = -1;
                     mNewReasonDataDenied = -1;
@@ -677,6 +692,65 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                     mDataRoaming = regCodeIsRoaming(regState);
                     mNewRilRadioTechnology = type;
                     newSS.setRadioTechnology(type);
+                    if (states.length >= 10) {
+                        int mcc;
+                        int mnc;
+                        int tac;
+                        int pci;
+                        int eci;
+                        int csgid;
+                        String operatorNumeric = null;
+
+                        try {
+                            operatorNumeric = ss.getOperatorNumeric();
+                            mcc = Integer.parseInt(operatorNumeric.substring(0,3));
+                        } catch (Exception ex) {
+                            loge("handlePollStateResult: bad mcc operatorNumeric=" +
+                                    operatorNumeric + " ex=" + ex);
+                            operatorNumeric = "";
+                            mcc = Integer.MAX_VALUE;
+                        try {
+                            mnc = Integer.parseInt(operatorNumeric.substring(3));
+                        } catch (Exception e) {
+                            loge("handlePollStateResult: bad mnc operatorNumeric=" +
+                                    operatorNumeric + " e=" + e);
+                            mnc = Integer.MAX_VALUE;
+                        }
+                        try {
+                            tac = Integer.parseInt(states[6], 16);
+                        } catch (Exception e) {
+                            loge("handlePollStateResult: bad tac states[6]=" +
+                                    states[6] + " e=" + e);
+                            tac = Integer.MAX_VALUE;
+                        }
+                        try {
+                            pci = Integer.parseInt(states[7], 16);
+                        } catch (Exception e) {
+                            loge("handlePollStateResultMessage: bad pci states[7]=" +
+                                    states[7] + " e=" + e);
+                            pci = Integer.MAX_VALUE;
+                        }
+                        try {
+                            eci = Integer.parseInt(states[8], 16);
+                        } catch (Exception e) {
+                            loge("handlePollStateResultMessage: bad eci states[8]=" +
+                                    states[8] + " e=" + e);
+                            eci = Integer.MAX_VALUE;
+                        }
+                        try {
+                            csgid = Integer.parseInt(states[9], 16);
+                        } catch (Exception e) {
+                            // FIX: Always bad so don't pollute the logs
+                            // loge("handlePollStateResultMessage: bad csgid states[9]=" +
+                            //        states[9] + " e=" + e);
+                            csgid = Integer.MAX_VALUE;
+                        }
+                        mNewCellIdentityLte = new CellIdentityLte(mcc, mnc, eci, pci, tac);
+                        if (DBG) {
+                            log("handlePollStateResult: mNewLteCellIdentity=" +
+                                    mNewCellIdentityLte);
+                        }
+                    }
                 break;
 
                 case EVENT_POLL_STATE_OPERATOR:
@@ -1045,6 +1119,32 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
 
         if (hasLocationChanged) {
             phone.notifyLocationChanged();
+        }
+
+        synchronized(mCellInfo) {
+            if (mRilRadioTechnology == ServiceState.RIL_RADIO_TECHNOLOGY_LTE) {
+                boolean cidChanged = ! mNewCellIdentityLte.equals(mLasteCellIdentityLte);
+                if (hasRegistered || hasDeregistered || cidChanged) {
+                    // TODO: Handle the absence of LteCellIdentity
+                    long timeStamp = SystemClock.elapsedRealtime() * 1000;
+                    boolean registered = ss.getState() == ServiceState.STATE_IN_SERVICE;
+                    mLasteCellIdentityLte = mNewCellIdentityLte;
+
+                    mCellInfoLte.setRegisterd(registered);
+                    mCellInfoLte.setCellIdentity(mLasteCellIdentityLte);
+                    if (DBG) {
+                        log("pollStateDone: hasRegistered=" + hasRegistered +
+                                " hasDeregistered=" + hasDeregistered +
+                                " cidChanged=" + cidChanged +
+                                " mCellInfoLte=" + mCellInfoLte);
+                    }
+                }
+            }
+            if (mCellInfoLte.getCellIdentity() != null) {
+                ArrayList<CellInfo> arrayCi = new ArrayList<CellInfo>();
+                arrayCi.add(mCellInfoLte);
+                phone.notifyCellInfo(arrayCi);
+            }
         }
 
         if (! isGprsConsistent(gprsState, ss.getState())) {
@@ -1703,6 +1803,24 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
             }
         }
     }
+
+    /**
+     * @return all available cell information, the returned List maybe empty but never null.
+     */
+    @Override
+    public List<CellInfo> getAllCellInfo() {
+        ArrayList<CellInfo> arrayList = new ArrayList<CellInfo>();
+        synchronized(mCellInfo) {
+            if (mRilRadioTechnology == ServiceState.RIL_RADIO_TECHNOLOGY_LTE) {
+                arrayList.add(mCellInfoLte);
+            } else {
+                arrayList.add(mCellInfo);
+            }
+        }
+        if (DBG) log ("getAllCellInfo: arrayList=" + arrayList);
+        return arrayList;
+    }
+
     @Override
     protected void log(String s) {
         Rlog.d(LOG_TAG, "[GsmSST] " + s);
