@@ -1,0 +1,11 @@
+Revision: 47308dad1d5f79f82dd9c04efe18264e6ded1a70
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/SIMRecords.java
+
+95
+Thu Feb 07 22:47:53 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PpJ5OXZE
+Bytes: 177
+Our internal tree has a change which added a toString() method here, creating a merge conflict. The conflict is resolved by keeping both the gid1 line and the toString() method.
+
