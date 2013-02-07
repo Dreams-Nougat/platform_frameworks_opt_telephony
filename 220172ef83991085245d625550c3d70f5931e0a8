@@ -1,0 +1,46 @@
+Revision: 220172ef83991085245d625550c3d70f5931e0a8
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/GsmDataConnectionTracker.java
+
+2019
+Thu Feb 07 22:56:59 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PpH4YMYk
+Bytes: 36
+Please wrap long line (> 100 chars).
+
+2020
+Thu Feb 07 22:56:59 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PpB4VbVA
+Bytes: 36
+Please wrap long line (> 100 chars).
+
+2046
+Thu Feb 07 22:56:59 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PpD4SqWk
+Bytes: 36
+Please wrap long line (> 100 chars).
+
+2048
+Thu Feb 07 22:56:59 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PpOHvwEI
+Bytes: 36
+Please wrap long line (> 100 chars).
+
+2057
+Thu Feb 07 22:56:59 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PpAH1DBE
+Bytes: 36
+Please wrap long line (> 100 chars).
+
+2070
+Thu Feb 07 22:56:59 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: PpKH5uA0
+Bytes: 36
+Please wrap long line (> 100 chars).
+
