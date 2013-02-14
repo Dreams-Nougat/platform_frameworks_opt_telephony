@@ -37,3 +37,27 @@ Agreed but we shouldn't retry IPV4V6 so in that sense its permanent. Currently i
 
 So I think it should be a permanent error.
 
+166
+Thu Feb 14 19:09:39 2013 +0000
+Author: Chris Lei <1016238@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: P3wwz.-M
+UUID: P3W5sHpE
+Bytes: 61
+Good point. Updates in Patch 4. Thanks for the feedback Wink.
+
+166
+Thu Feb 14 19:09:39 2013 +0000
+Author: Chris Lei <1016238@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: PzFNMWz8
+UUID: P3Y5Wuss
+Bytes: 4
+Done
+
+166
+Thu Feb 14 19:09:39 2013 +0000
+Author: Chris Lei <1016238@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: PzDOO-4c
+UUID: P3W5Tft0
+Bytes: 4
+Done
+
