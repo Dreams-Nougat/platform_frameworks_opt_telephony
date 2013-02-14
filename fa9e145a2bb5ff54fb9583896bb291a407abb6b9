@@ -27,3 +27,13 @@ UUID: P36n6mWg
 Bytes: 261
 If the connection request was for a IPV4V6 and we get ONLY_IPV4_ALLOWED or ONLY_IPV6_ALLOWED, is that considered a permanent fail? There is an option of retrying with IPV4 and the connection may succeed. Thats the reason ONLY_IPVX_ALLOWED has been omitted here.
 
+166
+Thu Feb 14 01:38:56 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: P36n6mWg
+UUID: P3wwz.-M
+Bytes: 294
+Agreed but we shouldn't retry IPV4V6 so in that sense its permanent. Currently if a RIL returns this we'll never succeed because there is no explicit handling and we'll just retry forever in CDMA and have to wait a full retry cycle for GSM, not good.
+
+So I think it should be a permanent error.
+
