@@ -19,3 +19,11 @@ In the next batch of errors in ril.h we also have that shouldn't be retried and 
 
   SIGNAL_LOST, RADIO_POWER_OFF, TETHERED_CALL_ACTIVE
 
+166
+Thu Feb 14 00:51:42 2013 +0000
+Author: Ajay Nambi <1005304@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: PzDOO-4c
+UUID: P36n6mWg
+Bytes: 261
+If the connection request was for a IPV4V6 and we get ONLY_IPV4_ALLOWED or ONLY_IPV6_ALLOWED, is that considered a permanent fail? There is an option of retrying with IPV4 and the connection may succeed. Thats the reason ONLY_IPVX_ALLOWED has been omitted here.
+
