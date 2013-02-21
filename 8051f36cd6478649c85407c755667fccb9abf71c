@@ -1,0 +1,17 @@
+Revision: 8051f36cd6478649c85407c755667fccb9abf71c
+Patch-set: 6
+File: src/java/com/android/internal/telephony/gsm/SmsMessage.java
+
+900
+Thu Feb 21 17:03:13 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: P..2iAQI
+Bytes: 244
+This might be better using regex:
+
+ format from##subject#body:  "(.*)##(.*)#(.*)"
+ format from(subject)body: "(.*)\\((.*)\\)(.*)"
+ format from[space]body: "(\\S*)\\s*(.*)"
+
+I tested them here: http://www.regexplanet.com/advanced/java/index.html
+
