@@ -1,0 +1,25 @@
+Revision: 1aa266d188acc76ef5f80ecd516fa07a6888b98d
+Patch-set: 5
+File: src/java/com/android/internal/telephony/RIL.java
+
+82
+Tue Feb 26 18:20:12 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QOPsREJw
+Bytes: 59
+Create a singleton Random object and initialize this to it?
+
+158
+Tue Feb 26 18:20:12 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QOFv9vCw
+Bytes: 72
+Should have one Random() object instead of creating a new one each time?
+
+599
+Tue Feb 26 18:20:12 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QOh4Akgs
+Bytes: 78
+Lets have this next to the resetSerial above or move resetSerial down to here.
+
