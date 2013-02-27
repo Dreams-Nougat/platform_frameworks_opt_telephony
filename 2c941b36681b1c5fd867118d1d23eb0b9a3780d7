@@ -9,6 +9,15 @@ UUID: QVXNy2F8
 Bytes: 22
 what is this used for?
 
+2044
+Wed Feb 27 01:06:57 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QVXNy2F8
+UUID: QPgcOGK4
+Bytes: 84
+use Settings/ApnEditor.java.
+But after changing mvno_match_data, I'll review, again.
+
 2048
 Wed Feb 27 00:52:36 2013 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -16,10 +25,26 @@ UUID: QVbNjoE0
 Bytes: 410
 I would integrate findMvno in with the existing createAllApnList.  Do a query based on mnc/mcc and then cycle through the cursor building the list of apns.  As soon as you get an apn that has an mvno_type and mvno_match_data that matches, I believe you want to throw out previous matches and then only accept apns with the same _type and _match_data.  This can be done in a single pass through the cursor list.
 
+2048
+Wed Feb 27 01:06:57 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QVbNjoE0
+UUID: QPicTFNc
+Bytes: 16
+OK, I'll try it.
+
 2066
 Wed Feb 27 00:52:36 2013 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: QVfNdKIg
 Bytes: 70
 this should generate some sort of error - the apn database is corrupt!
+
+2066
+Wed Feb 27 01:06:57 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QVfNdKIg
+UUID: QPscHoI0
+Bytes: 18
+ok, I'll check it.
 
