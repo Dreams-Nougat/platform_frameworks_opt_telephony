@@ -1,0 +1,11 @@
+Revision: cc6c268df63dd1ee93e7c5f82a5159b099c377d3
+Patch-set: 4
+File: src/java/android/provider/Telephony.java
+
+1824
+Wed Feb 27 18:54:39 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QVQFoWvc
+Bytes: 177
+I would list this below MVNO_TYPE as the type dictates what the data means.  Also a comment might be good too, perhaps indicating the form of the data for the 3 types supported.
+
