@@ -13,3 +13,33 @@ As you know, MVNO has same MCC and MNC. We should get the mvno, and if it doesn'
 
 To simplify this issue, I used findMvno().
 
+2049
+Wed Feb 27 18:34:29 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QQRDrcp4
+UUID: QVQEM2n8
+Bytes: 686
+I think this can be simpler.  How about
+String mvnoType = null;
+String mvnoMatchData = null;
+do {
+  String cursorMvnoType = cursor.getString(MVNO_TYPE);
+  String cursorMvnoMatchData = cursor.getString(MVNO_MATCH_DATA);
+  if (mvnoType != null) {
+    if (mvnoType.equals(cursorMvnoType) && 
+        mvnoMatchData.equals(cursorMvnoMatchData)) {
+      result.add(makeApnSetting(cursor);
+    }
+  } else {
+    // no mvno match yet
+    if (mvnoMatches(r, cursorMvnoType, cursorMvnoMatchData))
+    {
+      // first match - toss out non-mvno data
+      result.clear();
+      mvnoType = cursorMvnoType;
+      mvnoMatchData = cursorMvnoMatchData;
+    }
+    result.add(makeApnSetting(cursor);
+  }
+}
+
