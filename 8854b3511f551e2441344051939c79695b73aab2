@@ -1,0 +1,25 @@
+Revision: 8854b3511f551e2441344051939c79695b73aab2
+Patch-set: 6
+File: src/java/com/android/internal/telephony/RIL.java
+
+159
+Wed Feb 27 06:02:01 2013 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QPkfXMLU
+Bytes: 255
+Is it possible to keep 0 as initial serial? As we can use it to count how many requests have been sent out after RILD socked connected. Also this is called when RILD socket disconnected. Why we would mix old requests with new?  What problem did you meet ?
+
+239
+Wed Feb 27 06:02:01 2013 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QPgfhOI8
+Bytes: 586
+It is great that you decrease three locks (mWakelock, pending, mRequestList) to 1 lock(mRequestList). From code perspective, it is more simple. And I can not find current drain issue in current fix.
+
+While one lock may have thread efficiency issue.
+eg, 
+receive thread is in findAndRemoveRequestFromList(),
+switch to main thread acquireWakeLock, as mRequestList is held by receive thread, main thread will be blocked.
+
+Actually there are two resources(mRequestList / mRequestMessagesOutstanding), as one lock protect one resource. Is it possible to keep two locks for the two resources?
+
