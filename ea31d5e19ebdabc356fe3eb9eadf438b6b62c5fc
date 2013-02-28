@@ -1,0 +1,14 @@
+Revision: ea31d5e19ebdabc356fe3eb9eadf438b6b62c5fc
+Patch-set: 4
+File: /COMMIT_MSG
+
+20
+Thu Feb 28 16:46:35 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QXs3TIVA
+Bytes: 223
+Please make the Change-Id for this and the related change:
+  https://android-review.googlesource.com/#/c/43050/
+
+the same. That way gerrit will handle them together and if you click on the change-id you'll see both changes.
+
