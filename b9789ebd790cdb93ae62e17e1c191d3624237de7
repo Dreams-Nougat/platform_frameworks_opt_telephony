@@ -1,0 +1,40 @@
+Revision: b9789ebd790cdb93ae62e17e1c191d3624237de7
+Patch-set: 8
+File: src/java/com/android/internal/telephony/gsm/GsmDataConnectionTracker.java
+
+968
+Thu Feb 28 22:39:13 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QXrMCghQ
+Bytes: 102
+load the char once:
+char c = imsiDB.charAt(idx)
+if (c == 'x' || c == 'X' || c == imsiSIM.charAt(idx)))
+
+983
+Thu Feb 28 22:39:13 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QXtMJ-jg
+Bytes: 239
+put the "return true" on the inside:
+if (mvno_type.equalsIgnoreCase("spn")) {
+    if (mvno_match_data != null &&
+       mvno_match_data.equalsIgnoreCase(
+               r.getServiceProviderName()) {
+          return true;
+    } else if ...
+
+1053
+Thu Feb 28 22:39:13 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QXnivSSY
+Bytes: 49
+Move the mIccRecords.get out of the do-while loop
+
+1060
+Thu Feb 28 22:39:13 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QXriYoQk
+Bytes: 11
+good catch.
+
