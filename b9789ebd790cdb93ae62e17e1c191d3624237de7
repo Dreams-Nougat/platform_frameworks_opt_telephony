@@ -11,6 +11,14 @@ load the char once:
 char c = imsiDB.charAt(idx)
 if (c == 'x' || c == 'X' || c == imsiSIM.charAt(idx)))
 
+968
+Fri Mar 01 00:58:14 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QXrMCghQ
+UUID: QfyMbyoE
+Bytes: 4
+Done
+
 983
 Thu Feb 28 22:39:13 2013 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -24,12 +32,28 @@ if (mvno_type.equalsIgnoreCase("spn")) {
           return true;
     } else if ...
 
+983
+Fri Mar 01 00:58:14 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QXtMJ-jg
+UUID: Qf2MVwkg
+Bytes: 4
+Done
+
 1053
 Thu Feb 28 22:39:13 2013 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: QXnivSSY
 Bytes: 49
 Move the mIccRecords.get out of the do-while loop
+
+1053
+Fri Mar 01 00:58:14 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QXnivSSY
+UUID: Qf0MQxlk
+Bytes: 4
+Done
 
 1060
 Thu Feb 28 22:39:13 2013 +0000
