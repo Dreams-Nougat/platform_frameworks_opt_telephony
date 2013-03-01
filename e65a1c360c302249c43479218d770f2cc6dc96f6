@@ -1,0 +1,29 @@
+Revision: e65a1c360c302249c43479218d770f2cc6dc96f6
+Patch-set: 4
+File: src/java/com/android/internal/telephony/uicc/IccConstants.java
+
+92
+Fri Mar 01 19:38:22 2013 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QjNZ8pDU
+Bytes: 80
+Is this really usim specific? If not - should this go to the section on line 23?
+
+File: src/java/com/android/internal/telephony/uicc/SIMRecords.java
+
+93
+Fri Mar 01 19:38:22 2013 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QjLZxKFw
+Bytes: 109
+It looks like csim also has ef_gid1. Should this go to IccRecords and should RuimRecords also read this file?
+
+File: src/java/com/android/internal/telephony/uicc/UsimFileHandler.java
+
+60
+Fri Mar 01 19:38:22 2013 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: QjPZ3oE4
+Bytes: 96
+Is this file available in 2g sim as well? If so, add this to the SimFileHandler as well, please.
+
