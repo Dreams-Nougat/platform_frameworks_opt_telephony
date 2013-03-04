@@ -9,6 +9,14 @@ UUID: QklBMLPE
 Bytes: 164
 shouldn't you use the length of imsiDB?  If the DB requires the 9th digit exist or have a particular value but the imsSIM is only 8 digits long we should not match.
 
+965
+Mon Mar 04 06:12:17 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QklBMLPE
+UUID: QqVliI7w
+Bytes: 34
+yes, you're right. I'll remove it.
+
 979
 Fri Mar 01 18:05:38 2013 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -16,12 +24,28 @@ UUID: QkhD-xFM
 Bytes: 31
 This block is no longer needed.
 
+979
+Mon Mar 04 06:12:17 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QkhD-xFM
+UUID: QrDYheKs
+Bytes: 12
+you're right
+
 989
 Fri Mar 01 18:05:38 2013 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: QktA--DY
 Bytes: 36
 check for empty string isn't needed.
+
+989
+Mon Mar 04 06:12:17 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QktA--DY
+UUID: QrNY8xNY
+Bytes: 4
+Done
 
 994
 Fri Mar 01 18:05:38 2013 +0000
@@ -36,4 +60,12 @@ if (gid1 != null && gid1.equalsIgnoreCase(mvno_match_data)) {
 }
 
 should be enough - I think the substring stuff adds alot of complication and is too lenient.
+
+994
+Mon Mar 04 06:12:17 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QkrAbWN8
+UUID: QqXlf5-A
+Bytes: 62
+We use first 2 or 4 digits in DB. So need the substring stuff.
 
