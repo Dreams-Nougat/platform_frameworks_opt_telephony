@@ -17,6 +17,14 @@ UUID: QqVliI7w
 Bytes: 34
 yes, you're right. I'll remove it.
 
+965
+Mon Mar 04 06:15:48 2013 +0000
+Author: Agathon Jung <1014549@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QklBMLPE
+UUID: Qpb2zH5E
+Bytes: 4
+Done
+
 979
 Fri Mar 01 18:05:38 2013 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -68,4 +76,12 @@ Parent: QkrAbWN8
 UUID: QqXlf5-A
 Bytes: 62
 We use first 2 or 4 digits in DB. So need the substring stuff.
+
+994
+Mon Mar 04 06:15:48 2013 +0000
+Author: Agathon Jung <1014549@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QkrAbWN8
+UUID: QpZ2uYyg
+Bytes: 135
+This code needs to support the compare of specific length that guided by carrier. It can be used as the combination of meaningful data.
 
