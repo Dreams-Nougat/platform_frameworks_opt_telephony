@@ -9,6 +9,14 @@ UUID: QjNZ8pDU
 Bytes: 80
 Is this really usim specific? If not - should this go to the section on line 23?
 
+92
+Mon Mar 04 07:58:57 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QjNZ8pDU
+UUID: QqTlZbwo
+Bytes: 61
+This is 3gpp spec. so I'll move on above line as your comment
+
 File: src/java/com/android/internal/telephony/uicc/SIMRecords.java
 
 93
@@ -18,6 +26,14 @@ UUID: QjLZxKFw
 Bytes: 109
 It looks like csim also has ef_gid1. Should this go to IccRecords and should RuimRecords also read this file?
 
+93
+Mon Mar 04 07:58:57 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QjLZxKFw
+UUID: Qqdn088U
+Bytes: 55
+I'll move IccRecords. But for CSIM, I won't use it, now
+
 File: src/java/com/android/internal/telephony/uicc/UsimFileHandler.java
 
 60
@@ -26,4 +42,12 @@ Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: QjPZ3oE4
 Bytes: 96
 Is this file available in 2g sim as well? If so, add this to the SimFileHandler as well, please.
+
+60
+Mon Mar 04 07:58:57 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QjPZ3oE4
+UUID: QqdkbkzA
+Bytes: 4
+Done
 
