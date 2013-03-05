@@ -11,3 +11,11 @@ This will throw an exception if you do charAt beyond the length of imsiSIM.  I d
 
 Probably verify that imsiSIM length is at least as long as imsiDB length first.
 
+968
+Tue Mar 05 01:02:33 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: Qo6j4vwc
+UUID: QwQH56go
+Bytes: 47
+To check this, I re-use empty-check of imsiSIM.
+
