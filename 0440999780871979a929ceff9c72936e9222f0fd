@@ -19,3 +19,11 @@ UUID: QwQH56go
 Bytes: 47
 To check this, I re-use empty-check of imsiSIM.
 
+968
+Tue Mar 05 01:04:00 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QwQH56go
+UUID: QvKbnhjI
+Bytes: 101
+not empty, but if imsiSIM is X chars long, but imsiDB is X+1 chars long this will throw an exception.
+
