@@ -1,0 +1,27 @@
+Revision: c106adba1b285a656e40470ef218d7369e7e6991
+Patch-set: 5
+File: src/java/com/android/internal/telephony/SMSDispatcher.java
+
+428
+Thu Mar 07 01:08:18 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: REZFPvGs
+Bytes: 25
+extra whitespace after =.
+
+430
+Thu Mar 07 01:08:18 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: REdGDBEE
+Bytes: 34
+extra whitespace at end of string.
+
+File: src/java/com/android/internal/telephony/gsm/GsmSMSDispatcher.java
+
+301
+Thu Mar 07 01:08:18 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: RETHiUCY
+Bytes: 55
+Missing whitespace around "+" for previous three lines.
+
