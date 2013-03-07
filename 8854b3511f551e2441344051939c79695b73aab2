@@ -9,6 +9,14 @@ UUID: QPkfXMLU
 Bytes: 255
 Is it possible to keep 0 as initial serial? As we can use it to count how many requests have been sent out after RILD socked connected. Also this is called when RILD socket disconnected. Why we would mix old requests with new?  What problem did you meet ?
 
+159
+Thu Mar 07 23:27:05 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QPkfXMLU
+UUID: RJKGuGLs
+Bytes: 340
+The problem this is trying to fix is ensuring after a recovery we probably won't mis-interpret responses - that the serial numbers of the new commands will be substantially different from those in the old responses.  We could have the first generation start at 0 if you want - I don't think the recovery mechanism gets exercised very often.
+
 239
 Wed Feb 27 06:02:01 2013 +0000
 Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -22,4 +30,14 @@ receive thread is in findAndRemoveRequestFromList(),
 switch to main thread acquireWakeLock, as mRequestList is held by receive thread, main thread will be blocked.
 
 Actually there are two resources(mRequestList / mRequestMessagesOutstanding), as one lock protect one resource. Is it possible to keep two locks for the two resources?
+
+239
+Thu Mar 07 23:27:05 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: QPgfhOI8
+UUID: RJAE0rE4
+Bytes: 520
+Both the sending thread and the response processing thread access the wakelock, the count and the list.  We could break it into two separate wakelocks and in most places it would be ok - though the timeout and clearRequestList code would need nested locks (not a good thing).  The question is does the potential performance increase warrant the potential deadlock (if somebody in the future grabs the locks in the wrong order).
+
+I can get greater perf increases just optimizing what we've got.  Let me take another pass.
 
