@@ -17,6 +17,16 @@ UUID: RJKGuGLs
 Bytes: 340
 The problem this is trying to fix is ensuring after a recovery we probably won't mis-interpret responses - that the serial numbers of the new commands will be substantially different from those in the old responses.  We could have the first generation start at 0 if you want - I don't think the recovery mechanism gets exercised very often.
 
+159
+Tue Mar 12 05:52:39 2013 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: RJKGuGLs
+UUID: RiPpkKfw
+Bytes: 315
+We will resetSerial when RILD socket disconnected.
+If RILD socked disconnected, clearRequestsList() will clear all requests when socked disconnected. When RILD socket connected again, new serial number will start from 0, while no old requests. So I think there will no mis-interpret case.
+Correct me if  I am wrong.
+
 239
 Wed Feb 27 06:02:01 2013 +0000
 Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -40,4 +50,16 @@ Bytes: 520
 Both the sending thread and the response processing thread access the wakelock, the count and the list.  We could break it into two separate wakelocks and in most places it would be ok - though the timeout and clearRequestList code would need nested locks (not a good thing).  The question is does the potential performance increase warrant the potential deadlock (if somebody in the future grabs the locks in the wrong order).
 
 I can get greater perf increases just optimizing what we've got.  Let me take another pass.
+
+239
+Tue Mar 12 05:52:39 2013 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: RJAE0rE4
+UUID: RiLrhESM
+Bytes: 570
+You are correct that there are three objects(the wakelock, the count and the list).
+I think we can separate them into two parts (the wakelock and the count) and (the list). As the count operation will always be with wakelock. 
+In main thread, we will not handle list. As we do not need to wait for the list lock, which receive/send thread hold. I think this is what we can optimize.
+While send/receive thread might hold both list lock and wakelock lock. This might be potential deadlock.
+So we should ensure each thread do not hold one lock and waiting for another lock.
 
