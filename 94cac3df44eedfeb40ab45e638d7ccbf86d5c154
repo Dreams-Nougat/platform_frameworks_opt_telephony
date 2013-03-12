@@ -1,0 +1,11 @@
+Revision: 94cac3df44eedfeb40ab45e638d7ccbf86d5c154
+Patch-set: 7
+File: src/java/com/android/internal/telephony/RIL.java
+
+2128
+Tue Mar 12 05:52:25 2013 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: RiNqOBXU
+Bytes: 32
+mMakeLockCount -> mWakeLockCount
+
