@@ -39,6 +39,17 @@ Just because your implementation may not do this, we can imagine other OEMs pass
 
 Couldn't you just remember the first sequence number your RILD connection received?  Then you know the number of requests you've received.
 
+159
+Wed Mar 13 09:45:44 2013 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: Rf3cDuMw
+UUID: RocFxYqs
+Bytes: 624
+You are correct, there is possibility that when old response comes back, the sequence number is same as latest one after RILD socked connected again.
+Whereas, while RILD socked disconnected, possibly the serial number is a big number. When RILD socked connected again, the serial number start from 0. So the possibility the old serial number equals new serial number is very low. And we would discard the old response when RILD socked connected. While a new random serial number might have higher possibility to equal the old one.
+
+In most cases, it is hard to get the first sequence number in log snip that tester provided.
+
 239
 Wed Feb 27 06:02:01 2013 +0000
 Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -90,4 +101,19 @@ The handler is adding to the list and in an error may need to decrement the wake
 There are two places where we need to synchronously hold both list lock and wakelock/count lock:  Timeouts (due to debug output) and clearRequestList.  We can nest the locks in those two places so there's no deadlock, but it introduces the risk of future changes causing rare and hard-to-diagnose deadlocks.
 
 We are not convinced that this channel is busy enough and has contention enough to warrant the risk of this optimization.  Do you have data on the amount of contention in this module?
+
+239
+Wed Mar 13 09:45:44 2013 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: Rf8wM44I
+UUID: RoQHGao4
+Bytes: 469
+"main thread" mean Phone process main thread. The caller should be in Phone main thread.
+
+I think we do not need care about timeout and clearRequestList.
+
+Timeout: mean "Haven't heard back from the last request.", mean requester no request, also no response back.
+clearRequestList: when RILD socked disconnected, main thread will can not send to send thread. Also no response received in receive thread.
+
+As I checked logs. There may be 1356 requests send out in 4 min.
 
