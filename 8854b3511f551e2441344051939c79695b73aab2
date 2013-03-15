@@ -50,6 +50,18 @@ Whereas, while RILD socked disconnected, possibly the serial number is a big num
 
 In most cases, it is hard to get the first sequence number in log snip that tester provided.
 
+159
+Fri Mar 15 21:02:42 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: RocFxYqs
+UUID: RvNCycY4
+Bytes: 550
+If we assume the high rate of calls you suggest below (I think it's high as my LTE devices see only .093 req/sec while you're suggesting 5.7 req/sec), it would take 760 million seconds to get as far from the starting point as you would expect a random restart point to be in the random case.  That's 24 years.
+
+The odds that the random number selected for the restart is near the number last used are 1 in 4 billion.
+
+However we see alot of restarts early in the boot cycle when there's significantly higher odds of an old request looking like a new.
+
 239
 Wed Feb 27 06:02:01 2013 +0000
 Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -116,4 +128,16 @@ Timeout: mean "Haven't heard back from the last request.", mean requester no req
 clearRequestList: when RILD socked disconnected, main thread will can not send to send thread. Also no response received in receive thread.
 
 As I checked logs. There may be 1356 requests send out in 4 min.
+
+239
+Fri Mar 15 21:02:42 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: RoQHGao4
+UUID: RvJDnGaI
+Bytes: 336
+6 requests a second is 100 times more than what we see.  I hope that's not your sustained load.
+
+Even at 6/s, is there contention?  There's plenty of CPU time to handle that without contention.  If you'd had a single lock, would you have noticed?
+
+The brittleness/frailty of nested locks is not worth the slight perf gain you might see.
 
