@@ -62,6 +62,16 @@ The odds that the random number selected for the restart is near the number last
 
 However we see alot of restarts early in the boot cycle when there's significantly higher odds of an old request looking like a new.
 
+159
+Mon Mar 18 03:24:31 2013 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: RvNCycY4
+UUID: R1K7.Fyo
+Bytes: 130
+The cases is the most busy case as I saw. As network state change frequently.
+
+If you insist on the random start number. Go ahead.
+
 239
 Wed Feb 27 06:02:01 2013 +0000
 Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -140,4 +150,13 @@ Bytes: 336
 Even at 6/s, is there contention?  There's plenty of CPU time to handle that without contention.  If you'd had a single lock, would you have noticed?
 
 The brittleness/frailty of nested locks is not worth the slight perf gain you might see.
+
+239
+Mon Mar 18 03:24:31 2013 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: RvJDnGaI
+UUID: R1E7xc10
+Bytes: 300
+Main thread is used by both Phone App and Framework-Telephony. While send/receive thread are child threads for RIL communication. Do you think it is proper to block main thread due to send/receive thread lock ?
+The performance impact may result in UI update. So suggest to double evaluate it. Thanks!
 
