@@ -31,6 +31,8 @@ public interface AppInterface {
                                     "android.intent.action.stk.command";
     public static final String CAT_SESSION_END_ACTION =
                                     "android.intent.action.stk.session_end";
+    public static final String CAT_CMD_START_ACTION =
+                                    "android.intent.action.stk.start";
 
     /*
      * Callback function from app to telephony to pass a result code and user's
