@@ -225,6 +225,12 @@ public class CatService extends Handler implements AppInterface {
                     mMenuCmd = null;
                 } else {
                     mMenuCmd = cmdMsg;
+                    if(mMenuCmd.getMenu() != null) {
+                        Intent intent = new Intent(AppInterface.CAT_CMD_START_ACTION);
+                        intent.putExtra("StkMenuTitle", mMenuCmd.getMenu().title);
+                        mContext.sendBroadcast(intent);
+                        CatLog.d(this, "send update stk app label intent to launcher");
+                    }
                 }
                 sendTerminalResponse(cmdParams.cmdDet, ResultCode.OK, false, 0, null);
                 break;
