@@ -1225,7 +1225,8 @@ public final class GsmMmiCode extends Handler implements MmiCode {
         //      {2} is time in seconds
 
         destinations[0] = serviceClassToCFString(info.serviceClass & serviceClassMask);
-        destinations[1] = PhoneNumberUtils.stringFromStringAndTOA(info.number, info.toa);
+        destinations[1] = formatNoBidiString(
+                PhoneNumberUtils.stringFromStringAndTOA(info.number, info.toa));
         destinations[2] = Integer.toString(info.timeSeconds);
 
         if (info.reason == CommandsInterface.CF_REASON_UNCONDITIONAL &&
@@ -1240,6 +1241,13 @@ public final class GsmMmiCode extends Handler implements MmiCode {
         return TextUtils.replace(template, sources, destinations);
     }
 
+    /**
+     * Number should be displayed as normal order even in Right to Left oriented languages,
+     * use bididirection control character to implement this.
+     */
+    private String formatNoBidiString(final String number) {
+        return number == null ? number : "\u202A" + number + "\u202C";
+    }
 
     private void
     onQueryCfComplete(AsyncResult ar) {
