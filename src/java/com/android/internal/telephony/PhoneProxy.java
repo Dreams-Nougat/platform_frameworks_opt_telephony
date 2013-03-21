@@ -781,6 +781,10 @@ public class PhoneProxy extends Handler implements Phone {
         return mActivePhone.getSubscriberId();
     }
 
+    public String getGroupIdLevel1() {
+        return mActivePhone.getGroupIdLevel1();
+    }
+
     public String getIccSerialNumber() {
         return mActivePhone.getIccSerialNumber();
     }

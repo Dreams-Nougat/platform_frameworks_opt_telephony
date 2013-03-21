@@ -292,6 +292,10 @@ abstract class SipPhoneBase extends PhoneBase {
         return null;
     }
 
+    public String getGroupIdLevel1() {
+        return null;
+    }
+
     public String getIccSerialNumber() {
         return null;
     }

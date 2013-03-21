@@ -856,6 +856,11 @@ public class GSMPhone extends PhoneBase {
         return (r != null) ? r.getIMSI() : null;
     }
 
+    public String getGroupIdLevel1() {
+        IccRecords r = mIccRecords.get();
+        return (r != null) ? r.getGid1() : null;
+    }
+
     public String getLine1Number() {
         IccRecords r = mIccRecords.get();
         return (r != null) ? r.getMsisdnNumber() : null;
