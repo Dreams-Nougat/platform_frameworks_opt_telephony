@@ -11,3 +11,13 @@ Seems "round-about" maybe we should have an init() call as part of the "interace
 
 Also what about RuimRecords, there I see we're also doing "fetch" but interesting we're not calling adnCache.reset. Should that be fixed?
 
+1197
+Thu Mar 21 19:03:58 2013 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: SNgz5V3g
+UUID: SNszib8Q
+Bytes: 169
+Could you, please, clarify this: "Seems "round-about" maybe we should have an init() call as part of the "interace"?"
+
+I think same fix should be applied to RuimRecords.
+
