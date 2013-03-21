@@ -91,6 +91,7 @@ public abstract class IccRecords extends Handler implements IccConstants {
     public static final int EVENT_SPN = 2; // Service Provider Name
 
     public static final int EVENT_GET_ICC_RECORD_DONE = 100;
+    protected static final int EVENT_APP_READY = 1;
 
     /**
      * Generic ICC record loaded callback. Subclasses can call EF load methods on
@@ -330,6 +331,10 @@ public abstract class IccRecords extends Handler implements IccConstants {
      */
     public abstract void onRefresh(boolean fileChanged, int[] fileList);
 
+    protected void onIccRefreshInit() {
+        adnCache.reset();
+        sendMessage(obtainMessage(EVENT_APP_READY));
+    }
 
     public boolean getRecordsLoaded() {
         if (recordsToLoad == 0 && recordsRequested == true) {
