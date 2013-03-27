@@ -1835,6 +1835,12 @@ public final class Telephony {
           * gid: 4E, 33, ...
           */
         public static final String MVNO_MATCH_DATA = "mvno_match_data";
+
+        /**
+         * Read only APN.
+         * true : read only APN, false : not read only APN.
+         */
+        public static final String READ_ONLY = "read_only";
     }
 
     /**
