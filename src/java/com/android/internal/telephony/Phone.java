@@ -133,6 +133,14 @@ public interface Phone {
     int NT_MODE_LTE_WCDMA                = RILConstants.NETWORK_MODE_LTE_WCDMA;
     int PREFERRED_NT_MODE                = RILConstants.PREFERRED_NETWORK_MODE;
 
+    int NT_MODE_TD_SCDMA_ONLY            = RILConstants.NETWORK_MODE_TD_SCDMA_ONLY;
+    int NT_MODE_TD_SCDMA_WCDMA           = RILConstants.NETWORK_MODE_TD_SCDMA_WCDMA;
+    int NT_MODE_TD_SCDMA_LTE             = RILConstants.NETWORK_MODE_TD_SCDMA_LTE;
+    int NT_MODE_TD_SCDMA_GSM             = RILConstants.NETWORK_MODE_TD_SCDMA_GSM;
+    int NT_MODE_TD_SCDMA_GSM_LTE         = RILConstants.NETWORK_MODE_TD_SCDMA_GSM_LTE;
+    int NT_MODE_TD_SCDMA_GSM_WCDMA       = RILConstants.NETWORK_MODE_TD_SCDMA_GSM_WCDMA;
+    int NT_MODE_TD_SCDMA_GSM_WCDMA_LTE   = RILConstants.NETWORK_MODE_TD_SCDMA_GSM_WCDMA_LTE;
+
     // Used for CDMA roaming mode
     static final int CDMA_RM_HOME        = 0;  // Home Networks only, as defined in PRL
     static final int CDMA_RM_AFFILIATED  = 1;  // Roaming an Affiliated networks, as defined in PRL
