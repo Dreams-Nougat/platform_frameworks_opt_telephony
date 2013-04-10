@@ -1,0 +1,20 @@
+Revision: 2b6c7531f6c104a1eb322cb378c618ae06ecf804
+Patch-set: 2
+File: src/java/com/android/internal/telephony/uicc/IccConstants.java
+
+2
+Wed Apr 10 21:43:57 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: TRcDNwLE
+Bytes: 23
+Don't change copyright.
+
+File: src/java/com/android/internal/telephony/uicc/SIMRecords.java
+
+2
+Wed Apr 10 21:43:57 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: TRaDKNJU
+Bytes: 7
+Remove.
+
