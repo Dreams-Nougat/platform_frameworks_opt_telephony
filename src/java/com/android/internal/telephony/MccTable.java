@@ -236,8 +236,8 @@ public final class MccTable
                 for(int i = 0; i < N; i++) {
                     // only match full (lang + country) locales
                     if (locales[i]!=null && locales[i].length() >= 5 &&
-                            locales[i].substring(0,2).equals(language)) {
-                        if (locales[i].substring(3,5).equals(country)) {
+                            locales[i].substring(0,2).equalsIgnoreCase(language)) {
+                        if (locales[i].substring(3,5).equalsIgnoreCase(country)) {
                             bestMatch = locales[i];
                             break;
                         } else if (null == bestMatch) {
@@ -250,7 +250,8 @@ public final class MccTable
                     Configuration config = am.getConfiguration();
                     config.locale = new Locale(bestMatch.substring(0,2),
                                                bestMatch.substring(3,5));
-                    config.userSetLocale = true;
+                    // this is not set by user
+                    config.userSetLocale = false;
                     am.updateConfiguration(config);
                 }
             } catch (Exception e) {

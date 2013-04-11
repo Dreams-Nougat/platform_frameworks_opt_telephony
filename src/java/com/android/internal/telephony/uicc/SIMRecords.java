@@ -36,6 +36,8 @@ import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.SmsMessageBase;
 import com.android.internal.telephony.gsm.SimTlv;
 import com.android.internal.telephony.gsm.SmsMessage;
+import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppState;
+import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -83,6 +85,9 @@ public class SIMRecords extends IccRecords {
     byte[] mEfCff = null;
     byte[] mEfCfis = null;
 
+    boolean mSetLocaleFromUsimEnabled = false;
+    byte[] mEfLi = null;
+    byte[] mEfPl = null;
 
     int spnDisplayCondition;
     // Numeric network codes listed in TS 51.011 EF[SPDI]
@@ -146,6 +151,7 @@ public class SIMRecords extends IccRecords {
     private static final int EVENT_GET_CFIS_DONE = 32;
     private static final int EVENT_GET_CSP_CPHS_DONE = 33;
     private static final int EVENT_GET_GID1_DONE = 34;
+    private static final int EVENT_APP_LOCKED = 35;
 
     // Lookup table for carriers known to produce SIMs which incorrectly indicate MNC length.
 
@@ -183,12 +189,16 @@ public class SIMRecords extends IccRecords {
         // recordsToLoad is set to 0 because no requests are made yet
         recordsToLoad = 0;
 
+        mSetLocaleFromUsimEnabled = mContext.getResources().getBoolean(
+                com.android.internal.R.bool.config_set_default_locale_from_usim);
+
         mCi.setOnSmsOnSim(this, EVENT_SMS_ON_SIM, null);
         mCi.registerForIccRefresh(this, EVENT_SIM_REFRESH, null);
 
         // Start off by setting empty state
         resetRecords();
         mParentApp.registerForReady(this, EVENT_APP_READY, null);
+        mParentApp.registerForLocked(this, EVENT_APP_LOCKED, null);
     }
 
     @Override
@@ -198,6 +208,7 @@ public class SIMRecords extends IccRecords {
         mCi.unregisterForIccRefresh(this);
         mCi.unSetOnSmsOnSim(this);
         mParentApp.unregisterForReady(this);
+        mParentApp.unregisterForLocked(this);
         resetRecords();
         super.dispose();
     }
@@ -542,6 +553,10 @@ public class SIMRecords extends IccRecords {
         try { switch (msg.what) {
             case EVENT_APP_READY:
                 onReady();
+                break;
+
+            case EVENT_APP_LOCKED:
+                onLocked();
                 break;
 
             /* IO events */
@@ -1140,6 +1155,28 @@ public class SIMRecords extends IccRecords {
         }
     }
 
+    private class EfPlLoaded implements IccRecordLoaded {
+        public String getEfName() {
+            return "EF_PL";
+        }
+
+        public void onRecordLoaded(AsyncResult ar) {
+            mEfPl = (byte[]) ar.result;
+            if (DBG) log("EF_PL=" + IccUtils.bytesToHexString(mEfPl));
+        }
+    }
+
+    private class EfUsimLiLoaded implements IccRecordLoaded {
+        public String getEfName() {
+            return "EF_LI";
+        }
+
+        public void onRecordLoaded(AsyncResult ar) {
+            mEfLi = (byte[]) ar.result;
+            if (DBG) log("EF_LI=" + IccUtils.bytesToHexString(mEfLi));
+        }
+    }
+
     private void handleFileUpdate(int efid) {
         switch(efid) {
             case EF_MBDN:
@@ -1274,6 +1311,56 @@ public class SIMRecords extends IccRecords {
         }
     }
 
+    private String findBestLanguage(byte[] languages) {
+        String bestMatch = null;
+        String[] locales = mContext.getAssets().getLocales();
+
+        if ((languages == null) || (locales == null)) return null;
+
+        // Each 2-bytes consists of one language
+        for (int i = 0; (i + 1) < languages.length; i += 2) {
+            try {
+                String lang = new String(languages, i, 2, "ISO-8859-1");
+                if (DBG) log ("languages from sim = " + lang);
+                for (int j = 0; j < locales.length; j++) {
+                    if (locales[j] != null && locales[j].length() >= 2 &&
+                            locales[j].substring(0, 2).equalsIgnoreCase(lang)) {
+                        return lang;
+                    }
+                }
+                if (bestMatch != null) break;
+            } catch(java.io.UnsupportedEncodingException e) {
+                log ("Failed to parse USIM language records" + e);
+            }
+        }
+        // no match found. return null
+        return null;
+    }
+
+    private void setLocaleFromUsim() {
+        String prefLang = null;
+        // check EFli then EFpl
+        prefLang = findBestLanguage(mEfLi);
+
+        if (prefLang == null) {
+            prefLang = findBestLanguage(mEfPl);
+        }
+
+        if (prefLang != null) {
+            // check country code from SIM
+            String imsi = getIMSI();
+            String country = null;
+            if (imsi != null) {
+                country = MccTable.countryCodeForMcc(
+                                    Integer.parseInt(imsi.substring(0,3)));
+            }
+            if (DBG) log("Setting locale to " + prefLang + "_" + country);
+            MccTable.setSystemLocale(mContext, prefLang, country);
+        } else {
+            if (DBG) log ("No suitable USIM selected locale");
+        }
+    }
+
     protected void onRecordLoaded() {
         // One record loaded successfully or failed, In either case
         // we need to update the recordsToLoad count
@@ -1289,6 +1376,18 @@ public class SIMRecords extends IccRecords {
     }
 
     protected void onAllRecordsLoaded() {
+        if (mSetLocaleFromUsimEnabled) {
+            setLocaleFromUsim();
+
+            if (mParentApp.getState() == AppState.APPSTATE_PIN ||
+                   mParentApp.getState() == AppState.APPSTATE_PUK) {
+                // reset recordsRequested, since sim is not loaded really
+                recordsRequested = false;
+                // lock state, only update language
+                return ;
+            }
+        }
+
         String operator = getOperatorNumeric();
 
         // Some fields require more than one SIM record to set
@@ -1332,6 +1431,26 @@ public class SIMRecords extends IccRecords {
     @Override
     public void onReady() {
         fetchSimRecords();
+    }
+
+    private void onLocked() {
+        if (!mSetLocaleFromUsimEnabled) return;
+
+        recordsRequested = true;
+        if (DBG) log("only fetch EF_LI and EF_PL in lock state");
+        loadEfLiAndEfPl();
+    }
+
+    private void loadEfLiAndEfPl() {
+       if (mParentApp.getType() == AppType.APPTYPE_USIM) {
+            mFh.loadEFTransparent(EF_LI,
+                    obtainMessage(EVENT_GET_ICC_RECORD_DONE, new EfUsimLiLoaded()));
+            recordsToLoad++;
+
+            mFh.loadEFTransparent(EF_PL,
+                    obtainMessage(EVENT_GET_ICC_RECORD_DONE, new EfPlLoaded()));
+            recordsToLoad++;
+        }
     }
 
     protected void fetchSimRecords() {
@@ -1399,6 +1518,8 @@ public class SIMRecords extends IccRecords {
 
         mFh.loadEFTransparent(EF_GID1, obtainMessage(EVENT_GET_GID1_DONE));
         recordsToLoad++;
+
+        loadEfLiAndEfPl();
 
         // XXX should seek instead of examining them all
         if (false) { // XXX
