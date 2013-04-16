@@ -176,6 +176,11 @@ public abstract class DataConnectionTracker extends Handler {
 
     protected static final String DEFALUT_DATA_ON_BOOT_PROP = "net.def_data_on_boot";
 
+    protected static final int PDP_TYPE_IP_NOT_AVAILABLE = -1;
+    protected static final int PDP_TYPE_IPV4 = 0;
+    protected static final int PDP_TYPE_IPV6 = 2;
+    protected static final int PDP_TYPE_IPV4V6 = 3;
+
     // member variables
     protected PhoneBase mPhone;
     protected UiccController mUiccController;
@@ -1432,6 +1437,50 @@ public abstract class DataConnectionTracker extends Handler {
         }
         stopDataStallAlarm();
         startDataStallAlarm(DATA_STALL_NOT_SUSPECTED);
+    }
+
+    protected void setLteAttachProfile() {
+        ApnSetting apnSetting = null;
+
+        if (mPreferredApn != null) {
+            apnSetting = (ApnSetting)mPreferredApn;
+        } else if (mAllApns != null && !mAllApns.isEmpty()) {
+            for (ApnSetting apn : mAllApns) {
+                if (apnSetting == null) {
+                    apnSetting = apn;
+                }
+                if (apn.canHandleType(PhoneConstants.APN_TYPE_DEFAULT)) {
+                    apnSetting = apn;
+                    break;
+                }
+            }
+        } else {
+            if (DBG) log("setLteAttachProfile : mAllApns is null or empty");
+            return;
+        }
+
+        if (apnSetting == null) {
+            if (DBG) log("setLteAttachProfile : There in no available apn");
+            return;
+        }
+
+        if (DBG) log("setLteAttachProfile : selected Apn=" + apnSetting);
+
+        String apn = apnSetting.apn;
+        int apnLength = 0;
+        if (apn != null) {
+            apnLength = apn.length();
+        }
+
+        int protocol = PDP_TYPE_IPV4;
+        if (apnSetting.protocol.equals("IPV6")) {
+            protocol = PDP_TYPE_IPV6;
+        } else if (apnSetting.protocol.equals("IPV4V6")) {
+            protocol = PDP_TYPE_IPV4V6;
+        }
+
+        mPhone.mCM.sendLteAttachProfile(apnLength, apn, protocol, apnSetting.authType,
+                apnSetting.user, apnSetting.password, null);
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

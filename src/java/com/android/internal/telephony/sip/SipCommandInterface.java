@@ -422,4 +422,8 @@ class SipCommandInterface extends BaseCommands implements CommandsInterface {
 
     public void getVoiceRadioTechnology(Message result) {
     }
+
+    public void sendLteAttachProfile(int apnLength , String apn, int protocol, int authType,
+            String username, String password, Message result) {
+    }
 }

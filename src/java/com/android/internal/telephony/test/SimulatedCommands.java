@@ -1522,4 +1522,8 @@ public final class SimulatedCommands extends BaseCommands
     public void getVoiceRadioTechnology(Message response) {
         unimplemented(response);
     }
+
+    public void sendLteAttachProfile(int apnLength , String apn, int protocol, int authType,
+            String username, String password, Message result) {
+    }
 }

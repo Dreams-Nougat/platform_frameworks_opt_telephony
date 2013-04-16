@@ -1218,6 +1218,7 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
         // match the current operator.
         if (DBG) log("onApnChanged: createAllApnList and cleanUpAllConnections");
         createAllApnList();
+        setLteAttachProfile();
         cleanUpAllConnections(!isDisconnected, Phone.REASON_APN_CHANGED);
         if (isDisconnected) {
             setupDataOnReadyApns(Phone.REASON_APN_CHANGED);
@@ -1620,6 +1621,7 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
     private void onRecordsLoaded() {
         if (DBG) log("onRecordsLoaded: createAllApnList");
         createAllApnList();
+        setLteAttachProfile();
         if (mPhone.mCM.getRadioState().isOn()) {
             if (DBG) log("onRecordsLoaded: notifying data availability");
             notifyOffApnsOfAvailability(Phone.REASON_SIM_LOADED);

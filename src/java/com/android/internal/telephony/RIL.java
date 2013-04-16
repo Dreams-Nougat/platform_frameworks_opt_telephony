@@ -2336,6 +2336,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU: ret = responseVoid(p); break;
             case RIL_REQUEST_STK_SEND_ENVELOPE_WITH_STATUS: ret = responseICC_IO(p); break;
             case RIL_REQUEST_VOICE_RADIO_TECH: ret = responseInts(p); break;
+            case RIL_REQUEST_SET_LTE_ATTACH_PROFILE: ret = responseVoid(p); break;
             default:
                 throw new RuntimeException("Unrecognized solicited response: " + rr.mRequest);
             //break;
@@ -3609,6 +3610,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU: return "RIL_REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU";
             case RIL_REQUEST_STK_SEND_ENVELOPE_WITH_STATUS: return "RIL_REQUEST_STK_SEND_ENVELOPE_WITH_STATUS";
             case RIL_REQUEST_VOICE_RADIO_TECH: return "RIL_REQUEST_VOICE_RADIO_TECH";
+            case RIL_REQUEST_SET_LTE_ATTACH_PROFILE: return "RIL_REQUEST_SET_LTE_ATTACH_PROFILE";
             default: return "<unknown request>";
         }
     }
@@ -3880,6 +3882,27 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         rr.mp.writeString(nonce);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+
+        send(rr);
+    }
+
+    public void sendLteAttachProfile(int apnLength , String apn, int protocol, int authType,
+            String username, String password, Message result) {
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SET_LTE_ATTACH_PROFILE, null);
+
+        if (RILJ_LOGD) riljLog("Send RIL_REQUEST_SET_LTE_ATTACH_PROFILE");
+
+        rr.mp.writeInt(apn == null ? 0 : apn.length());
+        rr.mp.writeString(apn);
+        rr.mp.writeInt(protocol);
+        rr.mp.writeInt(authType);
+        rr.mp.writeString(username);
+        rr.mp.writeString(password);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
+                + ", apnLength:" + (apn == null ? 0 : apn.length()) + ", apn:" + apn
+                + ", protocol:" + protocol + ", authType:" + authType + ", username:" + username
+                + ", password:" + password);
 
         send(rr);
     }
