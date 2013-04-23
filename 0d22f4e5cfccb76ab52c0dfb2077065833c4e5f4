@@ -9,10 +9,28 @@ UUID: TbXWZ6Ck
 Bytes: 74
 Is it possible that mWakeLockCount decrease to 0, while mWakeLock is held?
 
+2073
+Tue Apr 23 23:11:38 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: TbXWZ6Ck
+UUID: T9sxg7.k
+Bytes: 146
+mWakeLockCount's value is only changed under the protection of synchronized (mWakeLock).  Is there more to you question?  Is there a problem here?
+
 2139
 Wed Apr 17 07:53:32 2013 +0000
 Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: TfsS2fuU
 Bytes: 140
 When clearRequestList called, mWakeLock should have been released. While processResponse may have no wakelock to process the error response.
+
+2139
+Tue Apr 23 23:11:38 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: TfsS2fuU
+UUID: T9ozZh3g
+Bytes: 539
+When clearRequestList is called, we have fallen out of the main RilReceiver loop on an error - the socket is cleared and we'll loop around in the outer loop and attempt to re-establish a connection.  We're giving up on any outstanding requests.  For each request in the list, we will decrement once.
+
+If, while we're doing this, somebody tries to send another ril request (send()), they will increment the wake count and then block waiting to synchronize on mRequestList.  Thus we could finish clearRequestList and *not* release mWakeLock.
 
