@@ -1702,4 +1702,12 @@ public interface Phone {
      * Remove references to external object stored in this object.
      */
     void removeReferences();
+
+    void getCallBarringOption(String facility, String password, Message onComplete);
+
+    void setCallBarringOption(String facility, boolean lockState, String password,
+            Message onComplete);
+
+    void requestChangeCbPsw(String facility, String oldPwd, String newPwd, Message result);
+
 }
