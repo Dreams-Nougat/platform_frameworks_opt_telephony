@@ -989,4 +989,17 @@ public class PhoneProxy extends Handler implements Phone {
         mActivePhone = null;
         mCommandsInterface = null;
     }
+
+    public void getCallBarringOption(String facility, String password, Message onComplete) {
+        mActivePhone.getCallBarringOption(facility, password, onComplete);
+    }
+
+    public void setCallBarringOption(String facility, boolean lockState, String password,
+            Message onComplete) {
+        mActivePhone.setCallBarringOption(facility, lockState, password, onComplete);
+    }
+
+    public void requestChangeCbPsw(String facility, String oldPwd, String newPwd, Message result) {
+        mActivePhone.requestChangeCbPsw(facility, oldPwd, newPwd, result);
+    }
 }
