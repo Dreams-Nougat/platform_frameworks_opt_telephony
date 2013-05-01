@@ -179,4 +179,9 @@ abstract class SipConnectionBase extends Connection {
         // FIXME: what's this for SIP?
         return null;
     }
+
+    @Override
+    public int getPreciseDisconnectCause() {
+        return 0;
+    }
 }

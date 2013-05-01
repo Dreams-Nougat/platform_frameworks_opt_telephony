@@ -834,6 +834,9 @@ public class CDMAPhone extends PhoneBase {
 
     /*package*/ void notifyDisconnect(Connection cn) {
         mDisconnectRegistrants.notifyResult(cn);
+
+        mNotifier.notifyDisconnectCause(cn.getDisconnectCause());
+        mNotifier.notifyPreciseDisconnectCause(cn.getPreciseDisconnectCause());
     }
 
     void notifyUnknownConnection() {
