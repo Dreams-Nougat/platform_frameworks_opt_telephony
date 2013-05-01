@@ -75,6 +75,7 @@ public class CdmaConnection extends Connection {
     int nextPostDialChar;       // index into postDialString
 
     DisconnectCause cause = DisconnectCause.NOT_DISCONNECTED;
+    int preciseCause = 0;
     PostDialState postDialState = PostDialState.NOT_STARTED;
     int numberPresentation = PhoneConstants.PRESENTATION_ALLOWED;
 
@@ -371,6 +372,7 @@ public class CdmaConnection extends Connection {
     void
     onHangupLocal() {
         cause = DisconnectCause.LOCAL;
+        preciseCause = 0;
     }
 
     DisconnectCause
@@ -439,6 +441,7 @@ public class CdmaConnection extends Connection {
 
     /*package*/ void
     onRemoteDisconnect(int causeCode) {
+        this.preciseCause = causeCode;
         onDisconnect(disconnectCauseFromCode(causeCode));
     }
 
@@ -947,4 +950,9 @@ public class CdmaConnection extends Connection {
         // UUS information not supported in CDMA
         return null;
     }
+
+    public int getPreciseDisconnectCause() {
+        return preciseCause;
+    }
+
 }

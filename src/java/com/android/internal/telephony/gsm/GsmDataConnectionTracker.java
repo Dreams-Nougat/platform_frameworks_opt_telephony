@@ -1914,6 +1914,9 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
                 EventLog.writeEvent(EventLogTags.PDP_SETUP_FAIL,
                         cause.ordinal(), cid, TelephonyManager.getDefault().getNetworkType());
             }
+            ApnSetting apn = apnContext.getApnSetting();
+            mPhone.notifyPreciseDataConnectionFailed(apnContext.getReason(), apnContext.getApnType(),
+                    apn != null ? apn.apn : "unknown", cause.toString());
 
             // Count permanent failures and remove the APN we just tried
             if (cause.isPermanentFail()) apnContext.decWaitingApnsPermFailCount();
