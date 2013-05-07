@@ -17,6 +17,14 @@ UUID: T9sxg7.k
 Bytes: 146
 mWakeLockCount's value is only changed under the protection of synchronized (mWakeLock).  Is there more to you question?  Is there a problem here?
 
+2073
+Tue May 07 07:46:44 2013 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: T9sxg7.k
+UUID: UX.Pm8s8
+Bytes: 273
+I am not sure there is a case that mWakeLockCount decrease to 0, while mWakeLock is held. As this will lead into unreleased wakelock, if that case happened. Why not check if the wakelock is held or not to ensure this? Because we want to use this function to clear wakelock.
+
 2139
 Wed Apr 17 07:53:32 2013 +0000
 Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -33,4 +41,12 @@ Bytes: 539
 When clearRequestList is called, we have fallen out of the main RilReceiver loop on an error - the socket is cleared and we'll loop around in the outer loop and attempt to re-establish a connection.  We're giving up on any outstanding requests.  For each request in the list, we will decrement once.
 
 If, while we're doing this, somebody tries to send another ril request (send()), they will increment the wake count and then block waiting to synchronize on mRequestList.  Thus we could finish clearRequestList and *not* release mWakeLock.
+
+2139
+Tue May 07 07:46:44 2013 +0000
+Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: T9ozZh3g
+UUID: UX4MA3nk
+Bytes: 16
+You are correct.
 
