@@ -9,3 +9,11 @@ UUID: UVTBF5n4
 Bytes: 167
 Even though these two are "CMAS Severe Alerts", shouldn't getCmasSeverity() still return CMAS_SEVERITY_EXTREME? Spec says "Severity of Extreme, Urgency of Expected..."
 
+342
+Tue May 07 18:14:29 2013 +0000
+Author: Anju Mathapati <1020994@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: UVTBF5n4
+UUID: UVbAfFn0
+Bytes: 156
+Ok.I agree to your comment. getCmasMessageClass() should return Severe but getCmasSeverity() should still return extreme. I will fix this & upload new patch
+
