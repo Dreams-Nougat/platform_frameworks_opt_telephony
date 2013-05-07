@@ -1,0 +1,11 @@
+Revision: 6bac9b95a4f629805c292fc107e347e6dd8648fe
+Patch-set: 2
+File: src/java/com/android/internal/telephony/gsm/SmsCbHeader.java
+
+342
+Tue May 07 18:04:10 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: UVTBF5n4
+Bytes: 167
+Even though these two are "CMAS Severe Alerts", shouldn't getCmasSeverity() still return CMAS_SEVERITY_EXTREME? Spec says "Severity of Extreme, Urgency of Expected..."
+
