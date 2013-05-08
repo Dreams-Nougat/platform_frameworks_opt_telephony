@@ -25,6 +25,14 @@ UUID: UX.Pm8s8
 Bytes: 273
 I am not sure there is a case that mWakeLockCount decrease to 0, while mWakeLock is held. As this will lead into unreleased wakelock, if that case happened. Why not check if the wakelock is held or not to ensure this? Because we want to use this function to clear wakelock.
 
+2073
+Wed May 08 17:45:54 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: UX.Pm8s8
+UUID: UVXBJLug
+Bytes: 61
+OK.  I understand your point.  I'll push up a new patch soon.
+
 2139
 Wed Apr 17 07:53:32 2013 +0000
 Author: YING WEI <1013953@85c56323-6fa9-3386-8a01-6480fb634889>
