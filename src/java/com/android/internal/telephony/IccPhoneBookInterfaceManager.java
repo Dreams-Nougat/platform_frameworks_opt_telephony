@@ -28,6 +28,9 @@ import com.android.internal.telephony.uicc.AdnRecordCache;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
 import com.android.internal.telephony.uicc.IccConstants;
 import com.android.internal.telephony.uicc.IccRecords;
+import com.android.internal.telephony.uicc.UiccCard;
+import com.android.internal.telephony.uicc.UiccCardApplication;
+import com.android.internal.telephony.uicc.UiccController;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -40,10 +43,12 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
     protected static final boolean DBG = true;
 
     protected PhoneBase mPhone;
+    private   UiccCardApplication mCurrentApp = null;
     protected AdnRecordCache mAdnCache;
     protected final Object mLock = new Object();
     protected int mRecordSize[];
     protected boolean mSuccess;
+    private   boolean mIs3gCard = false;  // flag to determine if card is 3G or 2G
     protected List<AdnRecord> mRecords;
 
     protected static final boolean ALLOW_SIM_OP_IN_UI_THREAD = false;
@@ -51,6 +56,7 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
     protected static final int EVENT_GET_SIZE_DONE = 1;
     protected static final int EVENT_LOAD_DONE = 2;
     protected static final int EVENT_UPDATE_DONE = 3;
+    protected static final int EVENT_ICC_CHANGED = 4;
 
     protected Handler mBaseHandler = new Handler() {
         @Override
@@ -109,13 +115,19 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
 
     public IccPhoneBookInterfaceManager(PhoneBase phone) {
         this.mPhone = phone;
-        IccRecords r = phone.mIccRecords.get();
-        if (r != null) {
-            mAdnCache = r.getAdnCache();
+    }
+
+    private void cleanUp() {
+        if (mAdnCache != null) {
+            mAdnCache.reset();
+            mAdnCache = null;
         }
+        mIs3gCard = false;
+        mCurrentApp = null;
     }
 
     public void dispose() {
+        cleanUp();
     }
 
     public void updateIccRecords(IccRecords iccRecords) {
@@ -123,6 +135,68 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
             mAdnCache = iccRecords.getAdnCache();
         } else {
             mAdnCache = null;
+        }
+    }
+
+    public void setIccCard(UiccCard card) {
+        logd("Card update received: " + card);
+
+        if (card == null) {
+            logd("Card is null. Cleanup");
+            cleanUp();
+            return;
+        }
+
+        UiccCardApplication validApp = null;
+        int numApps = card.getNumApplications();
+        boolean isCurrentAppFound = false;
+
+        for (int i = 0; i < numApps; i++) {
+            UiccCardApplication app = card.getApplicationIndex(i);
+            if (app != null) {
+                // Determine if the card is a 3G card by looking
+                // for a CSIM/USIM/ISIM app on the card
+                AppType type = app.getType();
+                if (type == AppType.APPTYPE_CSIM || type == AppType.APPTYPE_USIM
+                        || type == AppType.APPTYPE_ISIM) {
+                    logd("Card is 3G");
+                    mIs3gCard = true;
+                }
+                // Check if the app we have is present.
+                // If yes, then continue using that.
+                if (!isCurrentAppFound) {
+                    // if not, then find a valid app.
+                    // It does not matter which app, since we are
+                    // accessing non-app specific files
+                    if (validApp == null && type != AppType.APPTYPE_UNKNOWN) {
+                        validApp = app;
+                    }
+
+                    if (mCurrentApp == app) {
+                        logd("Existing app found");
+                        isCurrentAppFound = true;
+                    }
+                }
+
+                // We have determined that this is 3g card
+                // and we also found the current app
+                // We are done
+                if (mIs3gCard && isCurrentAppFound) {
+                    break;
+                }
+            }
+        }
+
+        //Set a new currentApp if
+        // - one was not set before
+        // OR
+        // - the previously set app no longer exists
+        if (mCurrentApp == null || !isCurrentAppFound) {
+            if (validApp != null) {
+                logd("Setting currentApp: " + validApp);
+                mCurrentApp = validApp;
+                mAdnCache = mCurrentApp.getIccRecords().getAdnCache();
+            }
         }
     }
 
@@ -311,11 +385,11 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
     }
 
     private int updateEfForIccType(int efid) {
-        // Check if we are trying to read ADN records
-        if (efid == IccConstants.EF_ADN) {
-            if (mPhone.getCurrentUiccAppType() == AppType.APPTYPE_USIM) {
-                return IccConstants.EF_PBR;
-            }
+        // If we are trying to read ADN records on a 3G card
+        // use EF_PBR
+        if (efid == IccConstants.EF_ADN && mIs3gCard) {
+            logd("Translate EF_ADN to EF_PBR");
+            return IccConstants.EF_PBR;
         }
         return efid;
     }
