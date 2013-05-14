@@ -57,6 +57,9 @@ public final class CdmaCallTracker extends CallTracker {
     static final int MAX_CONNECTIONS = 8;
     static final int MAX_CONNECTIONS_PER_CALL = 1; // only 1 connection allowed per call
 
+    // sprint nw-3way calling scenario's 2nd call default delay time after blank cdma flash
+    static final int DEFAULT_THREE_WAY_DIAL_SECOND_CALL_DELAY = 70;
+
     //***** Instance Variables
 
     CdmaConnection mConnections[] = new CdmaConnection[MAX_CONNECTIONS];
@@ -264,8 +267,9 @@ public final class CdmaCallTracker extends CallTracker {
             // Attach the new connection to foregroundCall
             mPendingMO = new CdmaConnection(mPhone.getContext(),
                                 checkForTestEmergencyNumber(dialString), this, mForegroundCall);
-            mCi.sendCDMAFeatureCode(mPendingMO.mAddress,
-                obtainMessage(EVENT_THREE_WAY_DIAL_L2_RESULT_CDMA));
+            // sprint network has special requirement, which need an blank flash to hold current
+            // call, this has no harm to other networks which don't need the blank flash.
+            mCi.sendCDMAFeatureCode("", obtainMessage(EVENT_THREE_WAY_DIAL_BLANK_FLASH));
             return mPendingMO;
         }
         return null;
@@ -1021,6 +1025,26 @@ public final class CdmaCallTracker extends CallTracker {
                    Rlog.d(LOG_TAG, "Event EVENT_CALL_WAITING_INFO_CDMA Received");
                }
             break;
+
+         // \send the 2nd call after blank cdma flash
+         // and sprint network require a bogus timer delay
+         case EVENT_THREE_WAY_DIAL_BLANK_FLASH:
+             ar = (AsyncResult)msg.obj;
+             if (ar.exception == null) {
+                 postDelayed(
+                     new Runnable() {
+                         public void run() {
+                             if (mPendingMO != null) {
+                                 mCi.sendCDMAFeatureCode(mPendingMO.mAddress,
+                                         obtainMessage(EVENT_THREE_WAY_DIAL_L2_RESULT_CDMA));
+                             }
+                         }
+                     }, DEFAULT_THREE_WAY_DIAL_SECOND_CALL_DELAY);
+             } else {
+                 mPendingMO = null;
+                 Rlog.w(LOG_TAG, "exception happened on Blank Flash for 3-way call");
+             }
+         break;
 
             case EVENT_THREE_WAY_DIAL_L2_RESULT_CDMA:
                 ar = (AsyncResult)msg.obj;
