@@ -469,6 +469,12 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
             && cm.getRadioState() == CommandsInterface.RadioState.RADIO_OFF) {
             cm.setRadioPower(true, null);
         } else if (!mDesiredPowerState && cm.getRadioState().isOn()) {
+            // hang up all active voice calls
+            if (phone.isInCall()) {
+                phone.mCT.ringingCall.hangupIfAlive();
+                phone.mCT.backgroundCall.hangupIfAlive();
+                phone.mCT.foregroundCall.hangupIfAlive();
+            }
             // If it's on and available and we want it off gracefully
             DataConnectionTracker dcTracker = phone.mDataConnectionTracker;
             powerOffRadioSafely(dcTracker);
@@ -477,13 +483,6 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
 
     @Override
     protected void hangupAndPowerOff() {
-        // hang up all active voice calls
-        if (phone.isInCall()) {
-            phone.mCT.ringingCall.hangupIfAlive();
-            phone.mCT.backgroundCall.hangupIfAlive();
-            phone.mCT.foregroundCall.hangupIfAlive();
-        }
-
         cm.setRadioPower(false, null);
     }
 

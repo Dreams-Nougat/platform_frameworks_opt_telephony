@@ -516,6 +516,10 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
             && cm.getRadioState() == CommandsInterface.RadioState.RADIO_OFF) {
             cm.setRadioPower(true, null);
         } else if (!mDesiredPowerState && cm.getRadioState().isOn()) {
+            // hang up all active voice calls
+            phone.mCT.ringingCall.hangupIfAlive();
+            phone.mCT.backgroundCall.hangupIfAlive();
+            phone.mCT.foregroundCall.hangupIfAlive();
             DataConnectionTracker dcTracker = phone.mDataConnectionTracker;
 
             // If it's on and available and we want it off gracefully
@@ -1614,10 +1618,6 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
 
     @Override
     protected void hangupAndPowerOff() {
-        // hang up all active voice calls
-        phone.mCT.ringingCall.hangupIfAlive();
-        phone.mCT.backgroundCall.hangupIfAlive();
-        phone.mCT.foregroundCall.hangupIfAlive();
         cm.setRadioPower(false, null);
     }
 
