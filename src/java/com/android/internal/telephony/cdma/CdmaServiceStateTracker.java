@@ -512,6 +512,9 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
             && mCi.getRadioState() == CommandsInterface.RadioState.RADIO_OFF) {
             mCi.setRadioPower(true, null);
         } else if (!mDesiredPowerState && mCi.getRadioState().isOn()) {
+            phone.mCT.ringingCall.hangupIfAlive();
+            phone.mCT.backgroundCall.hangupIfAlive();
+            phone.mCT.foregroundCall.hangupIfAlive();
             DcTrackerBase dcTracker = mPhone.mDcTracker;
 
             // If it's on and available and we want it off gracefully
@@ -1642,15 +1645,6 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
         }
         if (DBG) log("getOtasp: state=" + provisioningState);
         return provisioningState;
-    }
-
-    @Override
-    protected void hangupAndPowerOff() {
-        // hang up all active voice calls
-        mPhone.mCT.mRingingCall.hangupIfAlive();
-        mPhone.mCT.mBackgroundCall.hangupIfAlive();
-        mPhone.mCT.mForegroundCall.hangupIfAlive();
-        mCi.setRadioPower(false, null);
     }
 
     protected void parseSidNid (String sidStr, String nidStr) {

@@ -364,7 +364,7 @@ public abstract class ServiceStateTracker extends Handler {
                     if (mPendingRadioPowerOffAfterDataOff &&
                             (msg.arg1 == mPendingRadioPowerOffAfterDataOffTag)) {
                         if (DBG) log("EVENT_SET_RADIO_OFF, turn radio off now.");
-                        hangupAndPowerOff();
+                        setRadioPowerOff();
                         mPendingRadioPowerOffAfterDataOffTag += 1;
                         mPendingRadioPowerOffAfterDataOff = false;
                     } else {
@@ -540,7 +540,7 @@ public abstract class ServiceStateTracker extends Handler {
                     // To minimize race conditions we do this after isDisconnected
                     dcTracker.cleanUpAllConnections(Phone.REASON_RADIO_TURNED_OFF);
                     if (DBG) log("Data disconnected, turn off radio right away.");
-                    hangupAndPowerOff();
+                    setRadioPowerOff();
                 } else {
                     dcTracker.cleanUpAllConnections(Phone.REASON_RADIO_TURNED_OFF);
                     Message msg = Message.obtain(this);
@@ -551,7 +551,7 @@ public abstract class ServiceStateTracker extends Handler {
                         mPendingRadioPowerOffAfterDataOff = true;
                     } else {
                         log("Cannot send delayed Msg, turn off radio right away.");
-                        hangupAndPowerOff();
+                        setRadioPowerOff();
                     }
                 }
             }
@@ -568,7 +568,7 @@ public abstract class ServiceStateTracker extends Handler {
             if (mPendingRadioPowerOffAfterDataOff) {
                 if (DBG) log("Process pending request to turn radio off.");
                 mPendingRadioPowerOffAfterDataOffTag += 1;
-                hangupAndPowerOff();
+                setRadioPowerOff();
                 mPendingRadioPowerOffAfterDataOff = false;
                 return true;
             }
@@ -601,9 +601,11 @@ public abstract class ServiceStateTracker extends Handler {
     }
 
     /**
-     * Hang up all voice call and turn off radio. Implemented by derived class.
+     * Turn off the radio.
      */
-    protected abstract void hangupAndPowerOff();
+    protected void setRadioPowerOff() {
+        mCi.setRadioPower(false, null);
+    }
 
     /** Cancel a pending (if any) pollState() operation */
     protected void cancelPollState() {
