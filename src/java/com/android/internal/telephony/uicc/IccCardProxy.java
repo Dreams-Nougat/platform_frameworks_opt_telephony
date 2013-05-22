@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 The Android Open Source Project
+ * Portions Copyright (C) 2012-2013 Motorola Mobility LLC All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -280,8 +281,12 @@ public class IccCardProxy extends Handler implements IccCard {
             return;
         }
 
-        if (mUiccCard.getCardState() == CardState.CARDSTATE_ERROR ||
-                mUiccApplication == null) {
+        if (mUiccCard.getCardState() == CardState.CARDSTATE_ERROR) {
+            setExternalState(State.IO_ERROR);
+            return;
+        }
+
+        if (mUiccApplication == null) {
             setExternalState(State.UNKNOWN);
             return;
         }
@@ -412,6 +417,7 @@ public class IccCardProxy extends Handler implements IccCard {
             case READY: return IccCardConstants.INTENT_VALUE_ICC_READY;
             case NOT_READY: return IccCardConstants.INTENT_VALUE_ICC_NOT_READY;
             case PERM_DISABLED: return IccCardConstants.INTENT_VALUE_ICC_LOCKED;
+            case IO_ERROR: return IccCardConstants.INTENT_VALUE_ICC_IO_ERROR;
             default: return IccCardConstants.INTENT_VALUE_ICC_UNKNOWN;
         }
     }
@@ -426,6 +432,7 @@ public class IccCardProxy extends Handler implements IccCard {
             case PUK_REQUIRED: return IccCardConstants.INTENT_VALUE_LOCKED_ON_PUK;
             case NETWORK_LOCKED: return IccCardConstants.INTENT_VALUE_LOCKED_NETWORK;
             case PERM_DISABLED: return IccCardConstants.INTENT_VALUE_ABSENT_ON_PERM_DISABLED;
+            case IO_ERROR: return IccCardConstants.INTENT_VALUE_ICC_IO_ERROR;
             default: return null;
        }
     }

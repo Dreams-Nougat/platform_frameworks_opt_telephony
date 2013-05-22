@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 The Android Open Source Project
+ * Portions Copyright (C) 2012-2013 Motorola Mobility LLC All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -558,7 +559,9 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
     * Determine data network type based on radio technology.
     */
     protected void setCdmaTechnology(int radioTech){
+        // for CDMA, Data Service state is not from DATA_REGISTRATION_STATE
         mNewDataConnectionState = radioTechnologyToDataServiceState(radioTech);
+        newSS.setDataServiceState(mNewDataConnectionState);
         newSS.setRadioTechnology(radioTech);
         mNewRilRadioTechnology = radioTech;
     }
@@ -930,6 +933,13 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
     }
 
     protected void pollStateDone() {
+        // if there is data service and SVDO is set, indicate support Concurrent voice
+        //\ and data, otherwise, keep default from RIL
+        if (mNewDataConnectionState == ServiceState.STATE_IN_SERVICE &&
+                SystemProperties.getBoolean(TelephonyProperties.PROPERTY_SVDO, false)) {
+            newSS.setCssIndicator(1);
+        }
+
         if (DBG) log("pollStateDone: oldSS=[" + ss + "] newSS=[" + newSS + "]");
 
         boolean hasRegistered =
@@ -1540,17 +1550,6 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
                 }
             }
         }
-        return false;
-    }
-
-    /**
-     * @return true if phone is camping on a technology
-     * that could support voice and data simultaneously.
-     */
-    public boolean isConcurrentVoiceAndDataAllowed() {
-        // Note: it needs to be confirmed which CDMA network types
-        // can support voice and data calls concurrently.
-        // For the time-being, the return value will be false.
         return false;
     }
 
