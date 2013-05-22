@@ -72,6 +72,7 @@ public class CatService extends Handler implements AppInterface {
     // Protects singleton instance lazy initialization.
     private static final Object sInstanceLock = new Object();
     private static CatService sInstance;
+    protected static HandlerThread mhandlerThread;
     private CommandsInterface mCmdIf;
     private Context mContext;
     private CatCmdMessage mCurrntCmd = null;
@@ -136,13 +137,18 @@ public class CatService extends Handler implements AppInterface {
     }
 
     public void dispose() {
+        CatLog.d(this, "Disposing CatService object");
         mIccRecords.unregisterForRecordsLoaded(this);
         mCmdIf.unSetOnCatSessionEnd(this);
         mCmdIf.unSetOnCatProactiveCmd(this);
         mCmdIf.unSetOnCatEvent(this);
         mCmdIf.unSetOnCatCallSetUp(this);
-
+        mMsgDecoder.dispose();
+        mMsgDecoder = null;
+        mhandlerThread.quit();
+        mhandlerThread = null;
         removeCallbacksAndMessages(null);
+        sInstance = null;
     }
 
     @Override
@@ -535,8 +541,8 @@ public class CatService extends Handler implements AppInterface {
                         || ic == null) {
                     return null;
                 }
-                HandlerThread thread = new HandlerThread("Cat Telephony service");
-                thread.start();
+                mHandleThread = new HandlerThread("Cat Telephony service");
+                mHandleThread.start();
                 sInstance = new CatService(ci, ca, ir, context, fh, ic);
                 CatLog.d(sInstance, "NEW sInstance");
             } else if ((ir != null) && (mIccRecords != ir)) {
