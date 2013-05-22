@@ -154,6 +154,7 @@ public class CatService extends Handler implements AppInterface {
     }
 
     public void dispose() {
+        CatLog.d(this, "Disposing CatService object");
         mIccRecords.unregisterForRecordsLoaded(this);
 
         // Clean up stk icon if dispose is called
@@ -168,10 +169,15 @@ public class CatService extends Handler implements AppInterface {
             mUiccController.unregisterForIccChanged(this);
             mUiccController = null;
         }
-        sInstance = null;
+        if (mUiccApplication != null) {
+            mUiccApplication.unregisterForReady(this);
+        }
+        mMsgDecoder.dispose();
+        mMsgDecoder = null;
         mhandlerThread.quit();
         mhandlerThread = null;
         removeCallbacksAndMessages(null);
+        sInstance = null;
     }
 
     @Override
