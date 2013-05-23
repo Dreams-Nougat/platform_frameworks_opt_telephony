@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 The Android Open Source Project
+ * Portions Copyright (C) 2012-2013 Motorola Mobility LLC All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -273,6 +274,11 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
             newSS.setRadioTechnology(mNewRilRadioTechnology);
             log("pollStateDone LTE/eHRPD STATE_IN_SERVICE mNewRilRadioTechnology = " +
                     mNewRilRadioTechnology);
+            // if there is voice service and SVLTE is set; not all LTE 1x product support SV.
+            if (newSS.getState() == ServiceState.STATE_IN_SERVICE &&
+                    SystemProperties.getBoolean(TelephonyProperties.PROPERTY_SVLTE, false)) {
+                newSS.setCssIndicator(1);
+            }
         } else {
             // LTE out of service, get CDMA Service State
             mNewRilRadioTechnology = newSS.getRilRadioTechnology();
@@ -280,7 +286,16 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
             log("pollStateDone CDMA STATE_IN_SERVICE mNewRilRadioTechnology = " +
                     mNewRilRadioTechnology + " mNewDataConnectionState = " +
                     mNewDataConnectionState);
+            // if there is data service and SVDO is set, indicate support Concurrent voice
+            //\ and data, otherwise, keep default from RIL
+            if (mNewDataConnectionState == ServiceState.STATE_IN_SERVICE &&
+                    SystemProperties.getBoolean(TelephonyProperties.PROPERTY_SVDO, false)) {
+                newSS.setCssIndicator(1);
+            }
+
         }
+
+        newSS.setDataServiceState(mNewDataConnectionState);
 
         // TODO: Add proper support for LTE Only, we should be looking at
         //       the preferred network mode, to know when newSS state should
@@ -563,16 +578,6 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
             }
         }
         return ssChanged;
-    }
-
-    @Override
-    public boolean isConcurrentVoiceAndDataAllowed() {
-        // For non-LTE, look at the CSS indicator to check on SV capability
-        if (mRilRadioTechnology == ServiceState.RIL_RADIO_TECHNOLOGY_LTE) {
-            return true;
-        } else {
-            return ss.getCssIndicator() == 1;
-        }
     }
 
     /**

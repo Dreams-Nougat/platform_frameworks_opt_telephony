@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Portions Copyright (C) 2012-2013 Motorola Mobility LLC All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -677,6 +678,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                     mDataRoaming = regCodeIsRoaming(regState);
                     mNewRilRadioTechnology = type;
                     newSS.setRadioTechnology(type);
+
+                    newSS.setDataServiceState(newGPRSState);
                 break;
 
                 case EVENT_POLL_STATE_OPERATOR:
@@ -792,6 +795,11 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     }
 
     private void pollStateDone() {
+        // let other components know if concurrent voice and data is allowed.
+        if (mNewRilRadioTechnology >= ServiceState.RIL_RADIO_TECHNOLOGY_UMTS) {
+            newSS.setCssIndicator(1);
+        }
+
         if (DBG) {
             log("Poll ServiceState done: " +
                 " oldSS=[" + ss + "] newSS=[" + newSS +
@@ -1313,14 +1321,6 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
 
     public int getCurrentDataConnectionState() {
         return gprsState;
-    }
-
-    /**
-     * @return true if phone is camping on a technology (eg UMTS)
-     * that could support voice and data simultaneously.
-     */
-    public boolean isConcurrentVoiceAndDataAllowed() {
-        return (mRilRadioTechnology >= ServiceState.RIL_RADIO_TECHNOLOGY_UMTS);
     }
 
     /**

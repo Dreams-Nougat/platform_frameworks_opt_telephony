@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Portions Copyright (C) 2012-2013 Motorola Mobility LLC All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +34,7 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.List;
 
+import com.android.internal.telephony.SignalLevelManager;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppState;
 import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.UiccCardApplication;
@@ -363,7 +365,14 @@ public abstract class ServiceStateTracker extends Handler {
     protected abstract void loge(String s);
 
     public abstract int getCurrentDataConnectionState();
-    public abstract boolean isConcurrentVoiceAndDataAllowed();
+
+    /**
+     * @return true if phone is camping on a technology
+     * that could support voice and data simultaneously.
+     */
+    public boolean isConcurrentVoiceAndDataAllowed() {
+        return ss.getCssIndicator() == 1;
+    }
 
     /**
      * Registration point for transition into DataConnection attached.
@@ -527,6 +536,11 @@ public abstract class ServiceStateTracker extends Handler {
             log("onSignalStrengthResult() Exception from RIL : " + ar.exception);
             mSignalStrength = new SignalStrength(isGsm);
         }
+
+        mSignalStrength.setMaybeLteBasedOnCdma(
+                getPhone().getPhoneType() != PhoneConstants.PHONE_TYPE_GSM);
+        // calculate the signal levels
+        SignalLevelManager.getInstance().setLevels(mSignalStrength);
 
         return notifySignalStrength();
     }

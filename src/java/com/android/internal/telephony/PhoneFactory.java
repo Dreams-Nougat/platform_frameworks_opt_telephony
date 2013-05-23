@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2006 The Android Open Source Project
+ * Portions Copyright (C) 2012-2013 Motorola Mobility LLC All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +25,7 @@ import android.telephony.TelephonyManager;
 import android.telephony.Rlog;
 import android.os.SystemProperties;
 
+import com.android.internal.telephony.SignalLevelManager;
 import com.android.internal.telephony.cdma.CDMAPhone;
 import com.android.internal.telephony.cdma.CDMALTEPhone;
 import com.android.internal.telephony.cdma.CdmaSubscriptionSourceManager;
@@ -49,6 +51,7 @@ public class PhoneFactory {
     static private PhoneNotifier sPhoneNotifier;
     static private Looper sLooper;
     static private Context sContext;
+    static private SignalLevelManager sSignalLevelManager;
 
     static final int preferredCdmaSubscription =
                          CdmaSubscriptionSourceManager.PREFERRED_CDMA_SUBSCRIPTION;
@@ -66,6 +69,8 @@ public class PhoneFactory {
     public static void makeDefaultPhone(Context context) {
         synchronized(Phone.class) {
             if (!sMadeDefaults) {
+                sSignalLevelManager = SignalLevelManager.getInstance(context);
+
                 sLooper = Looper.myLooper();
                 sContext = context;
 
