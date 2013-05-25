@@ -1,0 +1,86 @@
+Revision: a7f0ba8f8230f07f48960659e645137f9caae2f9
+Patch-set: 1
+File: src/java/com/android/internal/telephony/ServiceStateTracker.java
+
+543
+Sat May 25 14:20:23 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: VDF9m5-8
+Bytes: 71
+Possible null pointer exception - null can be returned from getInstance
+
+File: src/java/com/android/internal/telephony/SignalLevelManager.java
+
+53
+Sat May 25 14:20:23 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: VDL81..A
+Bytes: 53
+I would change name isSLFileLoaded to mIsSLFileLoaded
+
+59
+Sat May 25 14:20:23 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: VC9fWXBg
+Bytes: 48
+I would change name mUseEVDOecio to sUseEVDOecio
+
+69
+Sat May 25 14:20:23 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: VDP9Ukwo
+Bytes: 42
+I would fix formatting in this constructor
+
+100
+Sat May 25 14:20:23 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: VCjjcadk
+Bytes: 129
+Currently it's always false, so that check can be missleading, but it's ok if you plan to use it differently in "future commits".
+
+131
+Sat May 25 14:20:23 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: VDB9gb94
+Bytes: 132
+In "if" above you check if splitLevel has enough elements, but now you parse it and don't care about possible NumberFormatException.
+
+151
+Sat May 25 14:20:23 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: VC1e0jN8
+Bytes: 25
+Space missing before else
+
+301
+Sat May 25 14:20:23 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: VDL9OG3M
+Bytes: 42
+Here, that:
+signalLevel = 0;
+does nothing.
+
+366
+Sat May 25 14:20:23 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: VC5fg5OQ
+Bytes: 63
+If mAsuLevel is null here, it will lead to NullPointerException
+
+415
+Sat May 25 14:20:23 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: VDN9R1xg
+Bytes: 98
+If mSigStrLevel is null here, it will lead to NullPointerException.
+There is also double semicolon
+
+420
+Sat May 25 14:20:23 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: VC3evkIs
+Bytes: 66
+If mEcSnrLevel is null here, it will lead to NullPointerException.
+
