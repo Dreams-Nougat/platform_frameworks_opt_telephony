@@ -515,8 +515,19 @@ public abstract class DataConnectionTracker extends Handler {
 
         apnData = c.getResources().getString(R.string.config_tether_apndata);
         dunSetting = ApnSetting.fromString(apnData);
+
+        ApnSetting mvnoSetting = fetchDunMvno();
+        if (mvnoSetting != null) {
+            if (VDBG) log("fetchDunApn: config_tether_apndata_mvno mvnoSetting=" + mvnoSetting);
+            return mvnoSetting;
+        }
+
         if (VDBG) log("fetchDunApn: config_tether_apndata dunSetting=" + dunSetting);
         return dunSetting;
+    }
+
+    protected ApnSetting fetchDunMvno() {
+        return null;
     }
 
     public String[] getActiveApnTypes() {
