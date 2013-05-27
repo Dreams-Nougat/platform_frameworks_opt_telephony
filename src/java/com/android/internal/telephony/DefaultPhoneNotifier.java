@@ -25,6 +25,7 @@ import android.telephony.CellInfo;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.telephony.Rlog;
+import android.telephony.PreciseCallState;
 
 import com.android.internal.telephony.ITelephonyRegistry;
 
@@ -175,6 +176,38 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
         }
     }
 
+    public void notifyPreciseCallState(Phone sender) {
+        Call ringingCall = sender.getRingingCall();
+        Call foregroundCall = sender.getForegroundCall();
+        Call backgroundCall = sender.getBackgroundCall();
+        if (ringingCall != null && foregroundCall != null && backgroundCall != null) {
+            try {
+                mRegistry.notifyPreciseCallState(
+                        convertPreciseCallState(ringingCall.getState()),
+                        convertPreciseCallState(foregroundCall.getState()),
+                        convertPreciseCallState(backgroundCall.getState()));
+            } catch (RemoteException ex) {
+                // system process is dead
+            }
+        }
+    }
+
+    public void notifyDisconnectCause(Connection.DisconnectCause cause, int preciseCause) {
+        try {
+            mRegistry.notifyDisconnectCause(convertDisconnectCause(cause), preciseCause);
+        } catch (RemoteException ex) {
+            // system process is dead
+        }
+    }
+
+    public void notifyPreciseDataConnectionFailed(Phone sender, String reason, String apnType, String apn, String failCause) {
+        try {
+            mRegistry.notifyPreciseDataConnectionFailed(reason, apnType, apn, failCause);
+        } catch (RemoteException ex) {
+            // system process is dead
+        }
+    }
+
     private void log(String s) {
         Rlog.d(LOG_TAG, "[PhoneNotifier] " + s);
     }
@@ -278,6 +311,226 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
                 return Phone.DataActivityState.DORMANT;
             default:
                 return Phone.DataActivityState.NONE;
+        }
+    }
+
+    /**
+     * Convert the {@link State} enum into the PreciseCallState.PRECISE_CALL_STATE_* constants
+     * for the public API.
+     */
+    public static int convertPreciseCallState(Call.State state) {
+        switch (state) {
+            case ACTIVE:
+                return PreciseCallState.PRECISE_CALL_STATE_ACTIVE;
+            case HOLDING:
+                return PreciseCallState.PRECISE_CALL_STATE_HOLDING;
+            case DIALING:
+                return PreciseCallState.PRECISE_CALL_STATE_DIALING;
+            case ALERTING:
+                return PreciseCallState.PRECISE_CALL_STATE_ALERTING;
+            case INCOMING:
+                return PreciseCallState.PRECISE_CALL_STATE_INCOMING;
+            case WAITING:
+                return PreciseCallState.PRECISE_CALL_STATE_WAITING;
+            case DISCONNECTED:
+                return PreciseCallState.PRECISE_CALL_STATE_DISCONNECTED;
+            case DISCONNECTING:
+                return PreciseCallState.PRECISE_CALL_STATE_DISCONNECTING;
+            default:
+                return PreciseCallState.PRECISE_CALL_STATE_IDLE;
+        }
+    }
+
+    /**
+     * Convert the Call.State.* constants into the {@link State} enum
+     * for the public API.
+     */
+    public static Call.State convertPreciseCallState(int state) {
+        switch (state) {
+            case PreciseCallState.PRECISE_CALL_STATE_ACTIVE:
+                return Call.State.ACTIVE;
+            case PreciseCallState.PRECISE_CALL_STATE_HOLDING:
+                return Call.State.HOLDING;
+            case PreciseCallState.PRECISE_CALL_STATE_DIALING:
+                return Call.State.DIALING;
+            case PreciseCallState.PRECISE_CALL_STATE_ALERTING:
+                return Call.State.ALERTING;
+            case PreciseCallState.PRECISE_CALL_STATE_INCOMING:
+                return Call.State.INCOMING;
+            case PreciseCallState.PRECISE_CALL_STATE_WAITING:
+                return Call.State.WAITING;
+            case PreciseCallState.PRECISE_CALL_STATE_DISCONNECTED:
+                return Call.State.DISCONNECTED;
+            case PreciseCallState.PRECISE_CALL_STATE_DISCONNECTING:
+                return Call.State.DISCONNECTING;
+            default:
+                return Call.State.IDLE;
+        }
+    }
+
+    /**
+     * Convert the {@link DisconnectCause} enum into the PreciseCallState.DISCONNECT_CAUSE_* constants
+     * for the public API.
+     */
+    public static int convertDisconnectCause(Connection.DisconnectCause cause) {
+        switch (cause) {
+            case NOT_DISCONNECTED:
+                return PreciseCallState.DISCONNECT_CAUSE_NOT_DISCONNECTED;
+            case INCOMING_MISSED:
+                return PreciseCallState.DISCONNECT_CAUSE_INCOMING_MISSED;
+            case NORMAL:
+                return PreciseCallState.DISCONNECT_CAUSE_NORMAL;
+            case LOCAL:
+                return PreciseCallState.DISCONNECT_CAUSE_LOCAL;
+            case BUSY:
+                return PreciseCallState.DISCONNECT_CAUSE_BUSY;
+            case CONGESTION:
+                return PreciseCallState.DISCONNECT_CAUSE_CONGESTION;
+            case MMI:
+                return PreciseCallState.DISCONNECT_CAUSE_MMI;
+            case INVALID_NUMBER:
+                return PreciseCallState.DISCONNECT_CAUSE_INVALID_NUMBER;
+            case NUMBER_UNREACHABLE:
+                return PreciseCallState.DISCONNECT_CAUSE_NUMBER_UNREACHABLE;
+            case SERVER_UNREACHABLE:
+                return PreciseCallState.DISCONNECT_CAUSE_SERVER_UNREACHABLE;
+            case INVALID_CREDENTIALS:
+                return PreciseCallState.DISCONNECT_CAUSE_INVALID_CREDENTIALS;
+            case OUT_OF_NETWORK:
+                return PreciseCallState.DISCONNECT_CAUSE_OUT_OF_NETWORK;
+            case SERVER_ERROR:
+                return PreciseCallState.DISCONNECT_CAUSE_SERVER_ERROR;
+            case TIMED_OUT:
+                return PreciseCallState.DISCONNECT_CAUSE_TIMED_OUT;
+            case LOST_SIGNAL:
+                return PreciseCallState.DISCONNECT_CAUSE_LOST_SIGNAL;
+            case LIMIT_EXCEEDED:
+                return PreciseCallState.DISCONNECT_CAUSE_LIMIT_EXCEEDED;
+            case INCOMING_REJECTED:
+                return PreciseCallState.DISCONNECT_CAUSE_INCOMING_REJECTED;
+            case POWER_OFF:
+                return PreciseCallState.DISCONNECT_CAUSE_POWER_OFF;
+            case OUT_OF_SERVICE:
+                return PreciseCallState.DISCONNECT_CAUSE_OUT_OF_SERVICE;
+            case ICC_ERROR:
+                return PreciseCallState.DISCONNECT_CAUSE_ICC_ERROR;
+            case CALL_BARRED:
+                return PreciseCallState.DISCONNECT_CAUSE_CALL_BARRED;
+            case FDN_BLOCKED:
+                return PreciseCallState.DISCONNECT_CAUSE_FDN_BLOCKED;
+            case CS_RESTRICTED:
+                return PreciseCallState.DISCONNECT_CAUSE_CS_RESTRICTED;
+            case CS_RESTRICTED_NORMAL:
+                return PreciseCallState.DISCONNECT_CAUSE_CS_RESTRICTED_NORMAL;
+            case CS_RESTRICTED_EMERGENCY:
+                return PreciseCallState.DISCONNECT_CAUSE_CS_RESTRICTED_EMERGENCY;
+            case UNOBTAINABLE_NUMBER:
+                return PreciseCallState.DISCONNECT_CAUSE_UNOBTAINABLE_NUMBER;
+            case CDMA_LOCKED_UNTIL_POWER_CYCLE:
+                return PreciseCallState.DISCONNECT_CAUSE_CDMA_LOCKED_UNTIL_POWER_CYCLE;
+            case CDMA_DROP:
+                return PreciseCallState.DISCONNECT_CAUSE_CDMA_DROP;
+            case CDMA_INTERCEPT:
+                return PreciseCallState.DISCONNECT_CAUSE_CDMA_INTERCEPT;
+            case CDMA_REORDER:
+                return PreciseCallState.DISCONNECT_CAUSE_CDMA_REORDER;
+            case CDMA_SO_REJECT:
+                return PreciseCallState.DISCONNECT_CAUSE_CDMA_SO_REJECT;
+            case CDMA_RETRY_ORDER:
+                return PreciseCallState.DISCONNECT_CAUSE_CDMA_RETRY_ORDER;
+            case CDMA_ACCESS_FAILURE:
+                return PreciseCallState.DISCONNECT_CAUSE_CDMA_ACCESS_FAILURE;
+            case CDMA_PREEMPTED:
+                return PreciseCallState.DISCONNECT_CAUSE_CDMA_PREEMPTED;
+            case CDMA_NOT_EMERGENCY:
+                return PreciseCallState.DISCONNECT_CAUSE_CDMA_NOT_EMERGENCY;
+            case CDMA_ACCESS_BLOCKED:
+                return PreciseCallState.DISCONNECT_CAUSE_CDMA_ACCESS_BLOCKED;
+            default:
+                return PreciseCallState.DISCONNECT_CAUSE_ERROR_UNSPECIFIED;
+        }
+    }
+
+    /**
+     * Convert the PreciseCallState.DISCONNECT_CAUSE_* constants into the {@link DisconnectCause} enum
+     * for the public API.
+     */
+    public static Connection.DisconnectCause convertDisconnectCause(int disconnectCause) {
+        switch (disconnectCause) {
+            case PreciseCallState.DISCONNECT_CAUSE_NOT_DISCONNECTED:
+                return Connection.DisconnectCause.NOT_DISCONNECTED;
+            case PreciseCallState.DISCONNECT_CAUSE_INCOMING_MISSED:
+                return Connection.DisconnectCause.INCOMING_MISSED;
+            case PreciseCallState.DISCONNECT_CAUSE_NORMAL:
+                return Connection.DisconnectCause.NORMAL;
+            case PreciseCallState.DISCONNECT_CAUSE_LOCAL:
+                return Connection.DisconnectCause.LOCAL;
+            case PreciseCallState.DISCONNECT_CAUSE_BUSY:
+                return Connection.DisconnectCause.BUSY;
+            case PreciseCallState.DISCONNECT_CAUSE_CONGESTION:
+                return Connection.DisconnectCause.CONGESTION;
+            case PreciseCallState.DISCONNECT_CAUSE_MMI:
+                return Connection.DisconnectCause.MMI;
+            case PreciseCallState.DISCONNECT_CAUSE_INVALID_NUMBER:
+                return Connection.DisconnectCause.INVALID_NUMBER;
+            case PreciseCallState.DISCONNECT_CAUSE_NUMBER_UNREACHABLE:
+                return Connection.DisconnectCause.NUMBER_UNREACHABLE;
+            case PreciseCallState.DISCONNECT_CAUSE_SERVER_UNREACHABLE:
+                return Connection.DisconnectCause.SERVER_UNREACHABLE;
+            case PreciseCallState.DISCONNECT_CAUSE_INVALID_CREDENTIALS:
+                return Connection.DisconnectCause.INVALID_CREDENTIALS;
+            case PreciseCallState.DISCONNECT_CAUSE_OUT_OF_NETWORK:
+                return Connection.DisconnectCause.OUT_OF_NETWORK;
+            case PreciseCallState.DISCONNECT_CAUSE_SERVER_ERROR:
+                return Connection.DisconnectCause.SERVER_ERROR;
+            case PreciseCallState.DISCONNECT_CAUSE_TIMED_OUT:
+                return Connection.DisconnectCause.TIMED_OUT;
+            case PreciseCallState.DISCONNECT_CAUSE_LOST_SIGNAL:
+                return Connection.DisconnectCause.LOST_SIGNAL;
+            case PreciseCallState.DISCONNECT_CAUSE_LIMIT_EXCEEDED:
+                return Connection.DisconnectCause.LIMIT_EXCEEDED;
+            case PreciseCallState.DISCONNECT_CAUSE_INCOMING_REJECTED:
+                return Connection.DisconnectCause.INCOMING_REJECTED;
+            case PreciseCallState.DISCONNECT_CAUSE_POWER_OFF:
+                return Connection.DisconnectCause.POWER_OFF;
+            case PreciseCallState.DISCONNECT_CAUSE_OUT_OF_SERVICE:
+                return Connection.DisconnectCause.OUT_OF_SERVICE;
+            case PreciseCallState.DISCONNECT_CAUSE_ICC_ERROR:
+                return Connection.DisconnectCause.ICC_ERROR;
+            case PreciseCallState.DISCONNECT_CAUSE_CALL_BARRED:
+                return Connection.DisconnectCause.CALL_BARRED;
+            case PreciseCallState.DISCONNECT_CAUSE_FDN_BLOCKED:
+                return Connection.DisconnectCause.FDN_BLOCKED;
+            case PreciseCallState.DISCONNECT_CAUSE_CS_RESTRICTED:
+                return Connection.DisconnectCause.CS_RESTRICTED;
+            case PreciseCallState.DISCONNECT_CAUSE_CS_RESTRICTED_NORMAL:
+                return Connection.DisconnectCause.CS_RESTRICTED_NORMAL;
+            case PreciseCallState.DISCONNECT_CAUSE_CS_RESTRICTED_EMERGENCY:
+                return Connection.DisconnectCause.CS_RESTRICTED_EMERGENCY;
+            case PreciseCallState.DISCONNECT_CAUSE_UNOBTAINABLE_NUMBER:
+                return Connection.DisconnectCause.UNOBTAINABLE_NUMBER;
+            case PreciseCallState.DISCONNECT_CAUSE_CDMA_LOCKED_UNTIL_POWER_CYCLE:
+                return Connection.DisconnectCause.CDMA_LOCKED_UNTIL_POWER_CYCLE;
+            case PreciseCallState.DISCONNECT_CAUSE_CDMA_DROP:
+                return Connection.DisconnectCause.CDMA_DROP;
+            case PreciseCallState.DISCONNECT_CAUSE_CDMA_INTERCEPT:
+                return Connection.DisconnectCause.CDMA_INTERCEPT;
+            case PreciseCallState.DISCONNECT_CAUSE_CDMA_REORDER:
+                return Connection.DisconnectCause.CDMA_REORDER;
+            case PreciseCallState.DISCONNECT_CAUSE_CDMA_SO_REJECT:
+                return Connection.DisconnectCause.CDMA_SO_REJECT;
+            case PreciseCallState.DISCONNECT_CAUSE_CDMA_RETRY_ORDER:
+                return Connection.DisconnectCause.CDMA_RETRY_ORDER;
+            case PreciseCallState.DISCONNECT_CAUSE_CDMA_ACCESS_FAILURE:
+                return Connection.DisconnectCause.CDMA_ACCESS_FAILURE;
+            case PreciseCallState.DISCONNECT_CAUSE_CDMA_PREEMPTED:
+                return Connection.DisconnectCause.CDMA_PREEMPTED;
+            case PreciseCallState.DISCONNECT_CAUSE_CDMA_NOT_EMERGENCY:
+                return Connection.DisconnectCause.CDMA_NOT_EMERGENCY;
+            case PreciseCallState.DISCONNECT_CAUSE_CDMA_ACCESS_BLOCKED:
+                return Connection.DisconnectCause.CDMA_ACCESS_BLOCKED;
+            default:
+                return Connection.DisconnectCause.ERROR_UNSPECIFIED;
         }
     }
 }
