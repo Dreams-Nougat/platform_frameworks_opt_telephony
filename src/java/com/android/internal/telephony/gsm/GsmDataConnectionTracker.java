@@ -369,6 +369,32 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
     }
 
     @Override
+    protected ApnSetting fetchDunMvno() {
+        Context c = mPhone.getContext();
+        String[] mvnoApnData = c.getResources().getStringArray(
+                com.android.internal.R.array.config_tether_apndata_mvno);
+
+        IccRecords r = mIccRecords.get();
+        if (r == null) {
+            return null;
+        }
+
+        for (String mvnoApn : mvnoApnData) {
+            String mvnoData = mvnoApn.substring(mvnoApn.lastIndexOf(",")+1, mvnoApn.length());
+            mvnoApn = mvnoApn.substring(0, mvnoApn.lastIndexOf(","));
+
+            String mvnoType = mvnoApn.substring(mvnoApn.lastIndexOf(",")+1, mvnoApn.length());
+            mvnoApn = mvnoApn.substring(0, mvnoApn.lastIndexOf(","));
+
+            if (mvnoMatches(r, mvnoType, mvnoData)) {
+                return ApnSetting.fromString(mvnoApn);
+            }
+        }
+
+        return null;
+    }
+
+    @Override
     // Return all active apn types
     public String[] getActiveApnTypes() {
         if (DBG) log("get all active apn types");
