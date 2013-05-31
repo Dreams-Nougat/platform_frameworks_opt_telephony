@@ -1,0 +1,11 @@
+Revision: 68de7269756aae3bef6a9051f33724d5403030c5
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/GsmMmiCode.java
+
+1228
+Fri May 31 22:17:03 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1d879d2a_a9d31dff
+Bytes: 37
+Could we use the BidiFormatter class?
+
