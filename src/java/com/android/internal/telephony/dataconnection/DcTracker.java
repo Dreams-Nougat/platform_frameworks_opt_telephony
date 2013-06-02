@@ -922,7 +922,9 @@ public final class DcTracker extends DcTrackerBase {
                         Telephony.Carriers.ROAMING_PROTOCOL)),
                 cursor.getInt(cursor.getColumnIndexOrThrow(
                         Telephony.Carriers.CARRIER_ENABLED)) == 1,
-                cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers.BEARER)));
+                cursor.getInt(cursor.getColumnIndexOrThrow(Telephony.Carriers.BEARER)),
+                cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.MVNO_TYPE)),
+                cursor.getString(cursor.getColumnIndexOrThrow(Telephony.Carriers.MVNO_MATCH_DATA)));
         return apn;
     }
 
@@ -1838,7 +1840,8 @@ public final class DcTracker extends DcTrackerBase {
                     PhoneConstants.APN_TYPE_CBS };
             ApnSetting apn = new ApnSetting(apnTypeToId(PhoneConstants.APN_TYPE_DEFAULT), operator,
                     null, null, null, null, null, null, null, null, null,
-                    RILConstants.SETUP_DATA_AUTH_PAP_CHAP, mDefaultApnTypes, "IP", "IP", true, 0);
+                    RILConstants.SETUP_DATA_AUTH_PAP_CHAP, mDefaultApnTypes, "IP", "IP", true, 0,
+                    null, null);
             mAllApnSettings.add(apn);
         }
 
