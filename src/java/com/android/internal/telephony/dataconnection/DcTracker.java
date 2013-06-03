@@ -877,7 +877,8 @@ public final class DcTracker extends DcTrackerBase {
         return true;
     }
 
-    private boolean mvnoMatches(IccRecords r, String mvno_type, String mvno_match_data) {
+    @Override
+    protected boolean mvnoMatches(IccRecords r, String mvno_type, String mvno_match_data) {
         if (mvno_type.equalsIgnoreCase("spn")) {
             if ((r.getServiceProviderName() != null) &&
                     r.getServiceProviderName().equalsIgnoreCase(mvno_match_data)) {
