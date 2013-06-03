@@ -567,10 +567,26 @@ public abstract class DcTrackerBase extends Handler {
             return dunSetting;
         }
 
-        apnData = c.getResources().getString(R.string.config_tether_apndata);
-        dunSetting = ApnSetting.fromString(apnData);
+        IccRecords r = mIccRecords.get();
+        String[] apnArrayData = c.getResources().getStringArray(R.array.config_tether_apndata);
+        for (String apn : apnArrayData) {
+            ApnSetting dun = ApnSetting.fromString(apn);
+            if (dun != null) {
+                if (r != null && mvnoMatches(r, dun.mvnoType, dun.mvnoMatchData)) {
+                    dunSetting = dun;
+                    break;
+                } else if (dunSetting != null && dun.mvnoType.equals("")) {
+                    dunSetting = dun;
+                }
+            }
+        }
+
         if (VDBG) log("fetchDunApn: config_tether_apndata dunSetting=" + dunSetting);
         return dunSetting;
+    }
+
+    protected boolean mvnoMatches(IccRecords r, String mvno_type, String mvno_match_data) {
+        return false;
     }
 
     public String[] getActiveApnTypes() {
