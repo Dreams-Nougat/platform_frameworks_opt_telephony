@@ -864,15 +864,18 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
                     if (apnContext.getState() != DctConstants.State.DISCONNECTING) {
                         boolean disconnectAll = false;
                         if (PhoneConstants.APN_TYPE_DUN.equals(apnContext.getApnType())) {
-                            ApnSetting dunSetting = fetchDunApn();
-                            if (dunSetting != null &&
-                                    dunSetting.equals(apnContext.getApnSetting())) {
-                                if (DBG) log("tearing down dedicated DUN connection");
-                                // we need to tear it down - we brought it up just for dun and
-                                // other people are camped on it and now dun is done.  We need
-                                // to stop using it and let the normal apn list get used to find
-                                // connections for the remaining desired connections
-                                disconnectAll = true;
+                            ArrayList<ApnSetting> dunList = fetchDunApn();
+                            if (dunList != null) {
+                                for (ApnSetting dun : dunList) {
+                                    if (dun.equals(apnContext.getApnSetting())) {
+                                        if (DBG) log("tearing down dedicated DUN connection");
+                                        // we need to tear it down - we brought it up just for dun and
+                                        // other people are camped on it and now dun is done.  We need
+                                        // to stop using it and let the normal apn list get used to find
+                                        // connections for the remaining desired connections
+                                        disconnectAll = true;
+                                    }
+                                }
                             }
                         }
                         if (DBG) {
@@ -1686,10 +1689,10 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
     private DataConnection checkForConnectionForApnContext(ApnContext apnContext) {
         // Loop through all apnContexts looking for one with a conn that satisfies this apnType
         String apnType = apnContext.getApnType();
-        ApnSetting dunSetting = null;
+        ArrayList<ApnSetting> dunList = null;
 
         if (PhoneConstants.APN_TYPE_DUN.equals(apnType)) {
-            dunSetting = fetchDunApn();
+            dunList = fetchDunApn();
         }
 
         DataConnection potential = null;
@@ -1697,17 +1700,19 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
             DataConnection conn = c.getDataConnection();
             if (conn != null) {
                 ApnSetting apnSetting = c.getApnSetting();
-                if (dunSetting != null) {
-                    if (dunSetting.equals(apnSetting)) {
-                        switch (c.getState()) {
-                            case CONNECTED:
-                                if (DBG) {
-                                    log("checkForConnectionForApnContext: apnContext=" +
-                                            apnContext + " found conn=" + conn);
-                                }
-                                return conn;
-                            case CONNECTING:
-                                potential = conn;
+                if (dunList != null) {
+                    for (ApnSetting dunSetting : dunList) {
+                        if (dunSetting.equals(apnSetting)) {
+                            switch (c.getState()) {
+                                case CONNECTED:
+                                    if (DBG) {
+                                        log("checkForConnectionForApnContext: apnContext=" +
+                                                apnContext + " found conn=" + conn);
+                                    }
+                                    return conn;
+                                case CONNECTING:
+                                    potential = conn;
+                            }
                         }
                     }
                 } else if (apnSetting != null && apnSetting.canHandleType(apnType)) {
@@ -2208,9 +2213,35 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
         ArrayList<ApnSetting> apnList = new ArrayList<ApnSetting>();
 
         if (requestedApnType.equals(PhoneConstants.APN_TYPE_DUN)) {
-            ApnSetting dun = fetchDunApn();
-            if (dun != null) {
-                apnList.add(dun);
+            ArrayList<ApnSetting> result = new ArrayList<ApnSetting>();
+            ArrayList<ApnSetting> dunList = fetchDunApn();
+            IccRecords r = mIccRecords.get();
+            String mvnoType = null;
+            String mvnoMatchData = null;
+            if (dunList != null) {
+                for (ApnSetting dun : dunList) {
+                    if (mvnoType != null && mvnoMatchData != null) {
+                        if ( mvnoType.equals(dun.mvnoType) &&
+                                mvnoMatchData.equals(dun.mvnoMatchData)) {
+                            result.add(dun);
+                        }
+                    } else {
+                        // no mvno match yet
+                        if (mvnoMatches(r, dun.mvnoType, dun.mvnoMatchData)) {
+                            // first match - toss out non-mvno data
+                            mvnoType = dun.mvnoType;
+                            mvnoMatchData = dun.mvnoMatchData;
+                            result.clear();
+                            result.add(dun);
+                        } else {
+                            // add only non-mvno data
+                            if (dun.mvnoType == null || dun.mvnoType.equals("")) {
+                                result.add(dun);
+                            }
+                        }
+                    }
+                }
+                apnList.addAll(result);
                 if (DBG) log("buildWaitingApns: X added APN_TYPE_DUN apnList=" + apnList);
                 return apnList;
             }

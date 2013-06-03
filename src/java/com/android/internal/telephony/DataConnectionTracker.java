@@ -491,32 +491,48 @@ public abstract class DataConnectionTracker extends Handler {
     public boolean isApnTypeActive(String type) {
         // TODO: support simultaneous with List instead
         if (PhoneConstants.APN_TYPE_DUN.equals(type)) {
-            ApnSetting dunApn = fetchDunApn();
-            if (dunApn != null) {
-                return ((mActiveApn != null) && (dunApn.toString().equals(mActiveApn.toString())));
+            ArrayList<ApnSetting> dunApns = fetchDunApn();
+            if (dunApns != null) {
+                if (mActiveApn==null) {
+                    return false;
+                } else {
+                    for (ApnSetting dunApn : dunApns) {
+                        if (dunApn.toString().equals(mActiveApn.toString())) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
             }
         }
         return mActiveApn != null && mActiveApn.canHandleType(type);
     }
 
-    protected ApnSetting fetchDunApn() {
+    protected ArrayList<ApnSetting> fetchDunApn() {
         if (SystemProperties.getBoolean("net.tethering.noprovisioning", false)) {
             log("fetchDunApn: net.tethering.noprovisioning=true ret: null");
             return null;
         }
+        ArrayList<ApnSetting> apnList = new ArrayList<ApnSetting>();
         Context c = mPhone.getContext();
         String apnData = Settings.Global.getString(c.getContentResolver(),
                 Settings.Global.TETHER_DUN_APN);
         ApnSetting dunSetting = ApnSetting.fromString(apnData);
         if (dunSetting != null) {
-            if (VDBG) log("fetchDunApn: global TETHER_DUN_APN dunSetting=" + dunSetting);
-            return dunSetting;
+            apnList.add(dunSetting);
+            if (VDBG) log("fetchDunApn: global TETHER_DUN_APN apnList=" + apnList);
+            return apnList;
         }
 
-        apnData = c.getResources().getString(R.string.config_tether_apndata);
-        dunSetting = ApnSetting.fromString(apnData);
-        if (VDBG) log("fetchDunApn: config_tether_apndata dunSetting=" + dunSetting);
-        return dunSetting;
+        String[] apnArrayData = c.getResources().getStringArray(R.array.config_tether_apndata);
+        for (String apn : apnArrayData) {
+            dunSetting = ApnSetting.fromString(apn);
+            if(dunSetting != null) {
+                apnList.add(dunSetting);
+            }
+        }
+        if (VDBG) log("fetchDunApn: config_tether_apndata apnList=" + apnList);
+        return apnList;
     }
 
     public String[] getActiveApnTypes() {
