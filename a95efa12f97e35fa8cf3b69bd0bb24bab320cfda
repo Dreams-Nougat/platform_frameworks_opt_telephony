@@ -1,0 +1,11 @@
+Revision: a95efa12f97e35fa8cf3b69bd0bb24bab320cfda
+Patch-set: 1
+File: src/java/com/android/internal/telephony/ApnSetting.java
+
+113
+Tue Jun 04 16:28:51 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1d879d2a_1dc38334
+Bytes: 247
+What do you think about encapsulating the variable-length "type" field in something, perhaps "<" ">"?  For example "<default,mms,dun>".  Then we wouldn't have a variable number of fields and wouldn't need to advance the type past v3 in the future.
+
