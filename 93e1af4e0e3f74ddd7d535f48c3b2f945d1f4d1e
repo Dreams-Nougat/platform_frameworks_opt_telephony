@@ -1,0 +1,57 @@
+Revision: 93e1af4e0e3f74ddd7d535f48c3b2f945d1f4d1e
+Patch-set: 3
+File: src/java/com/android/internal/telephony/DataConnectionTracker.java
+
+495
+Tue Jun 04 16:07:46 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1d879d2a_3d8207f7
+Bytes: 35
+this code shouldn't have to change.
+
+511
+Tue Jun 04 16:07:46 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1d879d2a_5d77bb4b
+Bytes: 26
+return a single ApnSetting
+
+522
+Tue Jun 04 16:07:46 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1d879d2a_7d7c7f2d
+Bytes: 45
+use mIccRecord to evaluate for mvno purposes.
+
+File: src/java/com/android/internal/telephony/gsm/GsmDataConnectionTracker.java
+
+869
+Tue Jun 04 16:07:46 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1d879d2a_3d9f6749
+Bytes: 35
+this code shouldn't need to change.
+
+981
+Tue Jun 04 16:07:46 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1d879d2a_9d705352
+Bytes: 93
+This may need to be promoted to DataConnectionTracker for general use (at lease a base impl).
+
+1695
+Tue Jun 04 16:07:46 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1d879d2a_fd8eaf22
+Bytes: 99
+I don't think we watch fetchDunApn to return a list.  You shouldn't have to change these functions.
+
+2217
+Tue Jun 04 16:07:46 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1d879d2a_1d7d432c
+Bytes: 180
+you shouldn't have to change this function either.
+
+fetchDunApn should be able to determine which of the ApnSettings best suits us for mvno purposes and return a single ApnSetting.
+
