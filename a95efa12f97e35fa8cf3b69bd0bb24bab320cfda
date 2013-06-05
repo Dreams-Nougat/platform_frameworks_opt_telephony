@@ -9,3 +9,12 @@ UUID: 1d879d2a_1dc38334
 Bytes: 247
 What do you think about encapsulating the variable-length "type" field in something, perhaps "<" ">"?  For example "<default,mms,dun>".  Then we wouldn't have a variable number of fields and wouldn't need to advance the type past v3 in the future.
 
+113
+Wed Jun 05 20:25:40 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1d879d2a_1dc38334
+UUID: 7db419fc_62abd262
+Bytes: 50
+sorry for late reply.
+LGTM. I'll try to change it.
+
