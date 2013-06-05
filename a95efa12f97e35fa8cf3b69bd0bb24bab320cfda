@@ -18,3 +18,10 @@ Bytes: 50
 sorry for late reply.
 LGTM. I'll try to change it.
 
+204
+Wed Jun 05 20:33:07 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7db419fc_62d4f2e7
+Bytes: 27
+mistake, use [ApnSettingV3]
+
