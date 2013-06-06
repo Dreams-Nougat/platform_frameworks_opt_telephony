@@ -19,6 +19,7 @@ package com.android.internal.telephony;
 import com.android.internal.telephony.sip.SipPhone;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.media.AudioManager;
 import android.os.AsyncResult;
 import android.os.Handler;
@@ -815,6 +816,13 @@ public final class CallManager {
      * @return true if the phone can make a new call
      */
     private boolean canDial(Phone phone) {
+        boolean allowECT = false;
+        try {
+            allowECT = getContext().getResources().getBoolean(
+                    com.android.internal.R.bool.config_allowExplicitCallTransfer);
+        } catch (Resources.NotFoundException e) {
+            allowECT = false;
+        }
         int serviceState = phone.getServiceState().getState();
         boolean hasRingingCall = hasActiveRingingCall();
         boolean hasActiveCall = hasActiveFgCall();
@@ -824,7 +832,7 @@ public final class CallManager {
 
         boolean result = (serviceState != ServiceState.STATE_POWER_OFF
                 && !hasRingingCall
-                && !allLinesTaken
+                && (!allLinesTaken || allowECT)
                 && ((fgCallState == Call.State.ACTIVE)
                     || (fgCallState == Call.State.IDLE)
                     || (fgCallState == Call.State.DISCONNECTED)));
