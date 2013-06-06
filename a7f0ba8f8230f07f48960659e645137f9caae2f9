@@ -25,12 +25,28 @@ UUID: VC9fWXBg
 Bytes: 48
 I would change name mUseEVDOecio to sUseEVDOecio
 
+59
+Thu Jun 06 20:45:29 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: VC9fWXBg
+UUID: 1d879d2a_26ebcfd8
+Bytes: 164
+Or "sUseEvdoEcio"? I tend to prefer the C# style rule where two-character acronyms are capitalized and 3+ character acronyms only have the first letter capitalized.
+
 69
 Sat May 25 14:20:23 2013 +0000
 Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: VDP9Ukwo
 Bytes: 42
 I would fix formatting in this constructor
+
+69
+Thu Jun 06 20:45:29 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: VDP9Ukwo
+UUID: 1d879d2a_6666a700
+Bytes: 189
+By "fix formatting", do you mean removing the space before the "(", or something else? The indentation looks correct. I would remove the unnecessary "this." from the assignment lines below.
 
 100
 Sat May 25 14:20:23 2013 +0000
@@ -83,4 +99,22 @@ Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: VC3evkIs
 Bytes: 66
 If mEcSnrLevel is null here, it will lead to NullPointerException.
+
+File: src/java/com/android/internal/telephony/cdma/CdmaLteServiceStateTracker.java
+
+290
+Thu Jun 06 20:45:29 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1d879d2a_4619a33a
+Bytes: 26
+extraneous "\" in comment.
+
+File: src/java/com/android/internal/telephony/cdma/CdmaServiceStateTracker.java
+
+937
+Thu Jun 06 20:45:29 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1d879d2a_86139b1a
+Bytes: 26
+extraneous "\" in comment.
 
