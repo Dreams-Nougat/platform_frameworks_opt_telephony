@@ -819,12 +819,10 @@ public final class CallManager {
         boolean hasRingingCall = hasActiveRingingCall();
         boolean hasActiveCall = hasActiveFgCall();
         boolean hasHoldingCall = hasActiveBgCall();
-        boolean allLinesTaken = hasActiveCall && hasHoldingCall;
         Call.State fgCallState = getActiveFgCallState();
 
         boolean result = (serviceState != ServiceState.STATE_POWER_OFF
                 && !hasRingingCall
-                && !allLinesTaken
                 && ((fgCallState == Call.State.ACTIVE)
                     || (fgCallState == Call.State.IDLE)
                     || (fgCallState == Call.State.DISCONNECTED)));
@@ -834,7 +832,6 @@ public final class CallManager {
                             + " hasRingingCall=" + hasRingingCall
                             + " hasActiveCall=" + hasActiveCall
                             + " hasHoldingCall=" + hasHoldingCall
-                            + " allLinesTaken=" + allLinesTaken
                             + " fgCallState=" + fgCallState);
         }
         return result;
