@@ -33,6 +33,14 @@ UUID: 1d879d2a_26ebcfd8
 Bytes: 164
 Or "sUseEvdoEcio"? I tend to prefer the C# style rule where two-character acronyms are capitalized and 3+ character acronyms only have the first letter capitalized.
 
+59
+Thu Jun 06 20:54:56 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1d879d2a_26ebcfd8
+UUID: 1d9cfd82_6d63c04a
+Bytes: 7
+I agree
+
 69
 Sat May 25 14:20:23 2013 +0000
 Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -47,6 +55,14 @@ Parent: VDP9Ukwo
 UUID: 1d879d2a_6666a700
 Bytes: 189
 By "fix formatting", do you mean removing the space before the "(", or something else? The indentation looks correct. I would remove the unnecessary "this." from the assignment lines below.
+
+69
+Thu Jun 06 20:54:56 2013 +0000
+Author: Michał Piechowski <1021920@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1d879d2a_6666a700
+UUID: 1d9cfd82_4d60fc3b
+Bytes: 134
+No, I would add extra indents before this.mAsuLevel, this.mSigStrLevel and this.mEcSnrLevel, since those lines are in "if" statements.
 
 100
 Sat May 25 14:20:23 2013 +0000
