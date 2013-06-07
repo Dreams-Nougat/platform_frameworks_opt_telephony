@@ -18,6 +18,18 @@ Bytes: 50
 sorry for late reply.
 LGTM. I'll try to change it.
 
+113
+Fri Jun 07 22:34:10 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7db419fc_62abd262
+UUID: fd072998_c842afc6
+Bytes: 210
+@Robert,
+
+I looked into the source. I think variable-length "type" field does not use from V2. Variable-lengths seems to depend on version.
+
+In V2, type field used "|" as separator. So it's ok to me, currently.
+
 204
 Wed Jun 05 20:33:07 2013 +0000
 Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
