@@ -30,6 +30,16 @@ I looked into the source. I think variable-length "type" field does not use from
 
 In V2, type field used "|" as separator. So it's ok to me, currently.
 
+113
+Fri Jun 07 22:48:35 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: fd072998_c842afc6
+UUID: 7dfb39ce_64bd2a4f
+Bytes: 144
+Great - then we don't need V3.  We can tell what the fields are from the number of fields.
+
+Just extend V2 with optional mvno type and mvno data
+
 204
 Wed Jun 05 20:33:07 2013 +0000
 Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
