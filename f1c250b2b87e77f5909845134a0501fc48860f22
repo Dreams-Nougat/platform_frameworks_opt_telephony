@@ -1,0 +1,11 @@
+Revision: f1c250b2b87e77f5909845134a0501fc48860f22
+Patch-set: 2
+File: tests/telephonytests/src/com/android/internal/telephony/ApnSettingTest.java
+
+62
+Sat Jun 08 00:26:16 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7dfb39ce_67e40c0b
+Bytes: 31
+test fromString with MVNO data.
+
