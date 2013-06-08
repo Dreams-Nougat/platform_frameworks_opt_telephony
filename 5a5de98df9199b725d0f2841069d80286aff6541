@@ -1,0 +1,11 @@
+Revision: 5a5de98df9199b725d0f2841069d80286aff6541
+Patch-set: 3
+File: src/java/com/android/internal/telephony/ApnSetting.java
+
+169
+Sat Jun 08 00:19:06 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7dfb39ce_2759740e
+Bytes: 23
+check if a.length >= 20
+
