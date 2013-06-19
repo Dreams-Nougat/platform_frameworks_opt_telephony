@@ -2422,6 +2422,15 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 sb.append(cell).append(" ");
             }
             s = sb.toString();
+        } else if (req == RIL_REQUEST_QUERY_CALL_FORWARD_STATUS) {
+            CallForwardInfo[] cinfo = (CallForwardInfo[]) ret;
+            length = cinfo.length;
+            sb = new StringBuilder("{");
+            for(int i = 0; i < length; i++) {
+                sb.append("[").append(cinfo[i]).append("] ");
+            }
+            sb.append("}");
+            s = sb.toString();
         } else {
             s = ret.toString();
         }
