@@ -1,0 +1,84 @@
+Revision: f45bf72d90167cb26f97ba67b8da4ff4b103dd68
+Patch-set: 2
+File: tests/telephonymockcmdtests/src/android/telephony/test/util/TelephonyTestUtil.java
+
+136
+Thu Jun 20 15:51:13 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ad591ff_0f697169
+Bytes: 21
+missing " " before {.
+
+File: tests/telephonymockcmdtests/src/com/android/internal/telephony/FSubmitDeliverTest.java
+
+173
+Thu Jun 20 15:51:13 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ad591ff_2f99d562
+Bytes: 47
+comment should be "waiting for a special state"
+
+186
+Thu Jun 20 15:51:13 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ad591ff_4f9e194c
+Bytes: 54
+comment should be "waiting for a RIL API to be called"
+
+File: tests/telephonymockcmdtests/src/com/android/internal/telephony/cdma/FCdmaPhoneCallTest.java
+
+84
+Thu Jun 20 15:51:13 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ad591ff_cfa9496d
+Bytes: 29
+"waiting for a special state"
+
+97
+Thu Jun 20 15:51:13 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ad591ff_efb60dc8
+Bytes: 30
+"waiting for the message only"
+
+110
+Thu Jun 20 15:51:13 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ad591ff_0fb411be
+Bytes: 32
+"Wait for the current thread..."
+
+121
+Thu Jun 20 15:51:13 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ad591ff_4fc53936
+Bytes: 32
+"Wait for the current thread..."
+
+File: tests/telephonymockcmdtests/src/com/android/internal/telephony/test/MockCommands.java
+
+1006
+Thu Jun 20 15:51:13 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ad591ff_8fbf4198
+Bytes: 102
+"don't care which order" or "don't care about the order" would sound a little more natural in English.
+
+File: tests/telephonymockcmdtests/src/com/android/internal/telephony/test/SimulatedCdmaCallState.java
+
+48
+Thu Jun 20 15:51:13 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ad591ff_afd325fd
+Bytes: 19
+extra " " before (.
+
+File: tests/telephonymockcmdtests/src/com/android/internal/telephony/test/TelephonyTestExecutor.java
+
+43
+Thu Jun 20 15:51:13 2013 +0000
+Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ad591ff_cfd069f3
+Bytes: 345
+Should be either "Create and hold" or "Creates and holds". The first form is a command (the subject "you" is implied) and the second is a statement about a third person ("this thread" is implied). Either form describes the same behavior, but the important thing to be grammatically correct is to use the same form for both verbs in the sentence.
+
