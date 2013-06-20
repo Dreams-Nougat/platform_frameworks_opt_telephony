@@ -17,3 +17,21 @@ Actually how about making DriverCall, NeighboringCellInfo and CallForwardInfo th
   sb.append("}");
   s = sb.toString();
 
+2426
+Thu Jun 20 10:03:57 2013 +0000
+Author: Gao Rong <1021463@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0ad591ff_2fc55560
+UUID: ca753907_26fd962a
+Bytes: 562
+Wink,
+
+Yeah, I originally considering the method you mentioned here,to keep code in the same layout.
+
+Unfortunatelly, the call forward processing(responseCallForward())  is using array, as a convention, and more comonents dependent on this array implementation, such as framework's GSMPhone, and app's Phone, they handle the call forward data as array too.
+
+If we use list instead of array, this would cause more code changes in both framework and apk, which is not worthy to do that.
+
+I think use array here, to keep the least code change.
+
+What's your opinion?
+
