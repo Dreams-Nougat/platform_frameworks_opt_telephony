@@ -35,3 +35,11 @@ I think use array here, to keep the least code change.
 
 What's your opinion?
 
+2426
+Thu Jun 20 13:36:26 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ca753907_26fd962a
+UUID: 0ad591ff_0f925147
+Bytes: 159
+This routine is purely for converting the output to a string and is used only for debugging so using an ArrayList will make no difference to external routines.
+
