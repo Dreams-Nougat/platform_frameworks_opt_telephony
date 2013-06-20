@@ -1,0 +1,19 @@
+Revision: 235eeb001d089f845b55a07366ba9c982d13525b
+Patch-set: 2
+File: src/java/com/android/internal/telephony/RIL.java
+
+2426
+Thu Jun 20 04:08:18 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ad591ff_2fc55560
+Bytes: 298
+Actually how about making DriverCall, NeighboringCellInfo and CallForwardInfo the same loop like this:
+
+  ArrayList<Xxxx> list = (ArrayList<Xxxx>) ret;
+  sb = new StringBuilder("{");
+  for(Xxxx entry : list) {
+    sb.append("[").append(entry).append("]");
+  }
+  sb.append("}");
+  s = sb.toString();
+
