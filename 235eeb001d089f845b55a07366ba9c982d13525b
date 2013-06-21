@@ -43,3 +43,36 @@ UUID: 0ad591ff_0f925147
 Bytes: 159
 This routine is purely for converting the output to a string and is used only for debugging so using an ArrayList will make no difference to external routines.
 
+2426
+Fri Jun 21 01:39:26 2013 +0000
+Author: Gao Rong <1021463@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0ad591ff_0f925147
+UUID: ca753907_29f809b1
+Bytes: 934
+Wink,
+
+Thank you for your comments.
+
+The routine you suggested is link-list data structure, while ret data for RIL_REQUEST_QUERY_CALL_FORWARD_STATUS is linear array[]. I think we can't use ArrayList<> for this case.
+
+I do try a test here, but using ArrayList in the debugging section, like this:
+  ArrayList<CallForwardInfo> cfs =(ArrayList<CallForwardInfo>) ret;
+  sb = new StringBuilder("{");
+  for(CallForwardInfo entry : list) {
+    sb.append("[").append(entry).append("]");
+  }
+  sb.append("}");
+  s = sb.toString();
+
+
+This would cause run-time exception, as array[] can't convert to ArrayList<>:
+E/RILJ    (  556): Uncaught exception com.android.internal.telephony.CallForwardInfo[] cannot be cast to java.util.ArrayList.
+
+If we want to ArrayList<>, we need re-structure CallForwardInfo in ArrayList<> instead of [].
+
+This would cause more code change, as Framework/APK both treat this info as [], not ArrayList<>.
+
+
+
+Thank you!
+
