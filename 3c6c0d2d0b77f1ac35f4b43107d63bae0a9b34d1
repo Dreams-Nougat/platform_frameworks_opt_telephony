@@ -1,0 +1,16 @@
+Revision: 3c6c0d2d0b77f1ac35f4b43107d63bae0a9b34d1
+Patch-set: 3
+File: src/java/com/android/internal/telephony/RIL.java
+
+0
+Fri Jun 21 06:21:37 2013 +0000
+Author: Gao Rong <1021463@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ca753907_29d649ba
+Bytes: 163
+Hi, Wink
+Thank you for your advise.
+
+Now, I let this change section be like {[...] [...] ...}
+
+I hope I can recover other inconsistency you hated, in next phase...
+
