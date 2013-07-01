@@ -1,0 +1,15 @@
+Revision: 16e04ee09e8c2649f5b6e4b52417157abe37f9cb
+Patch-set: 1
+File: src/java/com/android/internal/telephony/PhoneFactory.java
+
+114
+Mon Jul 01 19:11:47 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0a2cb179_3272ad57
+Bytes: 302
+How about renaming  CdmaSubscriptionSource#getDefaultCdmaSubscriptionSource() to getDefault(Context context) making it "static public" and then:
+
+  int cdmaSubscription = CdmaSubscriptionSource.getDefault(Context context);
+
+One less direct use of secure settings, also remove preferredCdmaSubscription.
+
