@@ -285,7 +285,8 @@ abstract class ValueParser {
                     throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
                 }
             } else {
-                return CatService.STK_DEFAULT;
+                CatLog.d("ValueParser", "Alpha Id length=" + length);
+                return null;
             }
         } else {
             return CatService.STK_DEFAULT;
