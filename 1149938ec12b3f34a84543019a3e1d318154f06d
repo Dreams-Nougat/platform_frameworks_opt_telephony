@@ -11,10 +11,26 @@ Can we add some hooks in place to support multi SIM and IMS as discussed in the 
 
 Do we expect that subscription information can be embedded in the Intent?
 
+29
+Wed Jul 03 19:35:53 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 47d144e1_12a72cb5
+UUID: 2771b0c7_139de4a8
+Bytes: 131
+I'm leaning that this Interface will be for voice oriented functions and I'd like to keep direct sim stuff in a separate interface.
+
 31
 Wed Jul 03 17:27:50 2013 +0000
 Author: Naveen K <1003413@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 47d144e1_32acb094
 Bytes: 156
 Do we need answerCall to indicate which call to answer. With DSDA, we can have multiple calls coming in and User has to decide which one he wants to answer.
+
+31
+Wed Jul 03 19:35:53 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 47d144e1_32acb094
+UUID: 2771b0c7_d37f6c6a
+Bytes: 183
+Agree, we should add support for dealing with multiple calls. That could be done have having multiple instances of the interface or an "call id" as a parameter in these methods or ...
 
