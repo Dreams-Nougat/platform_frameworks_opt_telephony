@@ -293,11 +293,21 @@ public class CatService extends Handler implements AppInterface {
             case RECEIVE_DATA:
             case SEND_DATA:
                 BIPClientParams cmd = (BIPClientParams) cmdParams;
-                if (cmd.bHasAlphaId && (cmd.textMsg.text == null)) {
+                /* Per 3GPP specification 102.223,
+                 * if the alpha identifier is not provided by the UICC,
+                 * the terminal MAY give information to the user
+                 * noAlphaUsrCnf defines if you need to show user confirmation or not
+                 */
+                boolean noAlphaUsrCnf = SystemProperties.getBoolean("persist.stk.noAlphaUsrCnf",false);
+                if (( cmd.textMsg.text == null) && ( cmd.bHasAlphaId || noAlphaUsrCnf)) {
                     CatLog.d(this, "cmd " + cmdParams.getCommandType() + " with null alpha id");
                     // If alpha length is zero, we just respond with OK.
                     if (isProactiveCmd) {
-                        sendTerminalResponse(cmdParams.cmdDet, ResultCode.OK, false, 0, null);
+                        if (cmdParams.getCommandType() == CommandType.OPEN_CHANNEL) {
+                            mCmdIf.handleCallSetupRequestFromSim(true, null);
+                        } else {
+                            sendTerminalResponse(cmdParams.cmdDet, ResultCode.OK, false, 0, null);
+                        }
                     }
                     return;
                 }
