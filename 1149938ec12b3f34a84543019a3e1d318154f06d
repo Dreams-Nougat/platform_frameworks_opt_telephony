@@ -1,0 +1,20 @@
+Revision: 1149938ec12b3f34a84543019a3e1d318154f06d
+Patch-set: 2
+File: src/java/com/android/internal/telephony/ITelephonyService.aidl
+
+29
+Wed Jul 03 17:27:50 2013 +0000
+Author: Naveen K <1003413@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 47d144e1_12a72cb5
+Bytes: 163
+Can we add some hooks in place to support multi SIM and IMS as discussed in the hangout?
+
+Do we expect that subscription information can be embedded in the Intent?
+
+31
+Wed Jul 03 17:27:50 2013 +0000
+Author: Naveen K <1003413@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 47d144e1_32acb094
+Bytes: 156
+Do we need answerCall to indicate which call to answer. With DSDA, we can have multiple calls coming in and User has to decide which one he wants to answer.
+
