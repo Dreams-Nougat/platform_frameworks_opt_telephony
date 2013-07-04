@@ -19,6 +19,18 @@ UUID: 2771b0c7_139de4a8
 Bytes: 131
 I'm leaning that this Interface will be for voice oriented functions and I'd like to keep direct sim stuff in a separate interface.
 
+29
+Thu Jul 04 10:11:09 2013 +0000
+Author: Roger Madsen <1020138@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2771b0c7_139de4a8
+UUID: c7ad346a_06e85a00
+Bytes: 526
+Actually I'm not really sure why we use Intent as parameter here..  It's a bit strange.. We will change this to something else.
+
+I agree we need to support multisim.. I kind of like the suggestion below to have multiple instances.. one for each sim..Still needs some thinking on how to actually implement that though.
+
+And if we have multiple instances then I guess we should separate audio API's to a new interface? Because those API's are still only valid for the actual active call no matter if we support multi sim or not?
+
 31
 Wed Jul 03 17:27:50 2013 +0000
 Author: Naveen K <1003413@85c56323-6fa9-3386-8a01-6480fb634889>
