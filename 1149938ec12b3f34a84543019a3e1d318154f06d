@@ -46,3 +46,11 @@ UUID: 2771b0c7_d37f6c6a
 Bytes: 183
 Agree, we should add support for dealing with multiple calls. That could be done have having multiple instances of the interface or an "call id" as a parameter in these methods or ...
 
+31
+Mon Jul 08 22:03:58 2013 +0000
+Author: Santos Cordon <1015328@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2771b0c7_d37f6c6a
+UUID: 2771b0c7_91e990a3
+Bytes: 175
+I think using a call-ID makes sense.  We can update this later to be a call-like object or answer can be a method of a call object.  But for now, a call ID would get us going.
+
