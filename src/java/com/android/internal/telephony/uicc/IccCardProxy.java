@@ -31,6 +31,8 @@ import android.telephony.Rlog;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 
+import com.android.internal.telephony.RILConstants;
+import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.IccCard;
 import com.android.internal.telephony.IccCardConstants;
@@ -543,7 +545,8 @@ public class IccCardProxy extends Handler implements IccCard {
             if (mUiccApplication != null) {
                 mUiccApplication.supplyPin(pin, onComplete);
             } else if (onComplete != null) {
-                Exception e = new RuntimeException("ICC card is absent.");
+                CommandException e;
+                e = CommandException.fromRilErrno(RILConstants.SIM_ABSENT);
                 AsyncResult.forMessage(onComplete).exception = e;
                 onComplete.sendToTarget();
                 return;
@@ -557,7 +560,8 @@ public class IccCardProxy extends Handler implements IccCard {
             if (mUiccApplication != null) {
                 mUiccApplication.supplyPuk(puk, newPin, onComplete);
             } else if (onComplete != null) {
-                Exception e = new RuntimeException("ICC card is absent.");
+                CommandException e;
+                e = CommandException.fromRilErrno(RILConstants.SIM_ABSENT);
                 AsyncResult.forMessage(onComplete).exception = e;
                 onComplete.sendToTarget();
                 return;
@@ -571,7 +575,8 @@ public class IccCardProxy extends Handler implements IccCard {
             if (mUiccApplication != null) {
                 mUiccApplication.supplyPin2(pin2, onComplete);
             } else if (onComplete != null) {
-                Exception e = new RuntimeException("ICC card is absent.");
+                CommandException e;
+                e = CommandException.fromRilErrno(RILConstants.SIM_ABSENT);
                 AsyncResult.forMessage(onComplete).exception = e;
                 onComplete.sendToTarget();
                 return;
@@ -585,7 +590,8 @@ public class IccCardProxy extends Handler implements IccCard {
             if (mUiccApplication != null) {
                 mUiccApplication.supplyPuk2(puk2, newPin2, onComplete);
             } else if (onComplete != null) {
-                Exception e = new RuntimeException("ICC card is absent.");
+                CommandException e;
+                e = CommandException.fromRilErrno(RILConstants.SIM_ABSENT);
                 AsyncResult.forMessage(onComplete).exception = e;
                 onComplete.sendToTarget();
                 return;
@@ -649,7 +655,8 @@ public class IccCardProxy extends Handler implements IccCard {
             if (mUiccApplication != null) {
                 mUiccApplication.setIccLockEnabled(enabled, password, onComplete);
             } else if (onComplete != null) {
-                Exception e = new RuntimeException("ICC card is absent.");
+                CommandException e;
+                e = CommandException.fromRilErrno(RILConstants.SIM_ABSENT);
                 AsyncResult.forMessage(onComplete).exception = e;
                 onComplete.sendToTarget();
                 return;
@@ -663,7 +670,8 @@ public class IccCardProxy extends Handler implements IccCard {
             if (mUiccApplication != null) {
                 mUiccApplication.setIccFdnEnabled(enabled, password, onComplete);
             } else if (onComplete != null) {
-                Exception e = new RuntimeException("ICC card is absent.");
+                CommandException e;
+                e = CommandException.fromRilErrno(RILConstants.SIM_ABSENT);
                 AsyncResult.forMessage(onComplete).exception = e;
                 onComplete.sendToTarget();
                 return;
@@ -677,7 +685,8 @@ public class IccCardProxy extends Handler implements IccCard {
             if (mUiccApplication != null) {
                 mUiccApplication.changeIccLockPassword(oldPassword, newPassword, onComplete);
             } else if (onComplete != null) {
-                Exception e = new RuntimeException("ICC card is absent.");
+                CommandException e;
+                e = CommandException.fromRilErrno(RILConstants.SIM_ABSENT);
                 AsyncResult.forMessage(onComplete).exception = e;
                 onComplete.sendToTarget();
                 return;
@@ -691,7 +700,8 @@ public class IccCardProxy extends Handler implements IccCard {
             if (mUiccApplication != null) {
                 mUiccApplication.changeIccFdnPassword(oldPassword, newPassword, onComplete);
             } else if (onComplete != null) {
-                Exception e = new RuntimeException("ICC card is absent.");
+                CommandException e;
+                e = CommandException.fromRilErrno(RILConstants.SIM_ABSENT);
                 AsyncResult.forMessage(onComplete).exception = e;
                 onComplete.sendToTarget();
                 return;
