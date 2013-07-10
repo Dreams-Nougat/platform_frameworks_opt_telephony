@@ -43,6 +43,8 @@ public class ApnContext {
 
     private ArrayList<ApnSetting> mWaitingApns = null;
 
+    private final int mPriority;
+
     /** A zero indicates that all waiting APNs had a permanent error */
     private AtomicInteger mWaitingApnsPermanentFailureCountDown;
 
@@ -64,9 +66,10 @@ public class ApnContext {
      */
     AtomicBoolean mDependencyMet;
 
-    public ApnContext(String apnType, String logTag) {
+    public ApnContext(String apnType, String logTag, int priority) {
         mApnType = apnType;
         mState = DctConstants.State.IDLE;
+        mPriority = priority;
         setReason(Phone.REASON_DATA_ENABLED);
         mDataEnabled = new AtomicBoolean(false);
         mDependencyMet = new AtomicBoolean(true);
@@ -143,6 +146,22 @@ public class ApnContext {
         return mWaitingApns;
     }
 
+    public synchronized int getPriority() {
+        return mPriority;
+    }
+
+    public synchronized boolean isHigherPriority(ApnContext context) {
+        return this.mPriority > context.getPriority();
+    }
+
+    public synchronized boolean isLowerPriority(ApnContext context) {
+        return this.mPriority < context.getPriority();
+    }
+
+    public synchronized boolean isEqualPriority(ApnContext context) {
+        return this.mPriority == context.getPriority();
+    }
+
     public synchronized void setState(DctConstants.State s) {
         if (DBG) {
             log("setState: " + s + ", previous state:" + mState);
@@ -165,6 +184,10 @@ public class ApnContext {
         DctConstants.State currentState = getState();
         return ((currentState == DctConstants.State.IDLE) ||
                     currentState == DctConstants.State.FAILED);
+    }
+
+    public boolean isDisconnecting() {
+        return mState == DctConstants.State.DISCONNECTING;
     }
 
     public synchronized void setReason(String reason) {

@@ -59,8 +59,13 @@ import com.android.internal.util.AsyncChannel;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -248,9 +253,10 @@ public abstract class DcTrackerBase extends Handler {
     protected ConcurrentHashMap<String, ApnContext> mApnContexts =
                                     new ConcurrentHashMap<String, ApnContext>();
 
+    private static ApnPriorityComparator mApnPriorityComparator = new ApnPriorityComparator();
+
     /* Currently active APN */
     protected ApnSetting mActiveApn;
-
     /** allApns holds all apns */
     protected ArrayList<ApnSetting> mAllApnSettings = null;
 
@@ -1187,6 +1193,13 @@ public abstract class DcTrackerBase extends Handler {
         }
     }
 
+    /* Return the list of ApnContexts based on their priorities in descending order */
+    protected List<ApnContext> getPrioritySortedApnContextList() {
+        LinkedList<ApnContext> sortedList = new LinkedList<ApnContext>(mApnContexts.values());
+        Collections.sort(sortedList, mApnPriorityComparator);
+        return sortedList;
+    }
+
     protected String getReryConfig(boolean forDefault) {
         int nt = mPhone.getServiceState().getNetworkType();
 
@@ -1601,4 +1614,13 @@ public abstract class DcTrackerBase extends Handler {
         pw.println(" mDataRoamingSettingObserver=" + mDataRoamingSettingObserver);
         pw.flush();
     }
+
+    static class ApnPriorityComparator implements Comparator<ApnContext> {
+        @Override
+        public int compare(ApnContext a1, ApnContext a2) {
+            // When used with sort it will sort in descending order
+            return a2.getPriority() - a1.getPriority();
+        }
+    }
 }
+

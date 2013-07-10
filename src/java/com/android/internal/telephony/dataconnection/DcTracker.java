@@ -34,6 +34,7 @@ import android.net.NetworkUtils;
 import android.net.ProxyProperties;
 import android.net.Uri;
 import android.os.AsyncResult;
+import android.os.Build;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.SystemClock;
@@ -224,8 +225,9 @@ public final class DcTracker extends DcTrackerBase {
         if(DBG) log("finalize");
     }
 
-    private ApnContext addApnContext(String type) {
-        ApnContext apnContext = new ApnContext(type, LOG_TAG);
+    private ApnContext addApnContext(String type, int priority) {
+        if (DBG) log("addApnContext: " + type + ", " + priority);
+        ApnContext apnContext = new ApnContext(type, LOG_TAG, priority);
         apnContext.setDependencyMet(false);
         mApnContexts.put(type, apnContext);
         return apnContext;
@@ -239,23 +241,24 @@ public final class DcTracker extends DcTrackerBase {
         for (String networkConfigString : networkConfigStrings) {
             NetworkConfig networkConfig = new NetworkConfig(networkConfigString);
             ApnContext apnContext = null;
+            int priority = networkConfig.priority;
 
             switch (networkConfig.type) {
             case ConnectivityManager.TYPE_MOBILE:
-                apnContext = addApnContext(PhoneConstants.APN_TYPE_DEFAULT);
+                apnContext = addApnContext(PhoneConstants.APN_TYPE_DEFAULT, priority);
                 apnContext.setEnabled(defaultEnabled);
                 break;
             case ConnectivityManager.TYPE_MOBILE_MMS:
-                apnContext = addApnContext(PhoneConstants.APN_TYPE_MMS);
+                apnContext = addApnContext(PhoneConstants.APN_TYPE_MMS, priority);
                 break;
             case ConnectivityManager.TYPE_MOBILE_SUPL:
-                apnContext = addApnContext(PhoneConstants.APN_TYPE_SUPL);
+                apnContext = addApnContext(PhoneConstants.APN_TYPE_SUPL, priority);
                 break;
             case ConnectivityManager.TYPE_MOBILE_DUN:
-                apnContext = addApnContext(PhoneConstants.APN_TYPE_DUN);
+                apnContext = addApnContext(PhoneConstants.APN_TYPE_DUN, priority);
                 break;
             case ConnectivityManager.TYPE_MOBILE_HIPRI:
-                apnContext = addApnContext(PhoneConstants.APN_TYPE_HIPRI);
+                apnContext = addApnContext(PhoneConstants.APN_TYPE_HIPRI, priority);
                 ApnContext defaultContext = mApnContexts.get(PhoneConstants.APN_TYPE_DEFAULT);
                 if (defaultContext != null) {
                     applyNewState(apnContext, apnContext.isEnabled(),
@@ -265,13 +268,13 @@ public final class DcTracker extends DcTrackerBase {
                 }
                 continue;
             case ConnectivityManager.TYPE_MOBILE_FOTA:
-                apnContext = addApnContext(PhoneConstants.APN_TYPE_FOTA);
+                apnContext = addApnContext(PhoneConstants.APN_TYPE_FOTA, priority);
                 break;
             case ConnectivityManager.TYPE_MOBILE_IMS:
-                apnContext = addApnContext(PhoneConstants.APN_TYPE_IMS);
+                apnContext = addApnContext(PhoneConstants.APN_TYPE_IMS, priority);
                 break;
             case ConnectivityManager.TYPE_MOBILE_CBS:
-                apnContext = addApnContext(PhoneConstants.APN_TYPE_CBS);
+                apnContext = addApnContext(PhoneConstants.APN_TYPE_CBS, priority);
                 break;
             default:
                 // skip unknown types
@@ -584,7 +587,10 @@ public final class DcTracker extends DcTrackerBase {
     }
 
     private void setupDataOnConnectableApns(String reason) {
-        for (ApnContext apnContext : mApnContexts.values()) {
+        if (DBG) log("setupDataOnConnectableApns: " + reason);
+
+        for (ApnContext apnContext : getPrioritySortedApnContextList()) {
+            if (DBG) log("setupDataOnConnectableApns: apnContext " + apnContext.getApnType());
             if (apnContext.getState() == DctConstants.State.FAILED) {
                 apnContext.setState(DctConstants.State.IDLE);
             }
@@ -610,7 +616,7 @@ public final class DcTracker extends DcTrackerBase {
 
         if (apnContext == null ){
             if (DBG) log("trySetupData new apn context for type:" + type);
-            apnContext = new ApnContext(type, LOG_TAG);
+            apnContext = new ApnContext(type, LOG_TAG, 0);
             mApnContexts.put(type, apnContext);
         }
         apnContext.setReason(reason);
@@ -636,6 +642,36 @@ public final class DcTracker extends DcTrackerBase {
         }
 
         boolean desiredPowerState = mPhone.getServiceStateTracker().getDesiredPowerState();
+
+        // If MPDN is disabled and if the current active ApnContext cannot handle the
+        // requested apnType, then
+        //  - Disconnect all active low priority data calls if there are any, and after
+        //    disconnect setup the new requested connection.
+        //  - Do not bring up the requested connection, if there is any higher priority
+        //    data connection active.
+        if (isOnlySingleDcAllowed() && !isAnyActiveApnContextHandlesType(apnContext.getApnType())) {
+
+            if (isHigherPriorityApnContextActive(apnContext)) {
+                if (DBG) log("trySetupData: Higher priority apn context active."
+                        + " Ignoring setup data call request.");
+                return false;
+            }
+
+            // Only lower priority calls left. Disconnect them all in this single PDP
+            // case, so that we can bring up requested higher priority call (once we receive
+            // response for deactivate request for the calls we are about to disconnect)
+            if (disconnectAllCalls(Phone.REASON_SINGLE_PDN_ARBITRATION)) {
+                // If any call actually were requested to be disconnected - means we can't bring
+                // this connection up yet (since we need to wait for those data call to be
+                // disconnected)
+                if (DBG) log("trySetupData: Some calls are disconnecting. Return.");
+                return false;
+            }
+
+            // Finally. No higher priority calls, no more calls need to be disconnected.
+            // Proceed with setup data for this apnContext
+            if (DBG) log("trySetupData: Single pdp. Continue setting up data call.");
+        }
 
         if (apnContext.isConnectable() &&
                 isDataAllowed(apnContext) && getAnyDataEnabled() && !isEmergency()) {
@@ -1161,7 +1197,64 @@ public final class DcTracker extends DcTrackerBase {
         mActiveApn = null;
     }
 
-    @Override
+    private boolean isAnyActiveApnContextHandlesType(String apnType) {
+        for (ApnContext apnContext : mApnContexts.values()) {
+            if (!apnContext.isDisconnected() && !apnContext.isDisconnecting()) {
+                // If the ApnContext can handle the request apnType, do not disconnect
+                ApnSetting apnSetting = apnContext.getApnSetting();
+                if (apnSetting != null && apnSetting.canHandleType(apnType)) {
+                    // Found a ApnContext, which can handle the required apn type
+                    log("isAnyActiveApnContextHandlesType:  - apnContext = [" + apnContext + "]"
+                            + " can handle apnType=" + apnType);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * "Active" here means ApnContext isEnabled() and not in FAILED state
+     * @param apnContext to compare with
+     * @return
+     */
+    private boolean isHigherPriorityApnContextActive(ApnContext apnContext) {
+        boolean result = false;
+
+        for (ApnContext apnContextEntry : getPrioritySortedApnContextList()) {
+            if (apnContextEntry.isHigherPriority(apnContext)
+                    && apnContextEntry.isEnabled()
+                    && apnContextEntry.getState() != DctConstants.State.FAILED) {
+                result = true;
+                break;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Disconnect all data calls
+     * @param reason
+     * @return true if any calls actually needed to be disconnected
+     *         false if this was no-op
+     */
+    protected boolean disconnectAllCalls(String reason) {
+        boolean disconnected = false;
+
+        for (ApnContext apnContextEntry : getPrioritySortedApnContextList()) {
+            if (!apnContextEntry.isDisconnected()) {
+                // Found a call, disconnect it.
+                apnContextEntry.setReason(reason);
+                cleanUpConnection(true, apnContextEntry);
+                disconnected = true;
+            }
+        }
+
+        if (DBG) log("disconnectAllCalls: Any calls got disconnected? -" + disconnected);
+
+        return disconnected;
+    }
+
     protected void restartRadio() {
         if (DBG) log("restartRadio: ************TURN OFF RADIO**************");
         cleanUpAllConnections(true, Phone.REASON_RADIO_TURNED_OFF);
@@ -1188,7 +1281,8 @@ public final class DcTracker extends DcTrackerBase {
     private boolean retryAfterDisconnected(String reason) {
         boolean retry = true;
 
-        if ( Phone.REASON_RADIO_TURNED_OFF.equals(reason) ) {
+        if (Phone.REASON_RADIO_TURNED_OFF.equals(reason)
+                || (isOnlySingleDcAllowed() && Phone.REASON_SINGLE_PDN_ARBITRATION.equals(reason)) ) {
             retry = false;
         }
         return retry;
@@ -1691,6 +1785,10 @@ public final class DcTracker extends DcTrackerBase {
             apnContext.setApnSetting(null);
             apnContext.setDataConnectionAc(null);
         }
+
+        if (isOnlySingleDcAllowed()) {
+            setupDataOnConnectableApns(Phone.REASON_SINGLE_PDN_ARBITRATION);
+        }
     }
 
     /**
@@ -2173,6 +2271,26 @@ public final class DcTracker extends DcTrackerBase {
             }
         }
         return cid;
+    }
+
+    /**
+     *
+     * @return true if only single DataConnection allowed
+     *         false is multiple DataConnections can be used
+     */
+    private boolean isOnlySingleDcAllowed() {
+        boolean onlySingleDcAllowed = mPhone.getContext().getResources()
+                .getBoolean(com.android.internal.R.bool.config_onlySingleDcAllowed);
+        if (Build.IS_DEBUGGABLE
+                && SystemProperties.getBoolean("persist.telephony.single_dc", false)) {
+            // Let value be overridden by system property in debug builds
+            onlySingleDcAllowed = true;
+        }
+
+        if (DBG) {
+            log("isOnlySingleDcAllowed: " + onlySingleDcAllowed);
+        }
+        return onlySingleDcAllowed;
     }
 
     @Override
