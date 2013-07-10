@@ -9,6 +9,14 @@ UUID: 27c53079_398cefec
 Bytes: 71
 Please don't use a system property.  Use a config.xml resource instead.
 
+301
+Wed Jul 10 02:47:22 2013 +0000
+Author: Sungmin Choi <1000591@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 27c53079_398cefec
+UUID: 47e5c41a_b2f1201f
+Bytes: 12
+I'll take it
+
 File: src/java/com/android/internal/telephony/cat/ValueParser.java
 
 298
