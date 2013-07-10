@@ -1,0 +1,20 @@
+Revision: f19a1db7ab17eb2bda185b51ebe54cb0e03b13cf
+Patch-set: 3
+File: src/java/com/android/internal/telephony/cat/CatService.java
+
+301
+Wed Jul 10 00:55:09 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 27c53079_398cefec
+Bytes: 71
+Please don't use a system property.  Use a config.xml resource instead.
+
+File: src/java/com/android/internal/telephony/cat/ValueParser.java
+
+298
+Wed Jul 10 00:55:09 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 27c53079_19892bdd
+Bytes: 118
+don't use a system property - that's a finite resource and poorly suited for this.  Use a config.xml resource instead.
+
