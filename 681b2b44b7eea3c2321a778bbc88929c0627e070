@@ -1,0 +1,28 @@
+Revision: 681b2b44b7eea3c2321a778bbc88929c0627e070
+Patch-set: 7
+File: src/java/android/telephony/SmsMessage.java
+
+147
+Wed Jul 10 00:28:05 2013 +0000
+Author: 榕展 胡 <1022708@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 27c53079_19fecb4f
+Bytes: 873
+In my test, this is not work.
+Our device  is LTE/GSM phone type and inserted Verizon SIM stay on LTE to receiver FORMAT_3GPP2 SMS, it never decodes by this format.
+
+When the device receiver the 3GPP2 SMS
+, the "basicsmsreceiver" will parse by 3GPP first.
+It would never be return message.mWrappedSmsMessage=null,
+so it can't re-parse by 3GPP2.
+
+We recommend that should added more condition to decide.  
+
+ 
+
+07-08 19:52:47.654 D/RILC    (  183): Inside responseCdmaSms
+07-08 19:52:47.664 D/RILJ    (  840): [UNSL]< UNSOL_RESPONSE_CDMA_NEW_SMS
+07-08 19:52:47.664 D/SMSDispatcher(  840): New SMS Message Received
+07-08 19:52:47.694 E/SmsMessage( 1255): Invalid TOA - high bit must be set. toa = 0 (at offset 3)
+07-08 19:52:47.724 D/RILJ    (  840): [0186]> RIL_REQUEST_CDMA_SMS_ACKNOWLEDGE true 0
+07-08 19:52:47.734 D/RILJ    (  840): [0186]< RIL_REQUEST_CDMA_SMS_ACKNOWLEDGE
+
