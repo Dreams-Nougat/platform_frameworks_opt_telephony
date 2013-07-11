@@ -261,15 +261,16 @@ public abstract class IccFileHandler extends Handler implements IccConstants {
                 onLoaded);
 
         logd("IccFileHandler: loadEFImgTransparent fileid = " + fileid
-                + " filePath = " + getEFPath(fileid) + " highOffset = " + highOffset
+                + " filePath = " + getEFPath(EF_IMG) + " highOffset = " + highOffset
                 + " lowOffset = " + lowOffset + " length = " + length);
-        /*
-         * Per TS 31.102, for displaying of Icon, under
+
+        /* Per TS 31.102, for displaying of Icon, under
          * DF Telecom and DF Graphics , EF instance(s) (4FXX,transparent files)
          * are present. The possible image file identifiers (EF instance) for
          * EF img ( 4F20, linear fixed file) are : 4F01 ... 4F05.
+         * It should be MF_SIM + DF_TELECOM + DF_GRAPHICS, same path as EF IMG
          */
-        mCi.iccIOForApp(COMMAND_READ_BINARY, fileid, getEFPath(fileid),
+        mCi.iccIOForApp(COMMAND_READ_BINARY, fileid, getEFPath(EF_IMG),
                 highOffset, lowOffset, length, null, null, mAid, response);
     }
 
@@ -355,6 +356,7 @@ public abstract class IccFileHandler extends Handler implements IccConstants {
                 }
 
                 data = result.payload;
+                recordNum = lc.mRecordNum;
                 lc.mRecordSize = data[RESPONSE_DATA_RECORD_LENGTH] & 0xFF;
 
                 if ((TYPE_EF != data[RESPONSE_DATA_FILE_TYPE]) ||
@@ -363,35 +365,23 @@ public abstract class IccFileHandler extends Handler implements IccConstants {
                     throw new IccFileTypeMismatch();
                 }
 
+                size = ((data[RESPONSE_DATA_FILE_SIZE_1] & 0xff) << 8)
+                       + (data[RESPONSE_DATA_FILE_SIZE_2] & 0xff);
+
+                lc.mCountRecords = size / lc.mRecordSize;
+
+                 if (lc.mLoadAll) {
+                     lc.results = new ArrayList<byte[]>(lc.mCountRecords);
+                 }
+
                 logd("IccFileHandler: read EF IMG");
                 mCi.iccIOForApp(COMMAND_READ_RECORD, lc.mEfid, getEFPath(lc.mEfid),
                         lc.mRecordNum,
                         READ_RECORD_MODE_ABSOLUTE,
                         lc.mRecordSize, null, null, mAid,
-                        obtainMessage(EVENT_READ_IMG_DONE, IccConstants.EF_IMG, 0, response));
+                        obtainMessage(EVENT_READ_IMG_DONE, lc));
                 break;
 
-            case EVENT_READ_IMG_DONE:
-                ar = (AsyncResult) msg.obj;
-                lc = (LoadLinearFixedContext) ar.userObj;
-                result = (IccIoResult) ar.result;
-                response = lc.mOnLoaded;
-
-                iccException = result.getException();
-                if (iccException != null) {
-                    sendResult(response, result.payload, ar.exception);
-                }
-                break;
-            case EVENT_READ_ICON_DONE:
-                ar = (AsyncResult) msg.obj;
-                response = (Message) ar.userObj;
-                result = (IccIoResult) ar.result;
-
-                iccException = result.getException();
-                if (iccException != null) {
-                    sendResult(response, result.payload, ar.exception);
-                }
-                break;
             case EVENT_GET_EF_LINEAR_RECORD_SIZE_DONE:
                 ar = (AsyncResult)msg.obj;
                 lc = (LoadLinearFixedContext) ar.userObj;
@@ -509,6 +499,7 @@ public abstract class IccFileHandler extends Handler implements IccConstants {
                                               fileid, 0, response));
             break;
 
+            case EVENT_READ_IMG_DONE:
             case EVENT_READ_RECORD_DONE:
 
                 ar = (AsyncResult)msg.obj;
@@ -549,6 +540,7 @@ public abstract class IccFileHandler extends Handler implements IccConstants {
             break;
 
             case EVENT_READ_BINARY_DONE:
+            case EVENT_READ_ICON_DONE:
                 ar = (AsyncResult)msg.obj;
                 response = (Message) ar.userObj;
                 result = (IccIoResult) ar.result;
