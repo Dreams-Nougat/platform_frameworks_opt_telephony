@@ -178,18 +178,19 @@ public class PhoneProxy extends Handler implements Phone {
             return;
         }
 
-        boolean oldPowerState = false; // old power state to off
+        int oldPowerState = CommandsInterface.RADIO_AIRPLANE_MODE;
         if (mResetModemOnRadioTechnologyChange) {
             if (mCommandsInterface.getRadioState().isOn()) {
-                oldPowerState = true;
-                logd("Setting Radio Power to Off");
-                mCommandsInterface.setRadioPower(false, null);
+                oldPowerState = CommandsInterface.RADIO_ON;
+                logd("Setting Radio to airplane mode");
+                mCommandsInterface.setRadioPower(CommandsInterface.RADIO_AIRPLANE_MODE, null);
             }
         }
 
         deleteAndCreatePhone(newVoiceRadioTech);
 
-        if (mResetModemOnRadioTechnologyChange && oldPowerState) { // restore power state
+        if (mResetModemOnRadioTechnologyChange &&
+            (oldPowerState == CommandsInterface.RADIO_ON)) { // restore power state
             logd("Resetting Radio");
             mCommandsInterface.setRadioPower(oldPowerState, null);
         }

@@ -16,6 +16,10 @@
 
 package com.android.internal.telephony;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
@@ -29,7 +33,6 @@ import android.util.TimeUtils;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.android.internal.telephony.dataconnection.DcTrackerBase;
@@ -84,7 +87,7 @@ public abstract class ServiceStateTracker extends Handler {
      * expected responses in this pollingContext.
      */
     protected int[] mPollingContext;
-    protected boolean mDesiredPowerState;
+    protected int mDesiredPowerState;
 
     /**
      * By default, strength polling is enabled.  However, if we're
@@ -209,15 +212,36 @@ public abstract class ServiceStateTracker extends Handler {
 
         mPhoneBase.setSystemProperty(TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE,
             ServiceState.rilRadioTechnologyToString(ServiceState.RIL_RADIO_TECHNOLOGY_UNKNOWN));
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_LOCALE_CHANGED);
+        filter.addAction(Intent.ACTION_SHUTDOWN);
+        phoneBase.getContext().registerReceiver(mIntentReceiver, filter);
     }
 
     public void dispose() {
+        mPhoneBase.getContext().unregisterReceiver(mIntentReceiver);
         mCi.unSetOnSignalStrengthUpdate(this);
         mUiccController.unregisterForIccChanged(this);
         mCi.unregisterForCellInfoList(this);
     }
 
-    public boolean getDesiredPowerState() {
+    private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (DBG) log("onReceive: action=" + action);
+            if (action.equals(Intent.ACTION_SHUTDOWN)) {
+                log("Device Shutting down");
+                setRadioPower(CommandsInterface.RADIO_SHUTDOWN);
+            } else if (action.equals(Intent.ACTION_LOCALE_CHANGED)) {
+                // update emergency string whenever locale changed
+                updateSpnDisplay();
+            }
+        }
+    };
+
+    public int getDesiredPowerState() {
         return mDesiredPowerState;
     }
 
@@ -310,9 +334,35 @@ public abstract class ServiceStateTracker extends Handler {
                 obtainMessage(EVENT_GET_PREFERRED_NETWORK_TYPE, onComplete));
     }
 
+    /**
+      * Set the Modem Power State. This method will update the desired power
+      * state to either ON, AIRPLANE_MODE or SHUTDOWN. SHUTDOWN is used to notify
+      * RIL that the device is shutting down. So if the desired power state is
+      * already RADIO_SHUTDOWN, then none of the other requests are processed.
+      *
+      * @param power can be one of the following values:
+      *    CommandsInterface.RADIO_SHUTDOWN: gracefully shutdown the radio
+      *    CommandsInterface.RADIO_AIRPLANE_MODE: set the radio in airplane mode
+      *    CommandsInterface.RADIO_ON: turn the radio ON.
+      *    This method throws IllegalArgumentException for all other values of power
+      */
     public void
-    setRadioPower(boolean power) {
-        mDesiredPowerState = power;
+    setRadioPower(int power) {
+        if(mDesiredPowerState == CommandsInterface.RADIO_SHUTDOWN) {
+            // Device is shutting down. So just exit without processing
+            // this request.
+            return;
+        }
+
+        switch (power) {
+            case CommandsInterface.RADIO_ON:
+            case CommandsInterface.RADIO_AIRPLANE_MODE:
+            case CommandsInterface.RADIO_SHUTDOWN:
+                mDesiredPowerState = power;
+                break;
+            default:
+                throw new IllegalArgumentException ("Unknown value: power = " + power);
+        }
 
         setPowerStateToDesired();
     }
@@ -364,7 +414,7 @@ public abstract class ServiceStateTracker extends Handler {
                     if (mPendingRadioPowerOffAfterDataOff &&
                             (msg.arg1 == mPendingRadioPowerOffAfterDataOffTag)) {
                         if (DBG) log("EVENT_SET_RADIO_OFF, turn radio off now.");
-                        hangupAndPowerOff();
+                        hangupAndSetRadioStateToDesired();
                         mPendingRadioPowerOffAfterDataOffTag += 1;
                         mPendingRadioPowerOffAfterDataOff = false;
                     } else {
@@ -423,10 +473,22 @@ public abstract class ServiceStateTracker extends Handler {
         }
     }
 
+    protected void setPowerStateToDesired() {
+        // If we want it on and it's off, turn it on
+        if ((mDesiredPowerState == CommandsInterface.RADIO_ON)
+            && mCi.getRadioState() == CommandsInterface.RadioState.RADIO_OFF) {
+            mCi.setRadioPower(CommandsInterface.RADIO_ON, null);
+        } else if ((mDesiredPowerState != CommandsInterface.RADIO_ON) &&
+                   mCi.getRadioState().isOn()) {
+            // If it's on and available and we want it off gracefully
+            DcTrackerBase dcTracker = mPhoneBase.mDcTracker;
+            powerOffRadioSafely(dcTracker);
+        } // Otherwise, we're in the desired state
+    }
+
     protected abstract Phone getPhone();
     protected abstract void handlePollStateResult(int what, AsyncResult ar);
     protected abstract void updateSpnDisplay();
-    protected abstract void setPowerStateToDesired();
     protected abstract void onUpdateIccAvailability();
     protected abstract void log(String s);
     protected abstract void loge(String s);
@@ -540,7 +602,7 @@ public abstract class ServiceStateTracker extends Handler {
                     // To minimize race conditions we do this after isDisconnected
                     dcTracker.cleanUpAllConnections(Phone.REASON_RADIO_TURNED_OFF);
                     if (DBG) log("Data disconnected, turn off radio right away.");
-                    hangupAndPowerOff();
+                    hangupAndSetRadioStateToDesired();
                 } else {
                     dcTracker.cleanUpAllConnections(Phone.REASON_RADIO_TURNED_OFF);
                     Message msg = Message.obtain(this);
@@ -551,7 +613,7 @@ public abstract class ServiceStateTracker extends Handler {
                         mPendingRadioPowerOffAfterDataOff = true;
                     } else {
                         log("Cannot send delayed Msg, turn off radio right away.");
-                        hangupAndPowerOff();
+                        hangupAndSetRadioStateToDesired();
                     }
                 }
             }
@@ -568,7 +630,7 @@ public abstract class ServiceStateTracker extends Handler {
             if (mPendingRadioPowerOffAfterDataOff) {
                 if (DBG) log("Process pending request to turn radio off.");
                 mPendingRadioPowerOffAfterDataOffTag += 1;
-                hangupAndPowerOff();
+                hangupAndSetRadioStateToDesired();
                 mPendingRadioPowerOffAfterDataOff = false;
                 return true;
             }
@@ -601,9 +663,13 @@ public abstract class ServiceStateTracker extends Handler {
     }
 
     /**
-     * Hang up all voice call and turn off radio. Implemented by derived class.
+     * Hang up all voice call and turn off radio.
      */
-    protected abstract void hangupAndPowerOff();
+    protected void hangupAndSetRadioStateToDesired() {
+        mPhoneBase.getCallTracker().hangupAllCalls();
+
+        mCi.setRadioPower(mDesiredPowerState, null);
+    }
 
     /** Cancel a pending (if any) pollState() operation */
     protected void cancelPollState() {

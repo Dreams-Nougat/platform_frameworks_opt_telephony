@@ -1375,15 +1375,25 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
     @Override
     public void
-    setRadioPower(boolean on, Message result) {
+    setRadioPower(int state, Message result) {
+
+        // State == -1 (shutdown) was added only from RIL_VERSION 9 onwards.
+        // convert it to 0 (airplane_mode) for earlier RIL VERSIONs
+        if (mRilVersion < 9 && state == RADIO_SHUTDOWN) state = RADIO_AIRPLANE_MODE;
+
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_RADIO_POWER, result);
 
         rr.mParcel.writeInt(1);
-        rr.mParcel.writeInt(on ? 1 : 0);
+        rr.mParcel.writeInt(state);
 
         if (RILJ_LOGD) {
-            riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
-                    + (on ? " on" : " off"));
+            if(state == RADIO_SHUTDOWN) {
+                riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
+                        + " shutdown");
+            } else {
+                riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
+                        + (state == RADIO_AIRPLANE_MODE ? " airplane mode": " on"));
+            }
         }
 
         send(rr);
@@ -2914,7 +2924,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 if (RILJ_LOGD) unsljLogRet(response, ret);
 
                 // Initial conditions
-                setRadioPower(false, null);
+                setRadioPower(RADIO_AIRPLANE_MODE, null);
                 setPreferredNetworkType(mPreferredNetworkType, null);
                 setCdmaSubscriptionSource(mCdmaSubscription, null);
                 setCellInfoListRate(Integer.MAX_VALUE, null);

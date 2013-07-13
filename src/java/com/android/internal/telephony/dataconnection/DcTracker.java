@@ -49,6 +49,7 @@ import android.text.TextUtils;
 import android.util.EventLog;
 import android.telephony.Rlog;
 
+import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.DctConstants;
@@ -547,7 +548,7 @@ public final class DcTracker extends DcTrackerBase {
         }
 
         int gprsState = mPhone.getServiceStateTracker().getCurrentDataConnectionState();
-        boolean desiredPowerState = mPhone.getServiceStateTracker().getDesiredPowerState();
+        int desiredPowerState = mPhone.getServiceStateTracker().getDesiredPowerState();
         IccRecords r = mIccRecords.get();
         boolean recordsLoaded = (r != null) ? r.getRecordsLoaded() : false;
 
@@ -559,7 +560,7 @@ public final class DcTracker extends DcTrackerBase {
                     internalDataEnabled &&
                     (!mPhone.getServiceState().getRoaming() || getDataOnRoamingEnabled()) &&
                     !mIsPsRestricted &&
-                    desiredPowerState;
+                    (desiredPowerState == CommandsInterface.RADIO_ON);
         if (!allowed && DBG) {
             String reason = "";
             if (!((gprsState == ServiceState.STATE_IN_SERVICE) || mAutoAttachOnCreation)) {
@@ -576,7 +577,9 @@ public final class DcTracker extends DcTrackerBase {
                 reason += " - Roaming and data roaming not enabled";
             }
             if (mIsPsRestricted) reason += " - mIsPsRestricted= true";
-            if (!desiredPowerState) reason += " - desiredPowerState= false";
+            if (desiredPowerState != CommandsInterface.RADIO_ON) {
+                reason += " - desiredPowerState != RADIO_ON";
+            }
             if (DBG) log("isDataAllowed: not allowed due to" + reason);
         }
         return allowed;
@@ -633,8 +636,6 @@ public final class DcTracker extends DcTrackerBase {
             log("trySetupData: X We're on the simulator; assuming connected retValue=true");
             return true;
         }
-
-        boolean desiredPowerState = mPhone.getServiceStateTracker().getDesiredPowerState();
 
         if (apnContext.isConnectable() &&
                 isDataAllowed(apnContext) && getAnyDataEnabled() && !isEmergency()) {
@@ -1165,7 +1166,7 @@ public final class DcTracker extends DcTrackerBase {
         if (DBG) log("restartRadio: ************TURN OFF RADIO**************");
         cleanUpAllConnections(true, Phone.REASON_RADIO_TURNED_OFF);
         mPhone.getServiceStateTracker().powerOffRadioSafely(this);
-        /* Note: no need to call setRadioPower(true).  Assuming the desired
+        /* Note: no need to call setRadioPower(RADIO_ON).  Assuming the desired
          * radio power state is still ON (as tracked by ServiceStateTracker),
          * ServiceStateTracker will call setRadioPower when it receives the
          * RADIO_STATE_CHANGED notification for the power off.  And if the

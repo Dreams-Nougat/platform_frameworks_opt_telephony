@@ -247,7 +247,7 @@ class SipCommandInterface extends BaseCommands implements CommandsInterface {
     }
 
     @Override
-    public void setRadioPower(boolean on, Message result) {
+    public void setRadioPower(int state, Message result) {
     }
 
     @Override

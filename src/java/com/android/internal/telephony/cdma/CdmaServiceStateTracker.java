@@ -17,9 +17,11 @@
 package com.android.internal.telephony.cdma;
 
 import android.app.AlarmManager;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.os.AsyncResult;
 import android.os.Build;
@@ -189,7 +191,8 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
 
         // System setting property AIRPLANE_MODE_ON is set in Settings.
         int airplaneMode = Settings.Global.getInt(mCr, Settings.Global.AIRPLANE_MODE_ON, 0);
-        mDesiredPowerState = ! (airplaneMode > 0);
+        mDesiredPowerState = (airplaneMode > 0) ? CommandsInterface.RADIO_AIRPLANE_MODE :
+                                                  CommandsInterface.RADIO_ON;
 
         mCr.registerContentObserver(
                 Settings.Global.getUriFor(Settings.Global.AUTO_TIME), true,
@@ -217,6 +220,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
         mCi.unregisterForCdmaPrlChanged(this);
         super.dispose();
     }
+
 
     @Override
     protected void finalize() {
@@ -508,10 +512,11 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
     @Override
     protected void setPowerStateToDesired() {
         // If we want it on and it's off, turn it on
-        if (mDesiredPowerState
+        if ((mDesiredPowerState == CommandsInterface.RADIO_ON)
             && mCi.getRadioState() == CommandsInterface.RadioState.RADIO_OFF) {
-            mCi.setRadioPower(true, null);
-        } else if (!mDesiredPowerState && mCi.getRadioState().isOn()) {
+            mCi.setRadioPower(CommandsInterface.RADIO_ON, null);
+        } else if ((mDesiredPowerState != CommandsInterface.RADIO_ON) &&
+                    mCi.getRadioState().isOn()) {
             DcTrackerBase dcTracker = mPhone.mDcTracker;
 
             // If it's on and available and we want it off gracefully
@@ -856,15 +861,8 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
         mPollingContext[0] = 0;
 
         switch (mCi.getRadioState()) {
+
         case RADIO_UNAVAILABLE:
-            mNewSS.setStateOutOfService();
-            mNewCellLoc.setStateInvalid();
-            setSignalStrengthDefaultValues();
-            mGotCountryCode = false;
-
-            pollStateDone();
-            break;
-
         case RADIO_OFF:
             mNewSS.setStateOff();
             mNewCellLoc.setStateInvalid();
@@ -1642,15 +1640,6 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
         }
         if (DBG) log("getOtasp: state=" + provisioningState);
         return provisioningState;
-    }
-
-    @Override
-    protected void hangupAndPowerOff() {
-        // hang up all active voice calls
-        mPhone.mCT.mRingingCall.hangupIfAlive();
-        mPhone.mCT.mBackgroundCall.hangupIfAlive();
-        mPhone.mCT.mForegroundCall.hangupIfAlive();
-        mCi.setRadioPower(false, null);
     }
 
     protected void parseSidNid (String sidStr, String nidStr) {

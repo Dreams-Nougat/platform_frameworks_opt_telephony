@@ -1024,6 +1024,12 @@ public final class CdmaCallTracker extends CallTracker {
         }
     }
 
+    protected void hangupAllCalls() {
+        mRingingCall.hangupIfAlive();
+        mBackgroundCall.hangupIfAlive();
+        mForegroundCall.hangupIfAlive();
+    }
+
     /**
      * Handle Ecm timer to be canceled or re-started
      */

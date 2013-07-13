@@ -208,14 +208,6 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
 
         switch (mCi.getRadioState()) {
             case RADIO_UNAVAILABLE:
-                mNewSS.setStateOutOfService();
-                mNewCellLoc.setStateInvalid();
-                setSignalStrengthDefaultValues();
-                mGotCountryCode = false;
-
-                pollStateDone();
-                break;
-
             case RADIO_OFF:
                 mNewSS.setStateOff();
                 mNewCellLoc.setStateInvalid();

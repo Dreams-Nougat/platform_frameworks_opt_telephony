@@ -638,6 +638,12 @@ public final class GsmCallTracker extends CallTracker {
         //dumpState();
     }
 
+    protected void hangupAllCalls() {
+        mRingingCall.hangupIfAlive();
+        mBackgroundCall.hangupIfAlive();
+        mForegroundCall.hangupIfAlive();
+    }
+
     private void
     handleRadioNotAvailable() {
         // handlePollCalls will clear out its

@@ -471,7 +471,8 @@ public class CDMAPhone extends PhoneBase {
     @Override
     public void
     setRadioPower(boolean power) {
-        mSST.setRadioPower(power);
+        mSST.setRadioPower(power ? CommandsInterface.RADIO_ON :
+                                   CommandsInterface.RADIO_AIRPLANE_MODE);
     }
 
     @Override

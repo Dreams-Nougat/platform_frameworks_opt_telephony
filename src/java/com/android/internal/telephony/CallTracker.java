@@ -169,6 +169,7 @@ public abstract class CallTracker extends Handler {
     public abstract void unregisterForVoiceCallStarted(Handler h);
     public abstract void registerForVoiceCallEnded(Handler h, int what, Object obj);
     public abstract void unregisterForVoiceCallEnded(Handler h);
+    protected abstract void hangupAllCalls();
 
     protected abstract void log(String msg);
 

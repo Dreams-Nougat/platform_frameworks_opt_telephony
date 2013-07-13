@@ -28,7 +28,7 @@ import android.os.Handler;
  */
 public interface CommandsInterface {
     enum RadioState {
-        RADIO_OFF,         /* Radio explicitly powered off (eg CFUN=0) */
+        RADIO_OFF,         /* Radio set to low_power mode (airplane mode) */
         RADIO_UNAVAILABLE, /* Radio unavailable (eg, resetting or not booted) */
         RADIO_ON;          /* Radio is on */
 
@@ -105,6 +105,11 @@ public interface CommandsInterface {
     static final int CDMA_SMS_FAIL_CAUSE_RESOURCE_SHORTAGE          = 35;
     static final int CDMA_SMS_FAIL_CAUSE_OTHER_TERMINAL_PROBLEM     = 39;
     static final int CDMA_SMS_FAIL_CAUSE_ENCODING_PROBLEM           = 96;
+
+    /* The Radio states passed to setRadioPower */
+    static public final int RADIO_SHUTDOWN = -1;
+    static public final int RADIO_AIRPLANE_MODE = 0;
+    static public final int RADIO_ON = 1;
 
     //***** Methods
     RadioState getRadioState();
@@ -1032,7 +1037,18 @@ public interface CommandsInterface {
 
     void writeSmsToRuim(int status, String pdu, Message response);
 
-    void setRadioPower(boolean on, Message response);
+    /**
+     * Sets Modem Power State
+     *
+     * @param state One of:
+     *                   RADIO_AIRPLANE_MODE,
+     *                   RADIO_ON
+     *                   RADIO_SHUTDOWN
+     * @param response sent when operation completes.
+     *                  response.obj will be an AsyncResult, and will indicate
+     *                  any error that may have occurred (eg, out of memory).
+     */
+    void setRadioPower(int state, Message response);
 
     void acknowledgeLastIncomingGsmSms(boolean success, int cause, Message response);
 

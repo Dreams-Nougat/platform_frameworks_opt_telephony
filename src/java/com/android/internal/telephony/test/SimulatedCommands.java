@@ -1089,11 +1089,19 @@ public final class SimulatedCommands extends BaseCommands
     }
 
     @Override
-    public void setRadioPower(boolean on, Message result) {
-        if(on) {
-            setRadioState(RadioState.RADIO_ON);
-        } else {
-            setRadioState(RadioState.RADIO_OFF);
+    public void setRadioPower(int state, Message result) {
+        switch (state) {
+            case RADIO_SHUTDOWN:
+                setRadioState(RadioState.RADIO_UNAVAILABLE);
+                break;
+            case RADIO_AIRPLANE_MODE:
+                setRadioState(RadioState.RADIO_OFF);
+                break;
+            case RADIO_ON:
+                setRadioState(RadioState.RADIO_ON);
+                break;
+            default:
+                throw new IllegalArgumentException("Unknown state: state = " + state);
         }
     }
 

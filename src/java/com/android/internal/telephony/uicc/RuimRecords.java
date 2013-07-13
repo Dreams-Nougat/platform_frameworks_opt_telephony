@@ -785,8 +785,8 @@ public final class RuimRecords extends IccRecords {
                 break;
             case IccRefreshResponse.REFRESH_RESULT_RESET:
                 if (DBG) log("handleRuimRefresh with SIM_REFRESH_RESET");
-                mCi.setRadioPower(false, null);
-                /* Note: no need to call setRadioPower(true).  Assuming the desired
+                mCi.setRadioPower(CommandsInterface.RADIO_AIRPLANE_MODE, null);
+                /* Note: no need to call setRadioPower(RADIO_ON).  Assuming the desired
                 * radio power state is still ON (as tracked by ServiceStateTracker),
                 * ServiceStateTracker will call setRadioPower when it receives the
                 * RADIO_STATE_CHANGED notification for the power off.  And if the

@@ -20,11 +20,9 @@ import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.database.ContentObserver;
 import android.os.AsyncResult;
@@ -165,16 +163,6 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     static final int PS_NOTIFICATION = 888;  // Id to update and cancel PS restricted
     static final int CS_NOTIFICATION = 999;  // Id to update and cancel CS restricted
 
-    private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getAction().equals(Intent.ACTION_LOCALE_CHANGED)) {
-                // update emergency string whenever locale changed
-                updateSpnDisplay();
-            }
-        }
-    };
-
     private ContentObserver mAutoTimeObserver = new ContentObserver(new Handler()) {
         @Override
         public void onChange(boolean selfChange) {
@@ -213,7 +201,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         int airplaneMode = Settings.Global.getInt(
                 phone.getContext().getContentResolver(),
                 Settings.Global.AIRPLANE_MODE_ON, 0);
-        mDesiredPowerState = ! (airplaneMode > 0);
+        mDesiredPowerState = (airplaneMode > 0) ? CommandsInterface.RADIO_AIRPLANE_MODE :
+                                                  CommandsInterface.RADIO_ON;
 
         mCr = phone.getContext().getContentResolver();
         mCr.registerContentObserver(
@@ -224,11 +213,6 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 mAutoTimeZoneObserver);
 
         setSignalStrengthDefaultValues();
-
-        // Monitor locale change
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_LOCALE_CHANGED);
-        phone.getContext().registerReceiver(mIntentReceiver, filter);
 
         // Gsm doesn't support OTASP so its not needed
         phone.notifyOtaspChanged(OTASP_NOT_NEEDED);
@@ -247,7 +231,6 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         mCi.unSetOnNITZTime(this);
         mCr.unregisterContentObserver(mAutoTimeObserver);
         mCr.unregisterContentObserver(mAutoTimeZoneObserver);
-        mPhone.getContext().unregisterReceiver(mIntentReceiver);
         super.dispose();
     }
 
@@ -457,31 +440,6 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 super.handleMessage(msg);
             break;
         }
-    }
-
-    @Override
-    protected void setPowerStateToDesired() {
-        // If we want it on and it's off, turn it on
-        if (mDesiredPowerState
-            && mCi.getRadioState() == CommandsInterface.RadioState.RADIO_OFF) {
-            mCi.setRadioPower(true, null);
-        } else if (!mDesiredPowerState && mCi.getRadioState().isOn()) {
-            // If it's on and available and we want it off gracefully
-            DcTrackerBase dcTracker = mPhone.mDcTracker;
-            powerOffRadioSafely(dcTracker);
-        } // Otherwise, we're in the desired state
-    }
-
-    @Override
-    protected void hangupAndPowerOff() {
-        // hang up all active voice calls
-        if (mPhone.isInCall()) {
-            mPhone.mCT.mRingingCall.hangupIfAlive();
-            mPhone.mCT.mBackgroundCall.hangupIfAlive();
-            mPhone.mCT.mForegroundCall.hangupIfAlive();
-        }
-
-        mCi.setRadioPower(false, null);
     }
 
     @Override
@@ -758,14 +716,6 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
 
         switch (mCi.getRadioState()) {
             case RADIO_UNAVAILABLE:
-                mNewSS.setStateOutOfService();
-                mNewCellLoc.setStateInvalid();
-                setSignalStrengthDefaultValues();
-                mGotCountryCode = false;
-                mNitzUpdatedTime = false;
-                pollStateDone();
-            break;
-
             case RADIO_OFF:
                 mNewSS.setStateOff();
                 mNewCellLoc.setStateInvalid();
