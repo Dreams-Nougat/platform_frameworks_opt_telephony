@@ -227,11 +227,16 @@ public class UiccCard {
     }
 
     private void onIccSwap(boolean isAdded) {
+
+        boolean isHotSwapSupported = mContext.getResources().getBoolean(
+                com.android.internal.R.bool.config_hotswapCapable);
+
+        if(isHotSwapSupported) {
+            //no need to prompt the user to reboot the device
+            return;
+        }
+
         synchronized (mLock) {
-            // TODO: Here we assume the device can't handle SIM hot-swap
-            //      and has to reboot. We may want to add a property,
-            //      e.g. REBOOT_ON_SIM_SWAP, to indicate if modem support
-            //      hot-swap.
             DialogInterface.OnClickListener listener = null;
 
 
