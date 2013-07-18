@@ -1,0 +1,11 @@
+Revision: 99dd41359365370c88d15ed9f5cb304a6d702146
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/SIMRecords.java
+
+219
+Thu Jul 18 15:27:31 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 73d1afe1_d2968494
+Bytes: 200
+This conflicts with code internally where I renamed this to mSpn, so lets hold off until the next AOSP release which is coming soon. And then, lets do this in IccRecords#dispose where mSpn is defined.
+
