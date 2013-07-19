@@ -734,6 +734,13 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
             if (mGsmRoaming && !isRoamingBetweenOperators(mGsmRoaming, mNewSS)) {
                 roaming = false;
             }
+            /**
+             * check national roaming
+             * don't show roaming icon for specific operators
+             */
+            if (mGsmRoaming && isNationalRoaming(mNewSS)) {
+                roaming = false;
+            }
             mNewSS.setRoaming(roaming);
             mNewSS.setEmergencyOnly(mEmergencyOnly);
             pollStateDone();
@@ -1297,18 +1304,51 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         boolean equalsOnsl = onsl != null && spn.equals(onsl);
         boolean equalsOnss = onss != null && spn.equals(onss);
 
+        return gsmRoaming && !(isEqualsMcc(s) && (equalsOnsl || equalsOnss));
+    }
+
+    private boolean isEqualsMcc(ServiceState s) {
         String simNumeric = SystemProperties.get(
                 TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, "");
-        String  operatorNumeric = s.getOperatorNumeric();
-
+        String operatorNumeric = s.getOperatorNumeric();
         boolean equalsMcc = true;
+
         try {
             equalsMcc = simNumeric.substring(0, 3).
                     equals(operatorNumeric.substring(0, 3));
         } catch (Exception e){
         }
+        return equalsMcc;
+    }
 
-        return gsmRoaming && !(equalsMcc && (equalsOnsl || equalsOnss));
+    private boolean isEqualsMnc(ServiceState s) {
+        String operatorNumeric = s.getOperatorNumeric();
+        String operatorNumericMnc = operatorNumeric.substring(3, operatorNumeric.length());
+
+        String[] mncArray = mPhone.getContext().getResources().getStringArray(
+                    com.android.internal.R.array.config_nationalRoamingAsMnc);
+
+        if (mncArray.length == 0)
+            return true;
+
+        for (String mnc : mncArray) {
+            if (operatorNumericMnc.equals(mnc))
+                return true;
+        }
+        return false;
+    }
+
+
+    private boolean isNationalRoaming(ServiceState s) {
+        boolean nationalRoaming = false;
+
+        try {
+            nationalRoaming = mPhone.getContext().getResources().getBoolean(
+                    com.android.internal.R.bool.config_isNationalRoaming);
+        } catch (Resources.NotFoundException e) {
+            nationalRoaming = false;
+        }
+        return isEqualsMcc(s) && isEqualsMnc(s) && nationalRoaming;
     }
 
     /**
