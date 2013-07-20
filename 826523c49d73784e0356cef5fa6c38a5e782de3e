@@ -1,0 +1,11 @@
+Revision: 826523c49d73784e0356cef5fa6c38a5e782de3e
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/UiccCard.java
+
+241
+Sat Jul 20 17:06:36 2013 +0000
+Author: Srikanth Chintala <1004511@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5334ab06_c175c2cd
+Bytes: 24
+this TODO to be removed?
+
