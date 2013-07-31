@@ -1,0 +1,11 @@
+Revision: 084696f2ddb700b25042f87270f5d19d0c1296b8
+Patch-set: 2
+File: src/java/com/android/internal/telephony/ServiceStateTracker.java
+
+211
+Wed Jul 31 16:50:22 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 33d01788_c23406f6
+Bytes: 72
+use mPhoneBase.setSystemProperty instead.  Don't import SystemProperties
+
