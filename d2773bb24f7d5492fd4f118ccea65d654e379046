@@ -1,0 +1,11 @@
+Revision: d2773bb24f7d5492fd4f118ccea65d654e379046
+Patch-set: 5
+File: src/java/com/android/internal/telephony/dataconnection/ApnSetting.java
+
+159
+Wed Jul 31 01:19:30 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 138a339d_b76db301
+Bytes: 70
+At a minimum we should output a loge or maybe even throw an exception?
+
