@@ -9,6 +9,13 @@ UUID: 587128c6_3c579d2c
 Bytes: 38
 Lets print the debug diagnostics here.
 
+142
+Mon Aug 05 16:45:43 2013 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 587128c6_ff88371e
+Bytes: 59
+Why are we using -1? It should be defined in AppState enum.
+
 File: src/java/com/android/internal/telephony/RIL.java
 
 3014
