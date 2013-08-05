@@ -1,0 +1,20 @@
+Revision: afad74d43bcc96b2c3a9b1e9a6907bf286e9ea84
+Patch-set: 1
+File: src/java/com/android/internal/telephony/IccCardApplicationStatus.java
+
+142
+Mon Aug 05 15:42:02 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 587128c6_3c579d2c
+Bytes: 38
+Lets print the debug diagnostics here.
+
+File: src/java/com/android/internal/telephony/RIL.java
+
+3014
+Mon Aug 05 15:42:02 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 587128c6_5c485189
+Bytes: 161
+This is done in AppStateFromRILInt lets not print this here, if we need the diagnostics lets do it in AppStateFromRILInt. If we do that this file doesn't change.
+
