@@ -1451,4 +1451,9 @@ public abstract class PhoneBase extends Handler implements Phone {
         pw.println(" isDataConnectivityPossible()=" + isDataConnectivityPossible());
         pw.println(" needsOtaServiceProvisioning=" + needsOtaServiceProvisioning());
     }
+
+    @Override
+    public boolean isRadioOn() {
+        return mCi.getRadioState().isOn();
+    }
 }
