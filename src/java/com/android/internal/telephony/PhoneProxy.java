@@ -1187,4 +1187,9 @@ public class PhoneProxy extends Handler implements Phone {
         mActivePhone = null;
         mCommandsInterface = null;
     }
+
+    @Override
+    public boolean isRadioOn() {
+        return mCommandsInterface.getRadioState().isOn();
+    }
 }
