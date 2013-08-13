@@ -38,7 +38,9 @@ import com.android.internal.telephony.test.SimulatedRadioControl;
 
 import java.util.List;
 
+import android.test.suitebuilder.annotation.Suppress;
 
+@Suppress
 public class GSMPhoneTest extends AndroidTestCase implements PerformanceTestCase {
     private SimulatedRadioControl mRadioControl;
     private GSMPhone mGSMPhone;

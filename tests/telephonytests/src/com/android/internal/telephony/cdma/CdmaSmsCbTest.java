@@ -35,9 +35,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
+import android.test.suitebuilder.annotation.Suppress;
+
 /**
  * Test cases for basic SmsCbMessage operation for CDMA.
  */
+@Suppress
 public class CdmaSmsCbTest extends AndroidTestCase {
 
     /* Copy of private subparameter identifier constants from BearerData class. */
