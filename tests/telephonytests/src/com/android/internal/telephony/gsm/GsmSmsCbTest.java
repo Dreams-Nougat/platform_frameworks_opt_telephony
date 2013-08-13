@@ -25,10 +25,11 @@ import android.test.AndroidTestCase;
 import com.android.internal.telephony.uicc.IccUtils;
 
 import java.util.Random;
-
+import android.test.suitebuilder.annotation.Suppress;
 /**
  * Test cases for basic SmsCbMessage operations
  */
+@Suppress
 public class GsmSmsCbTest extends AndroidTestCase {
 
     private static final String TAG = "GsmSmsCbTest";
