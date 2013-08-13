@@ -661,5 +661,10 @@ class UsimDataDownloadCommands extends BaseCommands {
     @Override
     public void iccTransmitApduBasicChannel(int cla, int instruction, int p1, int p2,
             int p3, String data, Message response) {
+    } 
+
+    @Override
+    public void setInitialAttachApn(String apn, String protocol, int authType, String username,
+            String password, Message result) {
     }
 }

@@ -21,6 +21,7 @@ import android.telephony.SmsCbEtwsInfo;
 import android.telephony.SmsCbLocation;
 import android.telephony.SmsCbMessage;
 import android.test.AndroidTestCase;
+import android.test.suitebuilder.annotation.Suppress;
 
 import com.android.internal.telephony.uicc.IccUtils;
 
@@ -29,6 +30,7 @@ import java.util.Random;
 /**
  * Test cases for basic SmsCbMessage operations
  */
+@Suppress
 public class GsmSmsCbTest extends AndroidTestCase {
 
     private static final String TAG = "GsmSmsCbTest";
