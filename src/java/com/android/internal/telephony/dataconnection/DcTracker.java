@@ -949,7 +949,9 @@ public final class DcTracker extends DcTrackerBase {
                     }
                 } else {
                     // no mvno match yet
-                    if (mvnoMatches(r, cursorMvnoType, cursorMvnoMatchData)) {
+                    // add null pointer check for cursorMvnoType and cursorMvnoMatchData.
+                    if ((cursorMvnoType != null && cursorMvnoMatchData != null)
+                            && mvnoMatches(r, cursorMvnoType, cursorMvnoMatchData)) {
                         // first match - toss out non-mvno data
                         result.clear();
                         mvnoType = cursorMvnoType;
@@ -957,7 +959,8 @@ public final class DcTracker extends DcTrackerBase {
                         result.add(makeApnSetting(cursor));
                     } else {
                         // add only non-mvno data
-                        if (cursorMvnoType.equals("")) {
+                        // add null pointer check for cursorMvnoType.
+                        if (cursorMvnoType == null || cursorMvnoType.equals("")) {
                             result.add(makeApnSetting(cursor));
                         }
                     }
