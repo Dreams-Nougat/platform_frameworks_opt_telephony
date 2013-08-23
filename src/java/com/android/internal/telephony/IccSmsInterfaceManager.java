@@ -225,7 +225,7 @@ public abstract class IccSmsInterfaceManager extends ISms.Stub {
             Message response = mHandler.obtainMessage(EVENT_UPDATE_DONE);
 
             //RIL_REQUEST_WRITE_SMS_TO_SIM vs RIL_REQUEST_CDMA_WRITE_SMS_TO_RUIM
-            writeSms(status, smsc, pdu, response);
+            writeSms(status, pdu, smsc, response);
 
             try {
                 mLock.wait();
