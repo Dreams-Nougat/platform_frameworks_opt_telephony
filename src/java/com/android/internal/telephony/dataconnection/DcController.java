@@ -24,6 +24,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.telephony.Rlog;
+import com.android.internal.telephony.DctConstants;
 import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.dataconnection.DataConnection.UpdateLinkPropertyResult;
@@ -163,7 +164,7 @@ class DcController extends StateMachine {
                 case DataConnection.EVENT_DATA_STATE_CHANGED:
                     ar = (AsyncResult)msg.obj;
                     if (ar.exception == null) {
-                        onDataStateChanged((ArrayList<DataCallResponse>)ar.result);
+                        onDataStateChanged(ar);
                     } else {
                         log("DccDefaultState: EVENT_DATA_STATE_CHANGED:" +
                                     " exception; likely radio not available, ignore");
@@ -177,7 +178,9 @@ class DcController extends StateMachine {
          * Process the new list of "known" Data Calls
          * @param dcsList as sent by RIL_UNSOL_DATA_CALL_LIST_CHANGED
          */
-        private void onDataStateChanged(ArrayList<DataCallResponse> dcsList) {
+        private void onDataStateChanged(AsyncResult ar) {
+            ArrayList<DataCallResponse> dcsList = (ArrayList<DataCallResponse>)ar.result;
+
             if (DBG) {
                 lr("onDataStateChanged: dcsList=" + dcsList
                         + " mDcListActiveByCid=" + mDcListActiveByCid);
@@ -208,7 +211,17 @@ class DcController extends StateMachine {
             // and any that are in active need to be retried.
             ArrayList<ApnContext> apnsToCleanup = new ArrayList<ApnContext>();
 
+            boolean isAnyDataCallDormant = false;
+            boolean isAnyDataCallActive = false;
+
             for (DataCallResponse newState : dcsList) {
+                if (newState.active == DATA_CONNECTION_ACTIVE_PH_LINK_UP) {
+                    isAnyDataCallActive = true;
+                }
+                if (newState.active == DATA_CONNECTION_ACTIVE_PH_LINK_DORMANT) {
+                    isAnyDataCallDormant = true;
+                }
+
                 DataConnection dc = mDcListActiveByCid.get(newState.cid);
                 if (dc == null) {
                     // UNSOL_DATA_CALL_LIST_CHANGED arrived before SETUP_DATA_CALL completed.
@@ -288,6 +301,30 @@ class DcController extends StateMachine {
                     }
                 }
             }
+
+            if (isAnyDataCallDormant && !isAnyDataCallActive) {
+                // There is no way to indicate link activity per APN right now. So
+                // Link Activity will be considered dormant only when all data calls
+                // are dormant.
+                // If a single data call is in dormant state and none of the data
+                // calls are active broadcast overall link state as dormant.
+                mDct.setActivity(DctConstants.Activity.DORMANT);
+                if (DBG) {
+                    log("onDataStateChanged: Data Activity updated to DORMANT. stopNetStatePoll");
+                }
+                mDct.stopNetStatPoll();
+            } else {
+                mDct.setActivity(DctConstants.Activity.NONE);
+                if (DBG) {
+                    log("onDataStateChanged: Data Activity updated to NONE. " +
+                            "isAnyDataCallActive = " + isAnyDataCallActive +
+                            " isAnyDataCallDormant = " + isAnyDataCallDormant);
+                }
+                if (isAnyDataCallActive) {
+                    mDct.startNetStatPoll();
+                }
+            }
+
             mPhone.notifyDataActivity();
 
             if (DBG) {
