@@ -542,6 +542,12 @@ public abstract class DcTrackerBase extends Handler {
         return mActivity;
     }
 
+    void setActivity(DctConstants.Activity activity) {
+        log("setActivity = " + activity);
+        mActivity = activity;
+        mPhone.notifyDataActivity();
+    }
+
     public boolean isApnTypeActive(String type) {
         // TODO: support simultaneous with List instead
         if (PhoneConstants.APN_TYPE_DUN.equals(type)) {
@@ -777,6 +783,14 @@ public abstract class DcTrackerBase extends Handler {
             }
             case DctConstants.EVENT_ICC_CHANGED: {
                 onUpdateIcc();
+                break;
+            }
+            case DctConstants.CMD_NET_STAT_POLL: {
+                if (msg.arg1 == DctConstants.ENABLED) {
+                    handleStartNetStatPoll((DctConstants.Activity)msg.obj);
+                } else if (msg.arg1 == DctConstants.DISABLED) {
+                    handleStopNetStatPoll((DctConstants.Activity)msg.obj);
+                }
                 break;
             }
             default:
@@ -1216,20 +1230,50 @@ public abstract class DcTrackerBase extends Handler {
 
     protected abstract DctConstants.State getOverallState();
 
-    protected void startNetStatPoll() {
+    void startNetStatPoll() {
         if (getOverallState() == DctConstants.State.CONNECTED
                 && mNetStatPollEnabled == false) {
-            if (DBG) log("startNetStatPoll");
+            if (DBG) {
+                log("startNetStatPoll");
+            }
             resetPollStats();
             mNetStatPollEnabled = true;
             mPollNetStat.run();
         }
     }
 
-    protected void stopNetStatPoll() {
+    void stopNetStatPoll() {
         mNetStatPollEnabled = false;
         removeCallbacks(mPollNetStat);
-        if (DBG) log("stopNetStatPoll");
+        if (DBG) {
+            log("stopNetStatPoll");
+        }
+    }
+
+    public void sendStartNetStatPoll(DctConstants.Activity activity) {
+        Message msg = obtainMessage(DctConstants.CMD_NET_STAT_POLL);
+        msg.arg1 = DctConstants.ENABLED;
+        msg.obj = activity;
+        sendMessage(msg);
+    }
+
+    protected void handleStartNetStatPoll(DctConstants.Activity activity) {
+        startNetStatPoll();
+        startDataStallAlarm(DATA_STALL_NOT_SUSPECTED);
+        setActivity(activity);
+    }
+
+    public void sendStopNetStatPoll(DctConstants.Activity activity) {
+        Message msg = obtainMessage(DctConstants.CMD_NET_STAT_POLL);
+        msg.arg1 = DctConstants.DISABLED;
+        msg.obj = activity;
+        sendMessage(msg);
+    }
+
+    protected void handleStopNetStatPoll(DctConstants.Activity activity) {
+        stopNetStatPoll();
+        stopDataStallAlarm();
+        setActivity(activity);
     }
 
     public void updateDataActivity() {
