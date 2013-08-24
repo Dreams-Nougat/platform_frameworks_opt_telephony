@@ -542,6 +542,11 @@ public abstract class DcTrackerBase extends Handler {
         return mActivity;
     }
 
+    void setActivity(DctConstants.Activity activity) {
+        log("setActivity ="+activity);
+        mActivity = activity;
+    }
+
     public boolean isApnTypeActive(String type) {
         // TODO: support simultaneous with List instead
         if (PhoneConstants.APN_TYPE_DUN.equals(type)) {
@@ -1230,6 +1235,16 @@ public abstract class DcTrackerBase extends Handler {
         mNetStatPollEnabled = false;
         removeCallbacks(mPollNetStat);
         if (DBG) log("stopNetStatPoll");
+    }
+
+    void startByteCounting() {
+        startNetStatPoll();
+        startDataStallAlarm(DATA_STALL_NOT_SUSPECTED);
+    }
+
+    void stopByteCounting() {
+        stopNetStatPoll();
+        stopDataStallAlarm();
     }
 
     public void updateDataActivity() {
