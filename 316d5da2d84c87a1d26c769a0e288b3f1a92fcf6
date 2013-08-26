@@ -1,0 +1,56 @@
+Revision: 316d5da2d84c87a1d26c769a0e288b3f1a92fcf6
+Patch-set: 2
+File: src/java/com/android/internal/telephony/gsm/GsmServiceStateTracker.java
+
+743
+Mon Aug 26 21:20:56 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2d8b5471_366d0072
+Bytes: 392
+this should be restructured.
+
+mNewSS.setRoaming((mGsmRoaming ||
+    mDataRoaming) && (inHomeCountry(mNewSS) &&
+    !sameNamedOperator(mNewSS) &&
+    !usingRoamingAgreementOperator(mNewSS)))
+
+Current code is checking mGsmRoaming too often and using two un-needed temp vars.  Note this restructuring goes into isRoamingBetweenOperators, which shouldn't even be called if roaming isn't possible.
+
+1310
+Mon Aug 26 21:20:56 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2d8b5471_f62a1848
+Bytes: 53
+this is a bad name.
+
+how about currentMccEqualsSimMcc
+
+1324
+Mon Aug 26 21:20:56 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2d8b5471_b6d7b006
+Bytes: 58
+another bad function name.
+
+isOperatorConcideredNonRoaming
+
+1342
+Mon Aug 26 21:20:56 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2d8b5471_16bebcc5
+Bytes: 162
+A bad function name.
+
+Where did the term "NationalRoaming" come from?  It seems like it is really a non-roaming agreement.  Please explain the origin of the term.
+
+1351
+Mon Aug 26 21:20:56 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2d8b5471_76daa830
+Bytes: 146
+do this in reverse.
+
+return nationalRoaming && isEqualsMcc && isEqualsMnc
+
+so the functions aren't called in the normal, non-nationalRoaming case.
+
