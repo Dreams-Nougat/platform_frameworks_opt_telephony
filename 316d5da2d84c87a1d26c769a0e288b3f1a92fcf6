@@ -43,6 +43,20 @@ A bad function name.
 
 Where did the term "NationalRoaming" come from?  It seems like it is really a non-roaming agreement.  Please explain the origin of the term.
 
+1342
+Mon Aug 26 23:36:59 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2d8b5471_16bebcc5
+UUID: cd18f82e_b5e4c05c
+Bytes: 1231
+http://en.wikipedia.org/wiki/Roaming
+
+National roaming:
+
+This type of roaming refers to the ability to move from one mobile operator to another in the same country. For example, a subscriber of T-Mobile USA who is allowed to roam on AT&T Mobility's service would have national roaming rights. For commercial and license reasons, this type of roaming is not allowed unless under very specific circumstances and under regulatory scrutiny. This has often taken place when a new company is assigned a mobile telephony license, to create a more competitive market by allowing the new entrant to offer coverage comparable to that of established operators (by requiring the existing operators to allow roaming while the new entrant has time to build up its own network). In a country like India, where the number of regional operators is high and the country is divided into circles, this type of roaming is common[citation needed]. Following the merger of Orange UK and T-Mobile UK on 1 July 2010, national roaming has been possible between these two networks since 5 October 2010 at no additional cost pending the technical merging of the two networks.
+
+I agree with you. It's bad function name. I'll change it to  more reasonable name.
+
 1351
 Mon Aug 26 21:20:56 2013 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
