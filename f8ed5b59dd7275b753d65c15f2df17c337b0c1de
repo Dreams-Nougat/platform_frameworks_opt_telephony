@@ -27,3 +27,10 @@ UUID: 2dd0b487_2b2ce50f
 Bytes: 198
 this is really checking if the name is the same.  You can pull the currentMccEqualsSimMcc out so we don't have to check that multiple times and so we don't do all this work if the mcc's don't match.
 
+1337
+Tue Aug 27 19:28:33 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2dd0b487_ee7bfb2f
+Bytes: 111
+is this really needed?  Can't we just get the array and if it's empty or we don't find a match we return false?
+
