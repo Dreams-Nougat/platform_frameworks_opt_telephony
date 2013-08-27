@@ -27,6 +27,14 @@ UUID: 2dd0b487_2b2ce50f
 Bytes: 198
 this is really checking if the name is the same.  You can pull the currentMccEqualsSimMcc out so we don't have to check that multiple times and so we don't do all this work if the mcc's don't match.
 
+1290
+Tue Aug 27 20:12:18 2013 +0000
+Author: Serge Orlov <1023901@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2dd0b487_2b2ce50f
+UUID: 2dd0b487_5173c6a3
+Bytes: 313
+Hi, Robert, I'm not sure how gerrit works (first time using it) but it looks like you didn't get a notification about my comment on the change. I think the code shouldn't be built around the assumption that MCCs are the same. I also believe this feature is called Equivalent Home PLMN. Please see my full comment.
+
 1337
 Tue Aug 27 19:28:33 2013 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
