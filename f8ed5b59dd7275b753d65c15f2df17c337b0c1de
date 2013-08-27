@@ -1,0 +1,29 @@
+Revision: f8ed5b59dd7275b753d65c15f2df17c337b0c1de
+Patch-set: 3
+File: src/java/com/android/internal/telephony/gsm/GsmServiceStateTracker.java
+
+736
+Tue Aug 27 19:23:39 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2dd0b487_6e626bb4
+Bytes: 432
+this isn't quite right.  here if mGsmRoaming == false you'll go false, when what we want is 
+&& !(mGsmRoaming && !isRoamingBetweenOperators)
+
+That can be expressed as
+&& (!mGsmRoaming || isRoamingBetweenOperators)
+
+however, if you pull out the mcc match check it becomes:
+
+setRoaming(mDataRoaming || (mGsmRoaming &&
+    !(inHomeCountry(mNewSS) &&
+      (sameNamedOperator(mNewSS) ||
+       usingRoamingAgreementOperator(mNewSS)))));
+
+1290
+Tue Aug 27 19:23:39 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2dd0b487_2b2ce50f
+Bytes: 198
+this is really checking if the name is the same.  You can pull the currentMccEqualsSimMcc out so we don't have to check that multiple times and so we don't do all this work if the mcc's don't match.
+
