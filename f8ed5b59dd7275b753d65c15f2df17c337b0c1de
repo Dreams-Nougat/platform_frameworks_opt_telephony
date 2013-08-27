@@ -20,6 +20,19 @@ setRoaming(mDataRoaming || (mGsmRoaming &&
       (sameNamedOperator(mNewSS) ||
        usingRoamingAgreementOperator(mNewSS)))));
 
+736
+Tue Aug 27 23:00:13 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2dd0b487_6e626bb4
+UUID: 0d585019_eff3e11d
+Bytes: 226
+I mistake. 
+
+there is some problem.
+If mDateRoaming == true, it is always true. But regardless mDataRoaming, it should be false if mGsmRoaming && !isRoamingBetweenOperators(mGsmRoaming, mNewSS)) == true.
+
+I'll change it again.
+
 1290
 Tue Aug 27 19:23:39 2013 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -46,10 +59,26 @@ Probably need to have an optional array set by mcc that lists other mcc's that a
 
 EG, Bermuda (350/310/338), Guam (310, 311), India (404, 405), etc
 
+1302
+Tue Aug 27 23:00:13 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 4d4ec857_915d1c25
+UUID: 0d585019_2ff6c90d
+Bytes: 3
+OK.
+
 1337
 Tue Aug 27 19:28:33 2013 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 2dd0b487_ee7bfb2f
 Bytes: 111
 is this really needed?  Can't we just get the array and if it's empty or we don't find a match we return false?
+
+1337
+Tue Aug 27 23:00:13 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2dd0b487_ee7bfb2f
+UUID: 0d585019_0ff905ff
+Bytes: 38
+I'll think more. and try to re-design.
 
