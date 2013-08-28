@@ -1,0 +1,18 @@
+Revision: 6865223a13159e37ef7636f7bd5e57758dc0e27e
+Patch-set: 4
+File: src/java/com/android/internal/telephony/gsm/GsmServiceStateTracker.java
+
+1324
+Wed Aug 28 16:59:25 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7210cd3e_ba12b1a3
+Bytes: 66
+comment that this can be used to match either mcc+mnc or just mcc.
+
+1334
+Wed Aug 28 16:59:25 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 320ad514_b897593d
+Bytes: 25
+|| operatorNumber == null
+
