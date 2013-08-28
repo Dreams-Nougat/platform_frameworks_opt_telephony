@@ -9,3 +9,17 @@ UUID: 32581541_5c5a7dfa
 Bytes: 284
 this appears to be outside the scope of this change - it's not showing user confirmation based on noAlphaUsrCnf, it appears to be setting up a data call.  If we need to do that, please create a separate bug and a separate change, don't bury it in a change regarding user confirmation.
 
+314
+Wed Aug 28 23:21:31 2013 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 32581541_5c5a7dfa
+UUID: 72836dc5_e293c6a1
+Bytes: 923
+In according ETSI TS 102 223 6.4.27.2 OPEN CHANNEL related to packet data service bearer,
+"• if the alpha identifier is provided by the UICC and is a null data object (i.e. length = '00' and no value part),
+this is an indication that the terminal should not give any information to the user or ask for user confirmation;
+• if the alpha identifier is not provided by the UICC, the terminal may give information to the user;
+• if the user does not reject the channel, the terminal shall then set up a channel;"
+
+In this condition, we does not need user confirmation and we should do next step. So, we need to set up a channel here when the command is OPEN CHANNEL. If we send Terminal Response, which value we should send to the UICC? If we send Terminal Response with OK value, it means that we are success to open a channel. And, If we send Terminal Response with Not OK value, it means that OPEN CHANNEL is rejected.
+
