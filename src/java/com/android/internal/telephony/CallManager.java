@@ -1,4 +1,8 @@
 /*
+ * Copyright (c) 2012, The Linux Foundation. All rights reserved.
+ * Not a Contribution, Apache license notifications and license are retained
+ * for attribution purposes only.
+ *
  * Copyright (C) 2010 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -515,9 +519,28 @@ public final class CallManager {
      * @exception CallStateException when call is not ringing or waiting
      */
     public void acceptCall(Call ringingCall) throws CallStateException {
+        acceptCall(ringingCall, Phone.CALL_TYPE_VOICE);
+    }
+
+    /**
+     * Answers a ringing or waiting call, with an option to downgrade a Video
+     * call Active call, if any, go on hold. If active call can't be held, i.e.,
+     * a background call of the same channel exists, the active call will be
+     * hang up. Answering occurs asynchronously, and final notification occurs
+     * via
+     * {@link #registerForPreciseCallStateChanged(android.os.Handler, int, java.lang.Object)
+     * registerForPreciseCallStateChanged()}.
+     *
+     * @param ringingCall The call to answer
+     * @param callType The call type to use to answer the call. Values from
+     *            Phone.RIL_CALL_TYPE
+     * @exception CallStateException when call is not ringing or waiting
+     */
+    public void acceptCall(Call ringingCall, int callType) throws CallStateException {
         Phone ringingPhone = ringingCall.getPhone();
 
         if (VDBG) {
+            Rlog.d(LOG_TAG, "acceptCall api with calltype " + callType);
             Rlog.d(LOG_TAG, "acceptCall(" +ringingCall + " from " + ringingCall.getPhone() + ")");
             Rlog.d(LOG_TAG, toString());
         }
@@ -557,9 +580,14 @@ public final class CallManager {
             }
         }
 
-        ringingPhone.acceptCall();
+        if (ringingPhone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
+            ringingPhone.acceptCall(callType);
+        } else {
+            ringingPhone.acceptCall();
+        }
 
         if (VDBG) {
+            Rlog.d(LOG_TAG, "Call type in acceptCall " +callType);
             Rlog.d(LOG_TAG, "End acceptCall(" +ringingCall + ")");
             Rlog.d(LOG_TAG, toString());
         }
@@ -740,6 +768,26 @@ public final class CallManager {
      * handled asynchronously.
      */
     public Connection dial(Phone phone, String dialString) throws CallStateException {
+        return dial(phone, dialString, Phone.CALL_TYPE_VOICE, null);
+    }
+
+    /**
+     * Initiate a new connection. This happens asynchronously, so you cannot
+     * assume the audio path is connected (or a call index has been assigned)
+     * until PhoneStateChanged notification has occurred.
+     *
+     * @exception CallStateException if a new outgoing call is not currently
+     *                possible because no more call slots exist or a call exists
+     *                that is dialing, alerting, ringing, or waiting. Other
+     *                errors are handled asynchronously.
+     * @param phone The phone to use to place the call
+     * @param dialString The phone number or URI that identifies the remote
+     *            party
+     * @param calldetails
+     */
+    public Connection dial(Phone phone, String dialString, int callType, String[] extras)
+            throws CallStateException {
+
         Phone basePhone = getPhoneBase(phone);
         Connection result;
 
@@ -771,7 +819,11 @@ public final class CallManager {
             }
         }
 
-        result = basePhone.dial(dialString);
+        if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_IMS) {
+            result = basePhone.dial(dialString, callType, extras);
+        } else {
+            result = basePhone.dial(dialString);
+        }
 
         if (VDBG) {
             Rlog.d(LOG_TAG, "End dial(" + basePhone + ", "+ dialString + ")");
