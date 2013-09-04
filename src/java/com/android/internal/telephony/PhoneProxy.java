@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2012-13, The Linux Foundation. All rights reserved.
+ *
  * Copyright (C) 2008 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -546,6 +548,21 @@ public class PhoneProxy extends Handler implements Phone {
     }
 
     @Override
+    public void acceptCall(int callType) throws CallStateException {
+        mActivePhone.acceptCall(callType);
+    }
+
+    @Override
+    public int getCallType(Call call) throws CallStateException {
+        return mActivePhone.getCallType(call);
+    }
+
+    @Override
+    public int getCallDomain(Call call) throws CallStateException {
+        return mActivePhone.getCallDomain(call);
+    }
+
+    @Override
     public void rejectCall() throws CallStateException {
         mActivePhone.rejectCall();
     }
@@ -613,6 +630,12 @@ public class PhoneProxy extends Handler implements Phone {
     @Override
     public Connection dial(String dialString, UUSInfo uusInfo) throws CallStateException {
         return mActivePhone.dial(dialString, uusInfo);
+    }
+
+    @Override
+    public Connection dial(String dialString, int callType, String[] extras)
+            throws CallStateException {
+        return mActivePhone.dial(dialString, callType, extras);
     }
 
     @Override

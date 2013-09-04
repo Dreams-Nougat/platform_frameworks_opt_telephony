@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2012-13, The Linux Foundation. All rights reserved.
+ *
  * Copyright (C) 2007 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -1400,4 +1402,24 @@ public abstract class PhoneBase extends Handler implements Phone {
         pw.println(" isDataConnectivityPossible()=" + isDataConnectivityPossible());
         pw.println(" needsOtaServiceProvisioning=" + needsOtaServiceProvisioning());
     }
+
+    // IMS APIs - Implemented only in ImsPhone
+    public void acceptCall(int callType) throws CallStateException {
+        throw new CallStateException("Accept with CallType is not supported in this phone " + this);
+    }
+
+    public int getCallType(Call call) throws CallStateException {
+        throw new CallStateException("getCallType is not supported in this phone " + this);
+    }
+
+    public int getCallDomain(Call call) throws CallStateException {
+        throw new CallStateException("getCallDomain is not supported in this phone " + this);
+    }
+
+    public Connection dial(String dialString, int CallType, String[] extras)
+            throws CallStateException {
+        throw new CallStateException("Dial with CallDetails is not supported in this phone "
+                + this);
+    }
+
 }
