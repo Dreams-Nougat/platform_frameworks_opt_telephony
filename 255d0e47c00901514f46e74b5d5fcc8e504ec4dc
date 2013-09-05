@@ -1,0 +1,64 @@
+Revision: 255d0e47c00901514f46e74b5d5fcc8e504ec4dc
+Patch-set: 3
+File: src/java/com/android/internal/telephony/dataconnection/DcController.java
+
+167
+Thu Sep 05 18:13:29 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 32b7354e_539bd6b7
+Bytes: 16
+Why change this?
+
+315
+Thu Sep 05 18:13:29 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 32b7354e_93309ecf
+Bytes: 66
+Change to mDct.sendStopNetStatPoll(DctConstants.Activity.DORMANT);
+
+317
+Thu Sep 05 18:13:29 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: f2c91dea_c65d4220
+Bytes: 136
+Not sure what to do about this, if we really need to set it to not but not stopNetStatePoll then we need to implement sendSetActivity().
+
+324
+Thu Sep 05 18:13:29 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 32b7354e_734a5a30
+Bytes: 56
+mDct.sendStartNetStatPoll(DctConstants.Activity.ACTIVE)?
+
+File: src/java/com/android/internal/telephony/dataconnection/DcTrackerBase.java
+
+547
+Thu Sep 05 18:13:29 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 12bcf130_ef53013c
+Bytes: 45
+Pass this as a parameter to CMD_NET_STAT_POLL
+
+1224
+Thu Sep 05 18:13:29 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 32b7354e_13acaecd
+Bytes: 364
+This and stop/startNetStatPoll are being called by two different threads, change this to be sendStartNetStatPoll(DctConstanst.Activity activity) and have it send CMD_NET_STAT_POLL with arg1 = 1 for start 0 for stop and arg2 being the value for activity. Move this and stop's code into the handler.
+
+Then have all users call sendStartNetStatPoll/sendStopNetStatPoll
+
+1236
+Thu Sep 05 18:13:29 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 32b7354e_d3b98610
+Bytes: 58
+change to sendStopNetStatPoll() and send CMD_NET_STAT_POLL
+
+1276
+Thu Sep 05 18:13:29 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 12bcf130_4f45ed6c
+Bytes: 44
+Wrap this read/modify/write in synchronized.
+
