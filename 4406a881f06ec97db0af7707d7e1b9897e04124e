@@ -1,0 +1,29 @@
+Revision: 4406a881f06ec97db0af7707d7e1b9897e04124e
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/IccFileHandler.java
+
+264
+Fri Sep 06 21:40:48 2013 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 4715c92d_5984c3a0
+Bytes: 154
+What is the specific fileId valued passed here that you don't like?
+It should be 4F01...4F05. getEFPath for these can be fixed instead of hacking it here.
+
+273
+Fri Sep 06 21:40:48 2013 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 4715c92d_99ba5b5d
+Bytes: 181
+In the order of preference here is how this could be fixed instead:
+1) Have caller provide path.
+2) let getEFPath figure out path based on actual values passed. (i.e. fix getEFPath)
+
+535
+Fri Sep 06 21:40:48 2013 +0000
+Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 4715c92d_f915d794
+Bytes: 113
+in case of EVENT_READ_IMG_DONE it would be LoadLinearFixedContext object and not Message.
+Wouldn't it crash here?
+
