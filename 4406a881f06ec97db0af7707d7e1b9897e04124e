@@ -19,6 +19,15 @@ In the order of preference here is how this could be fixed instead:
 1) Have caller provide path.
 2) let getEFPath figure out path based on actual values passed. (i.e. fix getEFPath)
 
+532
+Fri Sep 06 22:49:25 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 4715c92d_7c209561
+Bytes: 470
+I see one reason you might want to move these, in the original code for both EVENT_READ_IMG_DONE and READ_ICON_DONE are not calling sendResult(response, result,payload, null) if there is no exception and the read was successful. So it looks to me having EVENT_READ_ICON_DONE here is probably ok, but having EVENT_READ_IMG_DONE isn't correct as Alex says.
+
+So move EVENT_READ_IMG_DONE backup, but make its error handling and sendResponse code the modeled after this code.
+
 535
 Fri Sep 06 21:40:48 2013 +0000
 Author: Alex Yakavenka <1003902@85c56323-6fa9-3386-8a01-6480fb634889>
