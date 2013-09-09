@@ -9,10 +9,26 @@ UUID: c74e1982_65d006a0
 Bytes: 57
 fileid and recordnum aren't used, why are you doing this?
 
+359
+Mon Sep 09 18:18:41 2013 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: c74e1982_65d006a0
+UUID: e796bd05_fe484163
+Bytes: 22
+I'll remove this line.
+
 369
 Mon Sep 09 15:43:00 2013 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: c74e1982_2589eeb8
 Bytes: 111
 This is quite different from the code we had before and I'm nervous, please provide the relevant specification.
+
+369
+Mon Sep 09 18:18:41 2013 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: c74e1982_2589eeb8
+UUID: e796bd05_fe97e191
+Bytes: 233
+Previous patch has a problem which LoadLinearFixedContext was treated as Transparent object.(Alex Yakavenka commented it) For LoadLinearFixedContext is able to have multiple records. So, we should calculate the number of the records.
 
