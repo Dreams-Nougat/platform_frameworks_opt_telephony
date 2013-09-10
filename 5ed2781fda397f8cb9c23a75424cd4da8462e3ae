@@ -1,0 +1,18 @@
+Revision: 5ed2781fda397f8cb9c23a75424cd4da8462e3ae
+Patch-set: 6
+File: src/java/com/android/internal/telephony/TelephonyCapabilities.java
+
+165
+Tue Sep 10 00:48:02 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 27661513_c7780880
+Bytes: 7
+remove.
+
+172
+Tue Sep 10 00:48:02 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 27661513_67d57c37
+Bytes: 6
+remove
+
