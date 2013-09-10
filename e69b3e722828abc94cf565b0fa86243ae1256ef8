@@ -2,6 +2,14 @@ Revision: e69b3e722828abc94cf565b0fa86243ae1256ef8
 Patch-set: 5
 File: src/java/com/android/internal/telephony/uicc/IccFileHandler.java
 
+351
+Tue Sep 10 19:01:23 2013 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 27529551_be9c210a
+Bytes: 108
+Could we please pick up the processException utility from 
+https://android-review.googlesource.com/#/c/58835
+
 359
 Tue Sep 10 00:40:48 2013 +0000
 Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -38,4 +46,28 @@ UUID: 076bd1dd_5787cc66
 Bytes: 255
 As per TS 51.011, v4.15.0, section 10.6.1.1, the first byte of the EF_IMG file is the number of actual image instances.
 If I'm understanding correctly, the first byte of the EF_IMG file is the number of the EF_IIDF. It is not the number of EF_IMG records.
+
+371
+Tue Sep 10 19:01:23 2013 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 076bd1dd_5787cc66
+UUID: 27529551_1ed42d0a
+Bytes: 124
+Hey Duho, 
+
+False alarm. After further checking the format of the response and the spec, the size calculation looks correct.
+
+373
+Tue Sep 10 19:01:23 2013 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 27529551_3e349107
+Bytes: 192
+Is there a use case for supporting loading of all the records? Currently, loadEFImgLinearFixed() specifies the recordNum and I don't see mLoadAll being set to true anywhere else for Image EFs.
+
+417
+Tue Sep 10 19:01:23 2013 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 27529551_41e3684e
+Bytes: 184
+If we support loading of all records, then it seems this entire case block now is the same as the one for: EVENT_GET_RECORD_SIZE_IMG_DONE? If you agree, could we please get rid of one?
 
