@@ -81,7 +81,7 @@ public class IccCardProxy extends Handler implements IccCard {
     private static final int EVENT_APP_READY = 6;
     private static final int EVENT_RECORDS_LOADED = 7;
     private static final int EVENT_IMSI_READY = 8;
-    private static final int EVENT_NETWORK_LOCKED = 9;
+    private static final int EVENT_PERSO_LOCKED = 9;
     private static final int EVENT_CDMA_SUBSCRIPTION_SOURCE_CHANGED = 11;
 
     private final Object mLock = new Object();
@@ -90,7 +90,7 @@ public class IccCardProxy extends Handler implements IccCard {
 
     private RegistrantList mAbsentRegistrants = new RegistrantList();
     private RegistrantList mPinLockedRegistrants = new RegistrantList();
-    private RegistrantList mNetworkLockedRegistrants = new RegistrantList();
+    private RegistrantList mPersoLockedRegistrants = new RegistrantList();
 
     private int mCurrentAppType = UiccController.APP_FAM_3GPP; //default to 3gpp?
     private UiccController mUiccController = null;
@@ -103,6 +103,7 @@ public class IccCardProxy extends Handler implements IccCard {
                                         // ACTION_SIM_STATE_CHANGED intents
     private boolean mInitialized = false;
     private State mExternalState = State.UNKNOWN;
+    private PersoSubState mPersoSubState = PersoSubState.PERSOSUBSTATE_UNKNOWN;
 
     public IccCardProxy(Context context, CommandsInterface ci) {
         log("Creating");
@@ -231,9 +232,10 @@ public class IccCardProxy extends Handler implements IccCard {
             case EVENT_IMSI_READY:
                 broadcastIccStateChangedIntent(IccCardConstants.INTENT_VALUE_ICC_IMSI, null);
                 break;
-            case EVENT_NETWORK_LOCKED:
-                mNetworkLockedRegistrants.notifyRegistrants();
-                setExternalState(State.NETWORK_LOCKED);
+            case EVENT_PERSO_LOCKED:
+                mPersoSubState = mUiccApplication.getPersoSubState();
+                mPersoLockedRegistrants.notifyRegistrants((AsyncResult)msg.obj);
+                setExternalState(State.PERSO_LOCKED);  
                 break;
             case EVENT_CDMA_SUBSCRIPTION_SOURCE_CHANGED:
                 updateQuietMode();
@@ -299,8 +301,9 @@ public class IccCardProxy extends Handler implements IccCard {
                 setExternalState(State.PUK_REQUIRED);
                 break;
             case APPSTATE_SUBSCRIPTION_PERSO:
-                if (mUiccApplication.getPersoSubState() == PersoSubState.PERSOSUBSTATE_SIM_NETWORK) {
-                    setExternalState(State.NETWORK_LOCKED);
+                if (mUiccApplication.isPersoLocked()) {
+                    mPersoSubState = mUiccApplication.getPersoSubState();
+                    setExternalState(State.PERSO_LOCKED); 
                 } else {
                     setExternalState(State.UNKNOWN);
                 }
@@ -316,7 +319,7 @@ public class IccCardProxy extends Handler implements IccCard {
         if (mUiccApplication != null) {
             mUiccApplication.registerForReady(this, EVENT_APP_READY, null);
             mUiccApplication.registerForLocked(this, EVENT_ICC_LOCKED, null);
-            mUiccApplication.registerForNetworkLocked(this, EVENT_NETWORK_LOCKED, null);
+            mUiccApplication.registerForPersoLocked(this, EVENT_PERSO_LOCKED, null);
         }
         if (mIccRecords != null) {
             mIccRecords.registerForImsiReady(this, EVENT_IMSI_READY, null);
@@ -328,7 +331,7 @@ public class IccCardProxy extends Handler implements IccCard {
         if (mUiccCard != null) mUiccCard.unregisterForAbsent(this);
         if (mUiccApplication != null) mUiccApplication.unregisterForReady(this);
         if (mUiccApplication != null) mUiccApplication.unregisterForLocked(this);
-        if (mUiccApplication != null) mUiccApplication.unregisterForNetworkLocked(this);
+        if (mUiccApplication != null) mUiccApplication.unregisterForPersoLocked(this);
         if (mIccRecords != null) mIccRecords.unregisterForImsiReady(this);
         if (mIccRecords != null) mIccRecords.unregisterForRecordsLoaded(this);
     }
@@ -415,7 +418,7 @@ public class IccCardProxy extends Handler implements IccCard {
             case ABSENT: return IccCardConstants.INTENT_VALUE_ICC_ABSENT;
             case PIN_REQUIRED: return IccCardConstants.INTENT_VALUE_ICC_LOCKED;
             case PUK_REQUIRED: return IccCardConstants.INTENT_VALUE_ICC_LOCKED;
-            case NETWORK_LOCKED: return IccCardConstants.INTENT_VALUE_ICC_LOCKED;
+            case PERSO_LOCKED: return IccCardConstants.INTENT_VALUE_ICC_LOCKED;
             case READY: return IccCardConstants.INTENT_VALUE_ICC_READY;
             case NOT_READY: return IccCardConstants.INTENT_VALUE_ICC_NOT_READY;
             case PERM_DISABLED: return IccCardConstants.INTENT_VALUE_ICC_LOCKED;
@@ -431,7 +434,7 @@ public class IccCardProxy extends Handler implements IccCard {
         switch (state) {
             case PIN_REQUIRED: return IccCardConstants.INTENT_VALUE_LOCKED_ON_PIN;
             case PUK_REQUIRED: return IccCardConstants.INTENT_VALUE_LOCKED_ON_PUK;
-            case NETWORK_LOCKED: return IccCardConstants.INTENT_VALUE_LOCKED_NETWORK;
+            case PERSO_LOCKED: return IccCardConstants.INTENT_VALUE_LOCKED_PERSO;
             case PERM_DISABLED: return IccCardConstants.INTENT_VALUE_ABSENT_ON_PERM_DISABLED;
             default: return null;
        }
@@ -486,25 +489,25 @@ public class IccCardProxy extends Handler implements IccCard {
     }
 
     /**
-     * Notifies handler of any transition into State.NETWORK_LOCKED
+     * Notifies handler of any transition into State.PERSO_LOCKED
      */
     @Override
-    public void registerForNetworkLocked(Handler h, int what, Object obj) {
+    public void registerForPersoLocked(Handler h, int what, Object obj) {
         synchronized (mLock) {
             Registrant r = new Registrant (h, what, obj);
 
-            mNetworkLockedRegistrants.add(r);
+            mPersoLockedRegistrants.add(r);
 
-            if (getState() == State.NETWORK_LOCKED) {
-                r.notifyRegistrant();
+            if (getState() == State.PERSO_LOCKED) {
+                r.notifyRegistrant(new AsyncResult(null, mPersoSubState.ordinal(), null));
             }
         }
     }
 
     @Override
-    public void unregisterForNetworkLocked(Handler h) {
+    public void unregisterForPersoLocked(Handler h) {
         synchronized (mLock) {
-            mNetworkLockedRegistrants.remove(h);
+            mPersoLockedRegistrants.remove(h);
         }
     }
 
@@ -588,10 +591,10 @@ public class IccCardProxy extends Handler implements IccCard {
     }
 
     @Override
-    public void supplyNetworkDepersonalization(String pin, Message onComplete) {
+    public void supplyDepersonalization(String pin, int type, Message onComplete) {
         synchronized (mLock) {
             if (mUiccApplication != null) {
-                mUiccApplication.supplyNetworkDepersonalization(pin, onComplete);
+                mUiccApplication.supplyDepersonalization(pin, type, onComplete);
             } else if (onComplete != null) {
                 Exception e = new RuntimeException("CommandsInterface is not set.");
                 AsyncResult.forMessage(onComplete).exception = e;
@@ -724,10 +727,10 @@ public class IccCardProxy extends Handler implements IccCard {
             pw.println("  mPinLockedRegistrants[" + i + "]="
                     + ((Registrant)mPinLockedRegistrants.get(i)).getHandler());
         }
-        pw.println(" mNetworkLockedRegistrants: size=" + mNetworkLockedRegistrants.size());
-        for (int i = 0; i < mNetworkLockedRegistrants.size(); i++) {
-            pw.println("  mNetworkLockedRegistrants[" + i + "]="
-                    + ((Registrant)mNetworkLockedRegistrants.get(i)).getHandler());
+        pw.println(" mPersoLockedRegistrants: size=" + mPersoLockedRegistrants.size());
+        for (int i = 0; i < mPersoLockedRegistrants.size(); i++) {
+            pw.println("  mPersoLockedRegistrants[" + i + "]="
+                    + ((Registrant)mPersoLockedRegistrants.get(i)).getHandler());
         }
         pw.println(" mCurrentAppType=" + mCurrentAppType);
         pw.println(" mUiccController=" + mUiccController);
