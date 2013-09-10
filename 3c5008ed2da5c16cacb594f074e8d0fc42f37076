@@ -1,0 +1,18 @@
+Revision: 3c5008ed2da5c16cacb594f074e8d0fc42f37076
+Patch-set: 6
+File: src/java/com/android/internal/telephony/uicc/IccFileHandler.java
+
+383
+Tue Sep 10 01:47:00 2013 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 076bd1dd_3796d89a
+Bytes: 40
+EF IMG is a linear fixed file. isn't it?
+
+391
+Tue Sep 10 01:47:00 2013 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 076bd1dd_d79afcbc
+Bytes: 67
+It seems that the changes are supporting only one record of EF_IMG.
+
