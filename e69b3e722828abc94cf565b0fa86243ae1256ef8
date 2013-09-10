@@ -30,3 +30,12 @@ include the first byte I refer to above?
 
 If yes, then, it seems the above calculation would be incorrect.
 
+371
+Tue Sep 10 01:16:44 2013 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 27661513_87253073
+UUID: 076bd1dd_5787cc66
+Bytes: 255
+As per TS 51.011, v4.15.0, section 10.6.1.1, the first byte of the EF_IMG file is the number of actual image instances.
+If I'm understanding correctly, the first byte of the EF_IMG file is the number of the EF_IIDF. It is not the number of EF_IMG records.
+
