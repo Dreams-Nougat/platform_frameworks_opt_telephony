@@ -1,0 +1,32 @@
+Revision: e69b3e722828abc94cf565b0fa86243ae1256ef8
+Patch-set: 5
+File: src/java/com/android/internal/telephony/uicc/IccFileHandler.java
+
+359
+Tue Sep 10 00:40:48 2013 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 27661513_6cd003a0
+Bytes: 74
+Do we need this line? I don't see recordNum being used in this case block.
+
+371
+Tue Sep 10 00:40:48 2013 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 27661513_87253073
+Bytes: 760
+If I understand correctly, it seems like you are trying to read all the records of the EF_IMG file to get all the Image Instance descriptors, instead of the record number specified to loadEFImgLinearFixed() above.
+
+If my understanding is correct, could you please explain why do we need to do this? 
+
+Moreover, could you please check if this logic can be used to accurately determine the number of records?
+
+As per TS 51.011, v4.15.0, section 10.6.1.1, the first byte of the EF_IMG file is the number of actual image instances. 
+
+Does this size:
+size = ((data[RESPONSE_DATA_FILE_SIZE_1] & 0xff) << 8)	368
+			+ (data[RESPONSE_DATA_FILE_SIZE_2] & 0xff);
+
+include the first byte I refer to above? 
+
+If yes, then, it seems the above calculation would be incorrect.
+
