@@ -22,6 +22,7 @@ import com.android.internal.telephony.EventLogTags;
 import com.android.internal.telephony.uicc.RuimRecords;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppState;
 
+import android.content.res.Resources;
 import android.telephony.CellInfo;
 import android.telephony.CellInfoLte;
 import android.telephony.CellSignalStrengthLte;
@@ -503,12 +504,15 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
 
     @Override
     public boolean isConcurrentVoiceAndDataAllowed() {
-        // For non-LTE, look at the CSS indicator to check on Concurrent V & D capability
-        if (mSS.getRilDataRadioTechnology() == ServiceState.RIL_RADIO_TECHNOLOGY_LTE) {
-            return true;
-        } else {
+        // Based on the config, vendor RIL must set the CSS flag after detecting
+        // the modem capabilities (e.g. SV-LTE, 1X-CSFB etc.)
+        if (Resources.getSystem()
+            .getBoolean(com.android.internal.R.bool.config_css_from_ril)) {
             return mSS.getCssIndicator() == 1;
         }
+
+        // By default with LTE, we assume concurrent V & D capability.
+        return mSS.getRilDataRadioTechnology() == ServiceState.RIL_RADIO_TECHNOLOGY_LTE;
     }
 
     /**
