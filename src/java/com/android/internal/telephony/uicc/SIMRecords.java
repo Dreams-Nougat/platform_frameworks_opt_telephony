@@ -1576,19 +1576,25 @@ public class SIMRecords extends IccRecords {
 
                     if (DBG) log("Load EF_SPN: " + mSpn
                             + " spnDisplayCondition: " + mSpnDisplayCondition);
-                    SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
 
-                    mSpnState = GetSpnFsmState.IDLE;
+                    // Take EF_SPN for SPN display if have
+                    if (mSpn.length() > 0) {
+                        SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
+                        mSpnState = GetSpnFsmState.IDLE;
+                    }
                 } else {
+                    // See TS 51.011 10.3.11. Basically, default to
+                    // show PLMN always, and SPN also if roaming.
+                    mSpnDisplayCondition = -1;
+                }
+
+                if (mSpnState != GetSpnFsmState.IDLE) {
+                    // No SPN returned or read a zero-length SPN name, try SPN_CPHS next
                     mFh.loadEFTransparent( EF_SPN_CPHS,
                             obtainMessage(EVENT_GET_SPN_DONE));
                     mRecordsToLoad++;
 
                     mSpnState = GetSpnFsmState.READ_SPN_CPHS;
-
-                    // See TS 51.011 10.3.11.  Basically, default to
-                    // show PLMN always, and SPN also if roaming.
-                    mSpnDisplayCondition = -1;
                 }
                 break;
             case READ_SPN_CPHS:
@@ -1597,10 +1603,23 @@ public class SIMRecords extends IccRecords {
                     mSpn = IccUtils.adnStringFieldToString(data, 0, data.length);
 
                     if (DBG) log("Load EF_SPN_CPHS: " + mSpn);
-                    SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
 
-                    mSpnState = GetSpnFsmState.IDLE;
-                } else {
+                    // Take SPN_CPHS for SPN display if have
+                    if (mSpn.length() > 0) {
+                        // If spnDisplayCondition was already set in READ_SPN_3GPP
+                        // with a zero-length SPN, then respect it, otherwise set it here
+                        // so that SPN is shown only on matching PLMN
+                        if (mSpnDisplayCondition == -1) {
+                            mSpnDisplayCondition = 0x02;
+                        }
+
+                        SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
+                        mSpnState = GetSpnFsmState.IDLE;
+                    }
+                }
+
+                if (mSpnState != GetSpnFsmState.IDLE) {
+                    // No SPN_CPHS or zero-length, try SPN_SHORT_CPHS next
                     mFh.loadEFTransparent(
                             EF_SPN_SHORT_CPHS, obtainMessage(EVENT_GET_SPN_DONE));
                     mRecordsToLoad++;
@@ -1614,8 +1633,20 @@ public class SIMRecords extends IccRecords {
                     mSpn = IccUtils.adnStringFieldToString(data, 0, data.length);
 
                     if (DBG) log("Load EF_SPN_SHORT_CPHS: " + mSpn);
-                    SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
-                }else {
+
+                    // Take SPN_SHORT_CPHS for SPN display if have
+                    if (mSpn.length() > 0) {
+                        // If spnDisplayCondition was already set in READ_SPN_3GPP
+                        // with a zero-length SPN, then respect it, otherwise set it here
+                        // so that SPN is shown only on matching PLMN
+                        if (mSpnDisplayCondition == -1) {
+                            mSpnDisplayCondition = 0x02;
+                        }
+
+                        SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
+                    }
+                }
+                if(mSpn == null) {
                     if (DBG) log("No SPN loaded in either CHPS or 3GPP");
                 }
 
