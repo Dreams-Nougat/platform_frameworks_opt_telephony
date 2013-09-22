@@ -40,3 +40,11 @@ done.
 
 And it seems SipPhone has own functions
 
+821
+Sun Sep 22 23:17:51 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 92f9c100_9b98cb62
+UUID: a44cc3b3_5fd06f9d
+Bytes: 36
+It doesn't need to change Sip Phone.
+
