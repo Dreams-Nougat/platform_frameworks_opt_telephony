@@ -105,7 +105,7 @@ public class CdmaSMSDispatcher extends SMSDispatcher {
                 scAddr, destAddr, destPort, data, (deliveryIntent != null));
         HashMap map = getSmsTrackerMap(destAddr, scAddr, destPort, data, pdu);
         SmsTracker tracker = getSmsTracker(map, sentIntent, deliveryIntent,
-                getFormat());
+                getFormat(), false);
         sendSubmitPdu(tracker);
     }
 
@@ -117,7 +117,7 @@ public class CdmaSMSDispatcher extends SMSDispatcher {
                 scAddr, destAddr, text, (deliveryIntent != null), null);
         HashMap map = getSmsTrackerMap(destAddr, scAddr, text, pdu);
         SmsTracker tracker = getSmsTracker(map, sentIntent,
-                deliveryIntent, getFormat());
+                deliveryIntent, getFormat(), false);
         sendSubmitPdu(tracker);
     }
 
@@ -153,7 +153,7 @@ public class CdmaSMSDispatcher extends SMSDispatcher {
         HashMap map = getSmsTrackerMap(destinationAddress, scAddress,
                 message, submitPdu);
         SmsTracker tracker = getSmsTracker(map, sentIntent,
-                deliveryIntent, getFormat());
+                deliveryIntent, getFormat(), false);
         sendSubmitPdu(tracker);
     }
 
