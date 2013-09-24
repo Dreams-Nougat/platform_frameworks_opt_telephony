@@ -243,7 +243,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                 scAddr, destAddr, destPort, data, (deliveryIntent != null));
         if (pdu != null) {
             sendRawPdu(pdu.encodedScAddress, pdu.encodedMessage, sentIntent, deliveryIntent,
-                    destAddr);
+                    destAddr, false);
         } else {
             Rlog.e(TAG, "GsmSMSDispatcher.sendData(): getSubmitPdu() returned null");
         }
@@ -257,7 +257,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                 scAddr, destAddr, text, (deliveryIntent != null));
         if (pdu != null) {
             sendRawPdu(pdu.encodedScAddress, pdu.encodedMessage, sentIntent, deliveryIntent,
-                    destAddr);
+                    destAddr, false);
         } else {
             Rlog.e(TAG, "GsmSMSDispatcher.sendText(): getSubmitPdu() returned null");
         }
@@ -280,7 +280,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                 encoding, smsHeader.languageTable, smsHeader.languageShiftTable);
         if (pdu != null) {
             sendRawPdu(pdu.encodedScAddress, pdu.encodedMessage, sentIntent, deliveryIntent,
-                    destinationAddress);
+                    destinationAddress, !lastPart);
         } else {
             Rlog.e(TAG, "GsmSMSDispatcher.sendNewSubmitPdu(): getSubmitPdu() returned null");
         }
@@ -310,7 +310,13 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                 pdu[1] = (byte) tracker.mMessageRef; // TP-MR
             }
         }
-        mCi.sendSMS(IccUtils.bytesToHexString(smsc), IccUtils.bytesToHexString(pdu), reply);
+        // No link control for retry messages because no knowledge of message count
+        if (tracker.mRetryCount == 0 && tracker.mIsLastPart) {
+            mCi.sendSMSExpectMore(IccUtils.bytesToHexString(smsc), IccUtils.bytesToHexString(pdu),
+                    reply);
+        } else {
+            mCi.sendSMS(IccUtils.bytesToHexString(smsc), IccUtils.bytesToHexString(pdu), reply);
+        }
     }
 
     /** {@inheritDoc} */

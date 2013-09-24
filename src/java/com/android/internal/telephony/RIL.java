@@ -1200,6 +1200,21 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
     @Override
     public void
+    sendSMSExpectMore (String smscPDU, String pdu, Message result) {
+        RILRequest rr
+                = RILRequest.obtain(RIL_REQUEST_SEND_SMS, result);
+
+        rr.mParcel.writeInt(2);
+        rr.mParcel.writeString(smscPDU);
+        rr.mParcel.writeString(pdu);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+
+        send(rr);
+    }
+
+    @Override
+    public void
     sendCdmaSms(byte[] pdu, Message result) {
         int address_nbr_of_digits;
         int subaddr_nbr_of_digits;

@@ -346,7 +346,8 @@ final class CdmaSMSDispatcher extends SMSDispatcher {
             }
             return;
         }
-        sendRawPdu(pdu.encodedScAddress, pdu.encodedMessage, sentIntent, deliveryIntent, destAddr);
+        sendRawPdu(pdu.encodedScAddress, pdu.encodedMessage, sentIntent, deliveryIntent, destAddr,
+                false);
     }
 
     /** {@inheritDoc} */

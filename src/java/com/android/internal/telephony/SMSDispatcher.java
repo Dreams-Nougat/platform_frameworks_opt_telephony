@@ -934,7 +934,7 @@ public abstract class SMSDispatcher extends Handler {
      * @param destAddr the destination phone number (for short code confirmation)
      */
     protected void sendRawPdu(byte[] smsc, byte[] pdu, PendingIntent sentIntent,
-            PendingIntent deliveryIntent, String destAddr) {
+            PendingIntent deliveryIntent, String destAddr, boolean isLastPart) {
         if (mSmsSendDisabled) {
             if (sentIntent != null) {
                 try {
@@ -995,7 +995,7 @@ public abstract class SMSDispatcher extends Handler {
         // Strip non-digits from destination phone number before checking for short codes
         // and before displaying the number to the user if confirmation is required.
         SmsTracker tracker = new SmsTracker(map, sentIntent, deliveryIntent, appInfo,
-                PhoneNumberUtils.extractNetworkPortion(destAddr));
+                PhoneNumberUtils.extractNetworkPortion(destAddr), isLastPart);
 
         // checkDestination() returns true if the destination is not a premium short code or the
         // sending app is approved to send to short codes. Otherwise, a message is sent to our
@@ -1318,6 +1318,7 @@ public abstract class SMSDispatcher extends Handler {
         public final HashMap<String, Object> mData;
         public int mRetryCount;
         public int mMessageRef;
+        public boolean mIsLastPart;
 
         public final PendingIntent mSentIntent;
         public final PendingIntent mDeliveryIntent;
@@ -1326,13 +1327,15 @@ public abstract class SMSDispatcher extends Handler {
         public final String mDestAddress;
 
         public SmsTracker(HashMap<String, Object> data, PendingIntent sentIntent,
-                PendingIntent deliveryIntent, PackageInfo appInfo, String destAddr) {
+                PendingIntent deliveryIntent, PackageInfo appInfo, String destAddr,
+                boolean isLastPart) {
             mData = data;
             mSentIntent = sentIntent;
             mDeliveryIntent = deliveryIntent;
             mRetryCount = 0;
             mAppInfo = appInfo;
             mDestAddress = destAddr;
+            mIsLastPart = isLastPart;
         }
 
         /**
