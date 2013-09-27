@@ -17,6 +17,8 @@
 package com.android.internal.telephony.gsm;
 
 import android.content.Context;
+import android.content.res.Resources;
+import android.content.res.Resources.NotFoundException;
 import com.android.internal.telephony.*;
 import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.UiccCardApplication;
@@ -361,6 +363,16 @@ public final class GsmMmiCode extends Handler implements MmiCode {
 
     static boolean
     isServiceCodeCallBarring(String sc) {
+        Resources resource = Resources.getSystem();
+        try {
+            if (resource.getBoolean(
+                    com.android.internal.R.bool.config_redirectCallBarringMMI)) {
+                Rlog.d(LOG_TAG, "redirect Call Barring MMI");
+                return false;
+            }
+        } catch (NotFoundException e) {
+            Rlog.d(LOG_TAG, "can not found config_redirectCallBarringMMI");
+        }
         return sc != null &&
                 (sc.equals(SC_BAOC)
                 || sc.equals(SC_BAOIC)
