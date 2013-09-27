@@ -1,0 +1,11 @@
+Revision: 1e004f3f798989d4d4d1207a5a19b3f46ba34020
+Patch-set: 1
+File: src/java/com/android/internal/telephony/cat/CatCmdMessage.java
+
+123
+Fri Sep 27 17:23:41 2013 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 44214730_f9ac5736
+Bytes: 98
+Need to move setup_event_list handling into its own block. Not to be combined with PLI and Refresh
+
