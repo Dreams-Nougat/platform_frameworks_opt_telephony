@@ -20,10 +20,12 @@ import android.Manifest;
 import android.app.AppOpsManager;
 import android.app.PendingIntent;
 import android.content.Context;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.AsyncResult;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.Message;
+import android.os.UserHandle;
 import android.telephony.Rlog;
 import android.util.Log;
 
@@ -165,8 +167,11 @@ public abstract class IccSmsInterfaceManager extends ISms.Stub {
                 " status=" + status + " ==> " +
                 "("+ Arrays.toString(pdu) + ")");
         enforceReceiveAndSend("Updating message on Icc");
-        if (mAppOps.noteOp(AppOpsManager.OP_WRITE_ICC_SMS, Binder.getCallingUid(),
-                callingPackage) != AppOpsManager.MODE_ALLOWED) {
+        //Removing the appsops check for Mms app now to fix SMS read/write permission
+        //issue from SMSProvider.
+        if (!isMmsUid(Binder.getCallingUid()) &&
+                (mAppOps.noteOp(AppOpsManager.OP_WRITE_ICC_SMS, Binder.getCallingUid(),
+                callingPackage) != AppOpsManager.MODE_ALLOWED)) {
             return false;
         }
         synchronized(mLock) {
@@ -248,8 +253,11 @@ public abstract class IccSmsInterfaceManager extends ISms.Stub {
         mContext.enforceCallingPermission(
                 Manifest.permission.RECEIVE_SMS,
                 "Reading messages from Icc");
-        if (mAppOps.noteOp(AppOpsManager.OP_READ_ICC_SMS, Binder.getCallingUid(),
-                callingPackage) != AppOpsManager.MODE_ALLOWED) {
+        //Removing the appsops check for MMS app now to fix SMS read/write permission
+        //issue from SMSProvider.
+        if (!isMmsUid(Binder.getCallingUid()) &&
+                (mAppOps.noteOp(AppOpsManager.OP_READ_ICC_SMS, Binder.getCallingUid(),
+                callingPackage) != AppOpsManager.MODE_ALLOWED)) {
             return new ArrayList<SmsRawData>();
         }
         synchronized(mLock) {
@@ -463,6 +471,17 @@ public abstract class IccSmsInterfaceManager extends ISms.Stub {
         }
 
         return data;
+    }
+
+    private boolean isMmsUid(int uid) {
+        final String MMS_PKG = "com.android.mms";
+        int mmsUid = -1;
+        try {
+            mmsUid = mContext.getPackageManager().getPackageUid(MMS_PKG,
+                    UserHandle.getUserId(uid));
+        } catch (NameNotFoundException ex) {
+        }
+        return (mmsUid == uid);
     }
 
     protected abstract void deleteSms(int index, Message response);
