@@ -42,7 +42,9 @@ import com.android.internal.telephony.SmsMessageBase;
 import com.android.internal.telephony.SmsStorageMonitor;
 import com.android.internal.telephony.SmsUsageMonitor;
 import com.android.internal.telephony.TelephonyProperties;
+import com.android.internal.telephony.uicc.IccConstants;
 import com.android.internal.telephony.uicc.IccUtils;
+import com.android.internal.telephony.uicc.SIMRecords;
 import com.android.internal.telephony.uicc.UsimServiceTable;
 
 import java.util.HashMap;
@@ -71,6 +73,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
         mCi.setOnNewGsmSms(this, EVENT_NEW_SMS, null);
         mCi.setOnSmsStatus(this, EVENT_NEW_SMS_STATUS_REPORT, null);
         mCi.setOnNewGsmBroadcastSms(this, EVENT_NEW_BROADCAST_SMS, null);
+        mCi.setOnSmsOnSim(this, EVENT_SMS_ON_ICC, null);
     }
 
     @Override
@@ -78,6 +81,10 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
         mCi.unSetOnNewGsmSms(this);
         mCi.unSetOnSmsStatus(this);
         mCi.unSetOnNewGsmBroadcastSms(this);
+        mCi.unSetOnSmsOnSim(this);
+        if (mIccRecords.get() != null) {
+            mIccRecords.get().unregisterForNewSms(this);
+        }
     }
 
     @Override
@@ -111,6 +118,11 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
                 Rlog.d(TAG, "Failed to write SMS-PP message to UICC", ar.exception);
                 mCi.acknowledgeLastIncomingGsmSms(false,
                         CommandsInterface.GSM_SMS_FAIL_CAUSE_UNSPECIFIED_ERROR, null);
+            }
+            break;
+        case EVENT_SMS_ON_ICC:
+            if (mIccRecords.get() != null) {
+                ((SIMRecords)(mIccRecords.get())).handleSmsOnIcc((AsyncResult) msg.obj);
             }
             break;
 

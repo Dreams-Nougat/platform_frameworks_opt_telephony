@@ -145,6 +145,9 @@ public abstract class SMSDispatcher extends Handler {
     /** Confirmation required for third-party apps sending to an SMS short code. */
     private static final int EVENT_CONFIRM_SEND_TO_PREMIUM_SHORT_CODE = 9;
 
+    /** Class2 SMS  */
+    static final protected int EVENT_SMS_ON_ICC = 10;
+
     protected final Phone mPhone;
     protected final Context mContext;
     protected final ContentResolver mResolver;
