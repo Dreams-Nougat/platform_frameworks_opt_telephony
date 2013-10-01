@@ -1,0 +1,11 @@
+Revision: aa1dccf46c6385efaf29f03d0a6a9db419d118b7
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/RuimRecords.java
+
+214
+Tue Oct 01 13:09:32 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: e425db90_890a5d35
+Bytes: 72
+How about renaming this, instead as I recall there are only a few users?
+
