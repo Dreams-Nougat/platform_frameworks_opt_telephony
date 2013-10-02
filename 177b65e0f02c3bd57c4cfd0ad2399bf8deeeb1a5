@@ -11,3 +11,12 @@ it seems more general purpose to turn the list of call barring codes into a reso
 
 Is there any potential for different carriers supporting different call-bar strings?
 
+368
+Wed Oct 02 23:57:37 2013 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 21660513_1ee16d15
+UUID: 21660513_127ddc6d
+Bytes: 200
+Thanks for your review.
+I requested whether the other call barring codes are used and the indonesian team confirmed that they are not used at all. But I agree. I will change the codes as your mention.
+
