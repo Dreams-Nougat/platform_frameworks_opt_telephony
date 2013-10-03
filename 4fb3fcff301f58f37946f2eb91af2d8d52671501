@@ -1,0 +1,11 @@
+Revision: 4fb3fcff301f58f37946f2eb91af2d8d52671501
+Patch-set: 3
+File: src/java/com/android/internal/telephony/cdma/SmsMessage.java
+
+714
+Thu Oct 03 19:32:58 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 21660513_f5136fac
+Bytes: 83
+How do we know there isn't a "+" already present, should we test for a leading "+"?
+
