@@ -1,0 +1,50 @@
+Revision: 4d2297bfcb4256feb1d8fe2a5f3ed5be4af363ff
+Patch-set: 1
+File: /COMMIT_MSG
+
+9
+Thu Oct 03 15:29:12 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: c1aa8952_ae97dbce
+Bytes: 47
+Need more reason than this to make this change.
+
+File: src/java/com/android/internal/telephony/dataconnection/DataConnection.java
+
+148
+Thu Oct 03 15:29:12 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 21660513_dfbe8cc0
+Bytes: 12
+mDataProfile
+
+File: src/java/com/android/internal/telephony/dataconnection/DataProfile.java
+
+21
+Thu Oct 03 15:29:12 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 819df127_074919e0
+Bytes: 19
+Describe this class
+
+43
+Thu Oct 03 15:29:12 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: c1aa8952_2e8c4bc9
+Bytes: 25
+Android frowns upon enum.
+
+46
+Thu Oct 03 15:29:12 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 21660513_ff927051
+Bytes: 33
+Comment for each and what is OMH.
+
+59
+Thu Oct 03 15:29:12 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 21660513_5faefc8f
+Bytes: 7
+Unused?
+
