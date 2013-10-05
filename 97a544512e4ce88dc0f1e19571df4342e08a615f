@@ -19,3 +19,12 @@ if (sc != null) {
 }
 return false;
 
+365
+Sat Oct 05 02:04:16 2013 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 81625122_1696da39
+UUID: 01dae132_bf4a775a
+Bytes: 78
+I just did not want to touch the well working codes.
+I see. I'll update again.
+
