@@ -211,8 +211,8 @@ public class DcAsyncChannel extends AsyncChannel {
      * @param response Message
      * @return ApnSetting, maybe null
      */
-    public ApnSetting rspApnSetting(Message response) {
-        ApnSetting retVal = (ApnSetting) response.obj;
+    public DataProfile rspApnSetting(Message response) {
+        DataProfile retVal = (DataProfile) response.obj;
         if (DBG) log("rspApnSetting=" + retVal);
         return retVal;
     }
