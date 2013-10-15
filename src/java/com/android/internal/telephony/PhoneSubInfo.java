@@ -17,13 +17,16 @@ package com.android.internal.telephony;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.List;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Binder;
+import android.telephony.ApnSettings;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.Rlog;
 
+import com.android.internal.telephony.ApnUtils;
 import com.android.internal.telephony.uicc.IsimRecords;
 
 public class PhoneSubInfo extends IPhoneSubInfo.Stub {
@@ -40,6 +43,8 @@ public class PhoneSubInfo extends IPhoneSubInfo.Stub {
         android.Manifest.permission.CALL_PRIVILEGED;
     private static final String READ_PRIVILEGED_PHONE_STATE =
         android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE;
+    private static final String READ_APN_SETTINGS  =
+        android.Manifest.permission.READ_APN_SETTINGS;
 
     public PhoneSubInfo(Phone phone) {
         mPhone = phone;
@@ -212,6 +217,28 @@ public class PhoneSubInfo extends IPhoneSubInfo.Stub {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Returns the ApnSettings for specific mcc and mnc
+     * @return a List of ApnSettings specified by mcc and mcn
+     */
+    @Override
+    public List<ApnSettings> getApns(String mcc, String mnc) {
+        mContext.enforceCallingOrSelfPermission(READ_APN_SETTINGS,
+                "Requires READ_APN_SETTINGS");
+        return ApnUtils.getApns(mContext, mcc, mnc);
+    }
+
+    /**
+     * Returns the ApnSettings for specific type of usage
+     * @return a List of ApnSettings specified by type
+     */
+    @Override
+    public List<ApnSettings> getApnsForType(String type) {
+        mContext.enforceCallingOrSelfPermission(READ_APN_SETTINGS,
+                "Requires READ_APN_SETTINGS");
+        return ApnUtils.getApnsForType(mContext, type);
     }
 
     private void log(String s) {
