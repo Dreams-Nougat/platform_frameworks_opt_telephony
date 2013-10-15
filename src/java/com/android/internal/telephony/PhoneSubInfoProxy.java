@@ -18,9 +18,10 @@ package com.android.internal.telephony;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.List;
 
 import android.os.ServiceManager;
-
+import android.telephony.ApnSettings;
 
 public class PhoneSubInfoProxy extends IPhoneSubInfo.Stub {
     private PhoneSubInfo mPhoneSubInfo;
@@ -143,6 +144,24 @@ public class PhoneSubInfoProxy extends IPhoneSubInfo.Stub {
     @Override
     public String[] getIsimImpu() {
         return mPhoneSubInfo.getIsimImpu();
+    }
+
+    /**
+     * Returns the ApnSettings for specific mcc and mnc
+     * @return a List of ApnSettings specified by mcc and mcn
+     */
+    @Override
+    public List<ApnSettings> getApns(String mcc, String mnc) {
+        return mPhoneSubInfo.getApns(mcc, mnc);
+    }
+
+    /**
+     * Returns the ApnSettings for specific type of usage
+     * @return a List of ApnSettings specified by type
+     */
+    @Override
+    public List<ApnSettings> getApnsForType(String type) {
+        return mPhoneSubInfo.getApnsForType(type);
     }
 
     @Override
