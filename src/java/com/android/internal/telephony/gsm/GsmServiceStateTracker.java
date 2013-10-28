@@ -16,7 +16,6 @@
 
 package com.android.internal.telephony.gsm;
 
-import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -127,10 +126,6 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
 
     /** Boolean is true is setTimeFromNITZString was called */
     private boolean mNitzUpdatedTime = false;
-
-    String mSavedTimeZone;
-    long mSavedTime;
-    long mSavedAtTime;
 
     /** Started the recheck process after finding gprs should registered but not. */
     private boolean mStartedGprsRegCheck = false;
@@ -1593,67 +1588,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         mSavedAtTime = SystemClock.elapsedRealtime();
     }
 
-    /**
-     * Set the timezone and send out a sticky broadcast so the system can
-     * determine if the timezone was set by the carrier.
-     *
-     * @param zoneId timezone set by carrier
-     */
-    private void setAndBroadcastNetworkSetTimeZone(String zoneId) {
-        if (DBG) log("setAndBroadcastNetworkSetTimeZone: setTimeZone=" + zoneId);
-        AlarmManager alarm =
-            (AlarmManager) mPhone.getContext().getSystemService(Context.ALARM_SERVICE);
-        alarm.setTimeZone(zoneId);
-        Intent intent = new Intent(TelephonyIntents.ACTION_NETWORK_SET_TIMEZONE);
-        intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
-        intent.putExtra("time-zone", zoneId);
-        mPhone.getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
-        if (DBG) {
-            log("setAndBroadcastNetworkSetTimeZone: call alarm.setTimeZone and broadcast zoneId=" +
-                zoneId);
-        }
-    }
 
-    /**
-     * Set the time and Send out a sticky broadcast so the system can determine
-     * if the time was set by the carrier.
-     *
-     * @param time time set by network
-     */
-    private void setAndBroadcastNetworkSetTime(long time) {
-        if (DBG) log("setAndBroadcastNetworkSetTime: time=" + time + "ms");
-        SystemClock.setCurrentTimeMillis(time);
-        Intent intent = new Intent(TelephonyIntents.ACTION_NETWORK_SET_TIME);
-        intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
-        intent.putExtra("time", time);
-        mPhone.getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
-    }
 
-    private void revertToNitzTime() {
-        if (Settings.Global.getInt(mPhone.getContext().getContentResolver(),
-                Settings.Global.AUTO_TIME, 0) == 0) {
-            return;
-        }
-        if (DBG) {
-            log("Reverting to NITZ Time: mSavedTime=" + mSavedTime
-                + " mSavedAtTime=" + mSavedAtTime);
-        }
-        if (mSavedTime != 0 && mSavedAtTime != 0) {
-            setAndBroadcastNetworkSetTime(mSavedTime
-                    + (SystemClock.elapsedRealtime() - mSavedAtTime));
-        }
-    }
-
-    private void revertToNitzTimeZone() {
-        if (Settings.Global.getInt(mPhone.getContext().getContentResolver(),
-                Settings.Global.AUTO_TIME_ZONE, 0) == 0) {
-            return;
-        }
-        if (DBG) log("Reverting to NITZ TimeZone: tz='" + mSavedTimeZone);
-        if (mSavedTimeZone != null) {
-            setAndBroadcastNetworkSetTimeZone(mSavedTimeZone);
-        }
-    }
 
     /**
      * Post a notification to NotificationManager for restricted state

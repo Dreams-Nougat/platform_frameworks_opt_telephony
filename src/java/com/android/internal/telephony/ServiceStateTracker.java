@@ -16,6 +16,8 @@
 
 package com.android.internal.telephony;
 
+import android.app.AlarmManager;
+import android.content.Intent;
 import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
@@ -55,6 +57,10 @@ public abstract class ServiceStateTracker extends Handler {
     protected PhoneBase mPhoneBase;
 
     protected boolean mVoiceCapable;
+
+    protected String mSavedTimeZone;
+    protected long mSavedTime;
+    protected long mSavedAtTime;
 
     public ServiceState mSS = new ServiceState();
     protected ServiceState mNewSS = new ServiceState();
@@ -753,5 +759,67 @@ public abstract class ServiceStateTracker extends Handler {
         boolean value = Thread.currentThread() != getLooper().getThread();
         if (VDBG) log("isCallerOnDifferentThread: " + value);
         return value;
+    }
+
+    /**
+     * Set the time and Send out a sticky broadcast so the system can determine
+     * if the time was set by the carrier.
+     *
+     * @param time time set by network
+     */
+    protected void setAndBroadcastNetworkSetTime(long time) {
+        if (DBG) log("setAndBroadcastNetworkSetTime: time=" + time + "ms");
+        SystemClock.setCurrentTimeMillis(time);
+        Intent intent = new Intent(TelephonyIntents.ACTION_NETWORK_SET_TIME);
+        intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
+        intent.putExtra("time", time);
+        getPhone().getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
+    }
+
+    /**
+     * Set the timezone and send out a sticky broadcast so the system can
+     * determine if the timezone was set by the carrier.
+     *
+     * @param zoneId timezone set by carrier
+     */
+    protected void setAndBroadcastNetworkSetTimeZone(String zoneId) {
+        if (DBG) log("setAndBroadcastNetworkSetTimeZone: setTimeZone=" + zoneId);
+        AlarmManager alarm =
+            (AlarmManager) mPhone.getContext().getSystemService(Context.ALARM_SERVICE);
+        alarm.setTimeZone(zoneId);
+        Intent intent = new Intent(TelephonyIntents.ACTION_NETWORK_SET_TIMEZONE);
+        intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
+        intent.putExtra("time-zone", zoneId);
+        getPhone().getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
+        if (DBG) {
+            log("setAndBroadcastNetworkSetTimeZone: call alarm.setTimeZone and broadcast zoneId=" +
+                zoneId);
+        }
+    }
+
+    protected void revertToNitzTime() {
+        if (Settings.Global.getInt(getPhone().getContext().getContentResolver(),
+                Settings.Global.AUTO_TIME, 0) == 0) {
+            return;
+        }
+        if (DBG) {
+            log("Reverting to NITZ Time: mSavedTime=" + mSavedTime
+                + " mSavedAtTime=" + mSavedAtTime);
+        }
+        if (mSavedTime != 0 && mSavedAtTime != 0) {
+            setAndBroadcastNetworkSetTime(mSavedTime
+                    + (SystemClock.elapsedRealtime() - mSavedAtTime));
+        }
+    }
+
+    protected void revertToNitzTimeZone() {
+        if (Settings.Global.getInt(mPhone.getContext().getContentResolver(),
+                Settings.Global.AUTO_TIME_ZONE, 0) == 0) {
+            return;
+        }
+        if (DBG) log("Reverting to NITZ TimeZone: tz=" + mSavedTimeZone);
+        if (mSavedTimeZone != null) {
+            setAndBroadcastNetworkSetTimeZone(mSavedTimeZone);
+        }
     }
 }

@@ -16,7 +16,6 @@
 
 package com.android.internal.telephony.cdma;
 
-import android.app.AlarmManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -113,9 +112,6 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
     private boolean mZoneDst;
     private long mZoneTime;
     protected boolean mGotCountryCode = false;
-    String mSavedTimeZone;
-    long mSavedTime;
-    long mSavedAtTime;
 
     /** Wake lock used while setting time of day. */
     private PowerManager.WakeLock mWakeLock;
@@ -1493,61 +1489,6 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
         mSavedTimeZone = zoneId;
     }
 
-    /**
-     * Set the timezone and send out a sticky broadcast so the system can
-     * determine if the timezone was set by the carrier.
-     *
-     * @param zoneId timezone set by carrier
-     */
-    private void setAndBroadcastNetworkSetTimeZone(String zoneId) {
-        if (DBG) log("setAndBroadcastNetworkSetTimeZone: setTimeZone=" + zoneId);
-        AlarmManager alarm =
-            (AlarmManager) mPhone.getContext().getSystemService(Context.ALARM_SERVICE);
-        alarm.setTimeZone(zoneId);
-        Intent intent = new Intent(TelephonyIntents.ACTION_NETWORK_SET_TIMEZONE);
-        intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
-        intent.putExtra("time-zone", zoneId);
-        mPhone.getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
-    }
-
-    /**
-     * Set the time and Send out a sticky broadcast so the system can determine
-     * if the time was set by the carrier.
-     *
-     * @param time time set by network
-     */
-    private void setAndBroadcastNetworkSetTime(long time) {
-        if (DBG) log("setAndBroadcastNetworkSetTime: time=" + time + "ms");
-        SystemClock.setCurrentTimeMillis(time);
-        Intent intent = new Intent(TelephonyIntents.ACTION_NETWORK_SET_TIME);
-        intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
-        intent.putExtra("time", time);
-        mPhone.getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
-    }
-
-    private void revertToNitzTime() {
-        if (Settings.Global.getInt(mCr, Settings.Global.AUTO_TIME, 0) == 0) {
-            return;
-        }
-        if (DBG) {
-            log("revertToNitzTime: mSavedTime=" + mSavedTime + " mSavedAtTime=" + mSavedAtTime);
-        }
-        if (mSavedTime != 0 && mSavedAtTime != 0) {
-            setAndBroadcastNetworkSetTime(mSavedTime
-                    + (SystemClock.elapsedRealtime() - mSavedAtTime));
-        }
-    }
-
-    private void revertToNitzTimeZone() {
-        if (Settings.Global.getInt(mPhone.getContext().getContentResolver(),
-                Settings.Global.AUTO_TIME_ZONE, 0) == 0) {
-            return;
-        }
-        if (DBG) log("revertToNitzTimeZone: tz='" + mSavedTimeZone);
-        if (mSavedTimeZone != null) {
-            setAndBroadcastNetworkSetTimeZone(mSavedTimeZone);
-        }
-    }
 
     protected boolean isSidsAllZeros() {
         if (mHomeSystemId != null) {
@@ -1629,7 +1570,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
     int getOtasp() {
         int provisioningState;
         if (mMin == null || (mMin.length() < 6)) {
-            if (DBG) log("getOtasp: bad mMin='" + mMin + "'");
+            if (DBG) log("getOtasp: bad mMin=" + mMin);
             provisioningState = OTASP_UNKNOWN;
         } else {
             if ((mMin.equals(UNACTIVATED_MIN_VALUE)
