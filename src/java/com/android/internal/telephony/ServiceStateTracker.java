@@ -16,6 +16,8 @@
 
 package com.android.internal.telephony;
 
+import android.app.AlarmManager;
+import android.content.Intent;
 import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
@@ -55,6 +57,22 @@ public abstract class ServiceStateTracker extends Handler {
     protected PhoneBase mPhoneBase;
 
     protected boolean mVoiceCapable;
+
+    protected String mSavedTimeZone;
+    protected long mSavedTime;
+    protected long mSavedAtTime;
+    /**
+     * Sometimes we get the NITZ time before we know what country we
+     * are in. Keep the time zone information from the NITZ string so
+     * we can fix the time zone once know the country.
+     */
+    private boolean mNeedFixZone = false;
+    private int mZoneOffset;
+    private boolean mZoneDst;
+    private long mZoneTime;
+    private boolean mGotCountryCode = false;
+    /** Boolean is true is setTimeFromNITZString was called */
+    private boolean mNitzUpdatedTime = false;
 
     public ServiceState mSS = new ServiceState();
     protected ServiceState mNewSS = new ServiceState();
@@ -753,5 +771,312 @@ public abstract class ServiceStateTracker extends Handler {
         boolean value = Thread.currentThread() != getLooper().getThread();
         if (VDBG) log("isCallerOnDifferentThread: " + value);
         return value;
+    }
+
+    protected boolean getAutoTime() {
+        try {
+            return Settings.Global.getInt(getPhone().getContext().getContentResolver(),
+                    Settings.Global.AUTO_TIME) > 0;
+        } catch (SettingNotFoundException snfe) {
+            return true;
+        }
+    }
+
+    protected boolean getAutoTimeZone() {
+        try {
+            return Settings.Global.getInt(getPhone().getContext().getContentResolver(),
+                    Settings.Global.AUTO_TIME_ZONE) > 0;
+        } catch (SettingNotFoundException snfe) {
+            return true;
+        }
+    }
+
+    protected void saveNitzTimeZone(String zoneId) {
+        mSavedTimeZone = zoneId;
+    }
+
+    protected TimeZone findTimeZone(int offset, boolean dst, long when) {
+        int rawOffset = offset;
+        if (dst) {
+            rawOffset -= 3600000;
+        }
+        String[] zones = TimeZone.getAvailableIDs(rawOffset);
+        TimeZone guess = null;
+        Date d = new Date(when);
+        for (String zone : zones) {
+            TimeZone tz = TimeZone.getTimeZone(zone);
+            if (tz.getOffset(when) == offset &&
+                tz.inDaylightTime(d) == dst) {
+                guess = tz;
+                break;
+            }
+        }
+
+        return guess;
+    }
+
+    /**
+     * Returns a TimeZone object based only on parameters from the NITZ string.
+     */
+    protected TimeZone getNitzTimeZone(int offset, boolean dst, long when) {
+        TimeZone guess = findTimeZone(offset, dst, when);
+        if (guess == null) {
+            // Couldn't find a proper timezone.  Perhaps the DST data is wrong.
+            guess = findTimeZone(offset, !dst, when);
+        }
+        if (DBG) log("getNitzTimeZone returning " + (guess == null ? guess : guess.getID()));
+        return guess;
+    }
+
+    /**
+     * nitzReceiveTime is time_t that the NITZ time was posted
+     */
+    protected void setTimeFromNITZString (String nitz, long nitzReceiveTime) {
+        // "yy/mm/dd,hh:mm:ss(+/-)tz"
+        // tz is in number of quarter-hours
+
+        long start = SystemClock.elapsedRealtime();
+        if (DBG) {log("NITZ: " + nitz + "," + nitzReceiveTime +
+                        " start=" + start + " delay=" + (start - nitzReceiveTime));
+        }
+
+        try {
+            /* NITZ time (hour:min:sec) will be in UTC but it supplies the timezone
+             * offset as well (which we won't worry about until later) */
+            Calendar c = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+
+            c.clear();
+            c.set(Calendar.DST_OFFSET, 0);
+
+            String[] nitzSubs = nitz.split("[/:,+-]");
+
+            int year = 2000 + Integer.parseInt(nitzSubs[0]);
+            c.set(Calendar.YEAR, year);
+
+            // month is 0 based!
+            int month = Integer.parseInt(nitzSubs[1]) - 1;
+            c.set(Calendar.MONTH, month);
+
+            int date = Integer.parseInt(nitzSubs[2]);
+            c.set(Calendar.DATE, date);
+
+            int hour = Integer.parseInt(nitzSubs[3]);
+            c.set(Calendar.HOUR, hour);
+
+            int minute = Integer.parseInt(nitzSubs[4]);
+            c.set(Calendar.MINUTE, minute);
+
+            int second = Integer.parseInt(nitzSubs[5]);
+            c.set(Calendar.SECOND, second);
+
+            boolean sign = (nitz.indexOf('-') == -1);
+
+            int tzOffset = Integer.parseInt(nitzSubs[6]);
+
+            int dst = (nitzSubs.length >= 8 ) ? Integer.parseInt(nitzSubs[7])
+                                              : 0;
+
+            // The zone offset received from NITZ is for current local time,
+            // so DST correction is already applied.  Don't add it again.
+            //
+            // tzOffset += dst * 4;
+            //
+            // We could unapply it if we wanted the raw offset.
+
+            tzOffset = (sign ? 1 : -1) * tzOffset * 15 * 60 * 1000;
+
+            TimeZone    zone = null;
+
+            // As a special extension, the Android emulator appends the name of
+            // the host computer's timezone to the nitz string. this is zoneinfo
+            // timezone name of the form Area!Location or Area!Location!SubLocation
+            // so we need to convert the ! into /
+            if (nitzSubs.length >= 9) {
+                String  tzname = nitzSubs[8].replace('!','/');
+                zone = TimeZone.getTimeZone( tzname );
+            }
+
+            String iso = SystemProperties.get(TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY);
+
+            if (zone == null) {
+
+                if (mGotCountryCode) {
+                    if (iso != null && iso.length() > 0) {
+                        zone = TimeUtils.getTimeZone(tzOffset, dst != 0,
+                                c.getTimeInMillis(),
+                                iso);
+                    } else {
+                        // We don't have a valid iso country code.  This is
+                        // most likely because we're on a test network that's
+                        // using a bogus MCC (eg, "001"), so get a TimeZone
+                        // based only on the NITZ parameters.
+                        zone = getNitzTimeZone(tzOffset, (dst != 0), c.getTimeInMillis());
+                    }
+                }
+            }
+
+            if ((zone == null) || (mZoneOffset != tzOffset) || (mZoneDst != (dst != 0))){
+                // We got the time before the country or the zone has changed
+                // so we don't know how to identify the DST rules yet.  Save
+                // the information and hope to fix it up later.
+
+                mNeedFixZone = true;
+                mZoneOffset  = tzOffset;
+                mZoneDst     = dst != 0;
+                mZoneTime    = c.getTimeInMillis();
+            }
+
+            if (DBG) {
+                log("NITZ: tzOffset=" + tzOffset + " dst=" + dst + " zone=" +
+                        (zone!=null ? zone.getID() : "NULL") +
+                        " iso=" + iso + " mGotCountryCode=" + mGotCountryCode +
+                        " mNeedFixZone=" + mNeedFixZone);
+            }
+
+            if (zone != null) {
+                if (getAutoTimeZone()) {
+                    setAndBroadcastNetworkSetTimeZone(zone.getID());
+                }
+                saveNitzTimeZone(zone.getID());
+            }
+
+            String ignore = SystemProperties.get("gsm.ignore-nitz");
+            if (ignore != null && ignore.equals("yes")) {
+                log("NITZ: Not setting clock because gsm.ignore-nitz is set");
+                return;
+            }
+
+            try {
+                mWakeLock.acquire();
+
+                if (getAutoTime()) {
+                    long millisSinceNitzReceived
+                            = SystemClock.elapsedRealtime() - nitzReceiveTime;
+
+                    if (millisSinceNitzReceived < 0) {
+                        // Sanity check: something is wrong
+                        if (DBG) {
+                            log("NITZ: not setting time, clock has rolled "
+                                            + "backwards since NITZ time was received, "
+                                            + nitz);
+                        }
+                        return;
+                    }
+
+                    if (millisSinceNitzReceived > Integer.MAX_VALUE) {
+                        // If the time is this far off, something is wrong > 24 days!
+                        if (DBG) {
+                            log("NITZ: not setting time, processing has taken "
+                                        + (millisSinceNitzReceived / (1000 * 60 * 60 * 24))
+                                        + " days");
+                        }
+                        return;
+                    }
+
+                    // Note: with range checks above, cast to int is safe
+                    c.add(Calendar.MILLISECOND, (int)millisSinceNitzReceived);
+
+                    /**
+                     * Update system time automatically
+                     */
+                    long gained = c.getTimeInMillis() - System.currentTimeMillis();
+                    long timeSinceLastUpdate = SystemClock.elapsedRealtime() - mSavedAtTime;
+                    int nitzUpdateSpacing = Settings.Global.getInt(getPhone().getContext().getContentResolver(),
+                            Settings.Global.NITZ_UPDATE_SPACING, mNitzUpdateSpacing);
+                    int nitzUpdateDiff = Settings.Global.getInt(getPhone().getContext().getContentResolver(),
+                            Settings.Global.NITZ_UPDATE_DIFF, mNitzUpdateDiff);
+
+                    if ((mSavedAtTime == 0) || (timeSinceLastUpdate > nitzUpdateSpacing)
+                            || (Math.abs(gained) > nitzUpdateDiff)) {
+                        if (DBG) {
+                            log("NITZ: Auto updating time of day to " + c.getTime()
+                                + " NITZ receive delay=" + millisSinceNitzReceived
+                                + "ms gained=" + gained + "ms from " + nitz);
+                        }
+
+                        setAndBroadcastNetworkSetTime(c.getTimeInMillis());
+                    } else {
+                        if (DBG) {
+                            log("NITZ: ignore, a previous update was "
+                                + timeSinceLastUpdate + "ms ago and gained=" + gained + "ms");
+                        }
+                        return;
+                    }
+                }
+                SystemProperties.set("gsm.nitz.time", String.valueOf(c.getTimeInMillis()));
+                mSavedTime = c.getTimeInMillis();
+                mSavedAtTime = SystemClock.elapsedRealtime();
+            } finally {
+                if (VDBG) {
+                    long end = SystemClock.elapsedRealtime();
+                    log("NITZ: end=" + end + " dur=" + (end - start));
+                }
+                mNitzUpdatedTime = true;
+                mWakeLock.release();
+            }
+        } catch (RuntimeException ex) {
+            loge("NITZ: Parsing NITZ time " + nitz + " ex=" + ex);
+        }
+    }
+    /**
+     * Set the time and Send out a sticky broadcast so the system can determine
+     * if the time was set by the carrier.
+     *
+     * @param time time set by network
+     */
+    protected void setAndBroadcastNetworkSetTime(long time) {
+        if (DBG) log("setAndBroadcastNetworkSetTime: time=" + time + "ms");
+        SystemClock.setCurrentTimeMillis(time);
+        Intent intent = new Intent(TelephonyIntents.ACTION_NETWORK_SET_TIME);
+        intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
+        intent.putExtra("time", time);
+        getPhone().getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
+    }
+
+    /**
+     * Set the timezone and send out a sticky broadcast so the system can
+     * determine if the timezone was set by the carrier.
+     *
+     * @param zoneId timezone set by carrier
+     */
+    protected void setAndBroadcastNetworkSetTimeZone(String zoneId) {
+        if (DBG) log("setAndBroadcastNetworkSetTimeZone: setTimeZone=" + zoneId);
+        AlarmManager alarm =
+            (AlarmManager) getPhone().getContext().getSystemService(Context.ALARM_SERVICE);
+        alarm.setTimeZone(zoneId);
+        Intent intent = new Intent(TelephonyIntents.ACTION_NETWORK_SET_TIMEZONE);
+        intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
+        intent.putExtra("time-zone", zoneId);
+        getPhone().getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
+        if (DBG) {
+            log("setAndBroadcastNetworkSetTimeZone: call alarm.setTimeZone and broadcast zoneId=" +
+                zoneId);
+        }
+    }
+
+    protected void revertToNitzTime() {
+        if (Settings.Global.getInt(getPhone().getContext().getContentResolver(),
+                Settings.Global.AUTO_TIME, 0) == 0) {
+            return;
+        }
+        if (DBG) {
+            log("Reverting to NITZ Time: mSavedTime=" + mSavedTime
+                + " mSavedAtTime=" + mSavedAtTime);
+        }
+        if (mSavedTime != 0 && mSavedAtTime != 0) {
+            setAndBroadcastNetworkSetTime(mSavedTime
+                    + (SystemClock.elapsedRealtime() - mSavedAtTime));
+        }
+    }
+
+    protected void revertToNitzTimeZone() {
+        if (Settings.Global.getInt(getPhone().getContext().getContentResolver(),
+                Settings.Global.AUTO_TIME_ZONE, 0) == 0) {
+            return;
+        }
+        if (DBG) log("Reverting to NITZ TimeZone: tz=" + mSavedTimeZone);
+        if (mSavedTimeZone != null) {
+            setAndBroadcastNetworkSetTimeZone(mSavedTimeZone);
+        }
     }
 }
