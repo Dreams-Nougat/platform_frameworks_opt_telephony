@@ -1,0 +1,13 @@
+Revision: f65b2a71c89479df1eb93c38ffcd4b1c63e1b1d2
+Patch-set: 1
+File: src/java/com/android/internal/telephony/cdma/CdmaServiceStateTracker.java
+
+1546
+Mon Oct 28 16:11:02 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: fe62ccbe_ecd5af05
+Bytes: 231
+Lets remove the quote instead of adding the missing one, lets also do the same for the code below, it'll save a few cycles and make it smaller and simpler (always a good thing).
+
+  if (DBG) log("getOtasp: bad mMin='" + mMin + "'");
+
