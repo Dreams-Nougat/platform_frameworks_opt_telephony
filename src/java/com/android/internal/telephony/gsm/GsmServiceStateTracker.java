@@ -1649,7 +1649,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 Settings.Global.AUTO_TIME_ZONE, 0) == 0) {
             return;
         }
-        if (DBG) log("Reverting to NITZ TimeZone: tz='" + mSavedTimeZone);
+        if (DBG) log("Reverting to NITZ TimeZone: tz='" + mSavedTimeZone + "'");
         if (mSavedTimeZone != null) {
             setAndBroadcastNetworkSetTimeZone(mSavedTimeZone);
         }

@@ -1543,7 +1543,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
                 Settings.Global.AUTO_TIME_ZONE, 0) == 0) {
             return;
         }
-        if (DBG) log("revertToNitzTimeZone: tz='" + mSavedTimeZone);
+        if (DBG) log("revertToNitzTimeZone: tz='" + mSavedTimeZone + "'");
         if (mSavedTimeZone != null) {
             setAndBroadcastNetworkSetTimeZone(mSavedTimeZone);
         }
