@@ -53,6 +53,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import com.android.internal.R;
+
 /**
  * Implement the per-application based SMS control, which limits the number of
  * SMS/MMS messages an app can send in the checking period.
@@ -399,6 +401,19 @@ public class SmsUsageMonitor {
             if (!mCheckEnabled.get()) {
                 if (DBG) Rlog.e(TAG, "check disabled");
                 return CATEGORY_NOT_SHORT_CODE;
+            }
+
+            // Check if the destAddress is in short code exception list which defined
+            // by carrier
+            String[] shortCodeListArray = mContext.getResources().getStringArray(
+                 com.android.internal.R.array.config_sms_short_code_exception_list);
+            for(int i=0; i<shortCodeListArray.length; i++){
+                 if(shortCodeListArray[i] != null &&
+                         shortCodeListArray[i].equals(destAddress)){
+                     if (DBG) Rlog.d(TAG, "The number is in exception list:" + destAddress);
+
+                     return CATEGORY_NOT_SHORT_CODE;
+                 }
             }
 
             if (countryIso != null) {
