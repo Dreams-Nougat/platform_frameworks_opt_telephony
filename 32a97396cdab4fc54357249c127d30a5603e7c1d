@@ -26,3 +26,14 @@ And DBG_PORT is at the top of the class:
 
 Does this "work" for javac 7?
 
+166
+Mon Nov 04 13:52:28 2013 +0000
+Author: Jerome PILLIET <1018065@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: f342ff7b_bef2595a
+UUID: ed513c1f_e6519e0a
+Bytes: 259
+javac inline fields which are static and final so this modification does not solved the problem.
+This problem was transferred to Oracle and it is fixed but not in javac 7u25.
+http://bugs.sun.com/view_bug.do?bug_id=7199823 .
+You can delete the keyword "final".
+
