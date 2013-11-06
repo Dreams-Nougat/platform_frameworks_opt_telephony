@@ -1,0 +1,11 @@
+Revision: 4f691e9da12b4ce7339a9b22e71201c05842f374
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/RuimRecords.java
+
+311
+Wed Nov 06 00:02:14 2013 +0000
+Author: Naveen K <1003413@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: decee94a_6c1c9b50
+Bytes: 41
+This fix breaks operator name on Verizon.
+
