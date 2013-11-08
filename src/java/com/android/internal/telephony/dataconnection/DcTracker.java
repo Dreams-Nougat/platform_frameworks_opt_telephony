@@ -57,6 +57,7 @@ import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.DctConstants;
 import com.android.internal.telephony.EventLogTags;
 import com.android.internal.telephony.TelephonyIntents;
+import com.android.internal.telephony.cdma.CDMALTEPhone;
 import com.android.internal.telephony.gsm.GSMPhone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.RILConstants;
@@ -1082,6 +1083,9 @@ public final class DcTracker extends DcTrackerBase {
         if (mPhone instanceof GSMPhone) {
             // The "current" may no longer be valid.  MMS depends on this to send properly. TBD
             ((GSMPhone)mPhone).updateCurrentCarrierInProvider();
+        } else if (mPhone instanceof CDMALTEPhone) {
+            // The "current" may no longer be valid.  MMS depends on this to send properly.
+            ((CDMALTEPhone)mPhone).updateCurrentCarrierInProvider();
         }
 
         // TODO: It'd be nice to only do this if the changed entrie(s)
