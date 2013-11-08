@@ -94,7 +94,7 @@ public class GSMPhone extends PhoneBase {
     static final String LOG_TAG = "GSMPhone";
     private static final boolean LOCAL_DEBUG = true;
     private static final boolean VDBG = false; /* STOPSHIP if true */
-    private static final boolean DBG_PORT = false; /* STOPSHIP if true */
+    private static boolean DBG_PORT = false; /* STOPSHIP if true */
 
     // Key used to read/write current ciphering state
     public static final String CIPHERING_KEY = "ciphering_key";
