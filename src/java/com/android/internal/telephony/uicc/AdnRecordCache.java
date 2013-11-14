@@ -21,6 +21,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.SparseArray;
 
+import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.gsm.UsimPhoneBookManager;
 
 import java.util.ArrayList;
@@ -55,7 +56,7 @@ public final class AdnRecordCache extends Handler implements IccConstants {
 
 
 
-    AdnRecordCache(IccFileHandler fh) {
+    public AdnRecordCache(IccFileHandler fh, CommandsInterface ci) {
         mFh = fh;
         mUsimPhoneBookManager = new UsimPhoneBookManager(mFh, this);
     }
@@ -115,6 +116,11 @@ public final class AdnRecordCache extends Handler implements IccConstants {
             case EF_FDN: return EF_EXT2;
             case EF_MSISDN: return EF_EXT1;
             case EF_PBR: return 0; // The EF PBR doesn't have an extension record
+            case EF_GAS:
+                return 0;
+            case EF_INFO:
+            case EF_2GINFO:
+                return 0;
             default: return -1;
         }
     }
@@ -138,7 +144,8 @@ public final class AdnRecordCache extends Handler implements IccConstants {
      *        response.exception hold the exception in error
      */
     public void updateAdnByIndex(int efid, AdnRecord adn, int recordIndex, String pin2,
-            Message response) {
+            Message response,
+            String[] newEmails, String[] newAnrs, String[] newGroups) {
 
         int extensionEF = extensionEfForEf(efid);
         if (extensionEF < 0) {
@@ -174,9 +181,12 @@ public final class AdnRecordCache extends Handler implements IccConstants {
      *        response.exception hold the exception in error
      */
     public void updateAdnBySearch(int efid, AdnRecord oldAdn, AdnRecord newAdn,
-            String pin2, Message response) {
+            String pin2, Message response,
+            String[] oldEmails, String[] newEmails, String[] oldAnrs, String[] newAnrs,
+            String[] oldGroups, String[] newGroups) {
 
         int extensionEF;
+
         extensionEF = extensionEfForEf(efid);
 
         if (extensionEF < 0) {
@@ -200,7 +210,7 @@ public final class AdnRecordCache extends Handler implements IccConstants {
         int index = -1;
         int count = 1;
         for (Iterator<AdnRecord> it = oldAdnList.iterator(); it.hasNext(); ) {
-            if (oldAdn.isEqual(it.next())) {
+            if (oldAdn.isNameAndNumberEqual(it.next())) {
                 index = count;
                 break;
             }

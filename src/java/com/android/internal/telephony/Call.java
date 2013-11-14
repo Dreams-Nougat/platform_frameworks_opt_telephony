@@ -242,6 +242,16 @@ public abstract class Call {
         mIsGeneric = generic;
     }
 
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    //added vt call, VideoPhone
+    public boolean isVideoCall(){ 
+        return false;
+    }
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
     /**
      * Hangup call if it is alive
      */

@@ -30,8 +30,8 @@ public class PhoneSubInfo extends IPhoneSubInfo.Stub {
     static final String LOG_TAG = "PhoneSubInfo";
     private static final boolean DBG = true;
     private static final boolean VDBG = false; // STOPSHIP if true
+    protected Phone mPhone;
 
-    private Phone mPhone;
     private Context mContext;
     private static final String READ_PHONE_STATE =
         android.Manifest.permission.READ_PHONE_STATE;

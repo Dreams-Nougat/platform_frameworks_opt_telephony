@@ -24,13 +24,19 @@ import android.os.AsyncResult;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemProperties;
 import android.os.ServiceManager;
 import android.telephony.Rlog;
 import android.util.Log;
 
+import com.android.internal.telephony.RILConstants.SimCardID;
 import com.android.internal.telephony.ISms;
 import com.android.internal.telephony.gsm.SmsBroadcastConfigInfo;
+import com.android.internal.telephony.gsm.SmsCbConstants;     // no '*'
+import static com.android.internal.telephony.gsm.SmsCbConstants.*;  //with static and '*'
 import com.android.internal.telephony.cdma.CdmaSmsBroadcastConfigInfo;
+import com.android.internal.telephony.TelephonyProperties;
+import com.android.internal.telephony.RILConstants.SimCardID;
 import com.android.internal.telephony.uicc.IccConstants;
 import com.android.internal.telephony.uicc.IccFileHandler;
 import com.android.internal.util.HexDump;
@@ -42,6 +48,7 @@ import java.util.List;
 import static android.telephony.SmsManager.STATUS_ON_ICC_FREE;
 import static android.telephony.SmsManager.STATUS_ON_ICC_READ;
 import static android.telephony.SmsManager.STATUS_ON_ICC_UNREAD;
+
 
 /**
  * IccSmsInterfaceManager to provide an inter-process communication to
@@ -66,6 +73,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
     protected static final int EVENT_SET_BROADCAST_CONFIG_DONE = 4;
     private static final int SMS_CB_CODE_SCHEME_MIN = 0;
     private static final int SMS_CB_CODE_SCHEME_MAX = 255;
+    private static final int DEFAULT_LANGUAGE_INDEX = 15;
 
     protected PhoneBase mPhone;
     final protected Context mContext;
@@ -114,15 +122,28 @@ public class IccSmsInterfaceManager extends ISms.Stub {
         }
     };
 
+    private BrcmCbManager cbManager;
+
     protected IccSmsInterfaceManager(PhoneBase phone) {
         mPhone = phone;
         mContext = phone.getContext();
         mAppOps = (AppOpsManager) mContext.getSystemService(Context.APP_OPS_SERVICE);
         mDispatcher = new ImsSMSDispatcher(phone,
                 phone.mSmsStorageMonitor, phone.mSmsUsageMonitor);
-        if (ServiceManager.getService("isms") == null) {
-            ServiceManager.addService("isms", this);
+
+        cbManager = new BrcmCbManager();
+
+        /* dual sim */
+        if(SimCardID.ID_ONE == phone.getSimCardId()) {
+            if(ServiceManager.getService("isms2") == null) {
+                ServiceManager.addService("isms2", this);
+            }
+        } else {
+            if(ServiceManager.getService("isms") == null) {
+                ServiceManager.addService("isms", this);
+            }
         }
+
     }
 
     protected void markMessagesAsRead(ArrayList<byte[]> messages) {
@@ -532,16 +553,34 @@ public class IccSmsInterfaceManager extends ISms.Stub {
 
         Context context = mPhone.getContext();
 
-        context.enforceCallingPermission(
+        // context.enforceCallingPermission(
+        context.enforceCallingOrSelfPermission(
                 "android.permission.RECEIVE_SMS",
                 "Enabling cell broadcast SMS");
 
         String client = context.getPackageManager().getNameForUid(
                 Binder.getCallingUid());
 
+        boolean handlingCmas = false;
+        if ((startMessageId >= SmsCbConstants.MESSAGE_ID_PWS_FIRST_IDENTIFIER && startMessageId <= SmsCbConstants.MESSAGE_ID_PWS_LAST_IDENTIFIER)
+                && (endMessageId >= SmsCbConstants.MESSAGE_ID_PWS_FIRST_IDENTIFIER && endMessageId <= SmsCbConstants.MESSAGE_ID_PWS_LAST_IDENTIFIER)) {
+            handlingCmas = true;
+            cbManager.addCmasMsgId(startMessageId, endMessageId, mPhone.getSimCardId());
+            if (cbManager.getIsCmasOn(mPhone.getSimCardId())) {
+                log("CMAS is already enabled in framework, call enable to RIL again");
+            }
+            //enable the whole range at once
+            log("startMessageId = " + startMessageId + ", endMessageId = " + endMessageId
+                    + ", enable whole CMAS range");
+            startMessageId = MESSAGE_ID_PWS_FIRST_IDENTIFIER;
+            endMessageId = MESSAGE_ID_PWS_LAST_IDENTIFIER;
+        }
+
         if (!mCellBroadcastRangeManager.enableRange(startMessageId, endMessageId, client)) {
             log("Failed to add cell broadcast subscription for MID range " + startMessageId
                     + " to " + endMessageId + " from client " + client);
+            if (handlingCmas)
+                cbManager.setIsCmasOn(false, mPhone.getSimCardId());
             return false;
         }
 
@@ -549,7 +588,11 @@ public class IccSmsInterfaceManager extends ISms.Stub {
             log("Added cell broadcast subscription for MID range " + startMessageId
                     + " to " + endMessageId + " from client " + client);
 
-        setCellBroadcastActivation(!mCellBroadcastRangeManager.isEmpty());
+        if (handlingCmas) {
+            cbManager.setIsCmasOn(true, mPhone.getSimCardId());
+        } else {
+            cbManager.addNormalMsgId(startMessageId, endMessageId, mPhone.getSimCardId());
+        }
 
         return true;
     }
@@ -559,12 +602,27 @@ public class IccSmsInterfaceManager extends ISms.Stub {
 
         Context context = mPhone.getContext();
 
-        context.enforceCallingPermission(
+        context.enforceCallingOrSelfPermission(
                 "android.permission.RECEIVE_SMS",
                 "Disabling cell broadcast SMS");
 
         String client = context.getPackageManager().getNameForUid(
                 Binder.getCallingUid());
+
+        if ((startMessageId >= SmsCbConstants.MESSAGE_ID_PWS_FIRST_IDENTIFIER && startMessageId <= SmsCbConstants.MESSAGE_ID_PWS_LAST_IDENTIFIER)
+                && (endMessageId >= SmsCbConstants.MESSAGE_ID_PWS_FIRST_IDENTIFIER && endMessageId <= SmsCbConstants.MESSAGE_ID_PWS_LAST_IDENTIFIER)) {
+            cbManager.removeCmasMsgId(startMessageId, endMessageId, mPhone.getSimCardId());
+            if (!cbManager.isCmasEnabledListEmpty(mPhone.getSimCardId())) {
+                // list not empty, keep CMAS enabled in CP
+                return true;
+            } else {
+                // list empty, disable whole CMAS range in CP
+                log("startMessageId = " + startMessageId + ", endMessageId = " + endMessageId + ", disable whole CMAS range");
+                startMessageId = MESSAGE_ID_PWS_FIRST_IDENTIFIER;
+                endMessageId = MESSAGE_ID_PWS_LAST_IDENTIFIER;
+                cbManager.setIsCmasOn(false, mPhone.getSimCardId());
+            }
+        }
 
         if (!mCellBroadcastRangeManager.disableRange(startMessageId, endMessageId, client)) {
             log("Failed to remove cell broadcast subscription for MID range " + startMessageId
@@ -576,7 +634,13 @@ public class IccSmsInterfaceManager extends ISms.Stub {
             log("Removed cell broadcast subscription for MID range " + startMessageId
                     + " to " + endMessageId + " from client " + client);
 
-        setCellBroadcastActivation(!mCellBroadcastRangeManager.isEmpty());
+        if (!(startMessageId >= SmsCbConstants.MESSAGE_ID_PWS_FIRST_IDENTIFIER && startMessageId <= SmsCbConstants.MESSAGE_ID_PWS_LAST_IDENTIFIER)
+                && !(endMessageId >= SmsCbConstants.MESSAGE_ID_PWS_FIRST_IDENTIFIER && endMessageId <= SmsCbConstants.MESSAGE_ID_PWS_LAST_IDENTIFIER)) {  // CB_COUNT
+            cbManager.removeNormalMsgId(startMessageId, endMessageId, mPhone.getSimCardId());
+            if (cbManager.getIsNormalMsgIdEmpty(mPhone.getSimCardId())) {
+                setCellBroadcastActivation(false);
+            }
+        }
 
         return true;
     }
@@ -648,6 +712,33 @@ public class IccSmsInterfaceManager extends ISms.Stub {
             mConfigList.clear();
         }
 
+        private int getCBLanguagePropertyValue() {
+            String property;
+            int langIndex;
+
+            if(mPhone.getSimCardId() == SimCardID.ID_ONE) {
+                property = TelephonyProperties.PROPERTY_ICC_CB_LANGUAGE_INDEX + "_" + String.valueOf(mPhone.getSimCardId().toInt());
+            } else {
+                property = TelephonyProperties.PROPERTY_ICC_CB_LANGUAGE_INDEX;
+            }
+
+            String propertyValue = SystemProperties.get(property, Integer.toString(DEFAULT_LANGUAGE_INDEX));
+            if (null != propertyValue) {
+                try {
+                    langIndex = Integer.parseInt(propertyValue);
+                } catch (NumberFormatException e) {
+                    Log.e(LOG_TAG, "getCBLanguagePropertyValue(): PROPERTY_ICC_CB_LANGUAGE_INDEX property value = " + propertyValue);
+                    langIndex = DEFAULT_LANGUAGE_INDEX;
+                }
+            } else {
+                Log.e(LOG_TAG, "getCBLanguagePropertyValue(): PROPERTY_ICC_CB_LANGUAGE_INDEX property value == null");
+                langIndex = DEFAULT_LANGUAGE_INDEX;
+            }
+
+            return langIndex;
+        }
+
+
         /**
          * Called after {@link #startUpdate} to indicate a range of enabled
          * values.
@@ -655,8 +746,37 @@ public class IccSmsInterfaceManager extends ISms.Stub {
          * @param endId the last id included in the range
          */
         protected void addRange(int startId, int endId, boolean selected) {
+            int langId = -1;
+
+            if (-1 == startId && -1 == endId) {
+                langId = getCBLanguagePropertyValue();
+            } else {
+                langId = -1;
+            }
+
+            if (DBG) Log.d(LOG_TAG, "addRange(): langId = " + langId);
+
+            if (langId == DEFAULT_LANGUAGE_INDEX) {
+                langId = 256;
+                if (DBG) Log.d(LOG_TAG, "addRange(): convert langId to 256");
+            }
+
             mConfigList.add(new SmsBroadcastConfigInfo(startId, endId,
-                        SMS_CB_CODE_SCHEME_MIN, SMS_CB_CODE_SCHEME_MAX, selected));
+                        langId, langId, selected));
+        }
+
+        public synchronized boolean enableRange(int startId, int endId, String client) {
+            if (DBG) Log.d(LOG_TAG, "enableRange(): startId = " + startId + ", endId = " + endId + ", client = " + client);
+            startUpdate();
+            addRange(startId, endId, true);
+            return finishUpdate();
+        }
+
+        public synchronized boolean disableRange(int startId, int endId, String client) {
+            if (DBG) Log.d(LOG_TAG, "disableRange(): startId = " + startId + ", endId = " + endId + ", client = " + client);
+            startUpdate();
+            addRange(startId, endId, false);
+            return finishUpdate();
         }
 
         /**

@@ -525,7 +525,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
             return false;
         }
 
-        if (PhoneNumberUtils.isLocalEmergencyNumber(dialString, phone.getContext())) {
+        if (PhoneNumberUtils.isLocalEmergencyNumber(dialString, phone.getContext(), phone.getSimCardId())) {
             return false;
         } else {
             return isShortCodeUSSD(dialString, phone);
@@ -755,13 +755,13 @@ public final class GsmMmiCode extends Handler implements MmiCode {
                     } else {
                         facility = scToBarringFacility(mSia);
                     }
-                    if (newPwd.equals(mPwd)) {
+                   // if (newPwd.equals(mPwd)) {
                         mPhone.mCi.changeBarringPassword(facility, oldPwd,
                                 newPwd, obtainMessage(EVENT_SET_COMPLETE, this));
-                    } else {
+                    //} else {
                         // password mismatch; return error
-                        handlePasswordError(com.android.internal.R.string.passwordIncorrect);
-                    }
+                    //    handlePasswordError(com.android.internal.R.string.passwordIncorrect);
+                    //}
                 } else {
                     throw new RuntimeException ("Invalid or Unsupported MMI Code");
                 }

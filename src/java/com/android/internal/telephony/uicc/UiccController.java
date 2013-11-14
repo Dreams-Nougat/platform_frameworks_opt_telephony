@@ -29,6 +29,11 @@ import com.android.internal.telephony.CommandsInterface;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 
+import com.android.internal.telephony.CommandsInterface.RadioState;
+import com.android.internal.telephony.RILConstants.SimCardID;
+import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
+
 /**
  * This class is responsible for keeping all knowledge about
  * Universal Integrated Circuit Card (UICC), also know as SIM's,
@@ -79,9 +84,11 @@ public class UiccController extends Handler {
 
     private static final int EVENT_ICC_STATUS_CHANGED = 1;
     private static final int EVENT_GET_ICC_STATUS_DONE = 2;
+    private static final int EVENT_GET_ICC_STATUS = 3;
+    private static final int EVENT_RADIO_OFF_OR_NOT_AVAILABLE = 4;
 
     private static final Object mLock = new Object();
-    private static UiccController mInstance;
+    private static UiccController mInstance[]={ null, null };
 
     private Context mContext;
     private CommandsInterface mCi;
@@ -89,23 +96,51 @@ public class UiccController extends Handler {
 
     private RegistrantList mIccChangedRegistrants = new RegistrantList();
 
+    private SimCardID mSimCardId;
+
+    private boolean mPhoneOnMode = true;
+    private IccCardStatus status = null;
+
+    //The retry count to get Icc card status
+    private int mRetryGetIccStatus = 0;
+
     public static UiccController make(Context c, CommandsInterface ci) {
         synchronized (mLock) {
-            if (mInstance != null) {
+            if (mInstance[SimCardID.ID_ZERO.toInt()] != null) {
                 throw new RuntimeException("UiccController.make() should only be called once");
             }
-            mInstance = new UiccController(c, ci);
-            return mInstance;
+            mInstance[SimCardID.ID_ZERO.toInt()] = new UiccController(c, ci);
+            return mInstance[SimCardID.ID_ZERO.toInt()];
+        }
+    }
+
+    public static UiccController make(Context c, CommandsInterface ci, SimCardID simCardId) {
+        synchronized (mLock) {
+            if (mInstance[simCardId.toInt()] != null) {
+                throw new RuntimeException("UiccController.make() should only be called once");
+            }
+            mInstance[simCardId.toInt()] = new UiccController(c, ci, simCardId);
+            return mInstance[simCardId.toInt()];
         }
     }
 
     public static UiccController getInstance() {
         synchronized (mLock) {
-            if (mInstance == null) {
+            if (mInstance[SimCardID.ID_ZERO.toInt()] == null) {
                 throw new RuntimeException(
                         "UiccController.getInstance can't be called before make()");
             }
-            return mInstance;
+            return mInstance[SimCardID.ID_ZERO.toInt()];
+        }
+    }
+
+    public static UiccController getInstance(SimCardID simCardId) {
+        synchronized (mLock) {
+            if (mInstance[simCardId.toInt()] == null) {
+                throw new RuntimeException(
+                        "UiccController.getInstance can't be called before make()");
+            }
+            return mInstance[simCardId.toInt()];
         }
     }
 
@@ -176,10 +211,25 @@ public class UiccController extends Handler {
                     if (DBG) log("Received EVENT_ICC_STATUS_CHANGED, calling getIccCardStatus");
                     mCi.getIccCardStatus(obtainMessage(EVENT_GET_ICC_STATUS_DONE));
                     break;
+                case EVENT_GET_ICC_STATUS: //Used to get SIM card status when the radio state is off
+                    if (DBG) log("Received EVENT_GET_ICC_STATUS: getIccCardStatus()");
+                    if ((null == mUiccCard || null == mUiccCard.getCardState())
+                        && (mCi.getRadioState() == RadioState.RADIO_OFF)
+                        && (mRetryGetIccStatus <= 2)) {
+                        if (DBG) log("start to get SIM status");
+                        mCi.getIccCardStatus(obtainMessage(EVENT_GET_ICC_STATUS_DONE));
+                        mRetryGetIccStatus++;
+                    }
+                    break;
                 case EVENT_GET_ICC_STATUS_DONE:
                     if (DBG) log("Received EVENT_GET_ICC_STATUS_DONE");
                     AsyncResult ar = (AsyncResult)msg.obj;
                     onGetIccCardStatusDone(ar);
+                    break;
+                // No matter radio statue is on, off or not available, we should update ICC status
+                case EVENT_RADIO_OFF_OR_NOT_AVAILABLE:
+                    if (DBG) log("Received EVENT_RADIO_OFF_OR_NOT_AVAILABLE");
+                    sendEmptyMessageDelayed(EVENT_GET_ICC_STATUS, 3500);
                     break;
                 default:
                     Rlog.e(LOG_TAG, " Unknown Event " + msg.what);
@@ -188,12 +238,18 @@ public class UiccController extends Handler {
     }
 
     private UiccController(Context c, CommandsInterface ci) {
-        if (DBG) log("Creating UiccController");
+        this(c, ci, SimCardID.ID_ZERO);
+    }
+
+    private UiccController(Context c, CommandsInterface ci, SimCardID simCardId) {
+        if (DBG) log("Creating UiccController, SIM card ID:" + simCardId.toInt());
         mContext = c;
         mCi = ci;
+        mSimCardId = simCardId;
         mCi.registerForIccStatusChanged(this, EVENT_ICC_STATUS_CHANGED, null);
         // TODO remove this once modem correctly notifies the unsols
         mCi.registerForOn(this, EVENT_ICC_STATUS_CHANGED, null);
+        mCi.registerForOffOrNotAvailable(this, EVENT_RADIO_OFF_OR_NOT_AVAILABLE, null);
     }
 
     private synchronized void onGetIccCardStatusDone(AsyncResult ar) {
@@ -203,15 +259,34 @@ public class UiccController extends Handler {
                     + "never return an error", ar.exception);
             return;
         }
+        if (mSimCardId == SimCardID.ID_ONE) {
+            mPhoneOnMode = (Settings.Global.getInt(mContext.getContentResolver(), Settings.Global.PHONE2_ON, 1)!=0);
+        } else {
+            mPhoneOnMode = (Settings.Global.getInt(mContext.getContentResolver(), Settings.Global.PHONE1_ON, 1)!=0);
+        }
 
-        IccCardStatus status = (IccCardStatus)ar.result;
+        status = (IccCardStatus)ar.result;
+        // Try to re-get SIM card status when thr radio state is off
+        if (DBG) log("onGetIccCardStatusDone(), status:" + status + ", RadioState:" + mCi.getRadioState() + ", mPhoneOnMode:" + mPhoneOnMode);
+        if ((mPhoneOnMode == true)
+            && (null == mUiccCard || null == mUiccCard.getCardState())
+            && (mCi.getRadioState() == RadioState.RADIO_OFF)
+            && (mRetryGetIccStatus <= 2)) {
+            if (DBG) log("onGetIccCardStatusDone(), need to get SIM status");
+            sendEmptyMessageDelayed(EVENT_GET_ICC_STATUS, 3500);//Re-get ICC status
+            return; // BRCM - We should not move forward before we get the Icc card status or radio is ON
+        }
+
+        mRetryGetIccStatus = 0;
+
+        if (DBG) log("onGetIccCardStatusDone(), after re-get function, status:" + status + ", RadioState:" + mCi.getRadioState());
 
         if (mUiccCard == null) {
             //Create new card
-            mUiccCard = new UiccCard(mContext, mCi, status);
+            mUiccCard = new UiccCard(mContext, mCi, status, mSimCardId);
         } else {
             //Update already existing card
-            mUiccCard.update(mContext, mCi , status);
+            mUiccCard.update(mContext, mCi , status, mSimCardId);
         }
 
         if (DBG) log("Notifying IccChangedRegistrants");
@@ -219,7 +294,7 @@ public class UiccController extends Handler {
     }
 
     private void log(String string) {
-        Rlog.d(LOG_TAG, string);
+        Rlog.d(LOG_TAG, "SimId : " + mSimCardId + ", " + string);
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

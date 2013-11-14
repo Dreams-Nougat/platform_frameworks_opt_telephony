@@ -135,6 +135,7 @@ public abstract class ServiceStateTracker extends Handler {
     protected static final int EVENT_CHECK_REPORT_GPRS                 = 22;
     protected static final int EVENT_RESTRICTED_STATE_CHANGED          = 23;
 
+
     /** CDMA events */
     protected static final int EVENT_POLL_STATE_REGISTRATION_CDMA      = 24;
     protected static final int EVENT_POLL_STATE_OPERATOR_CDMA          = 25;
@@ -204,7 +205,7 @@ public abstract class ServiceStateTracker extends Handler {
         mCi = ci;
         mVoiceCapable = mPhoneBase.getContext().getResources().getBoolean(
                 com.android.internal.R.bool.config_voice_capable);
-        mUiccController = UiccController.getInstance();
+        mUiccController = UiccController.getInstance(mPhoneBase.getSimCardId());
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
         mCi.setOnSignalStrengthUpdate(this, EVENT_SIGNAL_STRENGTH_UPDATE, null);
         mCi.registerForCellInfoList(this, EVENT_UNSOL_CELL_INFO_LIST, null);

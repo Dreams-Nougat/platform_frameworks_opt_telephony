@@ -264,6 +264,13 @@ public class SmsMessage extends SmsMessageBase {
                     header = SmsHeader.toByteArray(smsHeader);
                 }
             }
+            for (int i = 0; i < message.length(); i++) {
+                char c = message.charAt(i);
+                if ((c == 0xDC) || (c == 0xFC) || (c == 0xC4) || (c == 0xE4) || (c == 0xD6) || (c == 0xF6) || (c == 0xDF)) {
+                    encoding = ENCODING_8BIT;
+                    break;
+                }
+            }
         }
 
         SubmitPdu ret = new SubmitPdu();
@@ -279,6 +286,8 @@ public class SmsMessage extends SmsMessageBase {
             if (encoding == ENCODING_7BIT) {
                 userData = GsmAlphabet.stringToGsm7BitPackedWithHeader(message, header,
                         languageTable, languageShiftTable);
+            } else if (encoding == ENCODING_8BIT) {
+                userData = GsmAlphabet.stringToGsm8BitPackedWithHeader(message, header);
             } else { //assume UCS-2
                 try {
                     userData = encodeUCS2(message, header);
@@ -318,6 +327,16 @@ public class SmsMessage extends SmsMessageBase {
             // the receiver's SIM card. You can then send messages to yourself
             // (on a phone with this change) and they'll end up on the SIM card.
             bo.write(0x00);
+        } else if (encoding == ENCODING_8BIT) {
+            if ((0xff & userData[0]) > MAX_USER_DATA_BYTES) {
+                // Message too long
+                Rlog.e(LOG_TAG, "ENCODING_8BIT Message too long");
+                return null;
+            }
+            // TP-Data-Coding-Scheme
+            // 8bit
+
+            bo.write(0x04);
         } else { // assume UCS-2
             if ((0xff & userData[0]) > MAX_USER_DATA_BYTES) {
                 // Message too long
@@ -686,6 +705,27 @@ public class SmsMessage extends SmsMessageBase {
          */
         SmsHeader getUserDataHeader() {
             return mUserDataHeader;
+        }
+
+        String getUserDataGSM8Bit(int byteCount) {
+            String ret =  GsmAlphabet.gsm8BitUnpackedToString(mPdu, 0, byteCount);
+            return ret;
+        }
+
+        String getUserDataGSM8Bit_string(int byteCount) {
+            byte[]userData = new byte[byteCount];
+            String new_ret = null;
+
+            System.arraycopy(mPdu, (mPdu.length-byteCount), userData, 0, byteCount);
+
+            try {
+                new_ret = new String(userData, "iso-8859-1");
+            } catch (UnsupportedEncodingException ex) {
+                new_ret = "";
+                Rlog.e(LOG_TAG, "getUserDataGSM8Bit_string :implausible UnsupportedEncodingException", ex);
+            }
+
+            return new_ret;
         }
 
         /**
@@ -1090,6 +1130,10 @@ public class SmsMessage extends SmsMessageBase {
                     break;
 
                 case 1: // 8 bit data
+                    encodingType = ENCODING_8BIT;
+                    Rlog.w(LOG_TAG, "coding scheme "
+                            + (mDataCodingScheme & 0xff));
+                    break;
                 case 3: // reserved
                     Rlog.w(LOG_TAG, "1 - Unsupported SMS data coding scheme "
                             + (mDataCodingScheme & 0xff));
@@ -1161,8 +1205,10 @@ public class SmsMessage extends SmsMessageBase {
 
         switch (encodingType) {
         case ENCODING_UNKNOWN:
-        case ENCODING_8BIT:
             mMessageBody = null;
+            break;
+        case ENCODING_8BIT:
+            mMessageBody = p.getUserDataGSM8Bit_string(count);
             break;
 
         case ENCODING_7BIT:

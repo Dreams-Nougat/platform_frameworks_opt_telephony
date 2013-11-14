@@ -47,6 +47,11 @@ import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.UUSInfo;
 import com.android.internal.telephony.uicc.IccFileHandler;
 
+/* dual sim */
+import com.android.internal.telephony.RILConstants;
+import com.android.internal.telephony.RILConstants.SimCardID;
+import static com.android.internal.telephony.TelephonyProperties.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,7 +62,7 @@ abstract class SipPhoneBase extends PhoneBase {
     private PhoneConstants.State mState = PhoneConstants.State.IDLE;
 
     public SipPhoneBase(String name, Context context, PhoneNotifier notifier) {
-        super(name, notifier, context, new SipCommandInterface(context), false);
+        super(name, notifier, context, new SipCommandInterface(context), false, SimCardID.ID_ZERO); /* dual sim */
     }
 
     @Override
@@ -133,6 +138,12 @@ abstract class SipPhoneBase extends PhoneBase {
     @Override
     public PhoneConstants.State getState() {
         return mState;
+    }
+
+    /* for dual sim */
+    public SimCardID getSimCardId()
+    {
+        return mSimCardId;
     }
 
     @Override
@@ -270,6 +281,9 @@ abstract class SipPhoneBase extends PhoneBase {
 
     @Override
     public void setRadioPower(boolean power) {
+    }
+
+    public void setSimPower(boolean power) {
     }
 
     @Override

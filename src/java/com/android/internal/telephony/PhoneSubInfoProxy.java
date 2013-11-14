@@ -21,14 +21,21 @@ import java.io.PrintWriter;
 
 import android.os.ServiceManager;
 
+import com.android.internal.telephony.RILConstants.SimCardID;
 
 public class PhoneSubInfoProxy extends IPhoneSubInfo.Stub {
     private PhoneSubInfo mPhoneSubInfo;
 
     public PhoneSubInfoProxy(PhoneSubInfo phoneSubInfo) {
         mPhoneSubInfo = phoneSubInfo;
-        if(ServiceManager.getService("iphonesubinfo") == null) {
-            ServiceManager.addService("iphonesubinfo", this);
+        if (SimCardID.ID_ONE == phoneSubInfo.mPhone.getSimCardId()) {
+            if (ServiceManager.getService("iphonesubinfo2") == null) {
+                ServiceManager.addService("iphonesubinfo2", this);
+            }
+        } else {
+            if (ServiceManager.getService("iphonesubinfo") == null) {
+                ServiceManager.addService("iphonesubinfo", this);
+            }
         }
     }
 

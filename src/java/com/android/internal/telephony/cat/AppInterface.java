@@ -32,11 +32,21 @@ public interface AppInterface {
     public static final String CAT_SESSION_END_ACTION =
                                     "android.intent.action.stk.session_end";
 
+    public static final String CAT_EXTRA_CAT_CMD = "CAT CMD";
+    public static final String CAT_EXTRA_SIM_ID = "simId";
+
     /*
      * Callback function from app to telephony to pass a result code and user's
      * input back to the ICC.
      */
     void onCmdResponse(CatResponseMessage resMsg);
+
+    /*
+     * Function from app to telephony to pass a event message to the UICC.
+     */
+    void onEventDownload(StkEventMessage eventMsg);
+
+    /*
 
     /*
      * Enumeration for representing "Type of Command" of proactive commands.
@@ -61,6 +71,7 @@ public interface AppInterface {
         SET_UP_MENU(0x25),
         SET_UP_CALL(0x10),
         PROVIDE_LOCAL_INFORMATION(0x26),
+        SET_POLL_INTERVAL(0x03),
         OPEN_CHANNEL(0x40),
         CLOSE_CHANNEL(0x41),
         RECEIVE_DATA(0x42),

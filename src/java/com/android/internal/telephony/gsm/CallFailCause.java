@@ -31,6 +31,7 @@ public interface CallFailCause {
     static final int NORMAL_CLEARING     = 16;
     // Busy Tone
     static final int USER_BUSY           = 17;
+    static final int USER_ALERTING_NO_ANSWER = 19;
 
     // No Tone
     static final int NUMBER_CHANGED      = 22;

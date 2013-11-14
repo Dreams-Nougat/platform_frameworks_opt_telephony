@@ -31,9 +31,11 @@ import com.android.internal.telephony.test.SimulatedRadioControl;
 import com.android.internal.telephony.uicc.IsimRecords;
 import com.android.internal.telephony.uicc.UsimServiceTable;
 
-import com.android.internal.telephony.PhoneConstants.*; // ???? 
+import com.android.internal.telephony.PhoneConstants.*; // ????
 
 import java.util.List;
+
+import com.android.internal.telephony.RILConstants.SimCardID;
 
 /**
  * Internal interface used to control the phone; SDK developers cannot
@@ -256,6 +258,13 @@ public interface Phone {
      *  @return The string name.
      */
     String getPhoneName();
+
+    /**
+     * Returns a SimCardID identifier for this phone interface for parties
+     *  outside the phone app process.
+     *  @return The phone id.
+     */
+    SimCardID getSimCardId();
 
     /**
      * Return a numerical identifier for the phone radio interface.
@@ -752,6 +761,14 @@ public interface Phone {
      */
     Call getRingingCall();
 
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    Call getVTCall();
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
+
     /**
      * Initiate a new voice connection. This happens asynchronously, so you
      * cannot assume the audio path is connected (or a call index has been
@@ -763,6 +780,14 @@ public interface Phone {
      * handled asynchronously.
      */
     Connection dial(String dialString) throws CallStateException;
+
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    Connection dial(String dialString, boolean isVTCall) throws CallStateException;
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     /**
      * Initiate a new voice connection with supplementary User to User
@@ -847,6 +872,14 @@ public interface Phone {
      * @param power true means "on", false means "off".
      */
     void setRadioPower(boolean power);
+
+    /**
+     * This is used to notify on the status on "the other" ICC card in order to determine
+     * if it's okay to kill the power-on delay issued to improve the dual-SIM camp on time
+     *
+     * {@hide}
+     */
+     void setRadioPowerOnNow();
 
     /**
      * Get voice message waiting indicator status. No change notification
@@ -1512,6 +1545,18 @@ public interface Phone {
      * @param h Handler to be removed from the registrant list.
      */
     void unregisterForSignalInfo(Handler h);
+
+    /* To process GCF test case 27.16 - SIM ERROR */
+    /**
+     * Sets the handler for Event Notifications for SIM Error.
+     * Unlike the register* methods, there's only one notification handler
+     *
+     * @param h Handler for notification message.
+     * @param what User-defined message code.
+     * @param obj User object.
+     */
+    void setOnUnsolOemHookRaw(Handler h, int what, Object obj);
+    void unSetOnUnsolOemHookRaw(Handler h);
 
     /**
      * Register for display information notifications from the network.

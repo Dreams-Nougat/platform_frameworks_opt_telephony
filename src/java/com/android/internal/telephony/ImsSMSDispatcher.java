@@ -35,6 +35,8 @@ import com.android.internal.telephony.gsm.GsmInboundSmsHandler;
 import com.android.internal.telephony.cdma.CdmaInboundSmsHandler;
 import com.android.internal.telephony.SmsBroadcastUndelivered;
 
+import com.android.internal.telephony.RILConstants.SimCardID; /* dual sim */
+
 public final class ImsSMSDispatcher extends SMSDispatcher {
     private static final String TAG = "RIL_ImsSms";
 
@@ -61,7 +63,8 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
                 storageMonitor, phone);
         mCdmaInboundSmsHandler = CdmaInboundSmsHandler.makeInboundSmsHandler(phone.getContext(),
                 storageMonitor, phone, (CdmaSMSDispatcher) mCdmaDispatcher);
-        mGsmDispatcher = new GsmSMSDispatcher(phone, usageMonitor, this, mGsmInboundSmsHandler);
+        mGsmDispatcher = new GsmSMSDispatcher(phone,
+                storageMonitor, usageMonitor, this, mGsmInboundSmsHandler, SimCardID.ID_ZERO);
         Thread broadcastThread = new Thread(new SmsBroadcastUndelivered(phone.getContext(),
                 mGsmInboundSmsHandler, mCdmaInboundSmsHandler));
         broadcastThread.start();

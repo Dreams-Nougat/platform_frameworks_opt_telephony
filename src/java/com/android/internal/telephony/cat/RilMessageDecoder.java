@@ -24,6 +24,8 @@ import com.android.internal.util.State;
 import com.android.internal.util.StateMachine;
 import android.os.Message;
 
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 /**
  * Class used for queuing raw ril messages, decoding them into CommanParams
  * objects and sending the result back to the CAT Service.
@@ -35,7 +37,7 @@ class RilMessageDecoder extends StateMachine {
     private static final int CMD_PARAMS_READY = 2;
 
     // members
-    private static RilMessageDecoder sInstance = null;
+    private static RilMessageDecoder sInstance[] = { null, null };
     private CommandParamsFactory mCmdParamsFactory = null;
     private RilMessage mCurrentRilMessage = null;
     private Handler mCaller = null;
@@ -52,11 +54,15 @@ class RilMessageDecoder extends StateMachine {
      * @return RilMesssageDecoder
      */
     public static synchronized RilMessageDecoder getInstance(Handler caller, IccFileHandler fh) {
-        if (sInstance == null) {
-            sInstance = new RilMessageDecoder(caller, fh);
-            sInstance.start();
+        return getInstance(caller, fh, SimCardID.ID_ZERO);
+    }
+
+    public static synchronized RilMessageDecoder getInstance(Handler caller, IccFileHandler fh, SimCardID simCardId) {
+        if (sInstance[simCardId.toInt()] == null) {
+            sInstance[simCardId.toInt()] = new RilMessageDecoder(caller, fh, simCardId);
+            sInstance[simCardId.toInt()].start();
         }
-        return sInstance;
+        return sInstance[simCardId.toInt()];
     }
 
     /**
@@ -90,7 +96,7 @@ class RilMessageDecoder extends StateMachine {
         msg.sendToTarget();
     }
 
-    private RilMessageDecoder(Handler caller, IccFileHandler fh) {
+    private RilMessageDecoder(Handler caller, IccFileHandler fh, SimCardID simCardId) {
         super("RilMessageDecoder");
 
         addState(mStateStart);
@@ -98,7 +104,7 @@ class RilMessageDecoder extends StateMachine {
         setInitialState(mStateStart);
 
         mCaller = caller;
-        mCmdParamsFactory = CommandParamsFactory.getInstance(this, fh);
+        mCmdParamsFactory = CommandParamsFactory.getInstance(this, fh, simCardId);
     }
 
     private class StateStart extends State {

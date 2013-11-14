@@ -39,6 +39,15 @@ public abstract class BaseCommands implements CommandsInterface {
     protected RegistrantList mOffOrNotAvailRegistrants = new RegistrantList();
     protected RegistrantList mNotAvailRegistrants = new RegistrantList();
     protected RegistrantList mCallStateRegistrants = new RegistrantList();
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    protected RegistrantList mVTCallStateRegistrants = new RegistrantList();
+    protected RegistrantList mVTIncomeCallRegistrants = new RegistrantList();
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
+
     protected RegistrantList mVoiceNetworkStateRegistrants = new RegistrantList();
     protected RegistrantList mDataNetworkStateRegistrants = new RegistrantList();
     protected RegistrantList mVoiceRadioTechChangedRegistrants = new RegistrantList();
@@ -221,6 +230,31 @@ public abstract class BaseCommands implements CommandsInterface {
     public void unregisterForCallStateChanged(Handler h) {
         mCallStateRegistrants.remove(h);
     }
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    public void registerForVTCallStateChanged(Handler h, int what, Object obj) {
+        Registrant r = new Registrant (h, what, obj);
+
+        mVTCallStateRegistrants.add(r);
+    }
+
+    public void unregisterForVTCallStateChanged(Handler h) {
+        mVTCallStateRegistrants.remove(h);
+    }
+
+    public void registerForVTCallIncomeChanged(Handler h, int what, Object obj) {
+        Registrant r = new Registrant (h, what, obj);
+
+        mVTIncomeCallRegistrants.add(r);
+    }
+
+    public void unregisterForVTCallIncomeChanged(Handler h) {
+        mVTIncomeCallRegistrants.remove(h);
+    }
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     @Override
     public void registerForVoiceNetworkStateChanged(Handler h, int what, Object obj) {

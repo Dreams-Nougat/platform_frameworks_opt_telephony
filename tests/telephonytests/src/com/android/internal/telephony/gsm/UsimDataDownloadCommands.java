@@ -210,6 +210,10 @@ class UsimDataDownloadCommands extends BaseCommands {
     }
 
     @Override
+    public void getPinRemainingStatus(Message result) {
+    }
+
+    @Override
     public void changeBarringPassword(String facility, String oldPwd, String newPwd,
             Message result) {
     }
@@ -382,6 +386,10 @@ class UsimDataDownloadCommands extends BaseCommands {
 
     @Override
     public void setRadioPower(boolean on, Message response) {
+    }
+
+    @Override
+    public void setSimPower(boolean on, Message response) {
     }
 
     @Override

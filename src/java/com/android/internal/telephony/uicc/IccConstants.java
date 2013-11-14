@@ -47,6 +47,14 @@ public interface IccConstants {
     // USIM SIM file ids from TS 31.102
     public static final int EF_PBR = 0x4F30;
 
+    // Define as a parameter to make Icc provider know about this is GAS case,
+    // and the defined value of EF_GAS might be different among different SIMs
+    static final int EF_GAS = 0x4F4C;
+
+    // define this for query info purpose only, the value is defined randomly
+    static final int EF_INFO = 0x6969;
+    static final int EF_2GINFO = 0x9696;
+
     // GSM SIM file ids from CPHS (phase 2, version 4.2) CPHS4_2.WW6
     static final int EF_MAILBOX_CPHS = 0x6F17;
     static final int EF_VOICE_MAIL_INDICATOR_CPHS = 0x6F11;
@@ -55,6 +63,9 @@ public interface IccConstants {
     static final int EF_SPN_SHORT_CPHS = 0x6f18;
     static final int EF_INFO_CPHS = 0x6f16;
     static final int EF_CSP_CPHS = 0x6f15;
+
+    // 3GPP TS 51.011 V5.0.0 (2001-12)
+    static final int EF_CBMI = 0x6f45;
 
     // CDMA RUIM file ids from 3GPP2 C.S0023-0
     static final int EF_CST = 0x6f32;
@@ -91,4 +102,11 @@ public interface IccConstants {
 
     //UICC access
     static final String DF_ADF = "7FFF";
+
+    // for query ADN capabilities
+    static final int INFO_ADN = 0;
+    static final int INFO_EMAIL = 1;
+    static final int INFO_ANR = 2;
+    static final int INFO_GROUP = 3;
+    static final int INFO_NUM = 4;
 }

@@ -76,6 +76,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Random;
 
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 /**
  * {@hide}
  */
@@ -237,8 +239,11 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     int mWakeLockCount;
 
     SparseArray<RILRequest> mRequestList = new SparseArray<RILRequest>();
+    private String mSocketName;
 
     Object     mLastNITZTimeInfo;
+
+    private int mRadioPower = -1;
 
     // When we are testing emergency calls
     AtomicBoolean mTestingEmergencyCall = new AtomicBoolean(false);
@@ -256,6 +261,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     static final int RESPONSE_UNSOLICITED = 1;
 
     static final String SOCKET_NAME_RIL = "rild";
+    static final String SOCKET_NAME_RIL1 = "rild1";
 
     static final int SOCKET_OPEN_RETRY_MILLIS = 4 * 1000;
 
@@ -471,7 +477,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
                 try {
                     s = new LocalSocket();
-                    l = new LocalSocketAddress(SOCKET_NAME_RIL,
+                    l = new LocalSocketAddress(mSocketName,
                             LocalSocketAddress.Namespace.RESERVED);
                     s.connect(l);
                 } catch (IOException ex){
@@ -488,12 +494,12 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
                     if (retryCount == 8) {
                         Rlog.e (RILJ_LOG_TAG,
-                            "Couldn't find '" + SOCKET_NAME_RIL
+                            "Couldn't find '" + mSocketName
                             + "' socket after " + retryCount
                             + " times, continuing to retry silently");
                     } else if (retryCount > 0 && retryCount < 8) {
                         Rlog.i (RILJ_LOG_TAG,
-                            "Couldn't find '" + SOCKET_NAME_RIL
+                            "Couldn't find '" + mSocketName
                             + "' socket; retrying after timeout");
                     }
 
@@ -569,8 +575,11 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
 
     //***** Constructors
-
     public RIL(Context context, int preferredNetworkType, int cdmaSubscription) {
+        this(context, preferredNetworkType, cdmaSubscription, SimCardID.ID_ZERO);
+    }
+
+    public RIL(Context context, int preferredNetworkType, int cdmaSubscription, SimCardID simCardId) {
         super(context);
         if (RILJ_LOGD) {
             riljLog("RIL(context, preferredNetworkType=" + preferredNetworkType +
@@ -584,9 +593,16 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, RILJ_LOG_TAG);
         mWakeLock.setReferenceCounted(false);
-        mWakeLockTimeout = SystemProperties.getInt(TelephonyProperties.PROPERTY_WAKE_LOCK_TIMEOUT,
+        mWakeLockTimeout = SystemProperties.getInt(TelephonyProperties.PROPERTY_WAKE_LOCK_TIMEOUT+((SimCardID.ID_ZERO != simCardId)?("_"+String.valueOf(simCardId.toInt())):""),
                 DEFAULT_WAKE_LOCK_TIMEOUT);
         mWakeLockCount = 0;
+
+        if(simCardId == SimCardID.ID_ONE) {
+            mSocketName = SOCKET_NAME_RIL1;
+        } else {
+            mSocketName = SOCKET_NAME_RIL;
+        }
+        if (RILJ_LOGD) riljLog("RIL Socket Name:" + mSocketName);
 
         mSenderThread = new HandlerThread("RILSender");
         mSenderThread.start();
@@ -781,18 +797,48 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         send(rr);
     }
 
-    @Override
     public void
+    getPinRemainingStatus(Message result) {
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_OEM_HOOK_RAW, result);
+        byte [] data = new byte [] {'B', 'R', 'C', 'M', RILConstants.BRIL_HOOK_QUERY_SIM_PIN_REMAINING};
+        rr.mParcel.writeByteArray(data);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+
+        send(rr);
+    }
+
+    public void
+    setSimPower(boolean on, Message response){
+        Rlog.e(RILJ_LOG_TAG, "setSimPower ");
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_OEM_HOOK_RAW, response);
+        byte simpoweron=0x00;
+        if (on) {
+            simpoweron=0x01;
+        }
+        byte [] data = new byte [] {'B', 'R', 'C', 'M', RILConstants.BRIL_HOOK_POWER_ONOFF_CARD,simpoweron};
+        rr.mParcel.writeByteArray(data);
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+        send(rr);
+    }
+
+     @Override
+   public void
     changeBarringPassword(String facility, String oldPwd, String newPwd, Message result) {
+        changeBarringPassword(facility, oldPwd, newPwd, newPwd, result);
+    }
+
+    public void
+    changeBarringPassword(String facility, String oldPwd, String newPwd, String RenewPwd, Message result) {
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_CHANGE_BARRING_PASSWORD, result);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
-        rr.mParcel.writeInt(3);
+        rr.mParcel.writeInt(4);
         rr.mParcel.writeString(facility);
         rr.mParcel.writeString(oldPwd);
         rr.mParcel.writeString(newPwd);
-
+        rr.mParcel.writeString(RenewPwd);
         send(rr);
     }
 
@@ -862,6 +908,85 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
         send(rr);
     }
+
+    // dial for vtcall, VideoPhone
+    public void
+    dial(String address, int clirMode, UUSInfo uusInfo, Message result,int vtdial) {
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_DIAL, result);
+
+        rr.mParcel.writeString(address);
+        rr.mParcel.writeInt(clirMode);
+
+
+        if (uusInfo == null) {
+            rr.mParcel.writeInt(0); // UUS information is absent
+        } else {
+            rr.mParcel.writeInt(1); // UUS information is present
+            rr.mParcel.writeInt(uusInfo.getType());
+            rr.mParcel.writeInt(uusInfo.getDcs());
+            rr.mParcel.writeByteArray(uusInfo.getUserData());
+        }
+
+        rr.mParcel.writeInt(vtdial); // dial for vtcall, VideoPhone
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+
+        send(rr);
+    }
+
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    public void
+    dialVT (String address, int clirMode, Message result) {
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_DIAL_VT, result);
+
+        rr.mParcel.writeString(address);
+        rr.mParcel.writeInt(clirMode);
+        rr.mParcel.writeInt(0); // UUS information is absent
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+
+        send(rr);
+    }
+
+    public void
+    hangupVTConnection (int vtIndex, Message result) {
+        if (RILJ_LOGD) riljLog("hangupConnection: vtIndex=" + vtIndex);
+
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_HANGUP_VT, result);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest) + " " +
+                vtIndex);
+
+        rr.mParcel.writeInt(1);
+        rr.mParcel.writeInt(vtIndex);
+
+        send(rr);
+    }
+
+    public void
+    acceptVTCall (Message result) {
+        RILRequest rr
+            = RILRequest.obtain(RIL_REQUEST_ANSWER_VT, result);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+            send(rr);
+        }
+
+    public void
+    rejectVTCall (Message result) {
+        RILRequest rr
+            = RILRequest.obtain(RIL_REQUEST_HANGUP_VT, result);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+            rr.mParcel.writeInt(1);
+            rr.mParcel.writeInt(1);
+            send(rr);
+        }
+
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     @Override
     public void
@@ -1428,6 +1553,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(on ? 1 : 0);
+
+        mRadioPower = on ? 1 : 0;
 
         if (RILJ_LOGD) {
             riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
@@ -2350,6 +2477,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_REQUEST_SEND_SMS_EXPECT_MORE: ret =  responseSMS(p); break;
             case RIL_REQUEST_SETUP_DATA_CALL: ret =  responseSetupDataCall(p); break;
             case RIL_REQUEST_SIM_IO: ret =  responseICC_IO(p); break;
+            case RIL_REQUEST_SIM_TRANSMIT_BASIC: ret =  responseICC_IO(p); break;
+            case RIL_REQUEST_SIM_OPEN_CHANNEL: ret  = responseInts(p); break;
+            case RIL_REQUEST_SIM_CLOSE_CHANNEL: ret  = responseVoid(p); break;
+            case RIL_REQUEST_SIM_TRANSMIT_CHANNEL: ret = responseICC_IO(p); break;
             case RIL_REQUEST_SEND_USSD: ret =  responseVoid(p); break;
             case RIL_REQUEST_CANCEL_USSD: ret =  responseVoid(p); break;
             case RIL_REQUEST_GET_CLIR: ret =  responseInts(p); break;
@@ -2620,6 +2751,46 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_CELL_INFO_LIST: ret = responseCellInfoList(p); break;
             case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED: ret =  responseVoid(p); break;
 
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_CALL_CONF: 
+                 ret = responseInts(p);
+                 break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_PROGRESS_INFO_IND:
+                 ret = responseInts(p);
+                 break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_CONNECT:
+                 ret = responseInts(p);
+                 break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_SETUP_IND:
+                 ret = responseVoid(p);
+                 break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_INCOM:
+                 ret = responseRaw(p);
+                 break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_END:
+                 ret = responseInts(p);
+                 break;
+
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_IND:
+                 ret = responseVoid(p);
+                 break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_REQ:
+                 ret = responseVoid(p);
+                 break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_COMPLETE_CONF:
+                 ret = responseVoid(p);
+                 break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_RES:
+                 ret = responseVoid(p);
+                 break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_UNKNOWN:
+                 ret = responseVoid(p);
+                 break;
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
             default:
                 throw new RuntimeException("Unrecognized unsol response: " + response);
             //break; (implied)
@@ -2922,8 +3093,14 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 if (RILJ_LOGD) unsljLogvRet(response, ret);
                 if (mRingbackToneRegistrants != null) {
                     boolean playtone = (((int[])ret)[0] == 1);
+
+                    SimCardID simId = SimCardID.ID_ZERO;
+                    if (SOCKET_NAME_RIL1.equals(mSocketName)) {
+                        simId = SimCardID.ID_ONE;
+                    }
+
                     mRingbackToneRegistrants.notifyRegistrants(
-                                        new AsyncResult (null, playtone, null));
+                                        new AsyncResult (simId, playtone, null));
                 }
                 break;
 
@@ -2992,6 +3169,68 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 }
                 break;
             }
+
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_CALL_CONF:
+                {
+                    if (RILJ_LOGD) unsljLog(response);
+
+                    if(mVTCallStateRegistrants != null)
+                        mVTCallStateRegistrants
+                        .notifyRegistrants(new AsyncResult(null, ret, null));
+                }
+                break;
+
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_PROGRESS_INFO_IND:
+                {
+                    if (RILJ_LOGD) unsljLog(response);
+                    if(mVTCallStateRegistrants != null)
+                        mVTCallStateRegistrants
+                        .notifyRegistrants(new AsyncResult(null, ret, null));
+                }
+                break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_CONNECT:
+                {
+                    if (RILJ_LOGD) unsljLog(response);
+                    //Log.w(LOG_TAG,"ril.java get connected of vt, id="+((int[])ret)[0]);
+                    if(mVTCallStateRegistrants != null)
+                        mVTCallStateRegistrants
+                        .notifyRegistrants(new AsyncResult(null, ret, null));
+                break;
+                }
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_SETUP_IND:
+                break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_INCOM:
+                if (RILJ_LOGD) unsljLogvRet(response, ret);
+                if(mVTIncomeCallRegistrants != null)
+                    mVTIncomeCallRegistrants
+                    .notifyRegistrants(new AsyncResult(null, ret, null));
+
+                break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_END:
+                if (RILJ_LOGD) unsljLog(response);
+
+                if(mVTCallStateRegistrants != null)
+                    mVTCallStateRegistrants
+                    .notifyRegistrants(new AsyncResult(null, ret, null));
+
+                break;
+
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_IND:
+                break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_REQ:
+                break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_COMPLETE_CONF:
+                break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_RES:
+                break;
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_UNKNOWN:
+                break;
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
         }
     }
 
@@ -3228,16 +3467,23 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 riljLogv("Incoming UUS : NOT present!");
             }
 
+            dc.isVideoCall = (0 != p.readInt()); //vt call add, make sure it is same order at ril.cpp VideoPhone
+
             // Make sure there's a leading + on addresses with a TOA of 145
             dc.number = PhoneNumberUtils.stringFromStringAndTOA(dc.number, dc.TOA);
 
             response.add(dc);
 
+            SimCardID simId = SimCardID.ID_ZERO;
+            if (SOCKET_NAME_RIL1.equals(mSocketName)) {
+                simId = SimCardID.ID_ONE;
+            }
+
             if (dc.isVoicePrivacy) {
-                mVoicePrivacyOnRegistrants.notifyRegistrants();
+                mVoicePrivacyOnRegistrants.notifyRegistrants(new AsyncResult (null, simId, null));
                 riljLog("InCall VoicePrivacy is enabled");
             } else {
-                mVoicePrivacyOffRegistrants.notifyRegistrants();
+                mVoicePrivacyOffRegistrants.notifyRegistrants(new AsyncResult (null, simId, null));
                 riljLog("InCall VoicePrivacy is disabled");
             }
         }
@@ -3394,7 +3640,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
        // Determine the radio access type
        String radioString = SystemProperties.get(
-               TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE, "unknown");
+               TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE+((!SOCKET_NAME_RIL.equals(mSocketName))?("_"+String.valueOf(1)):""), "unknown");
        int radioType;
        if (radioString.equals("GPRS")) {
            radioType = NETWORK_TYPE_GPRS;
@@ -3659,6 +3905,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_REQUEST_SEND_SMS_EXPECT_MORE: return "SEND_SMS_EXPECT_MORE";
             case RIL_REQUEST_SETUP_DATA_CALL: return "SETUP_DATA_CALL";
             case RIL_REQUEST_SIM_IO: return "SIM_IO";
+            case RIL_REQUEST_SIM_TRANSMIT_BASIC: return "SIM_TRANSMIT_BASIC";
+            case RIL_REQUEST_SIM_OPEN_CHANNEL: return "SIM_OPEN_CHANNEL";
+            case RIL_REQUEST_SIM_CLOSE_CHANNEL: return "SIM_CLOSE_CHANNEL";
+            case RIL_REQUEST_SIM_TRANSMIT_CHANNEL: return "SIM_TRANSMIT_CHANNEL";
             case RIL_REQUEST_SEND_USSD: return "SEND_USSD";
             case RIL_REQUEST_CANCEL_USSD: return "CANCEL_USSD";
             case RIL_REQUEST_GET_CLIR: return "GET_CLIR";
@@ -3801,6 +4051,24 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED:
                 return "UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED";
             default: return "<unknown response>";
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_CALL_CONF: return "RIL_UNSOL_RESPONSE_VT_CALL_EVENT_CALL_CONF";
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_PROGRESS_INFO_IND: return "RIL_UNSOL_RESPONSE_VT_CALL_EVENT_PROGRESS_INFO_IND";
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_CONNECT: return "RIL_UNSOL_RESPONSE_VT_CALL_EVENT_CONNECT";
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_SETUP_IND:return "RIL_UNSOL_RESPONSE_VT_CALL_EVENT_SETUP_IND";
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_INCOM:return "RIL_UNSOL_RESPONSE_VT_CALL_EVENT_INCOM";
+
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_END: return "RIL_UNSOL_RESPONSE_VT_CALL_EVENT_END";
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_IND: return "RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_IND";
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_REQ: return "RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_REQ";
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_COMPLETE_CONF:return "RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_COMPLETE_CONF";
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_RES:return "RIL_UNSOL_RESPONSE_VT_CALL_EVENT_MODIFY_RES";
+            case RIL_UNSOL_RESPONSE_VT_CALL_EVENT_UNKNOWN: return "RIL_UNSOL_RESPONSE_VT_CALL_EVENT_UNKNOWN";
+ /*
+ * End - Added by BrcmVT (2012/08/25)
+ */
         }
     }
 

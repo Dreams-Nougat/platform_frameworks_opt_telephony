@@ -49,6 +49,8 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 /**
  * {@hide}
  */
@@ -182,11 +184,22 @@ public final class GsmCallTracker extends CallTracker {
         }
     }
 
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    /* videophone */
+    /**
+     * clirMode is one of the CLIR_ constants
+     */
+    Connection
+    dial (String dialString, int clirMode, UUSInfo uusInfo) throws CallStateException {
+        return dial (dialString, clirMode, uusInfo, false);
+    }
     /**
      * clirMode is one of the CLIR_ constants
      */
     synchronized Connection
-    dial (String dialString, int clirMode, UUSInfo uusInfo) throws CallStateException {
+    dial (String dialString, int clirMode, UUSInfo uusInfo, boolean isVTCall) throws CallStateException {
         // note that this triggers call state changed notif
         clearDisconnected();
 
@@ -217,7 +230,7 @@ public final class GsmCallTracker extends CallTracker {
         }
 
         mPendingMO = new GsmConnection(mPhone.getContext(), checkForTestEmergencyNumber(dialString),
-                this, mForegroundCall);
+                this, mForegroundCall, isVTCall); //videophone: add for VTCall out
         mHangupPendingMO = false;
 
         if (mPendingMO.mAddress == null || mPendingMO.mAddress.length() == 0
@@ -233,7 +246,8 @@ public final class GsmCallTracker extends CallTracker {
             // Always unmute when initiating a new call
             setMute(false);
 
-            mCi.dial(mPendingMO.mAddress, clirMode, uusInfo, obtainCompleteMessage());
+            //videophone: add for VTCall out
+            mCi.dial(mPendingMO.mAddress, clirMode, uusInfo, obtainCompleteMessage(), isVTCall ? 1 : 0);
         }
 
         updatePhoneState();
@@ -244,18 +258,32 @@ public final class GsmCallTracker extends CallTracker {
 
     Connection
     dial(String dialString) throws CallStateException {
-        return dial(dialString, CommandsInterface.CLIR_DEFAULT, null);
+        return dial(dialString, CommandsInterface.CLIR_DEFAULT, null, false);
     }
 
     Connection
     dial(String dialString, UUSInfo uusInfo) throws CallStateException {
-        return dial(dialString, CommandsInterface.CLIR_DEFAULT, uusInfo);
+        return dial(dialString, CommandsInterface.CLIR_DEFAULT, uusInfo, false);
+    }
+
+    Connection
+    dial(String dialString, UUSInfo uusInfo, boolean isVTCall) throws CallStateException {
+        return dial(dialString, CommandsInterface.CLIR_DEFAULT, uusInfo, isVTCall);
     }
 
     Connection
     dial(String dialString, int clirMode) throws CallStateException {
-        return dial(dialString, clirMode, null);
+        return dial(dialString, clirMode, null, false);
     }
+
+    Connection
+    dial(String dialString, int clirMode, boolean isVTCall) throws CallStateException {
+        return dial(dialString, clirMode, null, isVTCall);
+    }
+
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     void
     acceptCall () throws CallStateException {
@@ -329,7 +357,7 @@ public final class GsmCallTracker extends CallTracker {
         boolean ret;
         int serviceState = mPhone.getServiceState().getState();
         String disableCall = SystemProperties.get(
-                TelephonyProperties.PROPERTY_DISABLE_CALL, "false");
+                TelephonyProperties.PROPERTY_DISABLE_CALL+((SimCardID.ID_ZERO != mPhone.getSimCardId())?("_"+String.valueOf(mPhone.getSimCardId().toInt())):""), "false");
 
         ret = (serviceState != ServiceState.STATE_POWER_OFF)
                 && mPendingMO == null
@@ -915,7 +943,7 @@ public final class GsmCallTracker extends CallTracker {
                     GsmCellLocation loc = ((GsmCellLocation)mPhone.getCellLocation());
                     EventLog.writeEvent(EventLogTags.CALL_DROP,
                             causeCode, loc != null ? loc.getCid() : -1,
-                            TelephonyManager.getDefault().getNetworkType());
+                            TelephonyManager.getDefault(mPhone.getSimCardId()).getNetworkType());
                 }
 
                 for (int i = 0, s =  mDroppedDuringPoll.size()

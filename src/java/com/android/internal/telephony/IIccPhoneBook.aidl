@@ -19,7 +19,6 @@ package com.android.internal.telephony;
 import com.android.internal.telephony.uicc.AdnRecord;
 
 
-
 /** Interface for applications to access the ICC phone book.
  *
  * <p>The following code snippet demonstrates a static method to
@@ -66,7 +65,7 @@ interface IIccPhoneBook {
     boolean updateAdnRecordsInEfBySearch(int efid,
             String oldTag, String oldPhoneNumber,
             String newTag, String newPhoneNumber,
-            String pin2);
+            String pin2,in String[] oldEmails,in String[] newEmails,in String[] oldAnrs,in String[] newAnrs,in String[] oldGroups,in String[] newGroups);
 
     /**
      * Update an ADN-like EF record by record index
@@ -85,7 +84,7 @@ interface IIccPhoneBook {
      */
     boolean updateAdnRecordsInEfByIndex(int efid, String newTag,
             String newPhoneNumber, int index,
-            String pin2);
+            String pin2, in String[] newEmails, in String[] newAnrs, in String[] newGroups);
 
     /**
      * Get the max munber of records in efid
@@ -98,4 +97,6 @@ interface IIccPhoneBook {
      */
     int[] getAdnRecordsSize(int efid);
 
+    /* Check is USIM or not. */
+    boolean IsUSIM();
 }

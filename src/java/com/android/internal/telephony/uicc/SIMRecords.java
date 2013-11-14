@@ -19,7 +19,13 @@ package com.android.internal.telephony.uicc;
 import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA;
 import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_OPERATOR_ISO_COUNTRY;
 import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC;
+import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_CB_CHANNEL_LIST;
+import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_MAX_CB_CHANNELS;
+
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncResult;
 import android.os.Message;
 import android.os.SystemProperties;
@@ -29,6 +35,7 @@ import android.text.TextUtils;
 import android.telephony.Rlog;
 
 import com.android.internal.telephony.CommandsInterface;
+import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
 import com.android.internal.telephony.MccTable;
 import com.android.internal.telephony.SmsConstants;
 import com.android.internal.telephony.gsm.SimTlv;
@@ -37,6 +44,8 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 
 /**
  * {@hide}
@@ -183,10 +192,10 @@ public class SIMRecords extends IccRecords {
 
     // ***** Constructor
 
-    public SIMRecords(UiccCardApplication app, Context c, CommandsInterface ci) {
-        super(app, c, ci);
+    public SIMRecords(UiccCardApplication app, Context c, CommandsInterface ci, SimCardID simCardId) {
+        super(app, c, ci, simCardId);
 
-        mAdnCache = new AdnRecordCache(mFh);
+        mAdnCache = new AdnRecordCache(mFh, ci);
 
         mVmConfig = new VoiceMailConstants();
         mSpnOverride = new SpnOverride();
@@ -203,6 +212,9 @@ public class SIMRecords extends IccRecords {
         resetRecords();
         mParentApp.registerForReady(this, EVENT_APP_READY, null);
         if (DBG) log("SIMRecords X ctor this=" + this);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("android.intent.action.API_SIM");
+        mContext.registerReceiver(mIntentReceiver, filter);
     }
 
     @Override
@@ -212,6 +224,7 @@ public class SIMRecords extends IccRecords {
         mCi.unregisterForIccRefresh(this);
         mCi.unSetOnSmsOnSim(this);
         mParentApp.unregisterForReady(this);
+        mContext.unregisterReceiver(mIntentReceiver);  // unregisterReceiver
         resetRecords();
         super.dispose();
     }
@@ -239,9 +252,12 @@ public class SIMRecords extends IccRecords {
         mAdnCache.reset();
 
         log("SIMRecords: onRadioOffOrNotAvailable set 'gsm.sim.operator.numeric' to operator=null");
-        SystemProperties.set(PROPERTY_ICC_OPERATOR_NUMERIC, null);
-        SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, null);
-        SystemProperties.set(PROPERTY_ICC_OPERATOR_ISO_COUNTRY, null);
+        super.setSystemPropertyIcc(PROPERTY_ICC_OPERATOR_NUMERIC, null);
+        super.setSystemPropertyIcc(PROPERTY_ICC_OPERATOR_ALPHA, null);
+        super.setSystemPropertyIcc(PROPERTY_ICC_OPERATOR_ISO_COUNTRY, null);
+
+        super.setSystemPropertyIcc(PROPERTY_ICC_CB_CHANNEL_LIST, "");
+        super.setSystemPropertyIcc(PROPERTY_ICC_MAX_CB_CHANNELS, "0");
 
         // recordsRequested is set to false indicating that the SIM
         // read requests made so far are not valid. This is set to
@@ -548,7 +564,7 @@ public class SIMRecords extends IccRecords {
             return null;
         }
         if (mMncLength == UNINITIALIZED || mMncLength == UNKNOWN) {
-            log("getSIMOperatorNumeric: bad mncLength");
+            log("getOperatorNumeric: bad mMncLength");
             return null;
         }
 
@@ -556,6 +572,20 @@ public class SIMRecords extends IccRecords {
         // length of mcc = 3 (TS 23.003 Section 2.2)
         return mImsi.substring(0, 3 + mMncLength);
     }
+
+    private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals("android.intent.action.API_SIM")) {
+                int simId = intent.getIntExtra("simId", 0);
+                if (simId == mSimCardId.toInt()) {
+                    if (mMncLength != UNKNOWN && mMncLength != UNINITIALIZED) {
+                        MccTable.updateMccMncConfiguration(mContext, mImsi.substring(0, 3 + mMncLength), mSimCardId);
+                    }
+                }
+            }
+        }
+    };
 
     // ***** Overridden from Handler
     @Override
@@ -625,7 +655,7 @@ public class SIMRecords extends IccRecords {
 
                 if (mMncLength != UNKNOWN && mMncLength != UNINITIALIZED) {
                     // finally have both the imsi and the mncLength and can parse the imsi properly
-                    MccTable.updateMccMncConfiguration(mContext, mImsi.substring(0, 3 + mMncLength));
+                    MccTable.updateMccMncConfiguration(mContext, mImsi.substring(0, 3 + mMncLength), mSimCardId);
                 }
                 mImsiReadyRegistrants.notifyRegistrants();
             break;
@@ -890,7 +920,7 @@ public class SIMRecords extends IccRecords {
                         // finally have both imsi and the length of the mnc and can parse
                         // the imsi properly
                         MccTable.updateMccMncConfiguration(mContext,
-                                mImsi.substring(0, 3 + mMncLength));
+                                mImsi.substring(0, 3 + mMncLength), mSimCardId);
                     }
                 }
             break;
@@ -1099,9 +1129,6 @@ public class SIMRecords extends IccRecords {
                 isRecordLoadResponse = false;
                 ar = (AsyncResult)msg.obj;
                 if (DBG) log("Sim REFRESH with exception: " + ar.exception);
-                if (ar.exception == null) {
-                    handleSimRefresh((IccRefreshResponse)ar.result);
-                }
                 break;
             case EVENT_GET_CFIS_DONE:
                 isRecordLoadResponse = true;
@@ -1202,7 +1229,7 @@ public class SIMRecords extends IccRecords {
         }
     }
 
-    private void handleSimRefresh(IccRefreshResponse refreshResponse){
+    public void handleSimRefresh(IccRefreshResponse refreshResponse){
         if (refreshResponse == null) {
             if (DBG) log("handleSimRefresh received without input");
             return;
@@ -1226,7 +1253,12 @@ public class SIMRecords extends IccRecords {
                 break;
             case IccRefreshResponse.REFRESH_RESULT_RESET:
                 if (DBG) log("handleSimRefresh with SIM_REFRESH_RESET");
-                mCi.setRadioPower(false, null);
+                //mCi.setRadioPower(false, null);
+                mCi.setSimPower(false,null);
+                super.setStkRefreshSimRestEnable(true);
+                if(super.getStkRefreshSimRestEnable()){
+                    log("Set StkRefreshRestEnable to true");
+                }
                 /* Note: no need to call setRadioPower(true).  Assuming the desired
                 * radio power state is still ON (as tracked by ServiceStateTracker),
                 * ServiceStateTracker will call setRadioPower when it receives the
@@ -1332,14 +1364,14 @@ public class SIMRecords extends IccRecords {
         if (!TextUtils.isEmpty(operator)) {
             log("onAllRecordsLoaded set 'gsm.sim.operator.numeric' to operator='" +
                     operator + "'");
-            SystemProperties.set(PROPERTY_ICC_OPERATOR_NUMERIC, operator);
+        super.setSystemPropertyIcc(PROPERTY_ICC_OPERATOR_NUMERIC, operator);
         } else {
             log("onAllRecordsLoaded empty 'gsm.sim.operator.numeric' skipping");
         }
 
         if (!TextUtils.isEmpty(mImsi)) {
             log("onAllRecordsLoaded set mcc imsi=" + mImsi);
-            SystemProperties.set(PROPERTY_ICC_OPERATOR_ISO_COUNTRY,
+            super.setSystemPropertyIcc(PROPERTY_ICC_OPERATOR_ISO_COUNTRY,
                     MccTable.countryCodeForMcc(Integer.parseInt(mImsi.substring(0,3))));
         } else {
             log("onAllRecordsLoaded empty imsi skipping setting mcc");
@@ -1472,7 +1504,7 @@ public class SIMRecords extends IccRecords {
     @Override
     public int getDisplayRule(String plmn) {
         int rule;
-        if (TextUtils.isEmpty(mSpn) || mSpnDisplayCondition == -1) {
+        if (TextUtils.isEmpty(mSpn) || mSpnDisplayCondition == -1 || mSpn.equals("")) {
             // No EF_SPN content was found on the SIM, or not yet loaded.  Just show ONS.
             rule = SPN_RULE_SHOW_PLMN;
         } else if (isOnMatchingPlmn(plmn)) {
@@ -1576,7 +1608,7 @@ public class SIMRecords extends IccRecords {
 
                     if (DBG) log("Load EF_SPN: " + mSpn
                             + " spnDisplayCondition: " + mSpnDisplayCondition);
-                    SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
+                    super.setSystemPropertyIcc(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
 
                     mSpnState = GetSpnFsmState.IDLE;
                 } else {
@@ -1597,7 +1629,7 @@ public class SIMRecords extends IccRecords {
                     mSpn = IccUtils.adnStringFieldToString(data, 0, data.length);
 
                     if (DBG) log("Load EF_SPN_CPHS: " + mSpn);
-                    SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
+                    super.setSystemPropertyIcc(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
 
                     mSpnState = GetSpnFsmState.IDLE;
                 } else {
@@ -1614,7 +1646,7 @@ public class SIMRecords extends IccRecords {
                     mSpn = IccUtils.adnStringFieldToString(data, 0, data.length);
 
                     if (DBG) log("Load EF_SPN_SHORT_CPHS: " + mSpn);
-                    SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
+                    super.setSystemPropertyIcc(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
                 }else {
                     if (DBG) log("No SPN loaded in either CHPS or 3GPP");
                 }

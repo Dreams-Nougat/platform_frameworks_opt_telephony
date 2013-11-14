@@ -284,6 +284,17 @@ public class CdmaConnection extends Connection {
         return mIsIncoming;
     }
 
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    //add for vt call, VideoPhone
+    public boolean isVideoCall() {
+        return false;
+    }
+ /*
+ * End - Added by BrcmVT (2012/08/25)
+ */
+
     @Override
     public CdmaCall.State getState() {
         if (mDisconnected) {
@@ -413,7 +424,7 @@ public class CdmaConnection extends Connection {
                 CDMAPhone phone = mOwner.mPhone;
                 int serviceState = phone.getServiceState().getState();
                 UiccCardApplication app = UiccController
-                        .getInstance()
+                        .getInstance(phone.getSimCardId())
                         .getUiccCardApplication(UiccController.APP_FAM_3GPP2);
                 AppState uiccAppState = (app != null) ? app.getState() : AppState.APPSTATE_UNKNOWN;
                 if (serviceState == ServiceState.STATE_POWER_OFF) {

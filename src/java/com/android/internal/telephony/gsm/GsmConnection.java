@@ -50,9 +50,15 @@ public class GsmConnection extends Connection {
     String mPostDialString;      // outgoing calls only
     boolean mIsIncoming;
     boolean mDisconnected;
-
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    boolean mIsVideo;	//is vt call, added VideoPhone
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
     int mIndex;          // index in GsmCallTracker.connections[], -1 if unassigned
-                        // The GSM index is 1 + this
+                         // The GSM index is 1 + this
 
     /*
      * These time/timespan values are based on System.currentTimeMillis(),
@@ -70,7 +76,7 @@ public class GsmConnection extends Connection {
     long mConnectTimeReal;
     long mDuration;
     long mHoldingStartTime;  // The time when the Connection last transitioned
-                            // into HOLDING
+                             // into HOLDING
 
     int mNextPostDialChar;       // index into postDialString
 
@@ -129,6 +135,15 @@ public class GsmConnection extends Connection {
         mAddress = dc.number;
 
         mIsIncoming = dc.isMT;
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+        mIsVideo = dc.isVideoCall;//added for vt call, VideoPhone
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
+
+
         mCreateTime = System.currentTimeMillis();
         mCnapName = dc.name;
         mCnapNamePresentation = dc.namePresentation;
@@ -141,9 +156,23 @@ public class GsmConnection extends Connection {
         mParent.attach(this, dc);
     }
 
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
     /** This is an MO call, created when dialing */
     /*package*/
     GsmConnection (Context context, String dialString, GsmCallTracker ct, GsmCall parent) {
+        createConnection(context, dialString, ct, parent, false);
+    }
+
+    /** This is an MO call, created when dialing */
+    /*package*/ //vtcall out version,VideoPhone
+    GsmConnection (Context context, String dialString, GsmCallTracker ct, GsmCall parent, boolean vtCall) {
+        createConnection(context, dialString, ct, parent, vtCall);
+    }
+
+    //vtcall out version,VideoPhone
+    void createConnection(Context context, String dialString, GsmCallTracker ct, GsmCall parent,boolean vtCall){
         createWakeLock(context);
         acquireWakeLock();
 
@@ -162,10 +191,14 @@ public class GsmConnection extends Connection {
         mCnapNamePresentation = PhoneConstants.PRESENTATION_ALLOWED;
         mNumberPresentation = PhoneConstants.PRESENTATION_ALLOWED;
         mCreateTime = System.currentTimeMillis();
+        mIsVideo = vtCall;//added for vt call, VideoPhone
 
         mParent = parent;
         parent.attachFake(this, GsmCall.State.DIALING);
     }
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     public void dispose() {
     }
@@ -246,6 +279,17 @@ public class GsmConnection extends Connection {
     public boolean isIncoming() {
         return mIsIncoming;
     }
+
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    //add for vt call, VideoPhone
+    public boolean isVideoCall() {
+        return mIsVideo;
+    }
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     @Override
     public GsmCall.State getState() {
@@ -363,13 +407,16 @@ public class GsmConnection extends Connection {
             case CallFailCause.UNOBTAINABLE_NUMBER:
                 return DisconnectCause.UNOBTAINABLE_NUMBER;
 
+            case CallFailCause.USER_ALERTING_NO_ANSWER:
+                return DisconnectCause.USER_ALERTING_NO_ANSWER;
+
             case CallFailCause.ERROR_UNSPECIFIED:
             case CallFailCause.NORMAL_CLEARING:
             default:
                 GSMPhone phone = mOwner.mPhone;
                 int serviceState = phone.getServiceState().getState();
                 UiccCardApplication cardApp = UiccController
-                        .getInstance()
+                        .getInstance(phone.getSimCardId())
                         .getUiccCardApplication(UiccController.APP_FAM_3GPP);
                 AppState uiccAppState = (cardApp != null) ? cardApp.getState() :
                                                             AppState.APPSTATE_UNKNOWN;

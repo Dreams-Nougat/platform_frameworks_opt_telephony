@@ -33,11 +33,20 @@ import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.IccUtils;
 import com.android.internal.telephony.uicc.UiccCard;
 import com.android.internal.telephony.uicc.UiccCardApplication;
+import com.android.internal.telephony.cat.BearerDescription.BearerType;
+import com.android.internal.telephony.cat.Duration.TimeUnit;
+import com.android.internal.telephony.cat.InterfaceTransportLevel.TransportProtocol;
+import com.android.internal.telephony.cat.CatCmdMessage.ChannelSettings;
+import com.android.internal.telephony.cat.CatCmdMessage.DataSettings;
+
 
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Locale;
+
+import android.content.SharedPreferences;
+import com.android.internal.telephony.RILConstants.SimCardID;
 
 class RilMessage {
     int mId;
@@ -66,13 +75,14 @@ public class CatService extends Handler implements AppInterface {
     private static final boolean DBG = false;
 
     // Class members
-    private static IccRecords mIccRecords;
+    public IccRecords mIccRecords;
     private static UiccCardApplication mUiccApplication;
 
     // Service members.
     // Protects singleton instance lazy initialization.
-    private static final Object sInstanceLock = new Object();
-    private static CatService sInstance;
+    public static final Object sInstanceLock = new Object();
+    public static CatService sInstance[] = {null, null};
+    private SimCardID mSimCardId = SimCardID.ID_ZERO;
     private CommandsInterface mCmdIf;
     private Context mContext;
     private CatCmdMessage mCurrntCmd = null;
@@ -80,6 +90,12 @@ public class CatService extends Handler implements AppInterface {
 
     private RilMessageDecoder mMsgDecoder = null;
     private boolean mStkAppInstalled = false;
+
+    private byte[] mEventList = null;
+    private int mEvenvalueIndex = 0;
+    private int mEvenvalueLen = 0;
+
+    private BipProxy mBipProxy = null;
 
     // Service constants.
     static final int MSG_ID_SESSION_END              = 1;
@@ -102,19 +118,34 @@ public class CatService extends Handler implements AppInterface {
 
     static final String STK_DEFAULT = "Default Message";
 
+    static final int REFRESH_NAA_INIT_AND_FULL_FILE_CHANGE  = 0x00;
+    static final int REFRESH_FILE_CHANGE                    = 0x01;
+    static final int REFRESH_NAA_INIT_AND_FILE_CHANGE       = 0x02;
+    static final int REFRESH_NAA_INIT                       = 0x03;
+    static final int REFRESH_UICC_RESET                     = 0x04;
+
+    // MUST BE the same with the define in PhoneSettings Activity
+    final static String DUAL_SIM_SETTING_PREFERENCES = "dualSimSetting_Preferences";
+    final static String PREF_DUAL_SIM_SETTING_MODE = "dual_sim_setting_mode";
+    final static String ONLY_SIM1_OPEN_MODE = "Only SIM1 open";
+    final static String ONLY_SIM2_OPEN_MODE = "Only SIM2 open";
+    final static String DUAL_SIM_OPEN_MODE = "Dual SIM open";
+    final static String DEFAULT_DUAL_SIM_SETTING_MODE = DUAL_SIM_OPEN_MODE;
+
     /* Intentionally private for singleton */
     private CatService(CommandsInterface ci, UiccCardApplication ca, IccRecords ir,
-            Context context, IccFileHandler fh, UiccCard ic) {
+            Context context, IccFileHandler fh, UiccCard ic, SimCardID simCardId) {
         if (ci == null || ca == null || ir == null || context == null || fh == null
                 || ic == null) {
             throw new NullPointerException(
                     "Service: Input parameters must not be null");
         }
+        mSimCardId = simCardId;
         mCmdIf = ci;
         mContext = context;
 
         // Get the RilMessagesDecoder for decoding the messages.
-        mMsgDecoder = RilMessageDecoder.getInstance(this, fh);
+        mMsgDecoder = RilMessageDecoder.getInstance(this, fh, simCardId);
 
         // Register ril events handling.
         mCmdIf.setOnCatSessionEnd(this, MSG_ID_SESSION_END, null);
@@ -129,6 +160,9 @@ public class CatService extends Handler implements AppInterface {
         // Register for SIM ready event.
         mUiccApplication.registerForReady(this, MSG_ID_SIM_READY, null);
         mIccRecords.registerForRecordsLoaded(this, MSG_ID_ICC_RECORDS_LOADED, null);
+
+
+        mBipProxy = new BipProxy(this, mCmdIf, mContext);
 
         // Check if STK application is availalbe
         mStkAppInstalled = isStkAppInstalled();
@@ -238,7 +272,32 @@ public class CatService extends Handler implements AppInterface {
             case REFRESH:
                 // ME side only handles refresh commands which meant to remove IDLE
                 // MODE TEXT.
-                cmdParams.mCmdDet.typeOfCommand = CommandType.SET_UP_IDLE_MODE_TEXT.value();
+                if (cmdParams.mCmdDet.commandQualifier != REFRESH_UICC_RESET) {
+                    sendTerminalResponse(cmdParams.mCmdDet, ResultCode.OK, false, 0, null);
+                }
+                break;
+            case SET_UP_EVENT_LIST:
+                // Store eventlist
+                mCurrntCmd = cmdMsg;
+                mEventList = mCurrntCmd.getEventList();
+                mEvenvalueIndex = mCurrntCmd.getEvenvalueIndex();
+                mEvenvalueLen = mCurrntCmd.getEvenvalueLen();
+                CatLog.d(this, "mEvenvalueIndex: " + mEvenvalueIndex + ", mEvenvalueLen" + mEvenvalueLen);
+
+                if (mEventList != null) {
+                    for (byte b : mEventList) {
+                        CatLog.d( this, "Registered Event: " + b );
+                    }
+                } else {
+                    CatLog.d( this, "WARNING: No Event in event list!" );
+                }
+
+                for (int i = mEvenvalueIndex ; i < mEvenvalueIndex + mEvenvalueLen ; i++) {
+                    CatLog.d("ValueParser", "index=" + i + ", mEventList[i]:" + mEventList[i]);
+                }
+
+                // TR should NOT be sent here, TR is sent by baseband!
+                sendTerminalResponse(cmdParams.mCmdDet, ResultCode.OK, false, 0, null);
                 break;
             case SET_UP_IDLE_MODE_TEXT:
                 sendTerminalResponse(cmdParams.mCmdDet, ResultCode.OK, false, 0, null);
@@ -290,9 +349,30 @@ public class CatService extends Handler implements AppInterface {
                 }
                 break;
             case OPEN_CHANNEL:
+                ChannelSettings newChannel = cmdMsg.getChannelSettings();
+                if (newChannel == null) {
+                    // Send TR cmd data not understood
+                    sendTerminalResponse(cmdParams.mCmdDet, ResultCode.CMD_DATA_NOT_UNDERSTOOD, false, 0, null);
+                    return;
+                }
+
+                // Check if BipProxy can handle more channels
+                if (!mBipProxy.canHandleNewChannel()) {
+                    ResponseData bipresp = new OpenChannelResponseData(newChannel.bufSize, null, newChannel.bearerDescription);
+                    sendTerminalResponse(cmdParams.mCmdDet, ResultCode.BIP_ERROR, true, 0x01, bipresp);
+                    return;
+                }
+
+                // Check if user confirmation is needed
+                if (cmdMsg.geTextMessage() != null && cmdMsg.geTextMessage().responseNeeded) {
+                    break;
+                }
+
+            // fall through
             case CLOSE_CHANNEL:
             case RECEIVE_DATA:
             case SEND_DATA:
+            case GET_CHANNEL_STATUS:
                 BIPClientParams cmd = (BIPClientParams) cmdParams;
                 /* Per 3GPP specification 102.223,
                  * if the alpha identifier is not provided by the UICC,
@@ -334,13 +414,13 @@ public class CatService extends Handler implements AppInterface {
                  * If PROACTIVE_COMMAND is used for those commands, send terminal
                  * response here.
                  */
-                if (isProactiveCmd &&
+            if (isProactiveCmd &&
                     ((cmdParams.getCommandType() == CommandType.CLOSE_CHANNEL) ||
                      (cmdParams.getCommandType() == CommandType.RECEIVE_DATA) ||
                      (cmdParams.getCommandType() == CommandType.SEND_DATA))) {
                     sendTerminalResponse(cmdParams.mCmdDet, ResultCode.OK, false, 0, null);
                 }
-                break;
+            break;
             default:
                 CatLog.d(this, "Unsupported command");
                 return;
@@ -348,6 +428,8 @@ public class CatService extends Handler implements AppInterface {
         mCurrntCmd = cmdMsg;
         Intent intent = new Intent(AppInterface.CAT_CMD_ACTION);
         intent.putExtra("STK CMD", cmdMsg);
+        CatLog.d(this, "=========> send cmdMsg with simId = " + mSimCardId.toInt());
+        intent.putExtra("simId", mSimCardId);
         mContext.sendBroadcast(intent);
     }
 
@@ -360,10 +442,12 @@ public class CatService extends Handler implements AppInterface {
 
         mCurrntCmd = mMenuCmd;
         Intent intent = new Intent(AppInterface.CAT_SESSION_END_ACTION);
+        intent.putExtra("simId", mSimCardId);
         mContext.sendBroadcast(intent);
+        mBipProxy.handleBipCommand(null);
     }
 
-    private void sendTerminalResponse(CommandDetails cmdDet,
+    protected void sendTerminalResponse(CommandDetails cmdDet,
             ResultCode resultCode, boolean includeAdditionalInfo,
             int additionalInfo, ResponseData resp) {
 
@@ -523,6 +607,73 @@ public class CatService extends Handler implements AppInterface {
         mCmdIf.sendEnvelope(hexString, null);
     }
 
+    public void onEventDownload( StkEventMessage eventMsg ) {
+        CatLog.d( this, "Download event: " + eventMsg.getEvent() );
+        eventDownload( eventMsg.getEvent(),
+                       eventMsg.getSourceId(),
+                       eventMsg.getDestId(),
+                       eventMsg.getAdditionalInfo(),
+                       eventMsg.isOneShot() );
+    }
+
+    protected void eventDownload(int event, int sourceId, int destinationId,
+                byte[] additionalInfo, boolean oneShot) {
+
+        // Check if the SIM have subscribed to this event using setup eventlist
+        boolean allowed = false;
+        if (mEventList != null) {
+            for (byte b : mEventList) {
+                if (b == (byte)event) {
+                    allowed = true;
+                    break;
+                }
+            }
+        }
+        if (!allowed) {
+            CatLog.d(this, "(U)SIM has not subscribed for event: " + event );
+            return;
+        }
+        ByteArrayOutputStream buf = new ByteArrayOutputStream();
+
+        // tag
+        int tag = BerTlv.BER_EVENT_DOWNLOAD_TAG;
+        buf.write(tag);
+
+        // length
+        buf.write(0x00); // place holder, assume length < 128.
+
+        // event list
+        tag = 0x80 | ComprehensionTlvTag.EVENT_LIST.value();
+        buf.write(tag);
+        buf.write(0x01); // length
+        buf.write(event); // event value
+
+        // device identities
+        tag = 0x80 | ComprehensionTlvTag.DEVICE_IDENTITIES.value();
+        buf.write(tag);
+        buf.write(0x02); // length
+        buf.write(sourceId); // source device id
+        buf.write(destinationId); // destination device id
+
+        // additional information
+        if (additionalInfo != null) {
+            for (byte b : additionalInfo) {
+                buf.write(b);
+            }
+        }
+
+        byte[] rawData = buf.toByteArray();
+
+        // write real length
+        int len = rawData.length - 2; // minus (tag + length)
+        rawData[1] = (byte) len;
+
+        String hexString = IccUtils.bytesToHexString(rawData);
+
+        CatLog.d(this, "eventDownload: " + hexString);
+        mCmdIf.sendEnvelope(hexString, null);
+    }
+
     /**
      * Used for instantiating/updating the Service from the GsmPhone or CdmaPhone constructor.
      *
@@ -533,6 +684,11 @@ public class CatService extends Handler implements AppInterface {
      */
     public static CatService getInstance(CommandsInterface ci,
             Context context, UiccCard ic) {
+        return getInstance(ci, context, ic, SimCardID.ID_ZERO);
+    }
+
+    public static CatService getInstance(CommandsInterface ci,
+            Context context, UiccCard ic, SimCardID simCardId) {
         UiccCardApplication ca = null;
         IccFileHandler fh = null;
         IccRecords ir = null;
@@ -547,36 +703,37 @@ public class CatService extends Handler implements AppInterface {
             }
         }
         synchronized (sInstanceLock) {
-            if (sInstance == null) {
+            if (sInstance[simCardId.toInt()] == null) {
                 if (ci == null || ca == null || ir == null || context == null || fh == null
                         || ic == null) {
                     return null;
                 }
                 HandlerThread thread = new HandlerThread("Cat Telephony service");
                 thread.start();
-                sInstance = new CatService(ci, ca, ir, context, fh, ic);
-                CatLog.d(sInstance, "NEW sInstance");
-            } else if ((ir != null) && (mIccRecords != ir)) {
-                if (mIccRecords != null) {
-                    mIccRecords.unregisterForRecordsLoaded(sInstance);
+                sInstance[simCardId.toInt()] = new CatService(ci, ca, ir, context, fh, ic, simCardId);
+                CatLog.d(sInstance[simCardId.toInt()], "NEW sInstance simCardId:"+simCardId.toInt());
+            } else if ((ir != null) && (sInstance[simCardId.toInt()].mIccRecords != ir)) {
+                CatService catservice = sInstance[simCardId.toInt()];
+                if (catservice.mIccRecords != null) {
+                    catservice.mIccRecords.unregisterForRecordsLoaded(sInstance[simCardId.toInt()]);
                 }
 
-                if (mUiccApplication != null) {
-                    mUiccApplication.unregisterForReady(sInstance);
+                if (catservice.mUiccApplication != null) {
+                    catservice.mUiccApplication.unregisterForReady(sInstance[simCardId.toInt()]);
                 }
-                CatLog.d(sInstance,
+                CatLog.d(sInstance[simCardId.toInt()],
                         "Reinitialize the Service with SIMRecords and UiccCardApplication");
-                mIccRecords = ir;
-                mUiccApplication = ca;
+                catservice.mIccRecords = ir;
+                catservice.mUiccApplication = ca;
 
                 // re-Register for SIM ready event.
-                mIccRecords.registerForRecordsLoaded(sInstance, MSG_ID_ICC_RECORDS_LOADED, null);
-                mUiccApplication.registerForReady(sInstance, MSG_ID_SIM_READY, null);
-                CatLog.d(sInstance, "sr changed reinitialize and return current sInstance");
+                catservice.mIccRecords.registerForRecordsLoaded(sInstance[simCardId.toInt()], MSG_ID_ICC_RECORDS_LOADED, null);
+                catservice.mUiccApplication.registerForReady(sInstance[simCardId.toInt()], MSG_ID_SIM_READY, null);
+                CatLog.d(sInstance[simCardId.toInt()], "sr changed reinitialize and return current sInstance");
             } else {
-                CatLog.d(sInstance, "Return current sInstance");
+                CatLog.d(sInstance[simCardId.toInt()], "Return current sInstance");
             }
-            return sInstance;
+            return sInstance[simCardId.toInt()];
         }
     }
 
@@ -587,6 +744,10 @@ public class CatService extends Handler implements AppInterface {
      */
     public static AppInterface getInstance() {
         return getInstance(null, null, null);
+    }
+
+    public static AppInterface getInstance(SimCardID simCardId) {
+        return getInstance(null, null, null, simCardId);
     }
 
     @Override
@@ -642,10 +803,23 @@ public class CatService extends Handler implements AppInterface {
     }
 
     private boolean validateResponse(CatResponseMessage resMsg) {
-        if (mCurrntCmd != null) {
-            return (resMsg.mCmdDet.compareTo(mCurrntCmd.mCmdDet));
+        if (resMsg.mstkevetdownload == false) {
+            if (mCurrntCmd != null) {
+                CatLog.d(this, "validateResponse");
+                if (resMsg.mCmdDet.compareTo(mCurrntCmd.mCmdDet)) {
+                    CatLog.d(this, "validateResponse true");
+                    return true;
+                } else {
+                    CatLog.d(this, "validateResponse false");
+                    return false;
+                }
+            }
+            CatLog.d(this, "validateResponse mCurrntCmd null");
+            return false;
+        } else {
+            CatLog.d(this, "mstkevetdownload true");
+            return true;
         }
-        return false;
     }
 
     private boolean removeMenu(Menu menu) {
@@ -671,13 +845,17 @@ public class CatService extends Handler implements AppInterface {
         // (long press on the home button). Relaunching that activity can send
         // the same command's result again to the CatService and can cause it to
         // get out of sync with the SIM.
-        if (!validateResponse(resMsg)) {
+        if ((resMsg != null) && (resMsg.envelopeCmd != null)) {
+            CatLog.d(this, "handleCmdResponse(), mCmdIf.sendEnvelope");
+            mCmdIf.sendEnvelope(resMsg.envelopeCmd, null);
             return;
         }
         ResponseData resp = null;
         boolean helpRequired = false;
         CommandDetails cmdDet = resMsg.getCmdDetails();
         AppInterface.CommandType type = AppInterface.CommandType.fromInt(cmdDet.typeOfCommand);
+        boolean includeAdditionalInfo = false;
+        int additionalInfo = 0;
 
         switch (resMsg.mResCode) {
         case HELP_INFO_REQUIRED:
@@ -721,7 +899,6 @@ public class CatService extends Handler implements AppInterface {
             case LAUNCH_BROWSER:
                 break;
             // 3GPP TS.102.223: Open Channel alpha confirmation should not send TR
-            case OPEN_CHANNEL:
             case SET_UP_CALL:
                 mCmdIf.handleCallSetupRequestFromSim(resMsg.mUsersConfirm, null);
                 // No need to send terminal response for SET UP CALL. The user's
@@ -729,11 +906,24 @@ public class CatService extends Handler implements AppInterface {
                 // invoked by the CommandInterface call above.
                 mCurrntCmd = null;
                 return;
-            default:
+            case OPEN_CHANNEL:
+                CatLog.d(this, "OPEN_CHANNEL");
+                if (resMsg.mResCode == ResultCode.OK && resMsg.mUsersConfirm) {
+                    // user has accepted OPEN CHANNEL
+                    mBipProxy.handleBipCommand(mCurrntCmd);
+                    return;
+                }
                 break;
-            }
+            case REFRESH:
+                CatLog.d(this, "handleCmdResponse is REFRESH");
+                return;
+             default:
+                break;
+           }
             break;
         case BACKWARD_MOVE_BY_USER:
+            resp = null;
+            break;
         case USER_NOT_ACCEPT:
             // if the user dismissed the alert dialog for a
             // setup call/open channel, consider that as the user
@@ -751,6 +941,10 @@ public class CatService extends Handler implements AppInterface {
         case UICC_SESSION_TERM_BY_USER:
             resp = null;
             break;
+        case EVENT_DOWNLOAD:
+            CatLog.d(this, "handleCmdResponse(), EVENT_DOWNLOAD Response");
+            eventDownload(resMsg.event,resMsg.sourceId,resMsg.destinationId,resMsg.meventadditionalInfo,true);
+            return;
         default:
             return;
         }
@@ -767,5 +961,19 @@ public class CatService extends Handler implements AppInterface {
         int numReceiver = broadcastReceivers == null ? 0 : broadcastReceivers.size();
 
         return (numReceiver > 0);
+    }
+
+    /**
+     * Get Dual SIM Setting Mode
+     */
+    private String getDualSimSettingMode() {
+        String mode = DEFAULT_DUAL_SIM_SETTING_MODE;
+
+        SharedPreferences prefs = mContext.getSharedPreferences(DUAL_SIM_SETTING_PREFERENCES, 0);
+        if (prefs != null) {
+            mode = prefs.getString(PREF_DUAL_SIM_SETTING_MODE, DEFAULT_DUAL_SIM_SETTING_MODE);
+        }
+
+        return mode;
     }
 }

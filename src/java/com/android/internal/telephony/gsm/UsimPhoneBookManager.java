@@ -219,7 +219,7 @@ public class UsimPhoneBookManager extends Handler implements IccConstants {
                         rec.setEmails(emails);
                     } else {
                         // might be a record with only email
-                        rec = new AdnRecord("", "", emails);
+                        rec = new AdnRecord("", "", emails, null);
                     }
                     mPhoneBookRecords.set(i, rec);
                 }

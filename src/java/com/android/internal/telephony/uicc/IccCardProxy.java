@@ -51,6 +51,8 @@ import java.io.PrintWriter;
 
 import static com.android.internal.telephony.TelephonyProperties.PROPERTY_SIM_STATE;
 
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 /**
  * @Deprecated use {@link UiccController}.getUiccCard instead.
  *
@@ -104,17 +106,31 @@ public class IccCardProxy extends Handler implements IccCard {
     private boolean mInitialized = false;
     private State mExternalState = State.UNKNOWN;
 
+    private SimCardID mSimCardId;
+    private int mPinRemainingCount[];
+    private int mNetworkLockRemainingCount; // remaining count of NETWORK_DEPERSONALIZATION
+
+
     public IccCardProxy(Context context, CommandsInterface ci) {
+        this(context, ci, SimCardID.ID_ZERO);
+    }
+    public IccCardProxy(Context context, CommandsInterface ci, SimCardID simCardId) {
         log("Creating");
         mContext = context;
         mCi = ci;
+        this.mSimCardId = simCardId;
         mCdmaSSM = CdmaSubscriptionSourceManager.getInstance(context,
                 ci, this, EVENT_CDMA_SUBSCRIPTION_SOURCE_CHANGED, null);
-        mUiccController = UiccController.getInstance();
+        mUiccController = UiccController.getInstance(mSimCardId);
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
         ci.registerForOn(this,EVENT_RADIO_ON, null);
         ci.registerForOffOrNotAvailable(this, EVENT_RADIO_OFF_OR_UNAVAILABLE, null);
         setExternalState(State.NOT_READY);
+        mPinRemainingCount = new int[4];
+        for (int i = 0; i < 4; ++i) {
+            mPinRemainingCount[i] = -1;
+        }
+        mNetworkLockRemainingCount = -1;
     }
 
     public void dispose() {
@@ -200,6 +216,7 @@ public class IccCardProxy extends Handler implements IccCard {
 
     @Override
     public void handleMessage(Message msg) {
+        AsyncResult ar;
         switch (msg.what) {
             case EVENT_RADIO_OFF_OR_UNAVAILABLE:
                 mRadioOn = false;
@@ -346,7 +363,7 @@ public class IccCardProxy extends Handler implements IccCard {
             intent.putExtra(PhoneConstants.PHONE_NAME_KEY, "Phone");
             intent.putExtra(IccCardConstants.INTENT_KEY_ICC_STATE, value);
             intent.putExtra(IccCardConstants.INTENT_KEY_LOCKED_REASON, reason);
-
+            intent.putExtra("simId", mSimCardId);
             if (DBG) log("Broadcasting intent ACTION_SIM_STATE_CHANGED " +  value
                     + " reason " + reason);
             ActivityManagerNative.broadcastStickyIntent(intent, READ_PHONE_STATE,
@@ -391,7 +408,13 @@ public class IccCardProxy extends Handler implements IccCard {
                 return;
             }
             mExternalState = newState;
-            SystemProperties.set(PROPERTY_SIM_STATE, mExternalState.toString());
+            String finalProperty;
+            if(mSimCardId == SimCardID.ID_ONE) {
+                finalProperty = PROPERTY_SIM_STATE + "_" + String.valueOf(mSimCardId.toInt());
+            } else {
+                finalProperty = PROPERTY_SIM_STATE;
+            }
+            SystemProperties.set(finalProperty, mExternalState.toString());
             broadcastIccStateChangedIntent(getIccStateIntentString(mExternalState),
                     getIccStateReason(mExternalState));
         }
@@ -585,6 +608,60 @@ public class IccCardProxy extends Handler implements IccCard {
                 return;
             }
         }
+    }
+
+    public int getPinRemainingStatus (int type) {
+        if (type < 0 || type > 3) return -1;
+        return mPinRemainingCount[type];
+    }
+
+    public int getNetworkLockRemainingStatus () {
+        return mNetworkLockRemainingCount;
+    }
+
+    public boolean isNetworkLock () {
+        return isNetworkPukRequired();
+    }
+
+    private void getNetworkLockRemaining(AsyncResult ar) {
+        if (ar.exception != null) {
+            Rlog.e(LOG_TAG, "getNetworkLockRemaining ar.exception" + ar.exception);
+        }
+        int [] rspRaw = (int [])ar.result;
+        mNetworkLockRemainingCount = rspRaw[0];
+        Rlog.v(LOG_TAG, "getNetworkLockRemaining mNetworkLockRemainingCount=" + mNetworkLockRemainingCount);
+    }
+
+    private void getPinRemainingDone(AsyncResult ar) {
+        if (ar.exception != null) {
+            return;
+        }
+
+        byte [] rspRaw = (byte[])ar.result;
+        String rsp = IccUtils.bytesToHexString(rspRaw);
+
+        if (new String(rspRaw).startsWith("BRCM")
+            && (int)rspRaw[4] == RILConstants.BRIL_HOOK_QUERY_SIM_PIN_REMAINING) {
+            mPinRemainingCount[0] = rspRaw[5]; //pin1
+            mPinRemainingCount[1] = rspRaw[7]; //puk1
+            mPinRemainingCount[2] = rspRaw[6]; //pin2
+            mPinRemainingCount[3] = rspRaw[8]; //puk2
+        }
+    }
+
+    /**
+     * @return true if app_state == APPSTATE_SUBSCRIPTION_PERSO &&
+     *                      perso_substate == PERSOSUBSTATE_SIM_NETWORK_PUK
+     */
+    public boolean isNetworkPukRequired() {
+        if (mUiccCard == null) return false;
+        UiccCardApplication mApp = mUiccCard.getApplication(mCurrentAppType);
+        if (mApp != null && mApp.getState() == AppState.APPSTATE_SUBSCRIPTION_PERSO) {
+            if (mApp.getPersoSubState()== PersoSubState.PERSOSUBSTATE_SIM_NETWORK_PUK){
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

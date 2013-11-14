@@ -138,6 +138,21 @@ class GsmCall extends Call {
 
         return false;
     }
+    
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    public boolean isVideoCall(){ //added vt call, VideoPhone 
+        for (int i = 0, s = mConnections.size()	; i < s; i ++) {
+            if (mConnections.get(i).isVideoCall()){
+                return true;
+            }
+        }
+        return false;
+    }
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     /*package*/ void
     detach(GsmConnection conn) {

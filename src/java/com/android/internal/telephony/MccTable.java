@@ -32,6 +32,8 @@ import java.util.Collections;
 import java.util.Locale;
 import libcore.icu.TimeZoneNames;
 
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 /**
  * Mobile Country Code
  *
@@ -172,8 +174,9 @@ public final class MccTable
      * @param context Context to act on.
      * @param mccmnc truncated imsi with just the MCC and MNC - MNC assumed to be from 4th to end
      */
-    public static void updateMccMncConfiguration(Context context, String mccmnc) {
-        if (!TextUtils.isEmpty(mccmnc)) {
+    public static void updateMccMncConfiguration(Context context, String mccmnc, SimCardID simId) {
+        // Only depend on SIM1 local information to set local configuration
+        if (!TextUtils.isEmpty(mccmnc) && SimCardID.ID_ZERO == simId) {
             int mcc, mnc;
 
             try {

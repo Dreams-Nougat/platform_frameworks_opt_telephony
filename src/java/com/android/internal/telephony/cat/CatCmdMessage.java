@@ -18,6 +18,8 @@ package com.android.internal.telephony.cat;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import com.android.internal.telephony.cat.InterfaceTransportLevel.TransportProtocol;
+import java.util.ArrayList;
 
 /**
  * Class used to pass CAT messages from telephony to application. Application
@@ -33,6 +35,12 @@ public class CatCmdMessage implements Parcelable {
     private BrowserSettings mBrowserSettings = null;
     private ToneSettings mToneSettings = null;
     private CallSettings mCallSettings = null;
+    private ChannelSettings mChannelSettings = null;
+    private DataSettings mDataSettings = null;
+    private byte[] mEventList = null;
+    private int mEvenvalueIndex = 0;
+    private int mEvenvalueLen = 0;
+    public int[] m_SetupEventList;
 
     /*
      * Container for Launch Browser command settings.
@@ -50,9 +58,33 @@ public class CatCmdMessage implements Parcelable {
         public TextMessage callMsg;
     }
 
+    public class ChannelSettings {
+        public int channel;
+        public TransportProtocol protocol;
+        public int port;
+        public int bufSize;
+        public byte[] destinationAddress;
+        public BearerDescription bearerDescription;
+        public String networkAccessName;
+        public String userLogin;
+        public String userPassword;
+        public Integer cid;
+    }
+
+    public class DataSettings {
+        public int channel;
+        public int length;
+        public byte[] data;
+    }
+
     CatCmdMessage(CommandParams cmdParams) {
         mCmdDet = cmdParams.mCmdDet;
         switch(getCmdType()) {
+        case SET_UP_EVENT_LIST:
+            mEventList = ((EventListParams) cmdParams).eventList;
+            mEvenvalueIndex = ((EventListParams) cmdParams).evenvalueIndex;
+            mEvenvalueLen = ((EventListParams) cmdParams).evenvalueLen;
+            break;
         case SET_UP_MENU:
         case SELECT_ITEM:
             mMenu = ((SelectItemParams) cmdParams).mMenu;
@@ -64,6 +96,10 @@ public class CatCmdMessage implements Parcelable {
         case SEND_SS:
         case SEND_USSD:
             mTextMsg = ((DisplayTextParams) cmdParams).mTextMsg;
+            break;
+        case REFRESH:
+            mTextMsg = ((DisplayTextParams) cmdParams).mTextMsg;
+            CatLog.d(this, "StkCmdMessage REFRESH");
             break;
         case GET_INPUT:
         case GET_INKEY:
@@ -82,6 +118,10 @@ public class CatCmdMessage implements Parcelable {
             break;
         case GET_CHANNEL_STATUS:
             mTextMsg = ((CallSetupParams) cmdParams).mConfirmMsg;
+            mDataSettings = new DataSettings();
+            mDataSettings.channel = 0;
+            mDataSettings.length = 0;
+            mDataSettings.data = null;
             break;
         case SET_UP_CALL:
             mCallSettings = new CallSettings();
@@ -89,17 +129,39 @@ public class CatCmdMessage implements Parcelable {
             mCallSettings.callMsg = ((CallSetupParams) cmdParams).mCallMsg;
             break;
         case OPEN_CHANNEL:
+            mTextMsg = ((OpenChannelParams) cmdParams).confirmMsg;
+            mChannelSettings = new ChannelSettings();
+            mChannelSettings.channel = 0;
+            mChannelSettings.protocol =
+                ((OpenChannelParams) cmdParams).itl.protocol;
+            mChannelSettings.port = ((OpenChannelParams) cmdParams).itl.port;
+            mChannelSettings.bufSize = ((OpenChannelParams) cmdParams).bufSize;
+            mChannelSettings.destinationAddress = ((OpenChannelParams) cmdParams).destinationAddress;
+            mChannelSettings.bearerDescription = ((OpenChannelParams) cmdParams).bearerDescription;
+            mChannelSettings.networkAccessName = ((OpenChannelParams) cmdParams).networkAccessName;
+            mChannelSettings.userLogin = ((OpenChannelParams) cmdParams).userLogin;
+            mChannelSettings.userPassword = ((OpenChannelParams) cmdParams).userPassword;
+            break;
         case CLOSE_CHANNEL:
+            mDataSettings = new DataSettings();
+            mDataSettings.channel = ((CloseChannelParams) cmdParams).channel;
+            mDataSettings.length = 0;
+            mDataSettings.data = null;
+            break;
         case RECEIVE_DATA:
+            mDataSettings = new DataSettings();
+            mDataSettings.channel = ((ReceiveDataParams) cmdParams).channel;
+            mDataSettings.length = ((ReceiveDataParams) cmdParams).datLen;
+            mDataSettings.data = null;
+            break;
         case SEND_DATA:
-            BIPClientParams param = (BIPClientParams) cmdParams;
-            mTextMsg = param.mTextMsg;
+            mDataSettings = new DataSettings();
+            mDataSettings.channel = ((SendDataParams) cmdParams).channel;
+            mDataSettings.length = 0;
+            mDataSettings.data = ((SendDataParams) cmdParams).data;
             break;
         case PROVIDE_LOCAL_INFORMATION:
-        case REFRESH:
-        case SET_UP_EVENT_LIST:
         default:
-            break;
         }
     }
 
@@ -109,6 +171,17 @@ public class CatCmdMessage implements Parcelable {
         mMenu = in.readParcelable(null);
         mInput = in.readParcelable(null);
         switch (getCmdType()) {
+        case SET_UP_EVENT_LIST: {
+            mEventList = null;
+            int len = in.readInt();
+            if (len > 0) {
+                mEventList = new byte[len];
+                in.readByteArray(mEventList);
+            }
+            mEvenvalueIndex= in.readInt();
+            mEvenvalueLen= in.readInt();
+        }
+        break;
         case LAUNCH_BROWSER:
             mBrowserSettings = new BrowserSettings();
             mBrowserSettings.url = in.readString();
@@ -122,6 +195,35 @@ public class CatCmdMessage implements Parcelable {
             mCallSettings.confirmMsg = in.readParcelable(null);
             mCallSettings.callMsg = in.readParcelable(null);
             break;
+        case OPEN_CHANNEL:
+            mChannelSettings = new ChannelSettings();
+            mChannelSettings.channel = in.readInt();
+            mChannelSettings.protocol =
+                TransportProtocol.values()[in.readInt()];
+            mChannelSettings.port = in.readInt();
+            mChannelSettings.bufSize = in.readInt();
+            mChannelSettings.destinationAddress = new byte[in.readInt()];
+            if (mChannelSettings.destinationAddress.length > 0) {
+                in.readByteArray(mChannelSettings.destinationAddress);
+            }
+            mChannelSettings.bearerDescription = (BearerDescription) in.readValue(BearerDescription.class.getClassLoader());
+            mChannelSettings.networkAccessName = in.readString();
+            mChannelSettings.userLogin = in.readString();
+            mChannelSettings.userPassword = in.readString();
+            break;
+        case CLOSE_CHANNEL:
+        case RECEIVE_DATA:
+        case SEND_DATA:
+            mDataSettings = new DataSettings();
+            mDataSettings.channel = in.readInt();
+            mDataSettings.length = in.readInt();
+            mDataSettings.data = null;
+            int len = in.readInt();
+            if (len > 0) {
+                mDataSettings.data = new byte[len];
+                in.readByteArray(mDataSettings.data);
+            }
+            break;
         default:
             break;
         }
@@ -134,6 +236,17 @@ public class CatCmdMessage implements Parcelable {
         dest.writeParcelable(mMenu, 0);
         dest.writeParcelable(mInput, 0);
         switch(getCmdType()) {
+        case SET_UP_EVENT_LIST: {
+            int len = 0;
+            if (mEventList != null)
+                len = mEventList.length;
+            dest.writeInt(len);
+            if (len > 0)
+                dest.writeByteArray(mEventList);
+            dest.writeInt(mEvenvalueIndex);
+            dest.writeInt(mEvenvalueLen);
+        }
+        break;
         case LAUNCH_BROWSER:
             dest.writeString(mBrowserSettings.url);
             dest.writeInt(mBrowserSettings.mode.ordinal());
@@ -144,6 +257,34 @@ public class CatCmdMessage implements Parcelable {
         case SET_UP_CALL:
             dest.writeParcelable(mCallSettings.confirmMsg, 0);
             dest.writeParcelable(mCallSettings.callMsg, 0);
+            break;
+        case OPEN_CHANNEL:
+            dest.writeInt(mChannelSettings.channel);
+            dest.writeInt(mChannelSettings.protocol.value());
+            dest.writeInt(mChannelSettings.port);
+            dest.writeInt(mChannelSettings.bufSize);
+            if (mChannelSettings.destinationAddress != null) {
+                dest.writeInt(mChannelSettings.destinationAddress.length);
+                dest.writeByteArray(mChannelSettings.destinationAddress);
+            } else {
+                dest.writeInt(0);
+            }
+            dest.writeValue(mChannelSettings.bearerDescription);
+            dest.writeString(mChannelSettings.networkAccessName);
+            dest.writeString(mChannelSettings.userLogin);
+            dest.writeString(mChannelSettings.userPassword);
+            break;
+        case CLOSE_CHANNEL:
+        case RECEIVE_DATA:
+        case SEND_DATA:
+            dest.writeInt(mDataSettings.channel);
+            dest.writeInt(mDataSettings.length);
+            int len = 0;
+            if (mDataSettings.data != null)
+                len = mDataSettings.data.length;
+            dest.writeInt(len);
+            if (len > 0)
+                dest.writeByteArray(mDataSettings.data);
             break;
         default:
             break;
@@ -172,6 +313,22 @@ public class CatCmdMessage implements Parcelable {
         return AppInterface.CommandType.fromInt(mCmdDet.typeOfCommand);
     }
 
+    public int getCommandQualifier() {
+        return mCmdDet.commandQualifier;
+    }
+
+    public byte[] getEventList() {
+        return mEventList;
+    }
+
+    public int getEvenvalueIndex() {
+        return mEvenvalueIndex;
+    }
+
+    public int getEvenvalueLen() {
+        return mEvenvalueLen;
+    }
+
     public Menu getMenu() {
         return mMenu;
     }
@@ -194,5 +351,13 @@ public class CatCmdMessage implements Parcelable {
 
     public CallSettings getCallSettings() {
         return mCallSettings;
+    }
+
+    public DataSettings getDataSettings() {
+        return mDataSettings;
+    }
+
+    public ChannelSettings getChannelSettings() {
+        return mChannelSettings;
     }
 }

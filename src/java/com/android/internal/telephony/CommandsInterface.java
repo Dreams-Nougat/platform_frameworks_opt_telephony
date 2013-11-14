@@ -180,6 +180,19 @@ public interface CommandsInterface {
 
     void registerForCallStateChanged(Handler h, int what, Object obj);
     void unregisterForCallStateChanged(Handler h);
+
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    void registerForVTCallStateChanged(Handler h, int what, Object obj);
+    void unregisterForVTCallStateChanged(Handler h);
+
+    void registerForVTCallIncomeChanged(Handler h, int what, Object obj);
+    void unregisterForVTCallIncomeChanged(Handler h);
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
+
     void registerForVoiceNetworkStateChanged(Handler h, int what, Object obj);
     void unregisterForVoiceNetworkStateChanged(Handler h);
     void registerForDataNetworkStateChanged(Handler h, int what, Object obj);
@@ -427,6 +440,18 @@ public interface CommandsInterface {
      */
     void registerForSignalInfo(Handler h, int what, Object obj);
     void unregisterForSignalInfo(Handler h);
+
+    /* To process GCF test case 27.16 - SIM ERROR */
+    /**
+     * Sets the handler for Event Notifications for SIM Error.
+     * Unlike the register* methods, there's only one notification handler
+     *
+     * @param h Handler for notification message.
+     * @param what User-defined message code.
+     * @param obj User object.
+     */
+    void setOnUnsolOemHookRaw(Handler h, int what, Object obj);
+    void unSetOnUnsolOemHookRaw(Handler h);
 
     /**
      * Registers the handler for CDMA number information record
@@ -720,8 +745,10 @@ public interface CommandsInterface {
     void changeIccPinForApp(String oldPin, String newPin, String aidPtr, Message result);
     void changeIccPin2(String oldPin2, String newPin2, Message result);
     void changeIccPin2ForApp(String oldPin2, String newPin2, String aidPtr, Message result);
-
+    void getPinRemainingStatus(Message result);
     void changeBarringPassword(String facility, String oldPwd, String newPwd, Message result);
+    /* GCF test case */
+    void changeBarringPassword(String facility, String oldPwd, String newPwd, String RenewPwd, Message result);
 
     void supplyNetworkDepersonalization(String netpin, Message result);
 
@@ -780,6 +807,22 @@ public interface CommandsInterface {
      * CLIR_INVOCATION  == on "CLIR invocation" (restrict CLI presentation)
      */
     void dial(String address, int clirMode, UUSInfo uusInfo, Message result);
+
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    void dial(String address, int clirMode, UUSInfo uusInfo, Message result,int vtdial);
+
+    void dialVT (String address, int clirMode, Message result);
+
+    void hangupVTConnection (int vtIndex, Message result);
+
+    void acceptVTCall (Message result);
+
+    void rejectVTCall (Message result);
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     /**
      *  returned message
@@ -1096,6 +1139,8 @@ public interface CommandsInterface {
 
     void setRadioPower(boolean on, Message response);
 
+    void setSimPower(boolean on, Message response);
+
     void acknowledgeLastIncomingGsmSms(boolean success, int cause, Message response);
 
     void acknowledgeLastIncomingCdmaSms(boolean success, int cause, Message response);
@@ -1126,6 +1171,13 @@ public interface CommandsInterface {
      */
     void iccIOForApp (int command, int fileid, String path, int p1, int p2, int p3,
             String data, String pin2, String aid, Message response);
+
+    void iccExchangeAPDU(int cla, int command, int channel, int p1, int p2,
+            int p3, String data, Message response);
+
+    void iccOpenChannel(String AID, Message response);
+
+    void iccCloseChannel(int channel, Message response);
 
     /**
      * (AsyncResult)response.obj).result is an int[] with element [0] set to

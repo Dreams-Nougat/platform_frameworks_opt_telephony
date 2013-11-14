@@ -65,6 +65,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+/* dual sim */
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 /**
  * {@hide}
  */
@@ -184,7 +187,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
         mCi.setOnNITZTime(this, EVENT_NITZ_TIME, null);
 
         mCi.registerForCdmaPrlChanged(this, EVENT_CDMA_PRL_VERSION_CHANGED, null);
-        phone.registerForEriFileLoaded(this, EVENT_ERI_FILE_LOADED, null);
+        mPhone.registerForEriFileLoaded(this, EVENT_ERI_FILE_LOADED, null);
         mCi.registerForCdmaOtaProvision(this,EVENT_OTA_PROVISION_STATUS_CHANGE, null);
 
         // System setting property AIRPLANE_MODE_ON is set in Settings.
@@ -545,7 +548,9 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
             intent.putExtra(TelephonyIntents.EXTRA_SPN, "");
             intent.putExtra(TelephonyIntents.EXTRA_SHOW_PLMN, showPlmn);
             intent.putExtra(TelephonyIntents.EXTRA_PLMN, plmn);
+            intent.putExtra("simId", mPhone.getSimCardId());/* dual sim */
             mPhone.getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
+
         }
 
         mCurPlmn = plmn;
@@ -1282,7 +1287,8 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
      */
     private
     boolean isRoamingBetweenOperators(boolean cdmaRoaming, ServiceState s) {
-        String spn = SystemProperties.get(TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA, "empty");
+        /* dual sim */
+        String spn = SystemProperties.get(TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA+((SimCardID.ID_ZERO != mPhone.getSimCardId())?("_"+String.valueOf(mPhone.getSimCardId().toInt())):""), "empty");
 
         // NOTE: in case of RUIM we should completely ignore the ERI data file and
         // mOperatorAlphaLong is set from RIL_REQUEST_OPERATOR response 0 (alpha ONS)
@@ -1368,7 +1374,8 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
                 zone = TimeZone.getTimeZone( tzname );
             }
 
-            String iso = SystemProperties.get(TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY);
+            /* dual sim */
+            String iso = SystemProperties.get(TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY+((SimCardID.ID_ZERO != mPhone.getSimCardId())?("_"+String.valueOf(mPhone.getSimCardId().toInt())):""));
 
             if (zone == null) {
                 if (mGotCountryCode) {
@@ -1624,9 +1631,10 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
      * Returns IMSI as MCC + MNC + MIN
      */
     String getImsi() {
+        /* dual sim */
         // TODO: When RUIM is enabled, IMSI will come from RUIM not build-time props.
         String operatorNumeric = SystemProperties.get(
-                TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, "");
+                TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC+((SimCardID.ID_ZERO != mPhone.getSimCardId())?("_"+String.valueOf(mPhone.getSimCardId().toInt())):""), "");
 
         if (!TextUtils.isEmpty(operatorNumeric) && getCdmaMin() != null) {
             return (operatorNumeric + getCdmaMin());
@@ -1763,6 +1771,8 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
     protected void loge(String s) {
         Rlog.e(LOG_TAG, "[CdmaSST] " + s);
     }
+
+    public void setRadioPowerOnNow() {}
 
     @Override
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

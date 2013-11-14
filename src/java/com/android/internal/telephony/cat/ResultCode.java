@@ -158,8 +158,10 @@ public enum ResultCode {
     FRAMES_ERROR(0x3c),
 
     /** MMS Error */
-    MMS_ERROR(0x3d);
+    MMS_ERROR(0x3d),
 
+    /** EVENT_DOWNLOAD RESPONSE */
+    EVENT_DOWNLOAD(0x50);
 
     private int mCode;
 

@@ -43,6 +43,8 @@ import com.android.internal.telephony.uicc.UiccController;
 import com.android.internal.telephony.uicc.UsimServiceTable;
 import com.android.internal.telephony.gsm.GsmInboundSmsHandler;
 
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
@@ -59,14 +61,19 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
     /** Status report received */
     private static final int EVENT_NEW_SMS_STATUS_REPORT = 100;
 
-    public GsmSMSDispatcher(PhoneBase phone, SmsUsageMonitor usageMonitor,
-            ImsSMSDispatcher imsSMSDispatcher,
-            GsmInboundSmsHandler gsmInboundSmsHandler) {
-        super(phone, usageMonitor, imsSMSDispatcher);
+    private final SimCardID mSimId;
+
+    public GsmSMSDispatcher(PhoneBase phone, SmsStorageMonitor storageMonitor,
+            SmsUsageMonitor usageMonitor, ImsSMSDispatcher imsSMSDispatcher,
+            GsmInboundSmsHandler gsmInboundSmsHandler, SimCardID simCardId) {
+        super(phone, usageMonitor);
         mCi.setOnSmsStatus(this, EVENT_NEW_SMS_STATUS_REPORT, null);
         mGsmInboundSmsHandler = gsmInboundSmsHandler;
+
         mUiccController = UiccController.getInstance();
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
+
+        mSimId = simCardId;
         Rlog.d(TAG, "GsmSMSDispatcher created");
     }
 

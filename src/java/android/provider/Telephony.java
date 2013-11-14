@@ -231,8 +231,21 @@ public final class Telephony {
          */
         public static final String SERVICE_CENTER = "service_center";
 
+        /** 
+         * The Sim card id with which to send the message, if present. Could be 0 or 1, default -1.
+         * <P>Type: INTEGER</P>
+         * @hide
+         */
+        public static final String SIM_ID = "sim_id";
+
         /**
-         * Is the message locked?
+         * The Sim card IMSI.
+         * <P>Type: TEXT</P>
+         * @hide
+         */
+        public static final String SIM_IMSI = "sim_imsi";
+
+        /**
          * <P>Type: INTEGER (boolean)</P>
          */
         public static final String LOCKED = "locked";
@@ -317,6 +330,24 @@ public final class Telephony {
             return addMessageToUri(resolver, uri, address, body, subject,
                     date, read, deliveryReport, -1L);
         }
+        /**
+         * @hide
+         */
+        public static Uri addMessageToUri(ContentResolver resolver,
+                Uri uri, String address, String body, String subject,
+                Long date, boolean read, boolean deliveryReport, int simId) {
+            return addMessageToUri(resolver, uri, address, body, subject,
+                    date, read, deliveryReport, -1L, simId);
+        }
+        /**
+         * @hide
+         */
+        public static Uri addMessageToUri(ContentResolver resolver,
+                Uri uri, String address, String body, String subject,
+                Long date, boolean read, boolean deliveryReport, int simId, String simIMSI) {
+            return addMessageToUri(resolver, uri, address, body, subject,
+                    date, read, deliveryReport, -1L, simId, simIMSI);
+        }
 
         /**
          * Add an SMS to the given URI with the specified thread ID.
@@ -345,6 +376,57 @@ public final class Telephony {
             values.put(READ, read ? Integer.valueOf(1) : Integer.valueOf(0));
             values.put(SUBJECT, subject);
             values.put(BODY, body);
+            if (deliveryReport) {
+                values.put(STATUS, STATUS_PENDING);
+            }
+            if (threadId != -1L) {
+                values.put(THREAD_ID, threadId);
+            }
+            return resolver.insert(uri, values);
+        }
+
+        /**
+         * @hide
+         */
+        public static Uri addMessageToUri(ContentResolver resolver,
+                Uri uri, String address, String body, String subject,
+                Long date, boolean read, boolean deliveryReport, long threadId, int simId) {
+            ContentValues values = new ContentValues(8);
+
+            values.put(ADDRESS, address);
+            if (date != null) {
+                values.put(DATE, date);
+            }
+            values.put(READ, read ? Integer.valueOf(1) : Integer.valueOf(0));
+            values.put(SUBJECT, subject);
+            values.put(BODY, body);
+            values.put(SIM_ID, simId);
+            if (deliveryReport) {
+                values.put(STATUS, STATUS_PENDING);
+            }
+            if (threadId != -1L) {
+                values.put(THREAD_ID, threadId);
+            }
+            return resolver.insert(uri, values);
+        }
+
+        /**
+         * @hide
+         */
+        public static Uri addMessageToUri(ContentResolver resolver,
+                Uri uri, String address, String body, String subject,
+                Long date, boolean read, boolean deliveryReport, long threadId, int simId, String simIMSI) {
+            ContentValues values = new ContentValues(9);
+
+            values.put(ADDRESS, address);
+            if (date != null) {
+                values.put(DATE, date);
+            }
+            values.put(READ, read ? Integer.valueOf(1) : Integer.valueOf(0));
+            values.put(SUBJECT, subject);
+            values.put(BODY, body);
+            values.put(SIM_ID, simId);
+            values.put(SIM_IMSI, simIMSI);
             if (deliveryReport) {
                 values.put(STATUS, STATUS_PENDING);
             }
@@ -453,6 +535,24 @@ public final class Telephony {
                 return addMessageToUri(resolver, CONTENT_URI, address, body,
                         subject, date, read, false);
             }
+            /**
+             * @hide
+             */
+            public static Uri addMessage(ContentResolver resolver,
+                    String address, String body, String subject, Long date,
+                    boolean read, int simId) {
+                return addMessageToUri(resolver, CONTENT_URI, address, body,
+                        subject, date, read, false, simId);
+            }
+            /**
+             * @hide
+             */
+            public static Uri addMessage(ContentResolver resolver,
+                    String address, String body, String subject, Long date,
+                    boolean read, int simId, String simIMSI) {
+                return addMessageToUri(resolver, CONTENT_URI, address, body,
+                        subject, date, read, false, simId, simIMSI);
+            }
         }
 
         /**
@@ -493,6 +593,22 @@ public final class Telephony {
                 return addMessageToUri(resolver, CONTENT_URI, address, body,
                         subject, date, true, false);
             }
+            /**
+             * @hide
+             */
+            public static Uri addMessage(ContentResolver resolver,
+                    String address, String body, String subject, Long date, int simId) {
+                return addMessageToUri(resolver, CONTENT_URI, address, body,
+                        subject, date, true, false, simId);
+            }
+            /**
+             * @hide
+             */
+            public static Uri addMessage(ContentResolver resolver,
+                    String address, String body, String subject, Long date, int simId, String simIMSI) {
+                return addMessageToUri(resolver, CONTENT_URI, address, body,
+                        subject, date, true, false, simId, simIMSI);
+            }
         }
 
         /**
@@ -517,6 +633,22 @@ public final class Telephony {
              */
             public static final String DEFAULT_SORT_ORDER = "date DESC";
         }
+            /**
+             * @hide
+             */
+            public static Uri addMessage(ContentResolver resolver,
+                    String address, String body, String subject, Long date, int simId) {
+                return addMessageToUri(resolver, CONTENT_URI, address, body,
+                        subject, date, true, false, simId);
+            }
+            /**
+             * @hide
+             */
+            public static Uri addMessage(ContentResolver resolver,
+                    String address, String body, String subject, Long date, int simId, String simIMSI) {
+                return addMessageToUri(resolver, CONTENT_URI, address, body,
+                        subject, date, true, false, simId, simIMSI);
+            }
 
         /**
          * Contains all pending outgoing text-based SMS messages.
@@ -557,6 +689,24 @@ public final class Telephony {
                     boolean deliveryReport, long threadId) {
                 return addMessageToUri(resolver, CONTENT_URI, address, body,
                         subject, date, true, deliveryReport, threadId);
+            }
+            /**
+             * @hide
+             */
+            public static Uri addMessage(ContentResolver resolver,
+                    String address, String body, String subject, Long date,
+                    boolean deliveryReport, long threadId, int simId) {
+                return addMessageToUri(resolver, CONTENT_URI, address, body,
+                        subject, date, true, deliveryReport, threadId, simId);
+            }
+            /**
+             * @hide
+             */
+            public static Uri addMessage(ContentResolver resolver,
+                    String address, String body, String subject, Long date,
+                    boolean deliveryReport, long threadId, int simId, String simIMSI) {
+                return addMessageToUri(resolver, CONTENT_URI, address, body,
+                        subject, date, true, deliveryReport, threadId, simId, simIMSI);
             }
         }
 
@@ -972,6 +1122,20 @@ public final class Telephony {
          * <P>Type: TEXT</P>
          */
         public static final String SUBJECT = "sub";
+
+        /**
+         * The Sim card id with which to send the message, if present. Could be 0 or 1, default -1.
+         * <P>Type: INTEGER</P>
+         * @hide
+         */
+        public static final String SIM_ID = "sim_id";
+
+        /**
+         * The Sim card IMSI.
+         * <P>Type: TEXT</P>
+         * @hide
+         */
+        public static final String SIM_IMSI = "sim_imsi";
 
         /**
          * The character set of the subject, if present.
@@ -1528,6 +1692,12 @@ public final class Telephony {
          * <P>Type: INTEGER</P>
          */
         public static final String HAS_ATTACHMENT = "has_attachment";
+
+        /**
+         * Different sim use different thread, Could be 0 or 1 , default -1.
+         * @hide
+         */
+        public static final String SIM_ID = "sim_id";
     }
 
     /**
@@ -1584,6 +1754,20 @@ public final class Telephony {
         }
 
         /**
+         * Different sim use different thread.
+         * This is a single-recipient version of
+         * getOrCreateThreadId.  It's convenient for use with SMS
+         * messages.
+         * @hide
+         */
+        public static long getOrCreateThreadId(Context context, String recipient, int simId) {
+            Set<String> recipients = new HashSet<String>();
+
+            recipients.add(recipient);
+            return getOrCreateThreadId(context, recipients, simId);
+        }
+
+        /**
          * Given the recipients list and subject of an unsaved message,
          * return its thread ID.  If the message starts a new thread,
          * allocate a new thread ID.  Otherwise, use the appropriate
@@ -1609,6 +1793,42 @@ public final class Telephony {
             Uri uri = uriBuilder.build();
             //if (DEBUG) Rlog.v(TAG, "getOrCreateThreadId uri: " + uri);
 
+            Cursor cursor = SqliteWrapper.query(context, context.getContentResolver(),
+                    uri, ID_PROJECTION, null, null, null);
+            if (cursor != null) {
+                try {
+                    if (cursor.moveToFirst()) {
+                        return cursor.getLong(0);
+                    } else {
+                        Rlog.e(TAG, "getOrCreateThreadId returned no rows!");
+                    }
+                } finally {
+                    cursor.close();
+                }
+            }
+
+            Rlog.e(TAG, "getOrCreateThreadId failed with uri " + uri.toString());
+            throw new IllegalArgumentException("Unable to find or allocate a thread ID.");
+        }
+
+        /**
+         * Different sim use different thread.
+         * @hide
+         */
+        public static long getOrCreateThreadId(
+                Context context, Set<String> recipients, int simId) {
+            Uri.Builder uriBuilder = THREAD_ID_CONTENT_URI.buildUpon();
+
+            for (String recipient : recipients) {
+                if (Mms.isEmailAddress(recipient)) {
+                    recipient = Mms.extractAddrSpec(recipient);
+                }
+
+                uriBuilder.appendQueryParameter("recipient", recipient);
+            }
+            uriBuilder.appendQueryParameter("sim_id", String.valueOf(simId));
+
+            Uri uri = uriBuilder.build();
             Cursor cursor = SqliteWrapper.query(context, context.getContentResolver(),
                     uri, ID_PROJECTION, null, null, null);
             if (cursor != null) {
@@ -2153,6 +2373,20 @@ public final class Telephony {
             public static final String MSG_TYPE = "msg_type";
 
             /**
+             * The type of the sim card. Could be 0 or 1, , default -1.
+             * <P>Type: INTEGER</P>
+             * @hide
+             */
+            public static final String SIM_ID ="sim_id2";
+
+            /**
+             * The Sim card IMSI.
+             * <P>Type: TEXT</P>
+             * @hide
+             */
+            public static final String SIM_IMSI = "sim_imsi2";
+
+            /**
              * The type of the error code.
              * <P>Type: INTEGER</P>
              */
@@ -2368,6 +2602,14 @@ public final class Telephony {
          * <P>Type: INTEGER</P>
          */
         public static final String BEARER = "bearer";
+        
+        /**
+         * Intended for dual sim support, so the APN is assigned by id for each sim card.
+         * Default is -1, which means sim id is not specified. If sim id is not specified,
+         * it should work for both sim cards.
+         * @hide
+         **/
+        public static final String SIM_ID = "sim_id";
 
         /**
          * MVNO type:

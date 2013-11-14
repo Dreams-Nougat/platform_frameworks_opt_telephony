@@ -54,6 +54,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import com.android.internal.telephony.RILConstants.SimCardID;
 
 
 /**
@@ -117,6 +118,11 @@ public abstract class PhoneBase extends Handler implements Phone {
     protected static final int EVENT_SET_NETWORK_AUTOMATIC          = 28;
     protected static final int EVENT_ICC_RECORD_EVENTS              = 29;
     protected static final int EVENT_ICC_CHANGED                    = 30;
+    protected static final int EVENT_PHONE_STATE_CHANGED = 32; // for TMO ECN
+    protected static final int EVENT_USSD_COMPLETE = 33; // for TMO ECN
+
+    public static final String ECN_VAL_ON = "ON"; // for TMO ECN
+    public static final String ECN_VAL_OFF = "OFF"; // for TMO ECN
 
     // Key used to read/write current CLIR setting
     public static final String CLIR_KEY = "clir_key";
@@ -139,6 +145,8 @@ public abstract class PhoneBase extends Handler implements Phone {
     public SmsUsageMonitor mSmsUsageMonitor;
     protected AtomicReference<UiccCardApplication> mUiccApplication =
             new AtomicReference<UiccCardApplication>();
+    /* dual sim */
+    protected SimCardID mSimCardId;
 
     private TelephonyTester mTelephonyTester;
     private final String mName;
@@ -234,7 +242,8 @@ public abstract class PhoneBase extends Handler implements Phone {
      * @param ci the CommandsInterface
      */
     protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci) {
-        this(name, notifier, context, ci, false);
+        //this(name, notifier, context, ci, false);
+        this(name, notifier, context, ci, false, SimCardID.ID_ZERO);
     }
 
     /**
@@ -248,7 +257,7 @@ public abstract class PhoneBase extends Handler implements Phone {
      * of state change events
      */
     protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci,
-            boolean unitTestMode) {
+            boolean unitTestMode, SimCardID simCardId) {
         mName = name;
         mNotifier = notifier;
         mContext = context;
@@ -256,6 +265,7 @@ public abstract class PhoneBase extends Handler implements Phone {
         mCi = ci;
         mActionDetached = this.getClass().getPackage().getName() + ".action_detached";
         mActionAttached = this.getClass().getPackage().getName() + ".action_attached";
+        mSimCardId = simCardId;
 
         if (Build.IS_DEBUGGABLE) {
             mTelephonyTester = new TelephonyTester(this);
@@ -288,18 +298,24 @@ public abstract class PhoneBase extends Handler implements Phone {
          * the RIL_UNSOL_CALL_RING so the default if there is no property is
          * true.
          */
-        mDoesRilSendMultipleCallRing = SystemProperties.getBoolean(
-                TelephonyProperties.PROPERTY_RIL_SENDS_MULTIPLE_CALL_RING, true);
+        if (SimCardID.ID_ONE == mSimCardId) {
+            mDoesRilSendMultipleCallRing = SystemProperties.getBoolean(
+                    "ro.telephony.call_ring.multi_1", false);
+        } else {
+            mDoesRilSendMultipleCallRing = SystemProperties.getBoolean(
+                    TelephonyProperties.PROPERTY_RIL_SENDS_MULTIPLE_CALL_RING, true);
+        }
         Rlog.d(LOG_TAG, "mDoesRilSendMultipleCallRing=" + mDoesRilSendMultipleCallRing);
 
+
         mCallRingDelay = SystemProperties.getInt(
-                TelephonyProperties.PROPERTY_CALL_RING_DELAY, 3000);
+                TelephonyProperties.PROPERTY_CALL_RING_DELAY +((SimCardID.ID_ZERO != mSimCardId)?("_"+String.valueOf(mSimCardId.toInt())):""), 3000);
         Rlog.d(LOG_TAG, "mCallRingDelay=" + mCallRingDelay);
 
         // Initialize device storage and outgoing SMS usage monitors for SMSDispatchers.
         mSmsStorageMonitor = new SmsStorageMonitor(this);
         mSmsUsageMonitor = new SmsUsageMonitor(context);
-        mUiccController = UiccController.getInstance();
+        mUiccController = UiccController.getInstance(mSimCardId); //send correct SIM ID
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
     }
 
@@ -566,7 +582,11 @@ public abstract class PhoneBase extends Handler implements Phone {
     private String getSavedNetworkSelection() {
         // open the shared preferences and search with our key.
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
-        return sp.getString(NETWORK_SELECTION_KEY, "");
+        String networkSeletctionKey = PhoneBase.NETWORK_SELECTION_KEY;
+        if (mSimCardId == SimCardID.ID_ONE) {
+            networkSeletctionKey = PhoneBase.NETWORK_SELECTION_KEY + "_" + String.valueOf(mSimCardId.toInt());
+        }
+        return sp.getString(networkSeletctionKey, "");
     }
 
     /**
@@ -684,6 +704,16 @@ public abstract class PhoneBase extends Handler implements Phone {
                     "com.android.internal.telephony.Phone must be used from within one thread");
         }
     }
+
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    public Call getVTCall() {
+        return null;
+    }
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     /**
      * Set the properties by matching the carrier string in
@@ -1017,6 +1047,8 @@ public abstract class PhoneBase extends Handler implements Phone {
     }
 
     @Override
+    public abstract SimCardID getSimCardId();
+
     public abstract int getPhoneType();
 
     /** @hide */
@@ -1161,6 +1193,15 @@ public abstract class PhoneBase extends Handler implements Phone {
     @Override
     public void unregisterForSignalInfo(Handler h) {
         mCi.unregisterForSignalInfo(h);
+    }
+
+    /* To process GCF test case 27.16 - SIM ERROR */
+    public void setOnUnsolOemHookRaw(Handler h, int what, Object obj) {
+        mCi.setOnUnsolOemHookRaw(h, what, obj);
+    }
+
+    public void unSetOnUnsolOemHookRaw(Handler h) {
+        mCi.unSetOnUnsolOemHookRaw(h);
     }
 
     @Override

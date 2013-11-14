@@ -17,6 +17,7 @@
 package com.android.internal.telephony.cat;
 
 import android.graphics.Bitmap;
+import java.util.ArrayList;
 
 /**
  * Container class for proactive command parameters.
@@ -202,5 +203,90 @@ class BIPClientParams extends CommandParams {
             return true;
         }
         return false;
+    }
+}
+
+class SetupEventListParams extends CommandParams {
+    ArrayList<Integer> m_EventList = new ArrayList<Integer>();
+    SetupEventListParams(CommandDetails cmdDet, ArrayList<Integer> EventList) {
+        super(cmdDet);
+        m_EventList = EventList;
+    }
+}
+
+class EventListParams extends CommandParams {
+    byte[] eventList = null;
+    int evenvalueIndex = 0;
+    int evenvalueLen=0;
+
+    EventListParams(CommandDetails cmdDet, byte[] eventList,int valueIndex,int valueLen ) {
+        super(cmdDet);
+        this.eventList = eventList;
+        this.evenvalueIndex = valueIndex;
+        this.evenvalueLen = valueLen;
+    }
+}
+
+class OpenChannelParams extends CommandParams {
+    TextMessage confirmMsg = null;
+    int bufSize = 0;
+    InterfaceTransportLevel itl = null;
+    byte[] destinationAddress = null;
+    BearerDescription bearerDescription = null;
+    String networkAccessName = null;
+    String userLogin = null;
+    String userPassword = null;
+
+    OpenChannelParams(CommandDetails cmdDet, TextMessage confirmMsg,
+                      int bufSize, InterfaceTransportLevel itl, byte[] destinationAddress,
+                      BearerDescription bearerDescription, String networkAccessName,
+                      String userLogin, String userPassword) {
+        super(cmdDet);
+        this.confirmMsg = confirmMsg;
+        this.bufSize = bufSize;
+        this.itl = itl;
+        this.destinationAddress = destinationAddress;
+        this.bearerDescription = bearerDescription;
+        this.networkAccessName = networkAccessName;
+        this.userLogin = userLogin;
+        this.userPassword = userPassword;
+    }
+}
+
+class CloseChannelParams extends CommandParams {
+    int channel = 0;
+
+    CloseChannelParams(CommandDetails cmdDet, int channel) {
+        super(cmdDet);
+        this.channel = channel;
+    }
+}
+
+class ReceiveDataParams extends CommandParams {
+    int datLen = 0;
+    int channel = 0;
+
+    ReceiveDataParams(CommandDetails cmdDet, int channel, int datLen) {
+        super(cmdDet);
+        this.channel = channel;
+        this.datLen = datLen;
+    }
+}
+
+class SendDataParams extends CommandParams {
+    byte[] data = null;
+    int channel = 0;
+
+    SendDataParams(CommandDetails cmdDet, int channel, byte[] data) {
+        super(cmdDet);
+        this.channel = channel;
+        this.data = data;
+    }
+}
+
+class GetChannelStatusParams extends CommandParams {
+
+    GetChannelStatusParams(CommandDetails cmdDet) {
+        super(cmdDet);
     }
 }

@@ -2149,10 +2149,9 @@ public final class DcTracker extends DcTrackerBase {
             log("getPreferredApn: X not found mAllApnSettings.isEmpty");
             return null;
         }
-
         Cursor cursor = mPhone.getContext().getContentResolver().query(
-                PREFERAPN_NO_UPDATE_URI, new String[] { "_id", "name", "apn" },
-                null, null, Telephony.Carriers.DEFAULT_SORT_ORDER);
+            PREFERAPN_NO_UPDATE_URI, new String[] { "_id", "name", "apn" },
+            null, null, Telephony.Carriers.DEFAULT_SORT_ORDER);
 
         if (cursor != null) {
             mCanSetPreferApn = true;

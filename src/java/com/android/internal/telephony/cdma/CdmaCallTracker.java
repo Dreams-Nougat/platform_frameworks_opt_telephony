@@ -33,6 +33,7 @@ import com.android.internal.telephony.Connection;
 import com.android.internal.telephony.DriverCall;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
+import com.android.internal.telephony.RILConstants.SimCardID;
 import com.android.internal.telephony.TelephonyProperties;
 
 import java.io.FileDescriptor;
@@ -178,11 +179,19 @@ public final class CdmaCallTracker extends CallTracker {
         mCallWaitingRegistrants.remove(h);
     }
 
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    /* videophone */
+    Connection
+    dial (String dialString, int clirMode) throws CallStateException {
+        return dial (dialString, clirMode, false);
+    }
     /**
      * clirMode is one of the CLIR_ constants
      */
     Connection
-    dial (String dialString, int clirMode) throws CallStateException {
+    dial (String dialString, int clirMode, boolean isVTCall) throws CallStateException {
         // note that this triggers call state changed notif
         clearDisconnected();
 
@@ -193,7 +202,7 @@ public final class CdmaCallTracker extends CallTracker {
         String inEcm=SystemProperties.get(TelephonyProperties.PROPERTY_INECM_MODE, "false");
         boolean isPhoneInEcmMode = inEcm.equals("true");
         boolean isEmergencyCall =
-                PhoneNumberUtils.isLocalEmergencyNumber(dialString, mPhone.getContext());
+                PhoneNumberUtils.isLocalEmergencyNumber(dialString, mPhone.getContext(), mPhone.getSimCardId());
 
         // Cancel Ecm timer if a second emergency call is originating in Ecm mode
         if (isPhoneInEcmMode && isEmergencyCall) {
@@ -233,7 +242,7 @@ public final class CdmaCallTracker extends CallTracker {
 
             // In Ecm mode, if another emergency call is dialed, Ecm mode will not exit.
             if(!isPhoneInEcmMode || (isPhoneInEcmMode && isEmergencyCall)) {
-                mCi.dial(mPendingMO.mAddress, clirMode, obtainCompleteMessage());
+                mCi.dial(mPendingMO.mAddress, clirMode, null, obtainCompleteMessage(), (isVTCall ? 1 : 0));
             } else {
                 mPhone.exitEmergencyCallbackMode();
                 mPhone.setOnEcbModeExitResponse(this,EVENT_EXIT_ECM_RESPONSE_CDMA, null);
@@ -247,7 +256,9 @@ public final class CdmaCallTracker extends CallTracker {
 
         return mPendingMO;
     }
-
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     Connection
     dial (String dialString) throws CallStateException {
@@ -1053,7 +1064,7 @@ public final class CdmaCallTracker extends CallTracker {
      * Disable data call when emergency call is connected
      */
     private void disableDataCallInEmergencyCall(String dialString) {
-        if (PhoneNumberUtils.isLocalEmergencyNumber(dialString, mPhone.getContext())) {
+        if (PhoneNumberUtils.isLocalEmergencyNumber(dialString, mPhone.getContext(), mPhone.getSimCardId())) {
             if (Phone.DEBUG_PHONE) log("disableDataCallInEmergencyCall");
             mIsInEmergencyCall = true;
             mPhone.mDcTracker.setInternalDataEnabled(false);

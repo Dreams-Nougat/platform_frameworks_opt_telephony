@@ -29,6 +29,10 @@ import com.android.internal.telephony.ITelephonyRegistry;
 
 import java.util.List;
 
+import android.content.Context;
+import android.os.SystemProperties;
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 /**
  * broadcast intents
  */
@@ -38,17 +42,34 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
 
     /*package*/
     DefaultPhoneNotifier() {
-        mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
-                    "telephony.registry"));
+        if (SimCardID.ID_ONE.toInt() == SystemProperties.getInt(TelephonyProperties.PROPERTY_API_SIM, SimCardID.ID_ZERO.toInt())) {
+            mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
+                        "telephony.registry2"));
+        } else {
+            mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
+                        "telephony.registry"));
+        }
+    }
+
+    DefaultPhoneNotifier(SimCardID simCardId) {
+        if (SimCardID.ID_ONE == simCardId) {
+            mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
+                        "telephony.registry2"));
+        } else if (SimCardID.ID_ZERO == simCardId) {
+            mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
+                        "telephony.registry"));
+        }
     }
 
     @Override
     public void notifyPhoneState(Phone sender) {
         Call ringingCall = sender.getRingingCall();
         String incomingNumber = "";
+        
         if (ringingCall != null && ringingCall.getEarliestConnection() != null){
             incomingNumber = ringingCall.getEarliestConnection().getAddress();
         }
+        
         try {
             mRegistry.notifyCallState(convertCallState(sender.getState()), incomingNumber);
         } catch (RemoteException ex) {
@@ -117,7 +138,7 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
         // TODO
         // use apnType as the key to which connection we're talking about.
         // pass apnType back up to fetch particular for this one.
-        TelephonyManager telephony = TelephonyManager.getDefault();
+        TelephonyManager telephony = TelephonyManager.getDefault(sender.getSimCardId());
         LinkProperties linkProperties = null;
         LinkCapabilities linkCapabilities = null;
         boolean roaming = false;

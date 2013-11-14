@@ -67,6 +67,7 @@ public abstract class Connection {
         CDMA_PREEMPTED,
         CDMA_NOT_EMERGENCY,              /* not an emergency call */
         CDMA_ACCESS_BLOCKED,            /* Access Blocked by CDMA network */
+        USER_ALERTING_NO_ANSWER,         /* User alerting, no answer */
         ERROR_UNSPECIFIED
     }
 
@@ -164,6 +165,13 @@ public abstract class Connection {
      */
     public abstract boolean isIncoming();
 
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    public abstract boolean isVideoCall(); 
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
     /**
      * If this Connection is connected, then it is associated with
      * a Call.

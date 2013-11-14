@@ -24,6 +24,8 @@ import android.os.Registrant;
 import android.os.RegistrantList;
 import android.telephony.Rlog;
 
+import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppState;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
@@ -32,6 +34,10 @@ import com.android.internal.telephony.uicc.IccCardStatus.PinState;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+
+import android.content.Intent;
+import com.android.internal.telephony.RILConstants.SimCardID;
+import com.android.internal.telephony.RILConstants;
 
 /**
  * {@hide}
@@ -65,6 +71,9 @@ public class UiccCardApplication {
     private boolean       mDesiredPinLocked;
     private boolean       mIccFdnAvailable = true; // Default is enabled.
 
+    private SimCardID mSimCardId;
+    protected Phone mPhone;
+
     private CommandsInterface mCi;
     private Context mContext;
     private IccRecords mIccRecords;
@@ -80,7 +89,15 @@ public class UiccCardApplication {
                         IccCardApplicationStatus as,
                         Context c,
                         CommandsInterface ci) {
-        if (DBG) log("Creating UiccApp: " + as);
+        this(uiccCard, as, c, ci, SimCardID.ID_ZERO);
+    }
+
+    UiccCardApplication(UiccCard uiccCard,
+                        IccCardApplicationStatus as,
+                        Context c,
+                        CommandsInterface ci,
+                        SimCardID simCardId) {
+        if (DBG) log("Creating UiccApp: " + as + ", SIM card ID: " + simCardId.toInt());
         mUiccCard = uiccCard;
         mAppState = as.app_state;
         mAppType = as.app_type;
@@ -93,6 +110,9 @@ public class UiccCardApplication {
 
         mContext = c;
         mCi = ci;
+
+        mSimCardId = simCardId;
+        mPhone = PhoneFactory.getDefaultPhone(mSimCardId);
 
         mIccFh = createIccFileHandler(as.app_type);
         mIccRecords = createIccRecords(as.app_type, mContext, mCi);
@@ -162,12 +182,13 @@ public class UiccCardApplication {
     }
 
     private IccRecords createIccRecords(AppType type, Context c, CommandsInterface ci) {
+        if (DBG) log(mAppType + "createIccRecords, AppType:" + type + ", SIM card ID:" + mSimCardId.toInt());
         if (type == AppType.APPTYPE_USIM || type == AppType.APPTYPE_SIM) {
-            return new SIMRecords(this, c, ci);
+            return new SIMRecords(this, c, ci, mSimCardId);
         } else if (type == AppType.APPTYPE_RUIM || type == AppType.APPTYPE_CSIM){
-            return new RuimRecords(this, c, ci);
+            return new RuimRecords(this, c, ci, mSimCardId);
         } else if (type == AppType.APPTYPE_ISIM) {
-            return new IsimUiccRecords(this, c, ci);
+            return new IsimUiccRecords(this, c, ci, mSimCardId);
         } else {
             // Unknown app type (maybe detection is still in progress)
             return null;
@@ -214,18 +235,10 @@ public class UiccCardApplication {
                 return;
             }
 
-            int[] result = (int[])ar.result;
-            if(result.length != 0) {
-                //0 - Available & Disabled, 1-Available & Enabled, 2-Unavailable.
-                if (result[0] == 2) {
-                    mIccFdnEnabled = false;
-                    mIccFdnAvailable = false;
-                } else {
-                    mIccFdnEnabled = (result[0] == 1) ? true : false;
-                    mIccFdnAvailable = true;
-                }
-                log("Query facility FDN : FDN service available: "+ mIccFdnAvailable
-                        +" enabled: "  + mIccFdnEnabled);
+            int[] ints = (int[])ar.result;
+            if(ints.length != 0) {
+                mIccFdnEnabled = (0!=ints[0]);
+                if (DBG) log("Query facility lock : "  + mIccFdnEnabled);
             } else {
                 loge("Bogus facility lock response");
             }

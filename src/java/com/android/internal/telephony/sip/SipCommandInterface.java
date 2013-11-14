@@ -66,9 +66,17 @@ class SipCommandInterface extends BaseCommands implements CommandsInterface {
     public void changeIccPin2(String oldPin2, String newPin2, Message result) {
     }
 
+    public void getPinRemainingStatus(Message result){
+    }
+
     @Override
     public void changeBarringPassword(String facility, String oldPwd,
             String newPwd, Message result) {
+    }
+
+    /* GCF test */
+    public void changeBarringPassword(String facility, String oldPwd,
+            String newPwd, String RenewPwd, Message result) {
     }
 
     @Override
@@ -96,7 +104,29 @@ class SipCommandInterface extends BaseCommands implements CommandsInterface {
             Message result) {
     }
 
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
     @Override
+    public void dial(String address, int clirMode, UUSInfo uusInfo, 
+            Message result ,int vtdial) {
+    }
+
+    public void dialVT (String address, int clirMode, Message result) {
+    }
+
+    public void hangupVTConnection (int vtIndex, Message result) {
+    }
+
+    public void acceptVTCall (Message result) {
+    }
+
+    public void rejectVTCall (Message result) {
+    }
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
+
     public void getIMSI(Message result) {
     }
 
@@ -111,7 +141,6 @@ class SipCommandInterface extends BaseCommands implements CommandsInterface {
     @Override
     public void getIMEISV(Message result) {
     }
-
 
     @Override
     public void hangupConnection (int gsmIndex, Message result) {
@@ -132,7 +161,6 @@ class SipCommandInterface extends BaseCommands implements CommandsInterface {
     @Override
     public void conference (Message result) {
     }
-
 
     @Override
     public void setPreferredVoicePrivacy(boolean enable, Message result) {
@@ -262,6 +290,9 @@ class SipCommandInterface extends BaseCommands implements CommandsInterface {
 
     @Override
     public void setRadioPower(boolean on, Message result) {
+    }
+
+    public void setSimPower(boolean on, Message result) {
     }
 
     @Override

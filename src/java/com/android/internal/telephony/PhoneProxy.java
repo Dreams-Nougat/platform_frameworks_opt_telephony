@@ -42,6 +42,8 @@ import com.android.internal.telephony.CallManager;
 
 import java.util.List;
 
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 public class PhoneProxy extends Handler implements Phone {
     public final static Object lockForRadioTechnologyChange = new Object();
 
@@ -80,7 +82,7 @@ public class PhoneProxy extends Handler implements Phone {
         mCommandsInterface.registerForOn(this, EVENT_RADIO_ON, null);
         mCommandsInterface.registerForVoiceRadioTechChanged(
                              this, EVENT_VOICE_RADIO_TECH_CHANGED, null);
-        mIccCardProxy = new IccCardProxy(phone.getContext(), mCommandsInterface);
+        mIccCardProxy = new IccCardProxy(phone.getContext(), mCommandsInterface, ((PhoneBase)mActivePhone).getSimCardId());
         if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
             // For the purpose of IccCardProxy we only care about the technology family
             mIccCardProxy.setVoiceRadioTech(ServiceState.RIL_RADIO_TECHNOLOGY_UMTS);
@@ -342,6 +344,10 @@ public class PhoneProxy extends Handler implements Phone {
     @Override
     public String getPhoneName() {
         return mActivePhone.getPhoneName();
+    }
+
+    public SimCardID getSimCardId() {
+         return mActivePhone.getSimCardId();
     }
 
     @Override
@@ -629,10 +635,24 @@ public class PhoneProxy extends Handler implements Phone {
         return mActivePhone.getRingingCall();
     }
 
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    public Call getVTCall() {
+        return mActivePhone.getVTCall();
+    }
+
     @Override
     public Connection dial(String dialString) throws CallStateException {
-        return mActivePhone.dial(dialString);
+        return dial(dialString, false);
     }
+
+    public Connection dial(String dialString, boolean isVTCall) throws CallStateException {
+        return mActivePhone.dial(dialString, isVTCall);
+    }
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     @Override
     public Connection dial(String dialString, UUSInfo uusInfo) throws CallStateException {
@@ -667,6 +687,10 @@ public class PhoneProxy extends Handler implements Phone {
     @Override
     public void setRadioPower(boolean power) {
         mActivePhone.setRadioPower(power);
+    }
+
+    public void setRadioPowerOnNow() {
+        mActivePhone.setRadioPowerOnNow();
     }
 
     @Override
@@ -745,6 +769,8 @@ public class PhoneProxy extends Handler implements Phone {
         mActivePhone.setCallForwardingOption(commandInterfaceCFReason,
             commandInterfaceCFAction, dialingNumber, timerSeconds, onComplete);
     }
+
+
 
     @Override
     public void getOutgoingCallerIdDisplay(Message onComplete) {
@@ -1070,6 +1096,15 @@ public class PhoneProxy extends Handler implements Phone {
     @Override
     public void unregisterForSignalInfo(Handler h) {
         mActivePhone.unregisterForSignalInfo(h);
+    }
+
+    /* To process GCF test case 27.16 - SIM ERROR */
+    public void setOnUnsolOemHookRaw(Handler h, int what, Object obj) {
+        mActivePhone.setOnUnsolOemHookRaw(h,what,obj);
+    }
+
+    public void unSetOnUnsolOemHookRaw(Handler h) {
+        mActivePhone.unSetOnUnsolOemHookRaw(h);
     }
 
     @Override

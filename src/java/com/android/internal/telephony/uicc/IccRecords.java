@@ -30,6 +30,9 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import android.os.SystemProperties;
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 /**
  * {@hide}
  */
@@ -42,6 +45,8 @@ public abstract class IccRecords extends Handler implements IccConstants {
     protected CommandsInterface mCi;
     protected IccFileHandler mFh;
     protected UiccCardApplication mParentApp;
+    protected SimCardID mSimCardId;
+    protected boolean mStkRefreshSimrest = false;
 
     protected RegistrantList mRecordsLoadedRegistrants = new RegistrantList();
     protected RegistrantList mImsiReadyRegistrants = new RegistrantList();
@@ -143,11 +148,12 @@ public abstract class IccRecords extends Handler implements IccConstants {
     }
 
     // ***** Constructor
-    public IccRecords(UiccCardApplication app, Context c, CommandsInterface ci) {
+    public IccRecords(UiccCardApplication app, Context c, CommandsInterface ci, SimCardID simCardId) {
         mContext = c;
         mCi = ci;
         mFh = app.getIccFileHandler();
         mParentApp = app;
+        mSimCardId = simCardId;
     }
 
     /**
@@ -555,4 +561,23 @@ public abstract class IccRecords extends Handler implements IccConstants {
         pw.println(" mSpn=" + mSpn);
         pw.flush();
     }
+
+    public void setSystemPropertyIcc(String property, String value) {
+        String finalProperty;
+        if(mSimCardId == SimCardID.ID_ONE) {
+            finalProperty = property + "_" + String.valueOf(mSimCardId.toInt());
+        } else {
+            finalProperty = property;
+        }
+        SystemProperties.set(finalProperty, value);
+    }
+
+    public boolean setStkRefreshSimRestEnable(boolean enable) {
+         mStkRefreshSimrest = enable;
+         return true;
+     }
+
+    public boolean getStkRefreshSimRestEnable() {
+         return mStkRefreshSimrest;
+     }
 }

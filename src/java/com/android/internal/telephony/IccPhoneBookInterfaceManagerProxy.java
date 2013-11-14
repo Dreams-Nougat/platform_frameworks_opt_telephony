@@ -22,6 +22,7 @@ import com.android.internal.telephony.uicc.AdnRecord;
 
 import java.util.List;
 
+import com.android.internal.telephony.RILConstants.SimCardID;
 
 /**
  * SimPhoneBookInterfaceManager to provide an inter-process communication to
@@ -33,8 +34,14 @@ public class IccPhoneBookInterfaceManagerProxy extends IIccPhoneBook.Stub {
     public IccPhoneBookInterfaceManagerProxy(IccPhoneBookInterfaceManager
             iccPhoneBookInterfaceManager) {
         mIccPhoneBookInterfaceManager = iccPhoneBookInterfaceManager;
-        if(ServiceManager.getService("simphonebook") == null) {
-            ServiceManager.addService("simphonebook", this);
+        if (SimCardID.ID_ONE == iccPhoneBookInterfaceManager.mPhone.getSimCardId()) {
+            if (ServiceManager.getService("simphonebook2") == null) {
+                ServiceManager.addService("simphonebook2", this);
+            }
+        } else {
+            if (ServiceManager.getService("simphonebook") == null) {
+                ServiceManager.addService("simphonebook", this);
+            }
         }
     }
 
@@ -48,17 +55,22 @@ public class IccPhoneBookInterfaceManagerProxy extends IIccPhoneBook.Stub {
     updateAdnRecordsInEfBySearch (int efid,
             String oldTag, String oldPhoneNumber,
             String newTag, String newPhoneNumber,
-            String pin2) {
+            String pin2,
+            String[] oldEmails, String[] newEmails, String[] oldAnrs, String[] newAnrs,
+            String[] oldGroups, String[] newGroups) throws android.os.RemoteException {
         return mIccPhoneBookInterfaceManager.updateAdnRecordsInEfBySearch(
-                efid, oldTag, oldPhoneNumber, newTag, newPhoneNumber, pin2);
+                efid, oldTag, oldPhoneNumber, newTag, newPhoneNumber, pin2, oldEmails, newEmails,
+                oldAnrs, newAnrs, oldGroups, newGroups);
     }
 
     @Override
     public boolean
     updateAdnRecordsInEfByIndex(int efid, String newTag,
-            String newPhoneNumber, int index, String pin2) {
+            String newPhoneNumber, int index, String pin2,
+            String[] newEmails, String[] newAnrs, String[] newGroups)
+                throws android.os.RemoteException {
         return mIccPhoneBookInterfaceManager.updateAdnRecordsInEfByIndex(efid,
-                newTag, newPhoneNumber, index, pin2);
+                newTag, newPhoneNumber, index, pin2, newEmails, newAnrs, newGroups);
     }
 
     @Override
@@ -70,4 +82,9 @@ public class IccPhoneBookInterfaceManagerProxy extends IIccPhoneBook.Stub {
     public List<AdnRecord> getAdnRecordsInEf(int efid) {
         return mIccPhoneBookInterfaceManager.getAdnRecordsInEf(efid);
     }
+
+    public boolean IsUSIM() {
+        return mIccPhoneBookInterfaceManager.IsUSIM();
+    }
+
 }

@@ -57,6 +57,7 @@ import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneNotifier;
 import com.android.internal.telephony.PhoneProxy;
 import com.android.internal.telephony.PhoneSubInfo;
+import com.android.internal.telephony.RILConstants.SimCardID;
 import com.android.internal.telephony.ServiceStateTracker;
 import com.android.internal.telephony.SmsBroadcastUndelivered;
 import com.android.internal.telephony.TelephonyIntents;
@@ -140,31 +141,42 @@ public class CDMAPhone extends PhoneBase {
 
     // Constructors
     public CDMAPhone(Context context, CommandsInterface ci, PhoneNotifier notifier) {
-        super("CDMA", notifier, context, ci, false);
+        super("CDMA", notifier, context, ci, false, SimCardID.ID_ZERO);
         initSstIcc();
-        init(context, notifier);
+        init(context, notifier, SimCardID.ID_ZERO);
+    }
+    public CDMAPhone(Context context, CommandsInterface ci, PhoneNotifier notifier, SimCardID simCardId) {
+        super("CDMA", notifier, context, ci, false, simCardId);
+        initSstIcc();
+        init(context, notifier, simCardId);
     }
 
     public CDMAPhone(Context context, CommandsInterface ci, PhoneNotifier notifier,
             boolean unitTestMode) {
-        super("CDMA", notifier, context, ci, unitTestMode);
+        super("CDMA", notifier, context, ci, unitTestMode, SimCardID.ID_ZERO);
         initSstIcc();
-        init(context, notifier);
+        init(context, notifier, SimCardID.ID_ZERO);
+    }
+    public CDMAPhone(Context context, CommandsInterface ci, PhoneNotifier notifier,
+            boolean unitTestMode, SimCardID simCardId) {
+        super("CDMA", notifier, context, ci, unitTestMode, simCardId);
+        initSstIcc();
+        init(context, notifier, simCardId);
     }
 
     protected void initSstIcc() {
         mSST = new CdmaServiceStateTracker(this);
     }
 
-    protected void init(Context context, PhoneNotifier notifier) {
+    protected void init(Context context, PhoneNotifier notifier, SimCardID simCardId) {
         mCi.setPhoneType(PhoneConstants.PHONE_TYPE_CDMA);
         mCT = new CdmaCallTracker(this);
-        mCdmaSSM = CdmaSubscriptionSourceManager.getInstance(context, mCi, this,
+        mCdmaSSM = CdmaSubscriptionSourceManager.getInstance(mContext, mCi, this,
                 EVENT_CDMA_SUBSCRIPTION_SOURCE_CHANGED, null);
         mDcTracker = new DcTracker(this);
         mRuimPhoneBookInterfaceManager = new RuimPhoneBookInterfaceManager(this);
         mSubInfo = new PhoneSubInfo(this);
-        mEriManager = new EriManager(this, context, EriManager.ERI_FROM_XML);
+        mEriManager = new EriManager(this, mContext, EriManager.ERI_FROM_XML);
 
         mCi.registerForAvailable(this, EVENT_RADIO_AVAILABLE, null);
         mCi.registerForOffOrNotAvailable(this, EVENT_RADIO_OFF_OR_NOT_AVAILABLE, null);
@@ -176,15 +188,15 @@ public class CDMAPhone extends PhoneBase {
                 null);
 
         PowerManager pm
-            = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,LOG_TAG);
 
         //Change the system setting
-        SystemProperties.set(TelephonyProperties.CURRENT_ACTIVE_PHONE,
+        setSystemProperty(TelephonyProperties.CURRENT_ACTIVE_PHONE,
                 Integer.toString(PhoneConstants.PHONE_TYPE_CDMA));
 
         // This is needed to handle phone process crashes
-        String inEcm=SystemProperties.get(TelephonyProperties.PROPERTY_INECM_MODE, "false");
+        String inEcm=SystemProperties.get(TelephonyProperties.PROPERTY_INECM_MODE+((SimCardID.ID_ZERO != mSimCardId)?("_"+String.valueOf(mSimCardId.toInt())):""), "false");
         mIsPhoneInEcmState = inEcm.equals("true");
         if (mIsPhoneInEcmState) {
             // Send a message which will invoke handleExitEmergencyCallbackMode
@@ -193,7 +205,7 @@ public class CDMAPhone extends PhoneBase {
 
         // get the string that specifies the carrier OTA Sp number
         mCarrierOtaSpNumSchema = SystemProperties.get(
-                TelephonyProperties.PROPERTY_OTASP_NUM_SCHEMA,"");
+                TelephonyProperties.PROPERTY_OTASP_NUM_SCHEMA+((SimCardID.ID_ZERO != mSimCardId)?("_"+String.valueOf(mSimCardId.toInt())):""),"");
 
         // Sets operator properties by retrieving from build-time system property
         String operatorAlpha = SystemProperties.get("ro.cdma.home.operator.alpha");
@@ -291,6 +303,12 @@ public class CDMAPhone extends PhoneBase {
     }
 
     @Override
+    /* dual sim */
+    public SimCardID getSimCardId()
+    {
+        return mSimCardId;
+    }
+
     public int getPhoneType() {
         return PhoneConstants.PHONE_TYPE_CDMA;
     }
@@ -376,10 +394,34 @@ public class CDMAPhone extends PhoneBase {
         return mCT.dial(newDialString);
     }
 
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    /* videophone */
+    public Connection
+    dial (String dialString, boolean isVTCall) throws CallStateException {
+        // Need to make sure dialString gets parsed properly
+        String newDialString = PhoneNumberUtils.stripSeparators(dialString);
+        return mCT.dial(newDialString);
+    }
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
+
     @Override
     public Connection dial(String dialString, UUSInfo uusInfo) throws CallStateException {
         throw new CallStateException("Sending UUS information NOT supported in CDMA!");
     }
+
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    public Connection dial(String dialString, UUSInfo uusInfo, boolean isVTCall) throws CallStateException {
+        throw new CallStateException("Sending UUS information NOT supported in CDMA!");
+    }
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     @Override
     public boolean
@@ -487,6 +529,11 @@ public class CDMAPhone extends PhoneBase {
     public void
     setRadioPower(boolean power) {
         mSST.setRadioPower(power);
+    }
+
+    public void
+    setRadioPowerOnNow() {
+        mSST.setRadioPowerOnNow();
     }
 
     @Override
@@ -989,7 +1036,7 @@ public class CDMAPhone extends PhoneBase {
             // Post this runnable so we will automatically exit
             // if no one invokes exitEmergencyCallbackMode() directly.
             long delayInMillis = SystemProperties.getLong(
-                    TelephonyProperties.PROPERTY_ECM_EXIT_TIMER, DEFAULT_ECM_EXIT_TIMER_VALUE);
+                    TelephonyProperties.PROPERTY_ECM_EXIT_TIMER+((SimCardID.ID_ZERO != mSimCardId)?("_"+String.valueOf(mSimCardId.toInt())):""), DEFAULT_ECM_EXIT_TIMER_VALUE);
             postDelayed(mExitEcmRunnable, delayInMillis);
             // We don't want to go to sleep while in Ecm
             mWakeLock.acquire();
@@ -1034,7 +1081,7 @@ public class CDMAPhone extends PhoneBase {
             break;
         case RESTART_ECM_TIMER:
             long delayInMillis = SystemProperties.getLong(
-                    TelephonyProperties.PROPERTY_ECM_EXIT_TIMER, DEFAULT_ECM_EXIT_TIMER_VALUE);
+                    TelephonyProperties.PROPERTY_ECM_EXIT_TIMER+((SimCardID.ID_ZERO != mSimCardId)?("_"+String.valueOf(mSimCardId.toInt())):""), DEFAULT_ECM_EXIT_TIMER_VALUE);
             postDelayed(mExitEcmRunnable, delayInMillis);
             mEcmTimerResetRegistrants.notifyResult(Boolean.FALSE);
             break;
@@ -1271,7 +1318,13 @@ public class CDMAPhone extends PhoneBase {
      */
     @Override
     public final void setSystemProperty(String property, String value) {
-        super.setSystemProperty(property, value);
+        if(getSimCardId() == SimCardID.ID_ONE) {
+            String property2;
+            property2 = property + "_" + String.valueOf(getSimCardId().toInt());
+            super.setSystemProperty(property2, value);
+        } else {
+            super.setSystemProperty(property, value);
+        }
     }
 
     /**
@@ -1573,14 +1626,14 @@ public class CDMAPhone extends PhoneBase {
         log("CDMAPhone: updateCurrentCarrierInProvider called");
         if (!TextUtils.isEmpty(operatorNumeric)) {
             try {
-                Uri uri = Uri.withAppendedPath(Telephony.Carriers.CONTENT_URI, "current");
+                Uri uri = Uri.withAppendedPath(Telephony.Carriers.CONTENT_URI, "current"+((SimCardID.ID_ZERO != getSimCardId())?("_"+String.valueOf(getSimCardId().toInt())):""));
                 ContentValues map = new ContentValues();
                 map.put(Telephony.Carriers.NUMERIC, operatorNumeric);
                 log("updateCurrentCarrierInProvider from system: numeric=" + operatorNumeric);
                 getContext().getContentResolver().insert(uri, map);
 
                 // Updates MCC MNC device configuration information
-                MccTable.updateMccMncConfiguration(mContext, operatorNumeric);
+                MccTable.updateMccMncConfiguration(mContext, operatorNumeric, getSimCardId());
 
                 return true;
             } catch (SQLException e) {
@@ -1667,4 +1720,6 @@ public class CDMAPhone extends PhoneBase {
         pw.println(" isMinInfoReady()=" + isMinInfoReady());
         pw.println(" isCspPlmnEnabled()=" + isCspPlmnEnabled());
     }
+
 }
+

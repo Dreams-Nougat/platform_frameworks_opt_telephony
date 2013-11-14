@@ -72,7 +72,6 @@ public abstract class IccFileHandler extends Handler implements IccConstants {
     static protected final int RESPONSE_DATA_STRUCTURE = 13;
     static protected final int RESPONSE_DATA_RECORD_LENGTH = 14;
 
-
     //***** Events
 
     /** Finished retrieving size of transparent EF; start loading. */
@@ -257,7 +256,7 @@ public abstract class IccFileHandler extends Handler implements IccConstants {
      */
     public void loadEFImgTransparent(int fileid, int highOffset, int lowOffset,
             int length, Message onLoaded) {
-        Message response = obtainMessage(EVENT_READ_ICON_DONE, fileid, 0,
+        Message response = obtainMessage(EVENT_READ_BINARY_DONE, fileid, 0,
                 onLoaded);
 
         logd("IccFileHandler: loadEFImgTransparent fileid = " + fileid
@@ -371,7 +370,7 @@ public abstract class IccFileHandler extends Handler implements IccConstants {
                 recordSize = new int[3];
                 recordSize[0] = data[RESPONSE_DATA_RECORD_LENGTH] & 0xFF;
                 recordSize[1] = ((data[RESPONSE_DATA_FILE_SIZE_1] & 0xff) << 8)
-                       + (data[RESPONSE_DATA_FILE_SIZE_2] & 0xff);
+                    + (data[RESPONSE_DATA_FILE_SIZE_2] & 0xff);
                 recordSize[2] = recordSize[1] / recordSize[0];
 
                 sendResult(response, recordSize, null);
@@ -390,31 +389,16 @@ public abstract class IccFileHandler extends Handler implements IccConstants {
 
                 data = result.payload;
 
-                if (TYPE_EF != data[RESPONSE_DATA_FILE_TYPE]) {
-                    throw new IccFileTypeMismatch();
+                if (lc.mLoadAll) {
+                    lc.results = new ArrayList<byte[]>(lc.mCountRecords);
                 }
 
-                if (EF_TYPE_LINEAR_FIXED != data[RESPONSE_DATA_STRUCTURE]) {
-                    throw new IccFileTypeMismatch();
-                }
-
-                lc.mRecordSize = data[RESPONSE_DATA_RECORD_LENGTH] & 0xFF;
-
-                size = ((data[RESPONSE_DATA_FILE_SIZE_1] & 0xff) << 8)
-                       + (data[RESPONSE_DATA_FILE_SIZE_2] & 0xff);
-
-                lc.mCountRecords = size / lc.mRecordSize;
-
-                 if (lc.mLoadAll) {
-                     lc.results = new ArrayList<byte[]>(lc.mCountRecords);
-                 }
-
-                 mCi.iccIOForApp(COMMAND_READ_RECORD, lc.mEfid, getEFPath(lc.mEfid),
+                mCi.iccIOForApp(COMMAND_READ_RECORD, lc.mEfid, getEFPath(lc.mEfid),
                          lc.mRecordNum,
                          READ_RECORD_MODE_ABSOLUTE,
                          lc.mRecordSize, null, null, mAid,
                          obtainMessage(EVENT_READ_RECORD_DONE, lc));
-                 break;
+                break;
             case EVENT_GET_BINARY_SIZE_DONE:
                 ar = (AsyncResult)msg.obj;
                 response = (Message) ar.userObj;

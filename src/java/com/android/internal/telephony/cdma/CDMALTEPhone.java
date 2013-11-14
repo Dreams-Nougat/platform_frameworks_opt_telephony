@@ -46,6 +46,9 @@ import com.android.internal.telephony.uicc.UiccController;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 
+/* dual sim */
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 public class CDMALTEPhone extends CDMAPhone {
     static final String LOG_LTE_TAG = "CDMALTEPhone";
     private static final boolean DBG = true;
@@ -69,9 +72,15 @@ public class CDMALTEPhone extends CDMAPhone {
     }
 
     // Constructors
+    /* dual sim */
     public CDMALTEPhone(Context context, CommandsInterface ci, PhoneNotifier notifier) {
-        super(context, ci, notifier, false);
+        super(context, ci, notifier, false, SimCardID.ID_ZERO);
     }
+
+    /* dual sim */
+    public CDMALTEPhone(Context context, CommandsInterface ci, PhoneNotifier notifier, SimCardID simCardId) {
+        super(context, ci, notifier, false, simCardId);
+     }
 
     @Override
     public void handleMessage (Message msg) {
@@ -313,6 +322,12 @@ public class CDMALTEPhone extends CDMAPhone {
         }
 
         super.onUpdateIccAvailability();
+    }
+
+    /* for dual sim */
+    public SimCardID getSimCardId()
+    {
+        return mSimCardId;
     }
 
     @Override

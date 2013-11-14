@@ -51,6 +51,7 @@ import com.android.internal.R;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import com.android.internal.telephony.RILConstants.SimCardID;
 
 /**
  * {@hide}
@@ -84,6 +85,13 @@ public class UiccCard {
         update(c, ci, ics);
     }
 
+    public UiccCard(Context c, CommandsInterface ci, IccCardStatus ics, SimCardID simCardId) {
+        if (DBG) log("Creating, SIM card ID:" + simCardId.toInt());
+        mCardState = ics.mCardState;
+        update(c, ci, ics, simCardId);
+    }
+
+
     public void dispose() {
         synchronized (mLock) {
             if (DBG) log("Disposing card");
@@ -99,6 +107,10 @@ public class UiccCard {
     }
 
     public void update(Context c, CommandsInterface ci, IccCardStatus ics) {
+        update(c, ci, ics, SimCardID.ID_ZERO);
+    }
+
+    public void update(Context c, CommandsInterface ci, IccCardStatus ics, SimCardID simCardId) {
         synchronized (mLock) {
             if (mDestroyed) {
                 loge("Updated after destroyed! Fix me!");
@@ -119,7 +131,7 @@ public class UiccCard {
                     //Create newly added Applications
                     if (i < ics.mApplications.length) {
                         mUiccApplications[i] = new UiccCardApplication(this,
-                                ics.mApplications[i], mContext, mCi);
+                                ics.mApplications[i], mContext, mCi, simCardId);
                     }
                 } else if (i >= ics.mApplications.length) {
                     //Delete removed applications
@@ -135,7 +147,7 @@ public class UiccCard {
                 // Initialize or Reinitialize CatService
                 mCatService = CatService.getInstance(mCi,
                                                      mContext,
-                                                     this);
+                                                     this, simCardId);
             } else {
                 if (mCatService != null) {
                     mCatService.dispose();

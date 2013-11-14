@@ -42,6 +42,8 @@ import com.android.internal.telephony.MccTable;
 import com.android.internal.telephony.cdma.sms.UserData;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
 
+import com.android.internal.telephony.RILConstants.SimCardID;
+
 
 /**
  * {@hide}
@@ -97,10 +99,10 @@ public final class RuimRecords extends IccRecords {
 
     private static final int EVENT_RUIM_REFRESH = 31;
 
-    public RuimRecords(UiccCardApplication app, Context c, CommandsInterface ci) {
-        super(app, c, ci);
+    public RuimRecords(UiccCardApplication app, Context c, CommandsInterface ci, SimCardID simCardId) {
+        super(app, c, ci, simCardId);
 
-        mAdnCache = new AdnRecordCache(mFh);
+        mAdnCache = new AdnRecordCache(mFh, ci);
 
         mRecordsRequested = false;  // No load request is made till SIM ready
 
@@ -483,7 +485,7 @@ public final class RuimRecords extends IccRecords {
                 String operatorNumeric = getRUIMOperatorNumeric();
                 if (operatorNumeric != null) {
                     if(operatorNumeric.length() <= 6){
-                        MccTable.updateMccMncConfiguration(mContext, operatorNumeric);
+                        MccTable.updateMccMncConfiguration(mContext, operatorNumeric, mSimCardId);
                     }
                 }
             break;
@@ -634,14 +636,14 @@ public final class RuimRecords extends IccRecords {
         if (!TextUtils.isEmpty(operator)) {
             log("onAllRecordsLoaded set 'gsm.sim.operator.numeric' to operator='" +
                     operator + "'");
-            SystemProperties.set(PROPERTY_ICC_OPERATOR_NUMERIC, operator);
+            super.setSystemPropertyIcc(PROPERTY_ICC_OPERATOR_NUMERIC, operator);
         } else {
             log("onAllRecordsLoaded empty 'gsm.sim.operator.numeric' skipping");
         }
 
         if (!TextUtils.isEmpty(mImsi)) {
             log("onAllRecordsLoaded set mcc imsi=" + mImsi);
-            SystemProperties.set(PROPERTY_ICC_OPERATOR_ISO_COUNTRY,
+            super.setSystemPropertyIcc(PROPERTY_ICC_OPERATOR_ISO_COUNTRY,
                     MccTable.countryCodeForMcc(Integer.parseInt(mImsi.substring(0,3))));
         } else {
             log("onAllRecordsLoaded empty imsi skipping setting mcc");

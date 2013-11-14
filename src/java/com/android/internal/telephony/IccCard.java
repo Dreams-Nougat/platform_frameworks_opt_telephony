@@ -231,4 +231,24 @@ public interface IccCard {
      * @return true if ICC card is PUK2 blocked
      */
     public boolean getIccPuk2Blocked();
+
+    public int getPinRemainingStatus (int type);
+
+    public int getNetworkLockRemainingStatus ();
+
+    public boolean isNetworkLock ();
+
+    /**
+     * @return true if app_state == APPSTATE_SUBSCRIPTION_PERSO &&
+     *                      perso_substate == PERSOSUBSTATE_SIM_NETWORK_PUK
+     */
+    public boolean isNetworkPukRequired();
+    /*
+    public void exchangeAPDU(int cla, int command, int channel, int p1, int p2,
+            int p3, String data, Message onComplete);
+
+    public void openLogicalChannel(String AID, Message onComplete);
+
+    public void closeLogicalChannel(int channel, Message onComplete);
+    */
 }

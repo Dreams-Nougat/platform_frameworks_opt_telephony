@@ -45,12 +45,12 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
     protected int mRecordSize[];
     protected boolean mSuccess;
     protected List<AdnRecord> mRecords;
-
     protected static final boolean ALLOW_SIM_OP_IN_UI_THREAD = false;
 
     protected static final int EVENT_GET_SIZE_DONE = 1;
     protected static final int EVENT_LOAD_DONE = 2;
     protected static final int EVENT_UPDATE_DONE = 3;
+    protected static final int EVENT_QUERY_INFO_DONE = 4;
 
     protected Handler mBaseHandler = new Handler() {
         @Override
@@ -159,8 +159,9 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
     public boolean
     updateAdnRecordsInEfBySearch (int efid,
             String oldTag, String oldPhoneNumber,
-            String newTag, String newPhoneNumber, String pin2) {
-
+            String newTag, String newPhoneNumber, String pin2,
+            String[] oldEmails, String[] newEmails, String[] oldAnrs, String[] newAnrs,
+            String[] oldGroups, String[] newGroups) {
 
         if (mPhone.getContext().checkCallingOrSelfPermission(
                 android.Manifest.permission.WRITE_CONTACTS)
@@ -184,7 +185,10 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
             AdnRecord oldAdn = new AdnRecord(oldTag, oldPhoneNumber);
             AdnRecord newAdn = new AdnRecord(newTag, newPhoneNumber);
             if (mAdnCache != null) {
-                mAdnCache.updateAdnBySearch(efid, oldAdn, newAdn, pin2, response);
+                mAdnCache.updateAdnBySearch(efid, oldAdn, newAdn, pin2, response,
+                oldEmails, newEmails, oldAnrs, newAnrs,
+                oldGroups, newGroups);
+
                 waitForResult(status);
             } else {
                 loge("Failure while trying to update by search due to uninitialised adncache");
@@ -213,7 +217,8 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
     @Override
     public boolean
     updateAdnRecordsInEfByIndex(int efid, String newTag,
-            String newPhoneNumber, int index, String pin2) {
+            String newPhoneNumber, int index, String pin2,
+            String[] newEmails, String[] newAnrs, String[] newGroups) {
 
         if (mPhone.getContext().checkCallingOrSelfPermission(
                 android.Manifest.permission.WRITE_CONTACTS)
@@ -221,6 +226,8 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
             throw new SecurityException(
                     "Requires android.permission.WRITE_CONTACTS permission");
         }
+
+        efid = updateEfForIccType(efid);
 
         if (DBG) logd("updateAdnRecordsInEfByIndex: efid=" + efid +
                 " Index=" + index + " ==> " +
@@ -232,7 +239,8 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
             Message response = mBaseHandler.obtainMessage(EVENT_UPDATE_DONE, status);
             AdnRecord newAdn = new AdnRecord(newTag, newPhoneNumber);
             if (mAdnCache != null) {
-                mAdnCache.updateAdnByIndex(efid, newAdn, index, pin2, response);
+                mAdnCache.updateAdnByIndex(efid, newAdn, index, pin2, response,
+                    newEmails, newAnrs, newGroups);
                 waitForResult(status);
             } else {
                 loge("Failure while trying to update by index due to uninitialised adncache");
@@ -289,6 +297,14 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
         return mRecords;
     }
 
+    public boolean IsUSIM() {
+        boolean isUSIM = false;
+        if (mPhone.getCurrentUiccAppType() == AppType.APPTYPE_USIM) {
+            isUSIM = true;
+        }
+        return isUSIM;
+    }
+
     protected void checkThread() {
         if (!ALLOW_SIM_OP_IN_UI_THREAD) {
             // Make sure this isn't the UI thread, since it will block
@@ -315,6 +331,10 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
         if (efid == IccConstants.EF_ADN) {
             if (mPhone.getCurrentUiccAppType() == AppType.APPTYPE_USIM) {
                 return IccConstants.EF_PBR;
+            }
+        } else if (efid == IccConstants.EF_INFO) {
+            if (mPhone.getCurrentUiccAppType() != AppType.APPTYPE_USIM) {
+                return IccConstants.EF_2GINFO;
             }
         }
         return efid;

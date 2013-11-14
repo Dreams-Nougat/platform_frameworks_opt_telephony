@@ -31,6 +31,7 @@ import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import com.android.internal.telephony.RILConstants.SimCardID;
 
 import static com.android.internal.telephony.uicc.IccConstants.EF_DOMAIN;
 import static com.android.internal.telephony.uicc.IccConstants.EF_IMPI;
@@ -62,8 +63,8 @@ public final class IsimUiccRecords extends IccRecords implements IsimRecords {
                 + " mIsimImpu=" + mIsimImpu;
     }
 
-    public IsimUiccRecords(UiccCardApplication app, Context c, CommandsInterface ci) {
-        super(app, c, ci);
+    public IsimUiccRecords(UiccCardApplication app, Context c, CommandsInterface ci, SimCardID simCardId) {
+        super(app, c, ci, simCardId);
 
         mRecordsRequested = false;  // No load request is made till SIM ready
 

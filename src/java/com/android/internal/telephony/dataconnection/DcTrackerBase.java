@@ -387,8 +387,8 @@ public abstract class DcTrackerBase extends Handler {
         }
 
         public void register() {
-            mResolver.registerContentObserver(
-                    Settings.Global.getUriFor(Settings.Global.DATA_ROAMING), false, this);
+	    mResolver.registerContentObserver(
+	            Settings.Global.getUriFor(Settings.Global.DATA_ROAMING), false, this);
         }
 
         public void unregister() {
@@ -656,7 +656,7 @@ public abstract class DcTrackerBase extends Handler {
     public void setDataOnRoamingEnabled(boolean enabled) {
         if (getDataOnRoamingEnabled() != enabled) {
             final ContentResolver resolver = mPhone.getContext().getContentResolver();
-            Settings.Global.putInt(resolver, Settings.Global.DATA_ROAMING, enabled ? 1 : 0);
+	    Settings.Global.putInt(resolver, Settings.Global.DATA_ROAMING, enabled ? 1 : 0);
             // will trigger handleDataOnRoamingChange() through observer
         }
     }

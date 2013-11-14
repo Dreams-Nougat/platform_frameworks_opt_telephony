@@ -19,6 +19,8 @@ package com.android.internal.telephony.cat;
 import com.android.internal.telephony.GsmAlphabet;
 import com.android.internal.telephony.cat.Duration.TimeUnit;
 import com.android.internal.telephony.uicc.IccUtils;
+import com.android.internal.telephony.cat.BearerDescription.BearerType;
+import com.android.internal.telephony.cat.InterfaceTransportLevel.TransportProtocol;
 
 import android.content.res.Resources;
 import android.content.res.Resources.NotFoundException;
@@ -172,6 +174,87 @@ abstract class ValueParser {
         }
 
         return id;
+    }
+
+    static int retrieveBufferSize(ComprehensionTlv ctlv) throws ResultException {
+        int sz = 0;
+
+        byte[] rawValue = ctlv.getRawValue();
+        int valueIndex = ctlv.getValueIndex();
+
+        try {
+            sz = (rawValue[valueIndex] & 0xff) << 8;
+            sz |= rawValue[valueIndex + 1] & 0xff;
+        } catch (IndexOutOfBoundsException e) {
+            throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
+        }
+
+        return sz;
+    }
+
+    static InterfaceTransportLevel retrieveInterfaceTransportLevel(ComprehensionTlv ctlv) throws ResultException {
+        int port = 0;
+        TransportProtocol protocol = TransportProtocol.TCP_SERVER;
+
+        byte[] rawValue = ctlv.getRawValue();
+        int valueIndex = ctlv.getValueIndex();
+
+        try {
+            protocol = TransportProtocol.values()[(rawValue[valueIndex] & 0xff)];
+            port = (rawValue[valueIndex + 1] & 0xff) << 8;
+            port |= rawValue[valueIndex + 2] & 0xff;
+        } catch (IndexOutOfBoundsException e) {
+            throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
+        }
+        return new InterfaceTransportLevel(port, protocol);
+    }
+
+    static int retrieveChannelDataLength(ComprehensionTlv ctlv) throws ResultException {
+        int len = 0;
+
+        byte[] rawValue = ctlv.getRawValue();
+        int valueIndex = ctlv.getValueIndex();
+
+        try {
+            len = rawValue[valueIndex] & 0xff;
+        } catch (IndexOutOfBoundsException e) {
+            throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
+        }
+
+        return len;
+    }
+
+    static byte[] retrieveChannelData(ComprehensionTlv ctlv) throws ResultException {
+        byte[] rawValue = ctlv.getRawValue();
+        int valueIndex = ctlv.getValueIndex();
+
+        byte[] data = new byte[ctlv.getLength()];
+        System.arraycopy(rawValue, valueIndex, data, 0, data.length);
+        return data;
+    }
+
+    static byte[] retrieveOtherAddress(ComprehensionTlv ctlv) throws ResultException {
+        int addrType;
+
+        byte[] rawValue = ctlv.getRawValue();
+        int valueIndex = ctlv.getValueIndex();
+
+        try {
+            addrType = rawValue[valueIndex] & 0xff;
+        } catch (IndexOutOfBoundsException e) {
+            throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
+        }
+
+        if (!((addrType == 0x21) || (addrType == 0x57)))
+            throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
+
+        if (((addrType == 0x21) && (ctlv.getLength() != 5)) ||
+                ((addrType == 0x57) && (ctlv.getLength() != 17)))
+            throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
+
+        byte[] addr = new byte[ctlv.getLength() - 1];
+        System.arraycopy(rawValue, valueIndex + 1, addr, 0, addr.length);
+        return addr;
     }
 
     /**
@@ -353,5 +436,146 @@ abstract class ValueParser {
             // This should never happen.
             throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
         }
+    }
+
+    static int retrieveFileList(ComprehensionTlv ctlv) throws ResultException {
+        int[] id=new int[30];
+        byte[] rawValue = ctlv.getRawValue();
+        int valueIndex = ctlv.getValueIndex();
+        int textLen = ctlv.getLength();
+        int root =0;
+        int[] rootIndx=new int[30];
+        int LengIndex = rawValue [valueIndex] & 0xff;
+        CatLog.d("ValueParser", "retrieveFileList textLen:"+textLen+" valueIndex:"+valueIndex+" rawValue[valueIndex]:"+rawValue[valueIndex]+" LengIndex:"+LengIndex);
+
+        for (int i = valueIndex+1 ; i < valueIndex + textLen ; i++) {
+            CatLog.d("ValueParser", "i:"+i+"rawValue[i]:"+rawValue[i]);
+            if (root != LengIndex) {
+                if((((byte) rawValue[i]) == 0x3F) && (((byte) rawValue[i+1]) == 0x00) ) {
+                    rootIndx[root] =i;
+                    CatLog.d("ValueParser", "root:"+root+" rootIndx[root]:"+rootIndx[root]);
+                    root++;
+                }
+            }
+        }
+        try {
+            if (root >1) {
+                int j=0;
+                for (int i = 1; i < root ; i++) {
+                    CatLog.d("ValueParser"," i:"+i+" rootIndx[i]:"+rootIndx[i]+"rawValue[(rootIndx[i]-1)"+rawValue[(rootIndx[i]-1)]+"rawValue[(rootIndx[i]-2)]"+rawValue[(rootIndx[i]-2)]);
+                    id[j] =rawValue[(rootIndx[i]-1)] & 0xff;
+                    id[j] |= ((rawValue[(rootIndx[i]-2)] << 8) & 0xFF00);
+                    CatLog.d("ValueParser"," j:"+j+"id[j]"+id[j]);
+                    j++;
+                }
+                id[j] = rawValue[((valueIndex+textLen)-1)] & 0xff;
+                id[j] |= ((rawValue[((valueIndex+textLen)-2)] << 8) & 0xFF00);
+                CatLog.d("ValueParser","last:"+j+"id[j]"+id[j]);
+                return id[0];
+            } else {
+                id[0] = rawValue[((valueIndex+textLen)-1)] & 0xff;
+                id[0] |= ((rawValue[((valueIndex+textLen)-2)] << 8) & 0xFF00);
+                CatLog.d("ValueParser","retrieveFileList_only one id[0]:"+id[0]);
+                return id[0];
+            }
+        } catch (IndexOutOfBoundsException e) {
+            throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
+        }
+    }
+
+    static ArrayList<Integer> retrieveEventList(ComprehensionTlv ctlv) throws ResultException {
+
+        ArrayList<Integer> eventlist = new ArrayList<Integer>();
+
+        byte[] rawValue = ctlv.getRawValue();
+        int valueIndex = ctlv.getValueIndex();
+        int EventLen = ctlv.getLength();
+
+        try {
+
+            for (int i = valueIndex ; i < valueIndex + EventLen ; i++) {
+                CatLog.d("ValueParser", "index="+ i +", rawValue[i]:"+ rawValue[i]);
+                int EventValue = (int) rawValue[i];
+                eventlist.add(EventValue);
+            }
+
+        } catch (IndexOutOfBoundsException e) {
+            throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
+        }
+
+        return eventlist;
+    }
+
+
+    /**
+     * Retrieves network access name from the Network Access Name
+     * COMPREHENSION-TLV object, and decodes it into a Java String.
+     *
+     * @param ctlv A Network Access Name COMPREHENSION-TLV object
+     * @return A Java String object decoded from the Text object
+     * @throws ResultException
+     */
+    static String retrieveNetworkAccessName(ComprehensionTlv ctlv) throws ResultException {
+        byte[] rawValue = ctlv.getRawValue();
+        int valueIndex = ctlv.getValueIndex();
+        String label;
+        byte labelLen = 0;
+        String networkAccessName = null;
+        int len = valueIndex + ctlv.getLength();
+
+        try {
+            while (valueIndex < len) {
+                labelLen = rawValue[valueIndex];
+                if (labelLen > 0) {
+                    label = GsmAlphabet.gsm8BitUnpackedToString(rawValue, valueIndex + 1, labelLen);
+                    valueIndex += labelLen + 1;
+                } else {
+                    return networkAccessName;
+                }
+
+                if (networkAccessName == null) {
+                    networkAccessName = label;
+                } else {
+                    networkAccessName += "." + label;
+                }
+            }
+            return networkAccessName;
+        } catch (IndexOutOfBoundsException e) {
+            throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
+        }
+    }
+
+    /**
+     * Retrieves bearer description from the Bearer Description
+     * COMPREHENSION-TLV object, and decodes it into a BearerDescription.
+     *
+     * @param ctlv A Bearer Description COMPREHENSION-TLV object
+     * @return BearerDescription decoded from the Bearer Description TLV
+     * @throws ResultException
+     */
+    static BearerDescription retrieveBearerDescription(ComprehensionTlv ctlv) throws ResultException {
+        BearerType type = null;
+
+        byte[] rawValue = ctlv.getRawValue();
+        int valueIndex = ctlv.getValueIndex();
+
+        try {
+            for (BearerType bt : BearerType.values()) {
+                if (bt.value() == rawValue[valueIndex]) {
+                    type = bt;
+                    break;
+                }
+            }
+            if (type == null) {
+                throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
+            }
+        } catch (IndexOutOfBoundsException e) {
+            throw new ResultException(ResultCode.CMD_DATA_NOT_UNDERSTOOD);
+        }
+
+        byte[] parameters = new byte[ctlv.getLength() - 1];
+        System.arraycopy(rawValue, valueIndex + 1, parameters, 0, parameters.length);
+
+        return new BearerDescription(type, parameters);
     }
 }

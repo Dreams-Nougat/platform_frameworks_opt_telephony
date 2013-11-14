@@ -25,6 +25,21 @@ public class CatResponseMessage {
         boolean mUsersConfirm = false;
         boolean mIncludeAdditionalInfo = false;
         int mAdditionalInfo = 0;
+        byte[] meventadditionalInfo = null;
+        int event = 0;
+        int sourceId = 0;
+        int destinationId = 0;
+        boolean mstkevetdownload = false;
+
+        String envelopeCmd = null;
+        byte[] channelData = null;
+        int channelDataLength = 0;
+        int[] channelStatus = null;
+
+        public CatResponseMessage(String envCmd) {
+            this.envelopeCmd = envCmd;
+        }
+
         public CatResponseMessage(CatCmdMessage cmdMsg) {
             mCmdDet = cmdMsg.mCmdDet;
         }
@@ -54,7 +69,37 @@ public class CatResponseMessage {
             mAdditionalInfo = info;
         }
 
+        public void setChannelData(byte[] data, int len) {
+            this.channelData = data;
+            this.channelDataLength = len;
+        }
+
+        public void setChannelStatus(int[] status) {
+            this.channelStatus = status;
+        }
+
+        public void setincludeAdditionalInfo(boolean includeadditionalinfo) {
+            this.mIncludeAdditionalInfo = includeadditionalinfo;
+        }
+
         CommandDetails getCmdDetails() {
             return mCmdDet;
+        }
+
+        public void setAdditionalInfo(byte[] eventadditionalInfo) {
+            this.meventadditionalInfo = eventadditionalInfo;
+        }
+
+        public void setEvent(int event) {
+            this.event = event;
+        }
+
+        public void setstkevetdownload(boolean stkevetdownload) {
+            this.mstkevetdownload = stkevetdownload;
+        }
+
+        public void setSourceAndDestination(int sourceId, int destinationId) {
+            this.sourceId = sourceId;
+            this.destinationId = destinationId;
         }
     }

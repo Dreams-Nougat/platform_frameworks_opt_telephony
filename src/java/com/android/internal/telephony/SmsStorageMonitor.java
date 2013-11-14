@@ -26,6 +26,7 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.provider.Telephony.Sms.Intents;
 import android.telephony.Rlog;
+import com.android.internal.telephony.RILConstants.SimCardID;
 
 /**
  * Monitors the device and ICC storage, and sends the appropriate events.
@@ -56,6 +57,7 @@ public final class SmsStorageMonitor extends Handler {
 
     final CommandsInterface mCi;                            // accessed from inner class
     boolean mStorageAvailable = true;                       // accessed from inner class
+    private SimCardID mSimId = SimCardID.ID_ZERO;
 
     /**
      * Hold the wake lock for 5 seconds, which should be enough time for
@@ -70,6 +72,10 @@ public final class SmsStorageMonitor extends Handler {
     public SmsStorageMonitor(PhoneBase phone) {
         mContext = phone.getContext();
         mCi = phone.mCi;
+
+        if (phone.getSimCardId() == SimCardID.ID_ONE) {
+            mSimId = SimCardID.ID_ONE;
+        }
 
         createWakelock();
 
@@ -138,6 +144,7 @@ public final class SmsStorageMonitor extends Handler {
     private void handleIccFull() {
         // broadcast SIM_FULL intent
         Intent intent = new Intent(Intents.SIM_FULL_ACTION);
+        intent.putExtra("simId", mSimId);
         mWakeLock.acquire(WAKE_LOCK_TIMEOUT);
         mContext.sendBroadcast(intent, android.Manifest.permission.RECEIVE_SMS);
     }

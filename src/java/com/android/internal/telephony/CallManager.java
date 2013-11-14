@@ -33,7 +33,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-
+import com.android.internal.telephony.RILConstants.SimCardID;
 
 /**
  * @hide
@@ -349,6 +349,22 @@ public final class CallManager {
     }
 
     /**
+     * return the default phone or null if no phone available
+     */
+    public Phone getDefaultPhone(SimCardID simId) {
+        //The phone obj which was chosen by user
+        Phone SpecifiedPhone = mPhones.get(simId.toInt());
+
+        if (SpecifiedPhone == null) {
+            Rlog.e(LOG_TAG, "Failed to get phone with specified simId " + simId.toInt());
+            return mDefaultPhone;
+        } else {
+            if (SpecifiedPhone.getSimCardId() != simId) Rlog.e(LOG_TAG, "wrong SIM id in the array");
+            return SpecifiedPhone;
+        }
+    }
+
+    /**
      * @return the phone associated with the foreground call
      */
     public Phone getFgPhone() {
@@ -449,7 +465,7 @@ public final class CallManager {
         phone.registerForSignalInfo(mHandler, EVENT_SIGNAL_INFO, null);
         phone.registerForResendIncallMute(mHandler, EVENT_RESEND_INCALL_MUTE, null);
         phone.registerForMmiInitiate(mHandler, EVENT_MMI_INITIATE, null);
-        phone.registerForMmiComplete(mHandler, EVENT_MMI_COMPLETE, null);
+        phone.registerForMmiComplete(mHandler, EVENT_MMI_COMPLETE, phone);
         phone.registerForSuppServiceFailed(mHandler, EVENT_SUPP_SERVICE_FAILED, null);
         phone.registerForServiceStateChanged(mHandler, EVENT_SERVICE_STATE_CHANGED, null);
 
@@ -748,7 +764,25 @@ public final class CallManager {
             Rlog.d(LOG_TAG, toString());
         }
 
-        if (!canDial(phone)) {
+        boolean isECT = false; // Explicit Call Transfer: 4 + SEND
+        boolean isEndHoldCall = false; //GCF test, Disconnect held single call, Clear all parties of held MultiParty call: 0 + SEND
+        boolean isReleaseAllActiveCalls = false; //Releases all active calls (if any exist, include multi-party call)
+        if ((null != dialString) && (dialString.equals("4")) && (canTransfer(getFirstActiveBgCall()))) {
+            isECT= true;
+            if (VDBG) Rlog.d(LOG_TAG, " dial: Explicit Call Transfer");
+        }
+
+        if ((null != dialString) && (dialString.equals("0")) && (canTransfer(getFirstActiveBgCall()))) {
+            isEndHoldCall = true;
+            if (VDBG) Rlog.d(LOG_TAG, " dial: Releases all held calls ");
+        }
+
+        if ((null != dialString) && (dialString.equals("1"))) {
+            isReleaseAllActiveCalls = true;
+            if (VDBG) Rlog.d(LOG_TAG, " dial: Releases all active calls (if any exist, include multi-party call)");
+        }
+
+        if ((!isECT) && (!isEndHoldCall) && (!isReleaseAllActiveCalls) && (!canDial(phone))) {
             throw new CallStateException("cannot dial in current state");
         }
 
@@ -1804,7 +1838,12 @@ public final class CallManager {
                     break;
                 case EVENT_MMI_COMPLETE:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_MMI_COMPLETE)");
-                    mMmiCompleteRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    for (int i = 0; i < mMmiCompleteRegistrants.size(); i++) {
+                        Message notifyMsg;
+                        notifyMsg = ((Registrant)mMmiCompleteRegistrants.get(i)).messageForRegistrant();
+                        notifyMsg.obj = msg.obj;
+                        notifyMsg.sendToTarget();
+                    }
                     break;
                 case EVENT_ECM_TIMER_RESET:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_ECM_TIMER_RESET)");

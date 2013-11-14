@@ -50,7 +50,13 @@ public class DriverCall implements Comparable<DriverCall> {
     public String name;
     public int namePresentation;
     public UUSInfo uusInfo;
-
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    public boolean isVideoCall; //VideoPhone
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
     /** returns null on error */
     static DriverCall
     fromCLCCLine(String line) {
@@ -67,7 +73,13 @@ public class DriverCall implements Comparable<DriverCall> {
 
             ret.isVoice = (0 == p.nextInt());
             ret.isMpty = p.nextBoolean();
-
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+            ret.isVideoCall=false; //vt,VideoPhone
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
             // use ALLOWED as default presentation while parsing CLCC
             ret.numberPresentation = PhoneConstants.PRESENTATION_ALLOWED;
 
@@ -111,6 +123,13 @@ public class DriverCall implements Comparable<DriverCall> {
                 + (isMT ? "mt" : "mo") + ","
                 + als + ","
                 + (isVoice ? "voc" : "nonvoc") + ","
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+                + (isVideoCall? "videocall" : "nonvtcall") + "," //vt add VideoPhone
+ /*
+ * End - Added by BrcmVT (2012/08/25)
+ */
                 + (isVoicePrivacy ? "evp" : "noevp") + ","
                 /*+ "number=" + number */ + ",cli=" + numberPresentation + ","
                 /*+ "name="+ name */ + "," + namePresentation;

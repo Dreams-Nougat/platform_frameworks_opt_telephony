@@ -183,6 +183,15 @@ public class SipPhone extends SipPhoneBase {
             return dialInternal(dialString);
         }
     }
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+    public Connection dial(String dialString, boolean isVTCall) throws CallStateException {
+        throw new CallStateException("VT Call NOT supported in SIP!");
+    }
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
 
     private Connection dialInternal(String dialString)
             throws CallStateException {
@@ -906,6 +915,17 @@ public class SipPhone extends SipPhoneBase {
             return mIncoming;
         }
 
+/*
+ * Start - Added by BrcmVT (2012/08/25)
+ */
+        //add for vt call, VideoPhone
+        @Override
+        public boolean isVideoCall() {
+            return false;
+        }
+/*
+ * End - Added by BrcmVT (2012/08/25)
+ */
         @Override
         public String getAddress() {
             // Phone app uses this to query caller ID. Return the original dial
@@ -1049,4 +1069,8 @@ public class SipPhone extends SipPhoneBase {
             Rlog.d(SACA_TAG, s);
         }
     }
+
+    @Override
+    public void setRadioPowerOnNow() {}
+
 }
