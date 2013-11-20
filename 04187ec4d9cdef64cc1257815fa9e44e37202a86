@@ -1,0 +1,11 @@
+Revision: 04187ec4d9cdef64cc1257815fa9e44e37202a86
+Patch-set: 4
+File: src/java/com/android/internal/telephony/cdma/SmsMessage.java
+
+715
+Wed Nov 20 23:57:07 2013 +0000
+Author: John Huang <1000718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: bea77522_8eeb5b62
+Bytes: 84
+What if originatingAddress.address includes "011"?  We've seen this on some devices.
+
