@@ -9,3 +9,11 @@ UUID: bea77522_8eeb5b62
 Bytes: 84
 What if originatingAddress.address includes "011"?  We've seen this on some devices.
 
+715
+Thu Nov 21 22:36:46 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: bea77522_8eeb5b62
+UUID: fec64dd8_258d2ed7
+Bytes: 230
+011 should never be present if ton=1 (TON_INTERNATIONAL_OR_IP) so adding the "+" is necessary. If 011 is then its a bug if ton=1, for the Galaxy Nexus Verizon model we do see the 011 present but ton=0 so the "+" will not be added.
+
