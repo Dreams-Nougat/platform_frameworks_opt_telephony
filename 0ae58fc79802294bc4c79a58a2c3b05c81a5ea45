@@ -1,0 +1,11 @@
+Revision: 0ae58fc79802294bc4c79a58a2c3b05c81a5ea45
+Patch-set: 1
+File: src/java/com/android/internal/telephony/CommandsInterface.java
+
+1683
+Thu Nov 28 00:55:35 2013 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: a3bafe99_9956e7ba
+Bytes: 144
+Please use an ETSI spec numbers every where as below if possible. If there is no ETSI spec the give the organization that is publising "27.007".
+
