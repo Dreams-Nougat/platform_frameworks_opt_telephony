@@ -481,7 +481,8 @@ public abstract class SMSDispatcher extends Handler {
      *  raw pdu of the status report is in the extended data ("pdu").
      */
     protected abstract void sendData(String destAddr, String scAddr, int destPort,
-            byte[] data, PendingIntent sentIntent, PendingIntent deliveryIntent);
+            byte[] data, PendingIntent sentIntent, PendingIntent deliveryIntent,
+            String callingPackage);// Pass the packageName
 
     /**
      * Send a text based SMS.
@@ -509,7 +510,8 @@ public abstract class SMSDispatcher extends Handler {
      *  raw pdu of the status report is in the extended data ("pdu").
      */
     protected abstract void sendText(String destAddr, String scAddr,
-            String text, PendingIntent sentIntent, PendingIntent deliveryIntent);
+            String text, PendingIntent sentIntent, PendingIntent deliveryIntent,
+            String callingPackage);// Pass the packageName
 
     /**
      * Calculate the number of septets needed to encode the message.
@@ -549,7 +551,8 @@ public abstract class SMSDispatcher extends Handler {
      */
     protected void sendMultipartText(String destAddr, String scAddr,
             ArrayList<String> parts, ArrayList<PendingIntent> sentIntents,
-            ArrayList<PendingIntent> deliveryIntents) {
+            ArrayList<PendingIntent> deliveryIntents,
+            String callingPackage) {// Pass the packageName
 
         int refNumber = getNextConcatenatedRef() & 0x00FF;
         int msgCount = parts.size();
@@ -600,7 +603,8 @@ public abstract class SMSDispatcher extends Handler {
             }
 
             sendNewSubmitPdu(destAddr, scAddr, parts.get(i), smsHeader, encoding,
-                    sentIntent, deliveryIntent, (i == (msgCount - 1)));
+                    sentIntent, deliveryIntent, (i == (msgCount - 1)),
+                    callingPackage);// Pass the packageName
         }
 
     }
@@ -610,7 +614,8 @@ public abstract class SMSDispatcher extends Handler {
      */
     protected abstract void sendNewSubmitPdu(String destinationAddress, String scAddress,
             String message, SmsHeader smsHeader, int encoding,
-            PendingIntent sentIntent, PendingIntent deliveryIntent, boolean lastPart);
+            PendingIntent sentIntent, PendingIntent deliveryIntent, boolean lastPart,
+            String callingPackage);// Pass the packageName
 
     /**
      * Send a SMS
@@ -658,28 +663,40 @@ public abstract class SMSDispatcher extends Handler {
             return;
         }
 
+        // Get packageName if it is available
+        String packageName = null;
+        if(tracker.mAppInfo != null && tracker.mAppInfo.applicationInfo != null){
+            packageName = tracker.mAppInfo.applicationInfo.packageName;
+        }
+
         // Get calling app package name via UID from Binder call
         PackageManager pm = mContext.getPackageManager();
-        String[] packageNames = pm.getPackagesForUid(Binder.getCallingUid());
 
-        if (packageNames == null || packageNames.length == 0) {
-            // Refuse to send SMS if we can't get the calling package name.
-            Rlog.e(TAG, "Can't get calling app package name: refusing to send SMS");
-            if (sentIntent != null) {
-                try {
-                    sentIntent.send(RESULT_ERROR_GENERIC_FAILURE);
-                } catch (CanceledException ex) {
-                    Rlog.e(TAG, "failed to send error result");
+        // Try to get packageName from UID if it is not passed in
+        if(packageName == null || packageName.length() == 0){
+            String[] packageNames = pm.getPackagesForUid(Binder.getCallingUid());
+
+            if (packageNames == null || packageNames.length == 0) {
+                // Refuse to send SMS if we can't get the calling package name.
+                Rlog.e(TAG, "Can't get calling app package name: refusing to send SMS");
+                if (sentIntent != null) {
+                    try {
+                        sentIntent.send(RESULT_ERROR_GENERIC_FAILURE);
+                    } catch (CanceledException ex) {
+                        Rlog.e(TAG, "failed to send error result");
+                    }
                 }
+                return;
             }
-            return;
-        }
+
+            packageName = packageNames[0];
+        } //
 
         // Get package info via packagemanager
         PackageInfo appInfo;
         try {
             // XXX this is lossy- apps can share a UID
-            appInfo = pm.getPackageInfo(packageNames[0], PackageManager.GET_SIGNATURES);
+            appInfo = pm.getPackageInfo(packageName, PackageManager.GET_SIGNATURES);
         } catch (PackageManager.NameNotFoundException e) {
             Rlog.e(TAG, "Can't get calling app package info: refusing to send SMS");
             if (sentIntent != null) {
@@ -988,7 +1005,15 @@ public abstract class SMSDispatcher extends Handler {
             return;
         }
 
-        sendMultipartText(destinationAddress, scAddress, parts, sentIntents, deliveryIntents);
+        // Get packageName if it is available
+        String packageName = null;
+        if(tracker != null && tracker.mAppInfo != null &&
+                tracker.mAppInfo.applicationInfo != null){
+            packageName = tracker.mAppInfo.applicationInfo.packageName;
+        }
+
+        sendMultipartText(destinationAddress, scAddress, parts, sentIntents, deliveryIntents,
+            packageName);
     }
 
     /**
@@ -1068,18 +1093,30 @@ public abstract class SMSDispatcher extends Handler {
         }
     }
 
+    // Pass the packageName
     protected SmsTracker getSmsTracker(HashMap<String, Object> data, PendingIntent sentIntent,
-            PendingIntent deliveryIntent, String format) {
+            PendingIntent deliveryIntent, String format, String callingPackage) {
         // Get calling app package name via UID from Binder call
         PackageManager pm = mContext.getPackageManager();
-        String[] packageNames = pm.getPackagesForUid(Binder.getCallingUid());
+
+        String packageName = callingPackage;
+
+        // Try to get packageName from UID if it is not passed in
+        if(packageName == null || packageName.length() == 0){
+            String[] packageNames = pm.getPackagesForUid(Binder.getCallingUid());
+
+            if (packageNames != null && packageNames.length > 0) {
+                packageName = packageNames[0];
+            }
+        }
 
         // Get package info via packagemanager
         PackageInfo appInfo = null;
-        if (packageNames != null && packageNames.length > 0) {
+
+        if(packageName != null && packageName.length() != 0){
             try {
                 // XXX this is lossy- apps can share a UID
-                appInfo = pm.getPackageInfo(packageNames[0], PackageManager.GET_SIGNATURES);
+                appInfo = pm.getPackageInfo(packageName, PackageManager.GET_SIGNATURES);
             } catch (PackageManager.NameNotFoundException e) {
                 // error will be logged in sendRawPdu
             }

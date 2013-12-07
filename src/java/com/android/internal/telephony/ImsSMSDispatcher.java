@@ -158,26 +158,32 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
 
     @Override
     protected void sendData(String destAddr, String scAddr, int destPort,
-            byte[] data, PendingIntent sentIntent, PendingIntent deliveryIntent) {
+            byte[] data, PendingIntent sentIntent, PendingIntent deliveryIntent,
+            String callingPackage) { // Pass the packageName
         if (isCdmaMo()) {
             mCdmaDispatcher.sendData(destAddr, scAddr, destPort,
-                    data, sentIntent, deliveryIntent);
+                    data, sentIntent, deliveryIntent,
+                    callingPackage); // Pass the packageName
         } else {
             mGsmDispatcher.sendData(destAddr, scAddr, destPort,
-                    data, sentIntent, deliveryIntent);
+                    data, sentIntent, deliveryIntent,
+                    callingPackage); // Pass the packageName
         }
     }
 
     @Override
     protected void sendMultipartText(String destAddr, String scAddr,
             ArrayList<String> parts, ArrayList<PendingIntent> sentIntents,
-            ArrayList<PendingIntent> deliveryIntents) {
+            ArrayList<PendingIntent> deliveryIntents,
+            String callingPackage) { // Pass the packageName
         if (isCdmaMo()) {
             mCdmaDispatcher.sendMultipartText(destAddr, scAddr,
-                    parts, sentIntents, deliveryIntents);
+                    parts, sentIntents, deliveryIntents,
+                    callingPackage); // Pass the packageName
         } else {
             mGsmDispatcher.sendMultipartText(destAddr, scAddr,
-                    parts, sentIntents, deliveryIntents);
+                    parts, sentIntents, deliveryIntents,
+                    callingPackage); // Pass the packageName
         }
     }
 
@@ -190,14 +196,17 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
 
     @Override
     protected void sendText(String destAddr, String scAddr, String text,
-            PendingIntent sentIntent, PendingIntent deliveryIntent) {
+            PendingIntent sentIntent, PendingIntent deliveryIntent,
+            String callingPackage) { // Pass the packageName
         Rlog.d(TAG, "sendText");
         if (isCdmaMo()) {
             mCdmaDispatcher.sendText(destAddr, scAddr,
-                    text, sentIntent, deliveryIntent);
+                    text, sentIntent, deliveryIntent,
+                    callingPackage); // Pass the packageName
         } else {
             mGsmDispatcher.sendText(destAddr, scAddr,
-                    text, sentIntent, deliveryIntent);
+                    text, sentIntent, deliveryIntent,
+                    callingPackage); // Pass the packageName
         }
     }
 
@@ -308,7 +317,8 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
     @Override
     protected void sendNewSubmitPdu(String destinationAddress, String scAddress, String message,
             SmsHeader smsHeader, int format, PendingIntent sentIntent,
-            PendingIntent deliveryIntent, boolean lastPart) {
+            PendingIntent deliveryIntent, boolean lastPart,
+            String callingPackage) { // Pass the packageName
         Rlog.e(TAG, "Error! Not implemented for IMS.");
     }
 

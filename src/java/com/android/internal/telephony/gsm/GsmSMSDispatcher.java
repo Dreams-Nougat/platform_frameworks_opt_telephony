@@ -151,13 +151,14 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
     /** {@inheritDoc} */
     @Override
     protected void sendData(String destAddr, String scAddr, int destPort,
-            byte[] data, PendingIntent sentIntent, PendingIntent deliveryIntent) {
+            byte[] data, PendingIntent sentIntent, PendingIntent deliveryIntent,
+            String callingPackage){ // Pass the packageName
         SmsMessage.SubmitPdu pdu = SmsMessage.getSubmitPdu(
                 scAddr, destAddr, destPort, data, (deliveryIntent != null));
         if (pdu != null) {
             HashMap map = getSmsTrackerMap(destAddr, scAddr, destPort, data, pdu);
             SmsTracker tracker = getSmsTracker(map, sentIntent, deliveryIntent,
-                    getFormat());
+                    getFormat(), callingPackage); // Pass the packageName
             sendRawPdu(tracker);
         } else {
             Rlog.e(TAG, "GsmSMSDispatcher.sendData(): getSubmitPdu() returned null");
@@ -167,13 +168,14 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
     /** {@inheritDoc} */
     @Override
     protected void sendText(String destAddr, String scAddr, String text,
-            PendingIntent sentIntent, PendingIntent deliveryIntent) {
+            PendingIntent sentIntent, PendingIntent deliveryIntent,
+            String callingPackage) { // Pass the packageName
         SmsMessage.SubmitPdu pdu = SmsMessage.getSubmitPdu(
                 scAddr, destAddr, text, (deliveryIntent != null));
         if (pdu != null) {
             HashMap map = getSmsTrackerMap(destAddr, scAddr, text, pdu);
             SmsTracker tracker = getSmsTracker(map, sentIntent, deliveryIntent,
-                    getFormat());
+                    getFormat(), callingPackage); // Pass the packageName
             sendRawPdu(tracker);
         } else {
             Rlog.e(TAG, "GsmSMSDispatcher.sendText(): getSubmitPdu() returned null");
@@ -191,7 +193,8 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
     @Override
     protected void sendNewSubmitPdu(String destinationAddress, String scAddress,
             String message, SmsHeader smsHeader, int encoding,
-            PendingIntent sentIntent, PendingIntent deliveryIntent, boolean lastPart) {
+            PendingIntent sentIntent, PendingIntent deliveryIntent, boolean lastPart,
+            String callingPackage) { // Pass the packageName
         SmsMessage.SubmitPdu pdu = SmsMessage.getSubmitPdu(scAddress, destinationAddress,
                 message, deliveryIntent != null, SmsHeader.toByteArray(smsHeader),
                 encoding, smsHeader.languageTable, smsHeader.languageShiftTable);
@@ -199,7 +202,8 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
             HashMap map =  getSmsTrackerMap(destinationAddress, scAddress,
                     message, pdu);
             SmsTracker tracker = getSmsTracker(map, sentIntent,
-                    deliveryIntent, getFormat());
+                    deliveryIntent, getFormat(),
+                    callingPackage); // Pass the packageName
             sendRawPdu(tracker);
         } else {
             Rlog.e(TAG, "GsmSMSDispatcher.sendNewSubmitPdu(): getSubmitPdu() returned null");

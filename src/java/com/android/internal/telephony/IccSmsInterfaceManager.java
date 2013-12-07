@@ -348,7 +348,8 @@ public class IccSmsInterfaceManager extends ISms.Stub {
                 callingPackage) != AppOpsManager.MODE_ALLOWED) {
             return;
         }
-        mDispatcher.sendData(destAddr, scAddr, destPort, data, sentIntent, deliveryIntent);
+        mDispatcher.sendData(destAddr, scAddr, destPort, data, sentIntent, deliveryIntent,
+                callingPackage);// Pass the packageName
     }
 
     /**
@@ -390,7 +391,8 @@ public class IccSmsInterfaceManager extends ISms.Stub {
                 callingPackage) != AppOpsManager.MODE_ALLOWED) {
             return;
         }
-        mDispatcher.sendText(destAddr, scAddr, text, sentIntent, deliveryIntent);
+        mDispatcher.sendText(destAddr, scAddr, text, sentIntent, deliveryIntent,
+            callingPackage);// Pass the packageName
     }
 
     /**
@@ -437,7 +439,8 @@ public class IccSmsInterfaceManager extends ISms.Stub {
             return;
         }
         mDispatcher.sendMultipartText(destAddr, scAddr, (ArrayList<String>) parts,
-                (ArrayList<PendingIntent>) sentIntents, (ArrayList<PendingIntent>) deliveryIntents);
+                (ArrayList<PendingIntent>) sentIntents, (ArrayList<PendingIntent>) deliveryIntents,
+                callingPackage);// Pass the packageName
     }
 
     @Override
