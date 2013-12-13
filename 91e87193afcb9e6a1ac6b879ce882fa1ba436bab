@@ -1,0 +1,23 @@
+Revision: 91e87193afcb9e6a1ac6b879ce882fa1ba436bab
+Patch-set: 8
+File: src/java/com/android/internal/telephony/dataconnection/ApnSetting.java
+
+117:0-118:0
+Fri Dec 13 20:13:45 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 48b31ffa_978e84d4
+Bytes: 106
+if mvnoType and mvnoMatchData are optional they should be inside brackets:
+[, <mvnoType>, <mvnoMatchData>]
+
+162:35-162:41
+Fri Dec 13 20:13:45 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: c8be2fc6_b35ab8dc
+Bytes: 135
+if (a.length<18 || a.length == 19 || a.length>20)
+
+I think == 20 is ok, correct?
+
+We also need to modify the tests to verify all this..
+
