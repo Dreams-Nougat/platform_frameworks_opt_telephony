@@ -1,0 +1,11 @@
+Revision: 91d98dce39aecc0abfea52a498d352e6229e396a
+Patch-set: 7
+File: tests/telephonytests/src/com/android/internal/telephony/ApnSettingTest.java
+
+70
+Fri Dec 13 20:11:31 2013 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 28c8ab74_f69500dc
+Bytes: 67
+since these are optional, also try a v2 test without mvnotype/data.
+
