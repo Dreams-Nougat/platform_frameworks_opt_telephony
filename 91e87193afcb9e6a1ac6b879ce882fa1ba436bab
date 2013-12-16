@@ -10,6 +10,14 @@ Bytes: 106
 if mvnoType and mvnoMatchData are optional they should be inside brackets:
 [, <mvnoType>, <mvnoMatchData>]
 
+117:0-118:0
+Mon Dec 16 00:07:02 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 48b31ffa_978e84d4
+UUID: c8caaf90_132a2c93
+Bytes: 4
+Done
+
 162:35-162:41
 Fri Dec 13 20:13:45 2013 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -20,4 +28,12 @@ if (a.length<18 || a.length == 19 || a.length>20)
 I think == 20 is ok, correct?
 
 We also need to modify the tests to verify all this..
+
+162:35-162:41
+Mon Dec 16 00:07:02 2013 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: c8be2fc6_b35ab8dc
+UUID: e8e2131a_ac82e338
+Bytes: 18
+yes, you're right.
 
