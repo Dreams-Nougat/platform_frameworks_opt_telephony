@@ -38,10 +38,11 @@ public class GsmInboundSmsHandler extends InboundSmsHandler {
     /** Handler for SMS-PP data download messages to UICC. */
     private final UsimDataDownloadHandler mDataDownloadHandler;
 
+
     /**
      * Create a new GSM inbound SMS handler.
      */
-    private GsmInboundSmsHandler(Context context, SmsStorageMonitor storageMonitor,
+    protected GsmInboundSmsHandler(Context context, SmsStorageMonitor storageMonitor,
             PhoneBase phone) {
         super("GsmInboundSmsHandler", context, storageMonitor, phone,
                 GsmCellBroadcastHandler.makeGsmCellBroadcastHandler(context, phone));
