@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
 
 /**
  * (<em>Not for SDK use</em>)
@@ -208,6 +209,9 @@ public abstract class PhoneBase extends Handler implements Phone {
             = new RegistrantList();
 
     protected final RegistrantList mSuppServiceFailedRegistrants
+            = new RegistrantList();
+
+    protected final RegistrantList mSimRecordsLoadedRegistrants
             = new RegistrantList();
 
     protected Looper mLooper; /* to insure registrants are in correct thread*/
@@ -386,6 +390,10 @@ public abstract class PhoneBase extends Handler implements Phone {
         return mContext;
     }
 
+    // Set the Card into the Phone Book.
+    protected void setCardInPhoneBook() {
+    }
+
     // Will be called when icc changed
     protected abstract void onUpdateIccAvailability();
 
@@ -558,6 +566,14 @@ public abstract class PhoneBase extends Handler implements Phone {
         checkCorrectThread(h);
 
         mMmiCompleteRegistrants.remove(h);
+    }
+
+    public void registerForSimRecordsLoaded(Handler h, int what, Object obj) {
+        logUnexpectedCdmaMethodCall("registerForSimRecordsLoaded");
+    }
+
+    public void unregisterForSimRecordsLoaded(Handler h) {
+        logUnexpectedCdmaMethodCall("unregisterForSimRecordsLoaded");
     }
 
     /**
@@ -1443,5 +1459,13 @@ public abstract class PhoneBase extends Handler implements Phone {
         pw.println(" getActiveApnTypes()=" + getActiveApnTypes());
         pw.println(" isDataConnectivityPossible()=" + isDataConnectivityPossible());
         pw.println(" needsOtaServiceProvisioning=" + needsOtaServiceProvisioning());
+    }
+
+    /**
+     * Returns the subscription id.
+     * Always returns default subscription(ie., 0).
+     */
+    public int getSubscription() {
+        return DEFAULT_SUBSCRIPTION;
     }
 }

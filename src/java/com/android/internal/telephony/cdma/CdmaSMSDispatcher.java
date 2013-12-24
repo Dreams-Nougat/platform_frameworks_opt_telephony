@@ -39,7 +39,7 @@ import com.android.internal.telephony.cdma.sms.UserData;
 import java.util.HashMap;
 
 public class CdmaSMSDispatcher extends SMSDispatcher {
-    private static final String TAG = "CdmaSMSDispatcher";
+    protected static final String TAG = "CdmaSMSDispatcher";
     private static final boolean VDBG = false;
 
     public CdmaSMSDispatcher(PhoneBase phone, SmsUsageMonitor usageMonitor,
@@ -115,6 +115,18 @@ public class CdmaSMSDispatcher extends SMSDispatcher {
             PendingIntent sentIntent, PendingIntent deliveryIntent) {
         SmsMessage.SubmitPdu pdu = SmsMessage.getSubmitPdu(
                 scAddr, destAddr, text, (deliveryIntent != null), null);
+        HashMap map = getSmsTrackerMap(destAddr, scAddr, text, pdu);
+        SmsTracker tracker = getSmsTracker(map, sentIntent,
+                deliveryIntent, getFormat());
+        sendSubmitPdu(tracker);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void sendTextWithPriority(String destAddr, String scAddr, String text,
+            PendingIntent sentIntent, PendingIntent deliveryIntent, int priority) {
+        SmsMessage.SubmitPdu pdu = SmsMessage.getSubmitPduWithPriority(
+                scAddr, destAddr, text, (deliveryIntent != null), null, priority);
         HashMap map = getSmsTrackerMap(destAddr, scAddr, text, pdu);
         SmsTracker tracker = getSmsTracker(map, sentIntent,
                 deliveryIntent, getFormat());

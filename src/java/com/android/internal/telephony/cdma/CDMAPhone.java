@@ -66,6 +66,7 @@ import com.android.internal.telephony.dataconnection.DcTracker;
 import com.android.internal.telephony.uicc.IccException;
 import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.RuimRecords;
+import com.android.internal.telephony.uicc.UiccCard;
 import com.android.internal.telephony.uicc.UiccCardApplication;
 import com.android.internal.telephony.uicc.UiccController;
 import java.io.FileDescriptor;
@@ -90,23 +91,25 @@ public class CDMAPhone extends PhoneBase {
     // Default Emergency Callback Mode exit timer
     private static final int DEFAULT_ECM_EXIT_TIMER_VALUE = 300000;
 
-    static final String VM_COUNT_CDMA = "vm_count_key_cdma";
-    private static final String VM_NUMBER_CDMA = "vm_number_key_cdma";
+    protected static final String VM_COUNT_CDMA = "vm_count_key_cdma";
+    protected static final String VM_NUMBER_CDMA = "vm_number_key_cdma";
     private String mVmNumber = null;
 
     static final int RESTART_ECM_TIMER = 0; // restart Ecm timer
     static final int CANCEL_ECM_TIMER = 1; // cancel Ecm timer
 
     // Instance Variables
-    CdmaCallTracker mCT;
-    CdmaServiceStateTracker mSST;
-    CdmaSubscriptionSourceManager mCdmaSSM;
+    protected CdmaCallTracker mCT;
+    protected CdmaServiceStateTracker mSST;
+    protected CdmaSubscriptionSourceManager mCdmaSSM;
     ArrayList <CdmaMmiCode> mPendingMmis = new ArrayList<CdmaMmiCode>();
-    RuimPhoneBookInterfaceManager mRuimPhoneBookInterfaceManager;
-    int mCdmaSubscriptionSource = CdmaSubscriptionSourceManager.SUBSCRIPTION_SOURCE_UNKNOWN;
-    PhoneSubInfo mSubInfo;
-    EriManager mEriManager;
-    WakeLock mWakeLock;
+    protected RuimPhoneBookInterfaceManager mRuimPhoneBookInterfaceManager;
+    protected int mCdmaSubscriptionSource =
+            CdmaSubscriptionSourceManager.SUBSCRIPTION_SOURCE_UNKNOWN;
+    protected PhoneSubInfo mSubInfo;
+    protected EriManager mEriManager;
+    protected WakeLock mWakeLock;
+    protected UiccCard mRuimCard = null;
 
     // mEriFileLoadedRegistrants are informed after the ERI text has been loaded
     private final RegistrantList mEriFileLoadedRegistrants = new RegistrantList();
@@ -117,14 +120,14 @@ public class CDMAPhone extends PhoneBase {
     // mEcmExitRespRegistrant is informed after the phone has been exited
     //the emergency callback mode
     //keep track of if phone is in emergency callback mode
-    private boolean mIsPhoneInEcmState;
+    protected boolean mIsPhoneInEcmState;
     private Registrant mEcmExitRespRegistrant;
     protected String mImei;
     protected String mImeiSv;
     private String mEsn;
     private String mMeid;
     // string to define how the carrier specifies its own ota sp number
-    private String mCarrierOtaSpNumSchema;
+    protected String mCarrierOtaSpNumSchema;
 
     // A runnable which is used to automatically exit from Ecm after a period of time.
     private Runnable mExitEcmRunnable = new Runnable() {
@@ -136,7 +139,7 @@ public class CDMAPhone extends PhoneBase {
 
     Registrant mPostDialHandler;
 
-    static String PROPERTY_CDMA_HOME_OPERATOR_NUMERIC = "ro.cdma.home.operator.numeric";
+    public static final String PROPERTY_CDMA_HOME_OPERATOR_NUMERIC = "ro.cdma.home.operator.numeric";
 
     // Constructors
     public CDMAPhone(Context context, CommandsInterface ci, PhoneNotifier notifier) {
@@ -957,7 +960,7 @@ public class CDMAPhone extends PhoneBase {
         return mIsPhoneInEcmState;
     }
 
-    void sendEmergencyCallbackModeChange(){
+    protected void sendEmergencyCallbackModeChange(){
         //Send an Intent
         Intent intent = new Intent(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
         intent.putExtra(PhoneConstants.PHONE_IN_ECM_STATE, mIsPhoneInEcmState);
@@ -1177,14 +1180,31 @@ public class CDMAPhone extends PhoneBase {
         }
     }
 
+    protected UiccCardApplication getUiccCardApplication() {
+        return  mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP2);
+    }
+
+    // Set the Card into the Phone Book.
+    @Override
+    protected void setCardInPhoneBook() {
+        if (mUiccController == null ) {
+            return;
+        }
+
+        mRuimPhoneBookInterfaceManager.setIccCard(mUiccController.getUiccCard());
+    }
+
     @Override
     protected void onUpdateIccAvailability() {
         if (mUiccController == null ) {
             return;
         }
 
-        UiccCardApplication newUiccApplication =
-                mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP2);
+        // Get the latest info on the card and
+        // send this to Phone Book
+        setCardInPhoneBook();
+
+        UiccCardApplication newUiccApplication = getUiccCardApplication();
 
         if (newUiccApplication == null) {
             log("can't find 3GPP2 application; trying APP_FAM_3GPP");
@@ -1198,7 +1218,6 @@ public class CDMAPhone extends PhoneBase {
                 log("Removing stale icc objects.");
                 if (mIccRecords.get() != null) {
                     unregisterForRuimRecordEvents();
-                    mRuimPhoneBookInterfaceManager.updateIccRecords(null);
                 }
                 mIccRecords.set(null);
                 mUiccApplication.set(null);
@@ -1208,7 +1227,6 @@ public class CDMAPhone extends PhoneBase {
                 mUiccApplication.set(newUiccApplication);
                 mIccRecords.set(newUiccApplication.getIccRecords());
                 registerForRuimRecordEvents();
-                mRuimPhoneBookInterfaceManager.updateIccRecords(mIccRecords.get());
             }
         }
     }
@@ -1270,7 +1288,7 @@ public class CDMAPhone extends PhoneBase {
      * {@inheritDoc}
      */
     @Override
-    public final void setSystemProperty(String property, String value) {
+    public void setSystemProperty(String property, String value) {
         super.setSystemProperty(property, value);
     }
 
@@ -1531,7 +1549,7 @@ public class CDMAPhone extends PhoneBase {
     /**
      * Store the voicemail number in preferences
      */
-    private void storeVoiceMailNumber(String number) {
+    protected void storeVoiceMailNumber(String number) {
         // Update the preference value of voicemail number
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         SharedPreferences.Editor editor = sp.edit();
@@ -1543,7 +1561,7 @@ public class CDMAPhone extends PhoneBase {
      * Sets PROPERTY_ICC_OPERATOR_ISO_COUNTRY property
      *
      */
-    private void setIsoCountryProperty(String operatorNumeric) {
+    protected void setIsoCountryProperty(String operatorNumeric) {
         if (TextUtils.isEmpty(operatorNumeric)) {
             log("setIsoCountryProperty: clear 'gsm.sim.operator.iso-country'");
             setSystemProperty(PROPERTY_ICC_OPERATOR_ISO_COUNTRY, "");
@@ -1601,6 +1619,10 @@ public class CDMAPhone extends PhoneBase {
     }
 
     public void prepareEri() {
+        if (mEriManager == null) {
+            Rlog.e(LOG_TAG, "PrepareEri: Trying to access stale objects");
+            return;
+        }
         mEriManager.loadEriFile();
         if(mEriManager.isEriFileLoaded()) {
             // when the ERI file is loaded

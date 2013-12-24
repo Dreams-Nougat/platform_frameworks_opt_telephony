@@ -31,7 +31,7 @@ import android.telephony.SmsCbMessage;
  */
 public class CellBroadcastHandler extends WakeLockStateMachine {
 
-    private CellBroadcastHandler(Context context) {
+    protected CellBroadcastHandler(Context context) {
         this("CellBroadcastHandler", context, null);
     }
 
