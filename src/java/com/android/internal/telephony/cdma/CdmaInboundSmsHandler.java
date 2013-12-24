@@ -46,7 +46,7 @@ import java.util.Arrays;
 public class CdmaInboundSmsHandler extends InboundSmsHandler {
 
     private final CdmaSMSDispatcher mSmsDispatcher;
-    private final CdmaServiceCategoryProgramHandler mServiceCategoryProgramHandler;
+    protected CdmaServiceCategoryProgramHandler mServiceCategoryProgramHandler;
 
     private byte[] mLastDispatchedSmsFingerprint;
     private byte[] mLastAcknowledgedSmsFingerprint;
@@ -57,14 +57,18 @@ public class CdmaInboundSmsHandler extends InboundSmsHandler {
     /**
      * Create a new inbound SMS handler for CDMA.
      */
-    private CdmaInboundSmsHandler(Context context, SmsStorageMonitor storageMonitor,
+    protected CdmaInboundSmsHandler(Context context, SmsStorageMonitor storageMonitor,
             PhoneBase phone, CdmaSMSDispatcher smsDispatcher) {
         super("CdmaInboundSmsHandler", context, storageMonitor, phone,
                 CellBroadcastHandler.makeCellBroadcastHandler(context));
         mSmsDispatcher = smsDispatcher;
+        init(context, phone);
+        phone.mCi.setOnNewCdmaSms(getHandler(), EVENT_NEW_SMS, null);
+    }
+
+    protected void init(Context context, PhoneBase phone) {
         mServiceCategoryProgramHandler = CdmaServiceCategoryProgramHandler.makeScpHandler(context,
                 phone.mCi);
-        phone.mCi.setOnNewCdmaSms(getHandler(), EVENT_NEW_SMS, null);
     }
 
     /**
