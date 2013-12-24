@@ -73,7 +73,7 @@ import java.util.HashMap;
 /**
  * {@hide}
  */
-public final class DcTracker extends DcTrackerBase {
+public class DcTracker extends DcTrackerBase {
     protected final String LOG_TAG = "DCT";
 
     /**
@@ -154,17 +154,7 @@ public final class DcTracker extends DcTrackerBase {
             filter.addAction(INTENT_RESTART_TRYSETUP_ALARM + '.' + apnContext.getApnType());
             mPhone.getContext().registerReceiver(mIntentReceiver, filter, null, mPhone);
         }
-
-        ConnectivityManager cm = (ConnectivityManager)p.getContext().getSystemService(
-                Context.CONNECTIVITY_SERVICE);
-        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE, new Messenger(this));
-        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_MMS, new Messenger(this));
-        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_SUPL, new Messenger(this));
-        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_DUN, new Messenger(this));
-        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_HIPRI, new Messenger(this));
-        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_FOTA, new Messenger(this));
-        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_IMS, new Messenger(this));
-        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_CBS, new Messenger(this));
+        supplyMessenger();
     }
 
     @Override
@@ -229,6 +219,19 @@ public final class DcTracker extends DcTrackerBase {
     @Override
     protected void finalize() {
         if(DBG) log("finalize");
+    }
+
+    protected void supplyMessenger() {
+        ConnectivityManager cm = (ConnectivityManager)mPhone.getContext().getSystemService(
+                Context.CONNECTIVITY_SERVICE);
+        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE, new Messenger(this));
+        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_MMS, new Messenger(this));
+        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_SUPL, new Messenger(this));
+        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_DUN, new Messenger(this));
+        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_HIPRI, new Messenger(this));
+        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_FOTA, new Messenger(this));
+        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_IMS, new Messenger(this));
+        cm.supplyMessenger(ConnectivityManager.TYPE_MOBILE_CBS, new Messenger(this));
     }
 
     private ApnContext addApnContext(String type, NetworkConfig networkConfig) {
@@ -517,7 +520,7 @@ public final class DcTracker extends DcTrackerBase {
         }
     }
 
-    private boolean isDataAllowed(ApnContext apnContext) {
+    protected boolean isDataAllowed(ApnContext apnContext) {
         return apnContext.isReady() && isDataAllowed();
     }
 
@@ -740,7 +743,7 @@ public final class DcTracker extends DcTrackerBase {
         cleanUpAllConnections(true, cause);
     }
 
-    private void cleanUpConnection(boolean tearDown, ApnContext apnContext) {
+    protected void cleanUpConnection(boolean tearDown, ApnContext apnContext) {
 
         if (apnContext == null) {
             if (DBG) log("cleanUpConnection: apn context is null");
@@ -824,7 +827,7 @@ public final class DcTracker extends DcTrackerBase {
      *
      * @param apnContext on which the alarm should be stopped.
      */
-    private void cancelReconnectAlarm(ApnContext apnContext) {
+    protected void cancelReconnectAlarm(ApnContext apnContext) {
         if (apnContext == null) return;
 
         PendingIntent intent = apnContext.getReconnectIntent();
@@ -2322,13 +2325,17 @@ public final class DcTracker extends DcTrackerBase {
         return cid;
     }
 
+    protected IccRecords getUiccRecords(int appFamily) {
+        return  mUiccController.getIccRecords(appFamily);
+    }
+
     @Override
     protected void onUpdateIcc() {
         if (mUiccController == null ) {
             return;
         }
 
-        IccRecords newIccRecords = mUiccController.getIccRecords(UiccController.APP_FAM_3GPP);
+        IccRecords newIccRecords = getUiccRecords(UiccController.APP_FAM_3GPP);
 
         IccRecords r = mIccRecords.get();
         if (r != newIccRecords) {
