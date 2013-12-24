@@ -112,7 +112,7 @@ public abstract class DcTrackerBase extends Handler {
     // TODO: move away from static state once 5587429 is fixed.
     protected static boolean sPolicyDataEnabled = true;
 
-    private boolean[] mDataEnabled = new boolean[DctConstants.APN_NUM_TYPES];
+    protected boolean[] mDataEnabled = new boolean[DctConstants.APN_NUM_TYPES];
 
     private int mEnabledCount = 0;
 
