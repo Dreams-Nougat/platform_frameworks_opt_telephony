@@ -47,7 +47,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class GsmSMSDispatcher extends SMSDispatcher {
+public class GsmSMSDispatcher extends SMSDispatcher {
     private static final String TAG = "GsmSMSDispatcher";
     private static final boolean VDBG = false;
     protected UiccController mUiccController = null;
@@ -178,6 +178,13 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
         } else {
             Rlog.e(TAG, "GsmSMSDispatcher.sendText(): getSubmitPdu() returned null");
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void sendTextWithPriority(String destAddr, String scAddr, String text,
+            PendingIntent sentIntent, PendingIntent deliveryIntent, int priority) {
+        Rlog.e(TAG, "priority is not supported in 3gpp text message!");
     }
 
     /** {@inheritDoc} */
