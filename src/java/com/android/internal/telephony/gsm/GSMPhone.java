@@ -90,7 +90,7 @@ public class GSMPhone extends PhoneBase {
     // NOTE that LOG_TAG here is "GSM", which means that log messages
     // from this file will go into the radio log rather than the main
     // log.  (Use "adb logcat -b radio" to see them.)
-    static final String LOG_TAG = "GSMPhone";
+    protected static final String LOG_TAG = "GSMPhone";
     private static final boolean LOCAL_DEBUG = true;
     private static final boolean VDBG = false; /* STOPSHIP if true */
 
@@ -103,7 +103,7 @@ public class GSMPhone extends PhoneBase {
 
     // Instance Variables
     GsmCallTracker mCT;
-    GsmServiceStateTracker mSST;
+    protected GsmServiceStateTracker mSST;
     ArrayList <GsmMmiCode> mPendingMMIs = new ArrayList<GsmMmiCode>();
     SimPhoneBookInterfaceManager mSimPhoneBookIntManager;
     PhoneSubInfo mSubInfo;
@@ -114,8 +114,8 @@ public class GSMPhone extends PhoneBase {
     /** List of Registrants to receive Supplementary Service Notifications. */
     RegistrantList mSsnRegistrants = new RegistrantList();
 
-    private String mImei;
-    private String mImeiSv;
+    protected String mImei;
+    protected String mImeiSv;
     private String mVmNumber;
 
     // Create Cfu (Call forward unconditional) so that dialling number &
@@ -148,9 +148,9 @@ public class GSMPhone extends PhoneBase {
 
         mCi.setPhoneType(PhoneConstants.PHONE_TYPE_GSM);
         mCT = new GsmCallTracker(this);
-        mSST = new GsmServiceStateTracker (this);
 
-        mDcTracker = new DcTracker(this);
+        initSubscriptionSpecifics();
+
         if (!unitTestMode) {
             mSimPhoneBookIntManager = new SimPhoneBookInterfaceManager(this);
             mSubInfo = new PhoneSubInfo(this);
@@ -162,10 +162,18 @@ public class GSMPhone extends PhoneBase {
         mCi.setOnUSSD(this, EVENT_USSD, null);
         mCi.setOnSuppServiceNotification(this, EVENT_SSN, null);
         mSST.registerForNetworkAttached(this, EVENT_REGISTERED_TO_NETWORK, null);
+        setProperties();
+    }
 
+    protected void setProperties() {
         //Change the system property
         SystemProperties.set(TelephonyProperties.CURRENT_ACTIVE_PHONE,
                 new Integer(PhoneConstants.PHONE_TYPE_GSM).toString());
+    }
+
+    protected void initSubscriptionSpecifics() {
+        mSST = new GsmServiceStateTracker(this);
+        mDcTracker = new DcTracker(this);
     }
 
     @Override
@@ -389,7 +397,7 @@ public class GSMPhone extends PhoneBase {
      * {@inheritDoc}
      */
     @Override
-    public final void
+    public void
     setSystemProperty(String property, String value) {
         super.setSystemProperty(property, value);
     }
@@ -775,7 +783,7 @@ public class GSMPhone extends PhoneBase {
         mSST.setRadioPower(power);
     }
 
-    private void storeVoiceMailNumber(String number) {
+    protected void storeVoiceMailNumber(String number) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         SharedPreferences.Editor editor = sp.edit();
         editor.putString(VM_NUMBER, number);
@@ -800,7 +808,7 @@ public class GSMPhone extends PhoneBase {
         return sp.getString(VM_SIM_IMSI, null);
     }
 
-    private void setVmSimImsi(String imsi) {
+    protected void setVmSimImsi(String imsi) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         SharedPreferences.Editor editor = sp.edit();
         editor.putString(VM_SIM_IMSI, imsi);
@@ -1362,14 +1370,17 @@ public class GSMPhone extends PhoneBase {
         }
     }
 
+    protected UiccCardApplication getUiccCardApplication() {
+        return  mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP);
+    }
+
     @Override
     protected void onUpdateIccAvailability() {
         if (mUiccController == null ) {
             return;
         }
 
-        UiccCardApplication newUiccApplication =
-                mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP);
+        UiccCardApplication newUiccApplication = getUiccCardApplication();
 
         UiccCardApplication app = mUiccApplication.get();
         if (app != newUiccApplication) {

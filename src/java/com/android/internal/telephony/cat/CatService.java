@@ -66,34 +66,36 @@ public class CatService extends Handler implements AppInterface {
     private static final boolean DBG = false;
 
     // Class members
-    private static IccRecords mIccRecords;
-    private static UiccCardApplication mUiccApplication;
+    protected static IccRecords mIccRecords;
+    protected static UiccCardApplication mUiccApplication;
 
     // Service members.
     // Protects singleton instance lazy initialization.
-    private static final Object sInstanceLock = new Object();
+    protected static final Object sInstanceLock = new Object();
     private static CatService sInstance;
-    private CommandsInterface mCmdIf;
-    private Context mContext;
-    private CatCmdMessage mCurrntCmd = null;
-    private CatCmdMessage mMenuCmd = null;
-
-    private RilMessageDecoder mMsgDecoder = null;
-    private boolean mStkAppInstalled = false;
+    protected CommandsInterface mCmdIf;
+    protected Context mContext;
+    protected CatCmdMessage mCurrntCmd = null;
+    protected CatCmdMessage mMenuCmd = null;
+    protected RilMessageDecoder mMsgDecoder = null;
+    protected boolean mStkAppInstalled = false;
 
     // Service constants.
-    static final int MSG_ID_SESSION_END              = 1;
-    static final int MSG_ID_PROACTIVE_COMMAND        = 2;
-    static final int MSG_ID_EVENT_NOTIFY             = 3;
-    static final int MSG_ID_CALL_SETUP               = 4;
+    protected static final int MSG_ID_SESSION_END              = 1;
+    protected static final int MSG_ID_PROACTIVE_COMMAND        = 2;
+    protected static final int MSG_ID_EVENT_NOTIFY             = 3;
+    protected static final int MSG_ID_CALL_SETUP               = 4;
     static final int MSG_ID_REFRESH                  = 5;
     static final int MSG_ID_RESPONSE                 = 6;
     static final int MSG_ID_SIM_READY                = 7;
 
+    protected static final int MSG_ID_ICC_CHANGED    = 8;
+    protected static final int MSG_ID_ALPHA_NOTIFY   = 9;
+
     static final int MSG_ID_RIL_MSG_DECODED          = 10;
 
     // Events to signal SIM presence or absent in the device.
-    private static final int MSG_ID_ICC_RECORDS_LOADED       = 20;
+    protected static final int MSG_ID_ICC_RECORDS_LOADED       = 20;
 
     private static final int DEV_ID_KEYPAD      = 0x01;
     private static final int DEV_ID_UICC        = 0x81;
@@ -136,14 +138,22 @@ public class CatService extends Handler implements AppInterface {
         CatLog.d(this, "Running CAT service. STK app installed:" + mStkAppInstalled);
     }
 
-    public void dispose() {
-        mIccRecords.unregisterForRecordsLoaded(this);
-        mCmdIf.unSetOnCatSessionEnd(this);
-        mCmdIf.unSetOnCatProactiveCmd(this);
-        mCmdIf.unSetOnCatEvent(this);
-        mCmdIf.unSetOnCatCallSetUp(this);
+    /* Add empty Constructor which is required for Multi SIM Functionaly */
+    protected CatService() {
+    }
 
-        removeCallbacksAndMessages(null);
+    public void dispose() {
+        synchronized (sInstanceLock) {
+            CatLog.d(this, "Disposing CatService object");
+            mIccRecords.unregisterForRecordsLoaded(this);
+
+            mCmdIf.unSetOnCatSessionEnd(this);
+            mCmdIf.unSetOnCatProactiveCmd(this);
+            mCmdIf.unSetOnCatEvent(this);
+            mCmdIf.unSetOnCatCallSetUp(this);
+
+            removeCallbacksAndMessages(null);
+        }
     }
 
     @Override
@@ -346,6 +356,10 @@ public class CatService extends Handler implements AppInterface {
                 return;
         }
         mCurrntCmd = cmdMsg;
+        broadcastCatCmdIntent(cmdMsg);
+    }
+
+    protected void broadcastCatCmdIntent(CatCmdMessage cmdMsg) {
         Intent intent = new Intent(AppInterface.CAT_CMD_ACTION);
         intent.putExtra("STK CMD", cmdMsg);
         mContext.sendBroadcast(intent);
@@ -355,7 +369,7 @@ public class CatService extends Handler implements AppInterface {
      * Handles RIL_UNSOL_STK_SESSION_END unsolicited command from RIL.
      *
      */
-    private void handleSessionEnd() {
+    protected void handleSessionEnd() {
         CatLog.d(this, "SESSION END");
 
         mCurrntCmd = mMenuCmd;
@@ -759,7 +773,7 @@ public class CatService extends Handler implements AppInterface {
         mCurrntCmd = null;
     }
 
-    private boolean isStkAppInstalled() {
+    protected boolean isStkAppInstalled() {
         Intent intent = new Intent(AppInterface.CAT_CMD_ACTION);
         PackageManager pm = mContext.getPackageManager();
         List<ResolveInfo> broadcastReceivers =

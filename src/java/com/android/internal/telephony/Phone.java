@@ -1723,4 +1723,9 @@ public interface Phone {
      * @param voiceRadioTech The new voice radio technology
      */
     void updatePhoneObject(int voiceRadioTech);
+
+    /*
+     * Returns the subscription id.
+     */
+    public int getSubscription();
 }
