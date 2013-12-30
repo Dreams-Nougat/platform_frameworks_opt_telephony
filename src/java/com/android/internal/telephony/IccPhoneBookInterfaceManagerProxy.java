@@ -44,6 +44,16 @@ public class IccPhoneBookInterfaceManagerProxy extends IIccPhoneBook.Stub {
     }
 
     @Override
+    public int
+    updateAdnBySearch (int efid,
+            String oldTag, String oldPhoneNumber,
+            String newTag, String newPhoneNumber,
+            String pin2) {
+        return mIccPhoneBookInterfaceManager.updateAdnBySearch(
+                efid, oldTag, oldPhoneNumber, newTag, newPhoneNumber, pin2);
+    }
+
+    @Override
     public boolean
     updateAdnRecordsInEfBySearch (int efid,
             String oldTag, String oldPhoneNumber,

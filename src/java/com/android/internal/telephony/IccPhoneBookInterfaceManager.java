@@ -45,6 +45,7 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
     protected int mRecordSize[];
     protected boolean mSuccess;
     protected List<AdnRecord> mRecords;
+    private AsyncResult mAsyncResult;
 
     protected static final boolean ALLOW_SIM_OP_IN_UI_THREAD = false;
 
@@ -76,6 +77,7 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
                 case EVENT_UPDATE_DONE:
                     ar = (AsyncResult) msg.obj;
                     synchronized (mLock) {
+                        mAsyncResult = ar;
                         mSuccess = (ar.exception == null);
                         notifyPending(ar);
                     }
@@ -139,6 +141,106 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
      * Replace oldAdn with newAdn in ADN-like record in EF
      *
      * getAdnRecordsInEf must be called at least once before this function,
+     * otherwise an error will be returned
+     *
+     * @param efid must be one among EF_ADN, EF_FDN, and EF_SDN
+     * @param oldTag adn tag to be replaced
+     * @param oldPhoneNumber adn number to be replaced
+     *        Set both oldTag and oldPhoneNubmer to "" means to replace an
+     *        empty record, aka, insert new record
+     * @param newTag adn tag to be stored
+     * @param newPhoneNumber adn number ot be stored
+     *        Set both newTag and newPhoneNubmer to "" means to replace the old
+     *        record with empty one, aka, delete old record
+     * @param pin2 required to update EF_FDN, otherwise must be null
+     * @return {@link PhoneConstants}
+     *     FAILURE 0
+     *         The Adn-like record update operation failed
+     *     SUCCESS 1
+     *         The ADN-like record was successfully updated
+     *     ERROR_PIN2_PASSWORD_INCORRECT 2
+     *         The EF_FDN record update operation failed due to incorrect PIN2
+     *     ERROR_PIN2_SIM_PUK2 3
+     *         The EF_FDN record update operation failed as PIN2 is blocked
+     */
+    @Override
+    public int
+    updateAdnBySearch (int efid,
+            String oldTag, String oldPhoneNumber,
+            String newTag, String newPhoneNumber, String pin2) {
+
+        int result;
+        String failureLog = "Failure while trying to update Adn by search:";
+
+        if (mPhone.getContext().checkCallingOrSelfPermission(
+                android.Manifest.permission.WRITE_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED) {
+            throw new SecurityException(
+                    "Requires android.permission.WRITE_CONTACTS permission");
+        }
+
+
+        if (DBG)  {
+            logd("updateAdnBySearch: efid=" + efid +
+                    " ("+ oldTag + "," + oldPhoneNumber + ")"+ "==>" +
+                    " ("+ newTag + "," + newPhoneNumber + ")"+ " pin2=" + pin2);
+        }
+
+        efid = updateEfForIccType(efid);
+
+        synchronized(mLock) {
+            checkThread();
+            mSuccess = false;
+            result = PhoneConstants.FAILURE;
+            AtomicBoolean status = new AtomicBoolean(false);
+            Message response = mBaseHandler.obtainMessage(EVENT_UPDATE_DONE, status);
+            AdnRecord oldAdn = new AdnRecord(oldTag, oldPhoneNumber);
+            AdnRecord newAdn = new AdnRecord(newTag, newPhoneNumber);
+            if (mAdnCache != null) {
+                mAdnCache.updateAdnBySearch(efid, oldAdn, newAdn, pin2, response);
+                waitForResult(status);
+                if (!mSuccess) {
+                    if(mAsyncResult.exception != null &&
+                            mAsyncResult.exception instanceof RuntimeException) {
+                        if((RuntimeException)mAsyncResult.exception.getCause() != null) {
+                            Throwable t = (RuntimeException)mAsyncResult.exception.getCause();
+                            CommandException ce = (CommandException)t;
+                            CommandException.Error e = ce.getCommandError();
+                            switch (e) {
+                                case PASSWORD_INCORRECT:
+                                    result = PhoneConstants.ERROR_PIN2_PASSWORD_INCORRECT;
+                                    break;
+                                case SIM_PUK2:
+                                    result = PhoneConstants.ERROR_PIN2_SIM_PUK2;
+                                    break;
+                                default:
+                                    loge(failureLog + "Error unknown");
+                                    result = PhoneConstants.FAILURE;
+                                    break;
+                            }
+                        } else {
+                            loge(failureLog + "RunttimeException cause is null");
+                            result = PhoneConstants.FAILURE;
+                        }
+                    } else {
+                        loge(failureLog +
+                                "Exception is null or not an instance of RuntimeException");
+                        result = PhoneConstants.FAILURE;
+                    }
+                } else {
+                    result = PhoneConstants.SUCCESS;
+                }
+            } else {
+                loge(failureLog + "AdnCache is uninitialised");
+            }
+        }
+        return result;
+    }
+
+/**
+     * Replace oldAdn with newAdn in ADN-like record in EF
+     *
+     * getAdnRecordsInEf must be called at least once before this function,
      * otherwise an error will be returned. Currently the email field
      * if set in the ADN record is ignored.
      * throws SecurityException if no WRITE_CONTACTS permission
@@ -161,36 +263,13 @@ public abstract class IccPhoneBookInterfaceManager extends IIccPhoneBook.Stub {
             String oldTag, String oldPhoneNumber,
             String newTag, String newPhoneNumber, String pin2) {
 
+        int result;
+        result = updateAdnBySearch(efid, oldTag, oldPhoneNumber, newTag, newPhoneNumber, pin2);
 
-        if (mPhone.getContext().checkCallingOrSelfPermission(
-                android.Manifest.permission.WRITE_CONTACTS)
-            != PackageManager.PERMISSION_GRANTED) {
-            throw new SecurityException(
-                    "Requires android.permission.WRITE_CONTACTS permission");
-        }
+        if (result != PhoneConstants.SUCCESS)
+            return false;
 
-
-        if (DBG) logd("updateAdnRecordsInEfBySearch: efid=" + efid +
-                " ("+ oldTag + "," + oldPhoneNumber + ")"+ "==>" +
-                " ("+ newTag + "," + newPhoneNumber + ")"+ " pin2=" + pin2);
-
-        efid = updateEfForIccType(efid);
-
-        synchronized(mLock) {
-            checkThread();
-            mSuccess = false;
-            AtomicBoolean status = new AtomicBoolean(false);
-            Message response = mBaseHandler.obtainMessage(EVENT_UPDATE_DONE, status);
-            AdnRecord oldAdn = new AdnRecord(oldTag, oldPhoneNumber);
-            AdnRecord newAdn = new AdnRecord(newTag, newPhoneNumber);
-            if (mAdnCache != null) {
-                mAdnCache.updateAdnBySearch(efid, oldAdn, newAdn, pin2, response);
-                waitForResult(status);
-            } else {
-                loge("Failure while trying to update by search due to uninitialised adncache");
-            }
-        }
-        return mSuccess;
+        return true;
     }
 
     /**

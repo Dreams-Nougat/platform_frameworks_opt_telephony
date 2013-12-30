@@ -61,6 +61,37 @@ interface IIccPhoneBook {
      *        Set both newTag and newPhoneNubmer to "" means to replace the old
      *        record with empty one, aka, delete old record
      * @param pin2 required to update EF_FDN, otherwise must be null
+     * @return {@link PhoneConstants}
+     *     FAILURE 0
+     *         The Adn-like record update operation failed
+     *     SUCCESS 1
+     *         The ADN-like record was successfully updated
+     *     ERROR_PIN2_PASSWORD_INCORRECT 2
+     *         The EF_FDN record update operation failed due to incorrect PIN2
+     *     ERROR_PIN2_SIM_PUK2 3
+     *         The EF_FDN record update operation failed as PIN2 is blocked
+     */
+    int updateAdnBySearch(int efid,
+            String oldTag, String oldPhoneNumber,
+            String newTag, String newPhoneNumber,
+            String pin2);
+
+    /**
+     * Replace oldAdn with newAdn in ADN-like record in EF
+     *
+     * getAdnRecordsInEf must be called at least once before this function,
+     * otherwise an error will be returned
+     *
+     * @param efid must be one among EF_ADN, EF_FDN, and EF_SDN
+     * @param oldTag adn tag to be replaced
+     * @param oldPhoneNumber adn number to be replaced
+     *        Set both oldTag and oldPhoneNubmer to "" means to replace an
+     *        empty record, aka, insert new record
+     * @param newTag adn tag to be stored
+     * @param newPhoneNumber adn number ot be stored
+     *        Set both newTag and newPhoneNubmer to "" means to replace the old
+     *        record with empty one, aka, delete old record
+     * @param pin2 required to update EF_FDN, otherwise must be null
      * @return true for success
      */
     boolean updateAdnRecordsInEfBySearch(int efid,

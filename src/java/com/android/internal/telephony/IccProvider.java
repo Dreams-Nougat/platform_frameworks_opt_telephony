@@ -32,6 +32,7 @@ import java.util.List;
 import com.android.internal.telephony.IIccPhoneBook;
 import com.android.internal.telephony.uicc.AdnRecord;
 import com.android.internal.telephony.uicc.IccConstants;
+import com.android.internal.telephony.PhoneConstants;
 
 
 /**
@@ -40,7 +41,8 @@ import com.android.internal.telephony.uicc.IccConstants;
 public class IccProvider extends ContentProvider {
     private static final String TAG = "IccProvider";
     private static final boolean DBG = false;
-
+    protected static final int FAILURE = 0;
+    protected static final int SUCCESS = 1;
 
     private static final String[] ADDRESS_BOOK_COLUMN_NAMES = new String[] {
         "name",
@@ -131,9 +133,9 @@ public class IccProvider extends ContentProvider {
         String tag = initialValues.getAsString("tag");
         String number = initialValues.getAsString("number");
         // TODO(): Read email instead of sending null.
-        boolean success = addIccRecordToEf(efType, tag, number, null, pin2);
+        int result = addIccRecordToEf(efType, tag, number, null, pin2);
 
-        if (!success) {
+        if (result != PhoneConstants.SUCCESS) {
             return null;
         }
 
@@ -176,6 +178,7 @@ public class IccProvider extends ContentProvider {
     @Override
     public int delete(Uri url, String where, String[] whereArgs) {
         int efType;
+        int tempResult, finalResult;
 
         if (DBG) log("delete");
 
@@ -232,17 +235,26 @@ public class IccProvider extends ContentProvider {
             return 0;
         }
 
-        boolean success = deleteIccRecordFromEf(efType, tag, number, emails, pin2);
-        if (!success) {
-            return 0;
+        tempResult = deleteIccRecordFromEf(efType, tag, number, emails, pin2);
+
+        if (tempResult == PhoneConstants.SUCCESS) {
+            finalResult = SUCCESS;
+            getContext().getContentResolver().notifyChange(url, null);
+        } else if (tempResult == PhoneConstants.FAILURE) {
+            finalResult = FAILURE;
+        } else {
+            // The efType is FDN and the result is either
+            // PhoneConsatnst.ERROT_PIN2_PASSWORD_INCORRECT or PhoneConstants.ERROR_PIN2_SIM_PUK2
+            finalResult = tempResult;
         }
 
-        return 1;
+        return finalResult;
     }
 
     @Override
     public int update(Uri url, ContentValues values, String where, String[] whereArgs) {
         int efType;
+        int tempResult, finalResult;
         String pin2 = null;
 
         if (DBG) log("update");
@@ -270,14 +282,21 @@ public class IccProvider extends ContentProvider {
         String newNumber = values.getAsString("newNumber");
         String[] newEmails = null;
         // TODO(): Update for email.
-        boolean success = updateIccRecordInEf(efType, tag, number,
+        tempResult = updateIccRecordInEf(efType, tag, number,
                 newTag, newNumber, pin2);
 
-        if (!success) {
-            return 0;
+        if (tempResult == PhoneConstants.SUCCESS) {
+            finalResult = SUCCESS;
+            getContext().getContentResolver().notifyChange(url, null);
+        } else if (tempResult == PhoneConstants.FAILURE) {
+            finalResult = FAILURE;
+        } else {
+            // The efType is FDN and the result is either
+            // PhoneConsatnst.ERROT_PIN2_PASSWORD_INCORRECT or PhoneConstants.ERROR_PIN2_SIM_PUK2
+            finalResult = tempResult;
         }
 
-        return 1;
+        return finalResult;
     }
 
     private MatrixCursor loadFromEf(int efType) {
@@ -312,15 +331,15 @@ public class IccProvider extends ContentProvider {
         }
     }
 
-    private boolean
+    private int
     addIccRecordToEf(int efType, String name, String number, String[] emails, String pin2) {
         if (DBG) log("addIccRecordToEf: efType=" + efType + ", name=" + name +
                 ", number=" + number + ", emails=" + emails);
 
-        boolean success = false;
+        int result = PhoneConstants.FAILURE;;
 
         // TODO: do we need to call getAdnRecordsInEf() before calling
-        // updateAdnRecordsInEfBySearch()? In any case, we will leave
+        // updateAdnBySearch()? In any case, we will leave
         // the UI level logic to fill that prereq if necessary. But
         // hopefully, we can remove this requirement.
 
@@ -328,7 +347,7 @@ public class IccProvider extends ContentProvider {
             IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
                     ServiceManager.getService("simphonebook"));
             if (iccIpb != null) {
-                success = iccIpb.updateAdnRecordsInEfBySearch(efType, "", "",
+                result = iccIpb.updateAdnBySearch(efType, "", "",
                         name, number, pin2);
             }
         } catch (RemoteException ex) {
@@ -336,23 +355,24 @@ public class IccProvider extends ContentProvider {
         } catch (SecurityException ex) {
             if (DBG) log(ex.toString());
         }
-        if (DBG) log("addIccRecordToEf: " + success);
-        return success;
+        if (DBG) log("addIccRecordToEf: " + result);
+        return result;
     }
 
-    private boolean
+    private int
     updateIccRecordInEf(int efType, String oldName, String oldNumber,
             String newName, String newNumber, String pin2) {
         if (DBG) log("updateIccRecordInEf: efType=" + efType +
                 ", oldname=" + oldName + ", oldnumber=" + oldNumber +
                 ", newname=" + newName + ", newnumber=" + newNumber);
-        boolean success = false;
+
+        int result = PhoneConstants.FAILURE;
 
         try {
             IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
                     ServiceManager.getService("simphonebook"));
             if (iccIpb != null) {
-                success = iccIpb.updateAdnRecordsInEfBySearch(efType,
+                result = iccIpb.updateAdnBySearch(efType,
                         oldName, oldNumber, newName, newNumber, pin2);
             }
         } catch (RemoteException ex) {
@@ -360,23 +380,23 @@ public class IccProvider extends ContentProvider {
         } catch (SecurityException ex) {
             if (DBG) log(ex.toString());
         }
-        if (DBG) log("updateIccRecordInEf: " + success);
-        return success;
+        if (DBG) log("updateIccRecordInEf: " + result);
+        return result;
     }
 
 
-    private boolean deleteIccRecordFromEf(int efType, String name, String number, String[] emails,
+    private int deleteIccRecordFromEf(int efType, String name, String number, String[] emails,
             String pin2) {
         if (DBG) log("deleteIccRecordFromEf: efType=" + efType +
                 ", name=" + name + ", number=" + number + ", emails=" + emails + ", pin2=" + pin2);
 
-        boolean success = false;
+        int result = PhoneConstants.FAILURE;
 
         try {
             IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
                     ServiceManager.getService("simphonebook"));
             if (iccIpb != null) {
-                success = iccIpb.updateAdnRecordsInEfBySearch(efType,
+                result = iccIpb.updateAdnBySearch(efType,
                         name, number, "", "", pin2);
             }
         } catch (RemoteException ex) {
@@ -384,8 +404,8 @@ public class IccProvider extends ContentProvider {
         } catch (SecurityException ex) {
             if (DBG) log(ex.toString());
         }
-        if (DBG) log("deleteIccRecordFromEf: " + success);
-        return success;
+        if (DBG) log("deleteIccRecordFromEf: " + result);
+        return result;
     }
 
     /**
