@@ -9,3 +9,17 @@ UUID: 4da89190_af4159c5
 Bytes: 142
 Seems like this code here is never needed as Settings dB should always return the preferred network mode. Can we just remove lines 106 to 108?
 
+107
+Wed Jan 08 18:08:54 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 4da89190_af4159c5
+UUID: 2d76fd12_8921fdba
+Bytes: 601
+This is specifically handling the case were the PREFERRED_NETWORK_MODE is not set and if not set what should the default be.
+
+At this point, we should handle switching properly no matter the guess so I'd agree with Naveen and we should need this at alll.
+
+Sungmin, so on the face of it, it would seem if there is a bug then its in the switching or what we're being told to switch to. Not what the initial guess at the preferred node was.
+
+So if this is still a problem, please file a bug or provide the Bug number in the commit message. As always provide full logs so we have as much info as possible.
+
