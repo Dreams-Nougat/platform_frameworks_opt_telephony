@@ -1,0 +1,46 @@
+Revision: 0892073907784b17715eb040b1669830c091e69b
+Patch-set: 1
+File: src/java/android/telephony/MSimSmsManager.java
+
+2:1-4:53
+Wed Jan 08 16:46:29 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2d76fd12_86ac8a89
+Bytes: 74
+Change copyright to:
+
+  Copyright (C) 2013 The Android Open Source Project
+
+File: src/java/com/android/internal/telephony/ExtCallManager.java
+
+2:0-4:53
+Wed Jan 08 16:46:29 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 4da89190_8f5e55d1
+Bytes: 64
+Change to:
+
+  Copyright (C) 2013 The Android Open Source Project
+
+File: src/java/com/android/internal/telephony/msim/IIccPhoneBookMSim.aidl
+
+2:0-4:50
+Wed Jan 08 16:46:29 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 4da89190_cf585de6
+Bytes: 64
+Change to:
+
+  Copyright (C) 2013 The Android Open Source Project
+
+File: src/java/com/android/internal/telephony/msim/ISmsMSim.aidl
+
+2:0-4:49
+Wed Jan 08 16:46:29 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 4da89190_ef5521ad
+Bytes: 64
+Change to:
+
+  Copyright (C) 2013 The Android Open Source Project
+
