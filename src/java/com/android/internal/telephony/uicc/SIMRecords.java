@@ -1471,6 +1471,10 @@ public class SIMRecords extends IccRecords {
      */
     @Override
     public int getDisplayRule(String plmn) {
+        if (mDestroyed.get()) {
+            loge("getDisplayRule is called while being destroyed. Returning SPN_RULE_SHOW_PLMN");
+            return SPN_RULE_SHOW_PLMN;
+        }
         int rule;
         if (TextUtils.isEmpty(mSpn) || mSpnDisplayCondition == -1) {
             // No EF_SPN content was found on the SIM, or not yet loaded.  Just show ONS.
