@@ -9,3 +9,11 @@ UUID: cdcac190_1f8226ee
 Bytes: 61
 no diff with presentationFromClip ? or am I missing something
 
+147:4-147:24
+Fri Jan 10 17:15:11 2014 +0000
+Author: Pierre Couillaud <1025044@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: cdcac190_1f8226ee
+UUID: 8d38c95d_c1908232
+Bytes: 158
+true.  however typically number and name presentation are separate functions.  of course we can use the other one if you think it is more appropriate.  thanks
+
