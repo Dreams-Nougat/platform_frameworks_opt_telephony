@@ -23,3 +23,13 @@ Sungmin, so on the face of it, it would seem if there is a bug then its in the s
 
 So if this is still a problem, please file a bug or provide the Bug number in the commit message. As always provide full logs so we have as much info as possible.
 
+107
+Fri Jan 10 09:20:22 2014 +0000
+Author: Sungmin Choi <1016953@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2d76fd12_8921fdba
+UUID: 2dd99d6f_94f4ccb0
+Bytes: 143
+There is no bug until now.
+I made a patch when supporting CDMA LTE. 
+After merging Naveen's patch on frameworks/base, it did not need any more.
+
