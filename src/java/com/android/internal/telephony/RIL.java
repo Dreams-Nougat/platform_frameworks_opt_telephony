@@ -3209,7 +3209,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             int np = p.readInt();
             dc.numberPresentation = DriverCall.presentationFromCLIP(np);
             dc.name = p.readString();
-            dc.namePresentation = p.readInt();
+            int nap = p.readInt();
+            dc.namePresentation = DriverCall.presentationFromCNAP(nap);
             int uusInfoPresent = p.readInt();
             if (uusInfoPresent == 1) {
                 dc.uusInfo = new UUSInfo();

@@ -143,6 +143,19 @@ public class DriverCall implements Comparable<DriverCall> {
         }
     }
 
+    public static int
+    presentationFromCNAP(int cli) throws ATParseEx
+    {
+        switch(cli) {
+            case 0: return PhoneConstants.PRESENTATION_ALLOWED;
+            case 1: return PhoneConstants.PRESENTATION_RESTRICTED;
+            case 2: return PhoneConstants.PRESENTATION_UNKNOWN;
+            case 3: return PhoneConstants.PRESENTATION_PAYPHONE;
+            default:
+                throw new ATParseEx("illegal presentation " + cli);
+        }
+    }
+
     //***** Comparable Implementation
 
     /** For sorting by index */
