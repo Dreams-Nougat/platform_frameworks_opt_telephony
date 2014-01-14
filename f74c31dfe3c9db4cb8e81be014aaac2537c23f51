@@ -1,0 +1,20 @@
+Revision: f74c31dfe3c9db4cb8e81be014aaac2537c23f51
+Patch-set: 6
+File: /COMMIT_MSG
+
+15
+Tue Jan 14 22:45:12 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ed5785b2_27ff1419
+Bytes: 21
+Move above Change-Id.
+
+File: src/java/com/android/internal/telephony/dataconnection/DcController.java
+
+216
+Tue Jan 14 22:45:12 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ed5785b2_c7de40a6
+Bytes: 84
+Lets move these down to the end of the loop near to where they are going to be used.
+
