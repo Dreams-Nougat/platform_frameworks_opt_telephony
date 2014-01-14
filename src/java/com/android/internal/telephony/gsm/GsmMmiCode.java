@@ -860,7 +860,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
     void
     onUssdFinished(String ussdMessage, boolean isUssdRequest) {
         if (mState == State.PENDING) {
-            if (ussdMessage == null) {
+            if (ussdMessage == null || ussdMessage.length() == 0) {
                 mMessage = mContext.getText(com.android.internal.R.string.mmiComplete);
             } else {
                 mMessage = ussdMessage;
