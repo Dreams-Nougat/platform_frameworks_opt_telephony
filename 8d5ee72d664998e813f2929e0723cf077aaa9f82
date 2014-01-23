@@ -1,0 +1,13 @@
+Revision: 8d5ee72d664998e813f2929e0723cf077aaa9f82
+Patch-set: 3
+File: /COMMIT_MSG
+
+10:18-10:38
+Thu Jan 23 21:00:49 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 72b456b0_d148b6a4
+Bytes: 339
+I like the refactoring, thanks. This is a fairly big change and with the refactoring it hard to quickly see which change did what. Which tests are suppressed and are they suppressed just for emulator or always?
+
+It might be easier to move the refactoring to a separate change unless you can easily discriminate them from the other changes.
+
