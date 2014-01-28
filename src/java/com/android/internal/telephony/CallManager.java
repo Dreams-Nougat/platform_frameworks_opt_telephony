@@ -16,6 +16,7 @@
 
 package com.android.internal.telephony;
 
+import android.telephony.TelephonyManager;
 import com.android.internal.telephony.sip.SipPhone;
 
 import android.content.Context;
@@ -25,7 +26,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.RegistrantList;
 import android.os.Registrant;
-import android.telephony.PhoneNumberUtils;
 import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
 import android.telephony.Rlog;
@@ -33,7 +33,7 @@ import android.telephony.Rlog;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
+import android.os.SystemProperties;
 
 
 /**
@@ -58,6 +58,7 @@ public final class CallManager {
     private static final String LOG_TAG ="CallManager";
     private static final boolean DBG = true;
     private static final boolean VDBG = false;
+    private static final int NOTIFICATION_ID_OFFSET = 100;
 
     private static final int EVENT_DISCONNECT = 100;
     private static final int EVENT_PRECISE_CALL_STATE_CHANGED = 101;
@@ -79,6 +80,10 @@ public final class CallManager {
     private static final int EVENT_SUPP_SERVICE_FAILED = 117;
     private static final int EVENT_SERVICE_STATE_CHANGED = 118;
     private static final int EVENT_POST_DIAL_CHARACTER = 119;
+
+    private static final int EVENT_RADIO_OFF_OR_NOT_AVAILABLE = 120;
+
+    private static final int EVENT_BASE = EVENT_DISCONNECT;
 
     // Singleton instance
     private static final CallManager INSTANCE = new CallManager();
@@ -104,68 +109,63 @@ public final class CallManager {
     private boolean mSpeedUpAudioForMtCall = false;
 
     // state registrants
-    protected final RegistrantList mPreciseCallStateRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mPreciseCallStateRegistrants;
 
-    protected final RegistrantList mNewRingingConnectionRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mNewRingingConnectionRegistrants;
 
-    protected final RegistrantList mIncomingRingRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mIncomingRingRegistrants;
 
-    protected final RegistrantList mDisconnectRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mDisconnectRegistrants;
 
-    protected final RegistrantList mMmiRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mMmiRegistrants;
 
-    protected final RegistrantList mUnknownConnectionRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mUnknownConnectionRegistrants;
 
-    protected final RegistrantList mRingbackToneRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mRingbackToneRegistrants;
 
-    protected final RegistrantList mInCallVoicePrivacyOnRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mInCallVoicePrivacyOnRegistrants;
 
-    protected final RegistrantList mInCallVoicePrivacyOffRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mInCallVoicePrivacyOffRegistrants;
 
-    protected final RegistrantList mCallWaitingRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mCallWaitingRegistrants;
 
-    protected final RegistrantList mDisplayInfoRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mDisplayInfoRegistrants;
 
-    protected final RegistrantList mSignalInfoRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mSignalInfoRegistrants;
 
-    protected final RegistrantList mCdmaOtaStatusChangeRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mCdmaOtaStatusChangeRegistrants;
 
-    protected final RegistrantList mResendIncallMuteRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mResendIncallMuteRegistrants;
 
-    protected final RegistrantList mMmiInitiateRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mMmiInitiateRegistrants;
 
-    protected final RegistrantList mMmiCompleteRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mMmiCompleteRegistrants;
 
-    protected final RegistrantList mEcmTimerResetRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mEcmTimerResetRegistrants;
 
-    protected final RegistrantList mSubscriptionInfoReadyRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mSubscriptionInfoReadyRegistrants;
 
-    protected final RegistrantList mSuppServiceFailedRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mSuppServiceFailedRegistrants;
 
-    protected final RegistrantList mServiceStateChangedRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mServiceStateChangedRegistrants;
 
-    protected final RegistrantList mPostDialCharacterRegistrants
-    = new RegistrantList();
+    protected final RegistrantList []mPostDialCharacterRegistrants;
+
+    private boolean mHasDtmfRequest = false;
+
+    private int mSimCount;
+    
+    /* For waiting hold request before accept call or hold active call */
+    enum WaitingReasonForHold {
+         NONE, ACCEPT_CALL, SWITCH_CALL, MAKE_CALL;
+    };
+    private boolean mWaitingForHoldRequest = false;
+    private Call mActiveCallToBeHeld = null; /* rememeber the bgcall, because current fg call will be bg after hold operation is done */ 
+    private Phone mPhoneForWaitingHoldRequest = null;
+    private WaitingReasonForHold mWaitingReasonForHold = WaitingReasonForHold.NONE;
+    private int mPreviousAudioMode = -1;
+
+    private CallManagerHelper mHelper;
 
     private CallManager() {
         mPhones = new ArrayList<Phone>();
@@ -173,6 +173,56 @@ public final class CallManager {
         mBackgroundCalls = new ArrayList<Call>();
         mForegroundCalls = new ArrayList<Call>();
         mDefaultPhone = null;
+
+        mSimCount = SystemProperties.getInt(TelephonyProperties.PROPERTY_SIM_COUNT, 1);
+
+        mPreciseCallStateRegistrants = new RegistrantList[mSimCount];
+        mNewRingingConnectionRegistrants = new RegistrantList[mSimCount];
+        mIncomingRingRegistrants = new RegistrantList[mSimCount];
+        mDisconnectRegistrants = new RegistrantList[mSimCount];
+        mMmiRegistrants = new RegistrantList[mSimCount];
+        mUnknownConnectionRegistrants = new RegistrantList[mSimCount];
+        mRingbackToneRegistrants = new RegistrantList[mSimCount];
+        mInCallVoicePrivacyOnRegistrants = new RegistrantList[mSimCount];
+        mInCallVoicePrivacyOffRegistrants = new RegistrantList[mSimCount];
+        mCallWaitingRegistrants = new RegistrantList[mSimCount];
+        mDisplayInfoRegistrants = new RegistrantList[mSimCount];
+        mSignalInfoRegistrants = new RegistrantList[mSimCount];
+        mCdmaOtaStatusChangeRegistrants = new RegistrantList[mSimCount];
+        mResendIncallMuteRegistrants = new RegistrantList[mSimCount];
+        mMmiInitiateRegistrants = new RegistrantList[mSimCount];
+        mMmiCompleteRegistrants = new RegistrantList[mSimCount];
+        mEcmTimerResetRegistrants = new RegistrantList[mSimCount];
+        mSubscriptionInfoReadyRegistrants = new RegistrantList[mSimCount];
+        mSuppServiceFailedRegistrants = new RegistrantList[mSimCount];
+        mServiceStateChangedRegistrants = new RegistrantList[mSimCount];
+        mPostDialCharacterRegistrants = new RegistrantList[mSimCount];        
+        
+        for (int i = 0; i < mSimCount; i++) {
+            mPreciseCallStateRegistrants[i]  = new RegistrantList(); 
+            mNewRingingConnectionRegistrants[i]  = new RegistrantList();
+            mIncomingRingRegistrants[i]  = new RegistrantList();
+            mDisconnectRegistrants[i]  = new RegistrantList();
+            mMmiRegistrants[i]  = new RegistrantList();
+            mUnknownConnectionRegistrants[i]  = new RegistrantList();
+            mRingbackToneRegistrants[i]  = new RegistrantList();
+            mInCallVoicePrivacyOnRegistrants[i]  = new RegistrantList(); 
+            mInCallVoicePrivacyOffRegistrants[i]  = new RegistrantList();
+            mCallWaitingRegistrants[i]  = new RegistrantList();
+            mDisplayInfoRegistrants[i]  = new RegistrantList();
+            mSignalInfoRegistrants[i]  = new RegistrantList();
+            mCdmaOtaStatusChangeRegistrants[i]  = new RegistrantList();
+            mResendIncallMuteRegistrants[i]  = new RegistrantList(); 
+            mMmiInitiateRegistrants[i]  = new RegistrantList();
+            mMmiCompleteRegistrants[i]  = new RegistrantList();
+            mEcmTimerResetRegistrants[i]  = new RegistrantList();
+            mSubscriptionInfoReadyRegistrants[i]  = new RegistrantList();
+            mSuppServiceFailedRegistrants[i]  = new RegistrantList();
+            mServiceStateChangedRegistrants[i]  = new RegistrantList();
+            mPostDialCharacterRegistrants[i]  = new RegistrantList();
+        }
+
+        mHelper = new CallManagerHelper(this);
     }
 
     /**
@@ -300,9 +350,6 @@ public final class CallManager {
                         phone.getPhoneName() + " " + phone + ")");
             }
 
-            if (mPhones.isEmpty()) {
-                mDefaultPhone = basePhone;
-            }
             mPhones.add(basePhone);
             mRingingCalls.add(basePhone.getRingingCall());
             mBackgroundCalls.add(basePhone.getBackgroundCall());
@@ -332,13 +379,6 @@ public final class CallManager {
             mBackgroundCalls.remove(basePhone.getBackgroundCall());
             mForegroundCalls.remove(basePhone.getForegroundCall());
             unregisterForPhoneStates(basePhone);
-            if (basePhone == mDefaultPhone) {
-                if (mPhones.isEmpty()) {
-                    mDefaultPhone = null;
-                } else {
-                    mDefaultPhone = mPhones.get(0);
-                }
-            }
         }
     }
 
@@ -346,6 +386,12 @@ public final class CallManager {
      * return the default phone or null if no phone available
      */
     public Phone getDefaultPhone() {
+
+        if(mDefaultPhone == null) {
+            int defaultSim = TelephonyManager.getDefault().getDefaultSim();
+            mDefaultPhone = PhoneProxyManager.getPhoneProxy(defaultSim);            
+        }
+        
         return mDefaultPhone;
     }
 
@@ -375,27 +421,57 @@ public final class CallManager {
         if (context == null) return;
         AudioManager audioManager = (AudioManager)
                 context.getSystemService(Context.AUDIO_SERVICE);
+        int curAudioMode = audioManager.getMode();                
+        int mode = AudioManager.MODE_NORMAL;
+        mPreviousAudioMode = -1;        
+        
+        if (mHelper.isServiceStatePowerOff(mPhones)) {
+            if (curAudioMode != AudioManager.MODE_NORMAL) {
+                if (VDBG) Rlog.d(LOG_TAG, "abandonAudioFocus");
+                // abandon audio focus after the mode has been set back to normal
+                audioManager.abandonAudioFocusForCall();
+            }
+            mode = AudioManager.MODE_NORMAL;            
+                
+            mode = setAudioModeDualModem(mode);
+            
+            if(curAudioMode != mode)        
+                audioManager.setMode(mode);      
+            return;
+        }
 
         // change the audio mode and request/abandon audio focus according to phone state,
         // but only on audio mode transitions
         switch (getState()) {
             case RINGING:
-                int curAudioMode = audioManager.getMode();
+                // allow to set ringtone mode only when we have 1 ringing call
+                if(curAudioMode != AudioManager.MODE_NORMAL) {
+                    if(hasActiveRingingCall() == true && hasActiveFgCall() == false && hasActiveBgCall() == false) {
+                        Rlog.i(LOG_TAG, "no fg/bg call but ring call is exist, allow to set ringtone mode");
+                    } else {
+                        Rlog.e(LOG_TAG, "there is fg or bg call exist, we don't allow to set ringtone mode");
+                        return;
+                    }
+                } 
+
                 if (curAudioMode != AudioManager.MODE_RINGTONE) {
-                    // only request audio focus if the ringtone is going to be heard
-                    if (audioManager.getStreamVolume(AudioManager.STREAM_RING) > 0) {
+                    // After set as "Silent"/"Meeting", the music go on play when incoming call comes.
+                    // Always request audio focus even if audio profile is set to "Silent".
+                    // only request audio focus if the ringtone is going to be heard                
+                    //if (audioManager.getStreamVolume(AudioManager.STREAM_RING) > 0) {
                         if (VDBG) Rlog.d(LOG_TAG, "requestAudioFocus on STREAM_RING");
                         audioManager.requestAudioFocusForCall(AudioManager.STREAM_RING,
                                 AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
-                    }
-                    if(!mSpeedUpAudioForMtCall) {
-                        audioManager.setMode(AudioManager.MODE_RINGTONE);
-                    }
+                    //}
                 }
-
+                
                 if (mSpeedUpAudioForMtCall && (curAudioMode != AudioManager.MODE_IN_CALL)) {
-                    audioManager.setMode(AudioManager.MODE_IN_CALL);
+                    mode = AudioManager.MODE_IN_CALL;
+                }                 
+                else {
+                    mode = AudioManager.MODE_RINGTONE;
                 }
+                    
                 break;
             case OFFHOOK:
                 Phone offhookPhone = getFgPhone();
@@ -405,31 +481,56 @@ public final class CallManager {
                     offhookPhone = getBgPhone();
                 }
 
-                int newAudioMode = AudioManager.MODE_IN_CALL;
+                mode = AudioManager.MODE_IN_CALL;
                 if (offhookPhone instanceof SipPhone) {
                     // enable IN_COMMUNICATION audio mode instead for sipPhone
-                    newAudioMode = AudioManager.MODE_IN_COMMUNICATION;
+                    mode = AudioManager.MODE_IN_COMMUNICATION;
                 }
-                if (audioManager.getMode() != newAudioMode || mSpeedUpAudioForMtCall) {
+                if (curAudioMode != mode || mSpeedUpAudioForMtCall) {
                     // request audio focus before setting the new mode
                     if (VDBG) Rlog.d(LOG_TAG, "requestAudioFocus on STREAM_VOICE_CALL");
                     audioManager.requestAudioFocusForCall(AudioManager.STREAM_VOICE_CALL,
                             AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
-                    audioManager.setMode(newAudioMode);
                 }
                 mSpeedUpAudioForMtCall = false;
+
                 break;
+                
             case IDLE:
-                if (audioManager.getMode() != AudioManager.MODE_NORMAL) {
-                    audioManager.setMode(AudioManager.MODE_NORMAL);
+                if (curAudioMode != AudioManager.MODE_NORMAL) {
                     if (VDBG) Rlog.d(LOG_TAG, "abandonAudioFocus");
                     // abandon audio focus after the mode has been set back to normal
                     audioManager.abandonAudioFocusForCall();
                 }
+                mode = AudioManager.MODE_NORMAL;
                 mSpeedUpAudioForMtCall = false;
-                break;
+                break;  
         }
+        
+        
+        mode = setAudioModeDualModem(mode);
+        
+        if(curAudioMode != mode)        
+            audioManager.setMode(mode);
     }
+
+    private int setAudioModeDualModem(int mode) {
+
+        Context context = getContext();
+        if (context == null) 
+            return mode;
+        
+        // switch when DSDA
+        /*        
+            if (mode == AudioManager.MODE_IN_CALL) {                                        
+               if (getFgPhone().getSimId() == PhoneConstants.SIM_ID_2) {
+                   mode = AudioManager.MODE_IN_CALL_2;
+               }
+            }
+        */
+
+        return mode;
+    }    
 
     private Context getContext() {
         Phone defaultPhone = getDefaultPhone();
@@ -437,35 +538,48 @@ public final class CallManager {
     }
 
     private void registerForPhoneStates(Phone phone) {
+        int simId;    
+        if(phone instanceof SipPhone) {
+            simId = 0;
+        }
+        else {
+            simId = phone.getSimId();
+        }
+        
+        int offset;        	
+        Rlog.d(LOG_TAG, "[registerForPhoneStates]simId = " + simId);
+
+        offset = simId * NOTIFICATION_ID_OFFSET;            
+
         // for common events supported by all phones
-        phone.registerForPreciseCallStateChanged(mHandler, EVENT_PRECISE_CALL_STATE_CHANGED, null);
-        phone.registerForDisconnect(mHandler, EVENT_DISCONNECT, null);
-        phone.registerForNewRingingConnection(mHandler, EVENT_NEW_RINGING_CONNECTION, null);
-        phone.registerForUnknownConnection(mHandler, EVENT_UNKNOWN_CONNECTION, null);
-        phone.registerForIncomingRing(mHandler, EVENT_INCOMING_RING, null);
-        phone.registerForRingbackTone(mHandler, EVENT_RINGBACK_TONE, null);
-        phone.registerForInCallVoicePrivacyOn(mHandler, EVENT_IN_CALL_VOICE_PRIVACY_ON, null);
-        phone.registerForInCallVoicePrivacyOff(mHandler, EVENT_IN_CALL_VOICE_PRIVACY_OFF, null);
-        phone.registerForDisplayInfo(mHandler, EVENT_DISPLAY_INFO, null);
-        phone.registerForSignalInfo(mHandler, EVENT_SIGNAL_INFO, null);
-        phone.registerForResendIncallMute(mHandler, EVENT_RESEND_INCALL_MUTE, null);
-        phone.registerForMmiInitiate(mHandler, EVENT_MMI_INITIATE, null);
-        phone.registerForMmiComplete(mHandler, EVENT_MMI_COMPLETE, null);
-        phone.registerForSuppServiceFailed(mHandler, EVENT_SUPP_SERVICE_FAILED, null);
-        phone.registerForServiceStateChanged(mHandler, EVENT_SERVICE_STATE_CHANGED, null);
+        phone.registerForPreciseCallStateChanged(mHandler, EVENT_PRECISE_CALL_STATE_CHANGED + offset, null);
+        phone.registerForDisconnect(mHandler, EVENT_DISCONNECT + offset, null);
+        phone.registerForNewRingingConnection(mHandler, EVENT_NEW_RINGING_CONNECTION + offset, null);
+        phone.registerForUnknownConnection(mHandler, EVENT_UNKNOWN_CONNECTION + offset, null);
+        phone.registerForIncomingRing(mHandler, EVENT_INCOMING_RING + offset, null);
+        phone.registerForRingbackTone(mHandler, EVENT_RINGBACK_TONE + offset, null);
+        phone.registerForInCallVoicePrivacyOn(mHandler, EVENT_IN_CALL_VOICE_PRIVACY_ON + offset, null);
+        phone.registerForInCallVoicePrivacyOff(mHandler, EVENT_IN_CALL_VOICE_PRIVACY_OFF + offset, null);
+        phone.registerForDisplayInfo(mHandler, EVENT_DISPLAY_INFO + offset, null);
+        phone.registerForSignalInfo(mHandler, EVENT_SIGNAL_INFO + offset, null);
+        phone.registerForResendIncallMute(mHandler, EVENT_RESEND_INCALL_MUTE + offset, null);
+        phone.registerForMmiInitiate(mHandler, EVENT_MMI_INITIATE + offset, null);
+        phone.registerForMmiComplete(mHandler, EVENT_MMI_COMPLETE + offset, null);
+        phone.registerForSuppServiceFailed(mHandler, EVENT_SUPP_SERVICE_FAILED + offset, null);
+        phone.registerForServiceStateChanged(mHandler, EVENT_SERVICE_STATE_CHANGED + offset, null);
 
         // for events supported only by GSM and CDMA phone
         if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM ||
                 phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
-            phone.setOnPostDialCharacter(mHandler, EVENT_POST_DIAL_CHARACTER, null);
+            phone.setOnPostDialCharacter(mHandler, EVENT_POST_DIAL_CHARACTER + offset, null);
         }
 
         // for events supported only by CDMA phone
         if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA ){
-            phone.registerForCdmaOtaStatusChange(mHandler, EVENT_CDMA_OTA_STATUS_CHANGE, null);
-            phone.registerForSubscriptionInfoReady(mHandler, EVENT_SUBSCRIPTION_INFO_READY, null);
-            phone.registerForCallWaiting(mHandler, EVENT_CALL_WAITING, null);
-            phone.registerForEcmTimerReset(mHandler, EVENT_ECM_TIMER_RESET, null);
+            phone.registerForCdmaOtaStatusChange(mHandler, EVENT_CDMA_OTA_STATUS_CHANGE + offset, null);
+            phone.registerForSubscriptionInfoReady(mHandler, EVENT_SUBSCRIPTION_INFO_READY + offset, null);
+            phone.registerForCallWaiting(mHandler, EVENT_CALL_WAITING + offset, null);
+            phone.registerForEcmTimerReset(mHandler, EVENT_ECM_TIMER_RESET + offset, null);
         }
     }
 
@@ -533,14 +647,41 @@ public final class CallManager {
             }
 
             if (sameChannel && hasBgCall) {
-                getActiveFgCall().hangup();
+                ///    Only hang up active call and keep held call to accept incoming call.
+                activePhone.hangupActiveCall();
             } else if (!sameChannel && !hasBgCall) {
-                activePhone.switchHoldingAndActive();
+                if (getActiveFgCallState().isDialing()) {
+                    getActiveFgCall().hangup();
+                }
+                else {
+                    if (activePhone.getRingingCall().isRinging()) {
+                       activePhone.getRingingCall().hangup();
+                    }   
+
+                    mPreviousAudioMode = mHelper.getAudioManager().getMode();                    
+
+                    Rlog.d(LOG_TAG, "Accept incoming call after the active call is held successfully.");
+                    setWaitingOperation(WaitingReasonForHold.ACCEPT_CALL, activePhone.getBackgroundCall(), ringingPhone);
+                    activePhone.switchHoldingAndActive();
+                }
             } else if (!sameChannel && hasBgCall) {
-                getActiveFgCall().hangup();
+                ///    Only hang up active call and keep held call to accept incoming call.
+                activePhone.hangupActiveCall();
             }
         }
 
+        if (!mWaitingForHoldRequest) {
+            setAudioModeEarlierInAcceptCall();
+            ringingPhone.acceptCall();
+        }   
+
+        if (VDBG) {
+            Rlog.d(LOG_TAG, "End acceptCall(" +ringingCall + ")");
+            Rlog.d(LOG_TAG, toString());
+        }
+    }
+
+    private void setAudioModeEarlierInAcceptCall() {
         Context context = getContext();
         if (context == null) {
             Rlog.d(LOG_TAG, "Speedup Audio Path enhancement: Context is null");
@@ -550,19 +691,15 @@ public final class CallManager {
             AudioManager audioManager = (AudioManager)
                     context.getSystemService(Context.AUDIO_SERVICE);
             int currMode = audioManager.getMode();
-            if ((currMode != AudioManager.MODE_IN_CALL) && !(ringingPhone instanceof SipPhone)) {
+            if ((currMode != AudioManager.MODE_IN_CALL) && !(getRingingPhone() instanceof SipPhone)) {
+                
                 Rlog.d(LOG_TAG, "setAudioMode Setting audio mode from " +
                                 currMode + " to " + AudioManager.MODE_IN_CALL);
-                audioManager.setMode(AudioManager.MODE_IN_CALL);
+                
+                int mode = setAudioModeDualModem(AudioManager.MODE_IN_CALL);        
+                audioManager.setMode(mode);
                 mSpeedUpAudioForMtCall = true;
             }
-        }
-
-        ringingPhone.acceptCall();
-
-        if (VDBG) {
-            Rlog.d(LOG_TAG, "End acceptCall(" +ringingCall + ")");
-            Rlog.d(LOG_TAG, toString());
         }
     }
 
@@ -627,10 +764,15 @@ public final class CallManager {
         }
 
         if (activePhone != null) {
+            // set waiting parameter firstly to prevent race condition issue
+            if (heldPhone != null && heldPhone != activePhone) {                
+                Rlog.d(LOG_TAG, "Switch held call to active one after the active call is held successfully.");
+                setWaitingOperation(WaitingReasonForHold.SWITCH_CALL, activePhone.getBackgroundCall(), heldPhone);                    
+            }
             activePhone.switchHoldingAndActive();
         }
 
-        if (heldPhone != null && heldPhone != activePhone) {
+        if (heldPhone != null && heldPhone != activePhone && !mWaitingForHoldRequest) {
             heldPhone.switchHoldingAndActive();
         }
 
@@ -694,7 +836,11 @@ public final class CallManager {
             heldPhone = heldCall.getPhone();
         }
 
-        return heldPhone.getClass().equals(activePhone.getClass());
+        if (heldPhone != null && activePhone != null) {
+            return heldPhone.getClass().equals(activePhone.getClass());
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -749,18 +895,8 @@ public final class CallManager {
             Rlog.d(LOG_TAG, toString());
         }
 
-        if (!canDial(phone)) {
-            /*
-             * canDial function only checks whether the phone can make a new call.
-             * InCall MMI commmands are basically supplementary services
-             * within a call eg: call hold, call deflection, explicit call transfer etc.
-             */
-            String newDialString = PhoneNumberUtils.stripSeparators(dialString);
-            if (basePhone.handleInCallMmiCommands(newDialString)) {
-                return null;
-            } else {
-                throw new CallStateException("cannot dial in current state");
-            }
+        if (!canDial(phone, dialString)) {
+            throw new CallStateException("cannot dial in current state");
         }
 
         if ( hasActiveFgCall() ) {
@@ -772,12 +908,17 @@ public final class CallManager {
             }
 
             if (activePhone != basePhone) {
-                if (hasBgCall) {
-                    Rlog.d(LOG_TAG, "Hangup");
-                    getActiveFgCall().hangup();
-                } else {
-                    Rlog.d(LOG_TAG, "Switch");
-                    activePhone.switchHoldingAndActive();
+                // check if USSD number
+                boolean isUssdNumber = mHelper.isUssdNumber(basePhone, dialString);
+
+                if (!isUssdNumber) {
+                    if (hasBgCall) {
+                        Rlog.d(LOG_TAG, "Hangup");
+                        activePhone.hangupActiveCall();
+                    } else {
+                        Rlog.d(LOG_TAG, "Switch");
+                        activePhone.switchHoldingAndActive();
+                    }
                 }
             }
         }
@@ -824,21 +965,39 @@ public final class CallManager {
      * @param phone
      * @return true if the phone can make a new call
      */
-    private boolean canDial(Phone phone) {
+    private boolean canDial(Phone phone, String dialString) {
         int serviceState = phone.getServiceState().getState();
         boolean hasRingingCall = hasActiveRingingCall();
+        boolean hasActiveCall = hasActiveFgCall();
+        boolean hasHoldingCall = hasActiveBgCall();
+        boolean bIsInCallMmiCommands = mHelper.isInCallMmiCommands(dialString);
+        boolean allLinesTaken = (hasActiveCall && hasHoldingCall);
+        /* If one of SIM has 1A1H, new MO call is not allowed even by another SIM */
+        /* bIsInCallMmiCommands == true only when dialphone == activephone */
+        if (bIsInCallMmiCommands && hasActiveCall) {
+            Phone activePhone = getFirstActiveCall(mForegroundCalls).getPhone();
+            Phone dialPhone = getPhoneBase(phone);
+            bIsInCallMmiCommands = (dialPhone == activePhone);
+        }
         Call.State fgCallState = getActiveFgCallState();
 
-        boolean result = (serviceState != ServiceState.STATE_POWER_OFF
-                && !hasRingingCall
+        boolean result = 
+                (serviceState != ServiceState.STATE_POWER_OFF
+                && !(hasRingingCall && !bIsInCallMmiCommands)
+                && !(allLinesTaken && !bIsInCallMmiCommands)
                 && ((fgCallState == Call.State.ACTIVE)
                     || (fgCallState == Call.State.IDLE)
-                    || (fgCallState == Call.State.DISCONNECTED)));
+                    || (fgCallState == Call.State.DISCONNECTED)
+                    || (fgCallState == Call.State.ALERTING && bIsInCallMmiCommands)));
 
         if (result == false) {
             Rlog.d(LOG_TAG, "canDial serviceState=" + serviceState
                             + " hasRingingCall=" + hasRingingCall
-                            + " fgCallState=" + fgCallState);
+                            + " hasActiveCall=" + hasActiveCall
+                            + " hasHoldingCall=" + hasHoldingCall
+                            + " allLinesTaken=" + allLinesTaken
+                            + " fgCallState=" + fgCallState
+                            );
         }
         return result;
     }
@@ -1029,6 +1188,10 @@ public final class CallManager {
         if (hasActiveFgCall()) {
             getActiveFgCall().getPhone().startDtmf(c);
             result = true;
+
+            // to avoid DTMF start request is sent, but stop request is ignore due to active is held
+            Rlog.d(LOG_TAG, "mHasDtmfRequest = true");
+            mHasDtmfRequest = true;
         }
 
         if (VDBG) {
@@ -1049,7 +1212,12 @@ public final class CallManager {
             Rlog.d(LOG_TAG, toString());
         }
 
-        if (hasActiveFgCall()) getFgPhone().stopDtmf();
+        // to avoid DTMF start request is sent, but stop request is ignore due to active is held
+        if (hasActiveFgCall() || mHasDtmfRequest) {
+            getFgPhone().stopDtmf();
+            mHasDtmfRequest = false;
+            Rlog.d(LOG_TAG, "mHasDtmfRequest = false");
+        }
 
         if (VDBG) {
             Rlog.d(LOG_TAG, "End stopDtmf()");
@@ -1090,7 +1258,9 @@ public final class CallManager {
      *  no longer connected.</li></ul>
      */
     public void registerForDisconnect(Handler h, int what, Object obj) {
-        mDisconnectRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {
+            mDisconnectRegistrants[i].addUnique(h, what, obj);    
+        }
     }
 
     /**
@@ -1098,7 +1268,9 @@ public final class CallManager {
      * Extraneous calls are tolerated silently
      */
     public void unregisterForDisconnect(Handler h){
-        mDisconnectRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {    
+            mDisconnectRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1111,7 +1283,9 @@ public final class CallManager {
      * The <em>h</em> parameter is held only by a weak reference.
      */
     public void registerForPreciseCallStateChanged(Handler h, int what, Object obj){
-        mPreciseCallStateRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {    
+            mPreciseCallStateRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1119,7 +1293,9 @@ public final class CallManager {
      * Extraneous calls are tolerated silently.
      */
     public void unregisterForPreciseCallStateChanged(Handler h){
-        mPreciseCallStateRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {    
+            mPreciseCallStateRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1127,14 +1303,18 @@ public final class CallManager {
      * This is likely due to some other entity (eg, SIM card application) initiating a call.
      */
     public void registerForUnknownConnection(Handler h, int what, Object obj){
-        mUnknownConnectionRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {    
+            mUnknownConnectionRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
      * Unregisters for unknown connection notifications.
      */
     public void unregisterForUnknownConnection(Handler h){
-        mUnknownConnectionRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {    
+            mUnknownConnectionRegistrants[i].remove(h);
+        }
     }
 
 
@@ -1151,7 +1331,9 @@ public final class CallManager {
      *   Connection.getCall() == Phone.getRingingCall()
      */
     public void registerForNewRingingConnection(Handler h, int what, Object obj){
-        mNewRingingConnectionRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {    
+            mNewRingingConnectionRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1160,7 +1342,9 @@ public final class CallManager {
      */
 
     public void unregisterForNewRingingConnection(Handler h){
-        mNewRingingConnectionRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {    
+            mNewRingingConnectionRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1172,7 +1356,9 @@ public final class CallManager {
      *  AsyncResult.result = a Connection. <p>
      */
     public void registerForIncomingRing(Handler h, int what, Object obj){
-        mIncomingRingRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {    
+            mIncomingRingRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1181,7 +1367,9 @@ public final class CallManager {
      */
 
     public void unregisterForIncomingRing(Handler h){
-        mIncomingRingRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {    
+            mIncomingRingRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1194,7 +1382,9 @@ public final class CallManager {
      *                       and false to stop. <p>
      */
     public void registerForRingbackTone(Handler h, int what, Object obj){
-        mRingbackToneRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {    
+            mRingbackToneRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1202,7 +1392,9 @@ public final class CallManager {
      */
 
     public void unregisterForRingbackTone(Handler h){
-        mRingbackToneRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {    
+            mRingbackToneRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1210,14 +1402,18 @@ public final class CallManager {
      * uplink audio.
      */
     public void registerForResendIncallMute(Handler h, int what, Object obj){
-        mResendIncallMuteRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {    
+            mResendIncallMuteRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
      * Unregisters for resend incall mute notifications.
      */
     public void unregisterForResendIncallMute(Handler h){
-        mResendIncallMuteRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {    
+            mResendIncallMuteRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1232,7 +1428,9 @@ public final class CallManager {
      * <code>obj.result</code> will be an "MmiCode" object.
      */
     public void registerForMmiInitiate(Handler h, int what, Object obj){
-        mMmiInitiateRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {    
+            mMmiInitiateRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1240,7 +1438,9 @@ public final class CallManager {
      * Extraneous calls are tolerated silently
      */
     public void unregisterForMmiInitiate(Handler h){
-        mMmiInitiateRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {    
+            mMmiInitiateRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1252,7 +1452,9 @@ public final class CallManager {
      * <code>obj.result</code> will be an "MmiCode" object
      */
     public void registerForMmiComplete(Handler h, int what, Object obj){
-        mMmiCompleteRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {    
+            mMmiCompleteRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1260,7 +1462,9 @@ public final class CallManager {
      * Extraneous calls are tolerated silently
      */
     public void unregisterForMmiComplete(Handler h){
-        mMmiCompleteRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {        
+            mMmiCompleteRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1270,7 +1474,9 @@ public final class CallManager {
      * @param obj placed in Message.obj
      */
     public void registerForEcmTimerReset(Handler h, int what, Object obj){
-        mEcmTimerResetRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {        
+            mEcmTimerResetRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1278,7 +1484,9 @@ public final class CallManager {
      * @param h Handler to be removed from the registrant list.
      */
     public void unregisterForEcmTimerReset(Handler h){
-        mEcmTimerResetRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {     
+            mEcmTimerResetRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1287,7 +1495,9 @@ public final class CallManager {
      * AsyncResult.result will be a ServiceState instance
      */
     public void registerForServiceStateChanged(Handler h, int what, Object obj){
-        mServiceStateChangedRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {     
+            mServiceStateChangedRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1295,7 +1505,9 @@ public final class CallManager {
      * Extraneous calls are tolerated silently
      */
     public void unregisterForServiceStateChanged(Handler h){
-        mServiceStateChangedRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {     
+            mServiceStateChangedRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1307,7 +1519,9 @@ public final class CallManager {
      * @param obj User object.
      */
     public void registerForSuppServiceFailed(Handler h, int what, Object obj){
-        mSuppServiceFailedRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {     
+            mSuppServiceFailedRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1317,7 +1531,9 @@ public final class CallManager {
      * @param h Handler to be removed from the registrant list.
      */
     public void unregisterForSuppServiceFailed(Handler h){
-        mSuppServiceFailedRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {     
+            mSuppServiceFailedRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1328,7 +1544,9 @@ public final class CallManager {
      * @param obj User object.
      */
     public void registerForInCallVoicePrivacyOn(Handler h, int what, Object obj){
-        mInCallVoicePrivacyOnRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {     
+            mInCallVoicePrivacyOnRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1337,7 +1555,9 @@ public final class CallManager {
      * @param h Handler to be removed from the registrant list.
      */
     public void unregisterForInCallVoicePrivacyOn(Handler h){
-        mInCallVoicePrivacyOnRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {     
+            mInCallVoicePrivacyOnRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1348,7 +1568,9 @@ public final class CallManager {
      * @param obj User object.
      */
     public void registerForInCallVoicePrivacyOff(Handler h, int what, Object obj){
-        mInCallVoicePrivacyOffRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {     
+            mInCallVoicePrivacyOffRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1357,7 +1579,9 @@ public final class CallManager {
      * @param h Handler to be removed from the registrant list.
      */
     public void unregisterForInCallVoicePrivacyOff(Handler h){
-        mInCallVoicePrivacyOffRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {     
+            mInCallVoicePrivacyOffRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1368,7 +1592,9 @@ public final class CallManager {
      * @param obj User object.
      */
     public void registerForCallWaiting(Handler h, int what, Object obj){
-        mCallWaitingRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {     
+            mCallWaitingRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1376,7 +1602,9 @@ public final class CallManager {
      * @param h Handler to be removed from the registrant list.
      */
     public void unregisterForCallWaiting(Handler h){
-        mCallWaitingRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {     
+            mCallWaitingRegistrants[i].remove(h);
+        }
     }
 
 
@@ -1391,7 +1619,9 @@ public final class CallManager {
      */
 
     public void registerForSignalInfo(Handler h, int what, Object obj){
-        mSignalInfoRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {     
+            mSignalInfoRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1401,7 +1631,9 @@ public final class CallManager {
      * @param h Handler to be removed from the registrant list.
      */
     public void unregisterForSignalInfo(Handler h){
-        mSignalInfoRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {     
+            mSignalInfoRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1414,7 +1646,9 @@ public final class CallManager {
      * @param obj User object.
      */
     public void registerForDisplayInfo(Handler h, int what, Object obj){
-        mDisplayInfoRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) { 
+            mDisplayInfoRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1424,7 +1658,9 @@ public final class CallManager {
      * @param h Handler to be removed from the registrant list.
      */
     public void unregisterForDisplayInfo(Handler h) {
-        mDisplayInfoRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {     
+            mDisplayInfoRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1435,7 +1671,9 @@ public final class CallManager {
      * @param obj User object.
      */
     public void registerForCdmaOtaStatusChange(Handler h, int what, Object obj){
-        mCdmaOtaStatusChangeRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {     
+            mCdmaOtaStatusChangeRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1443,7 +1681,9 @@ public final class CallManager {
      * @param h Handler to be removed from the registrant list.
      */
     public void unregisterForCdmaOtaStatusChange(Handler h){
-        mCdmaOtaStatusChangeRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {     
+            mCdmaOtaStatusChangeRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1453,7 +1693,9 @@ public final class CallManager {
      * @param obj placed in Message.obj
      */
     public void registerForSubscriptionInfoReady(Handler h, int what, Object obj){
-        mSubscriptionInfoReadyRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {     
+            mSubscriptionInfoReadyRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     /**
@@ -1461,7 +1703,9 @@ public final class CallManager {
      * @param h Handler to be removed from the registrant list.
      */
     public void unregisterForSubscriptionInfoReady(Handler h){
-        mSubscriptionInfoReadyRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {     
+            mSubscriptionInfoReadyRegistrants[i].remove(h);
+        }
     }
 
     /**
@@ -1497,12 +1741,28 @@ public final class CallManager {
      *
      */
     public void registerForPostDialCharacter(Handler h, int what, Object obj){
-        mPostDialCharacterRegistrants.addUnique(h, what, obj);
+        for(int i = 0; i < mSimCount; i++) {     
+            mPostDialCharacterRegistrants[i].addUnique(h, what, obj);
+        }
     }
 
     public void unregisterForPostDialCharacter(Handler h){
-        mPostDialCharacterRegistrants.remove(h);
+        for(int i = 0; i < mSimCount; i++) {         
+            mPostDialCharacterRegistrants[i].remove(h);
+        }
     }
+
+    public void registerForPreciseCallStateChanged(Handler h, int what, Object obj, int simId) {
+        mPreciseCallStateRegistrants[simId].addUnique(h, what, obj);
+    }
+    
+    public void registerForCallWaiting(Handler h, int what, Object obj, int simId) {
+        mCallWaitingRegistrants[simId].addUnique(h, what, obj);
+    }
+
+    public void registerForDisconnect(Handler h, int what, Object obj, int simId) {
+        mDisconnectRegistrants[simId].addUnique(h, what, obj);            
+    }    
 
     /* APIs to access foregroudCalls, backgroudCalls, and ringingCalls
      * 1. APIs to access list of calls
@@ -1727,13 +1987,68 @@ public final class CallManager {
         return null;
     }
 
-
-    private boolean hasMoreThanOneRingingCall() {
+    public int getRingingCallCount() {
         int count = 0;
+
         for (Call call : mRingingCalls) {
             if (call.getState().isRinging()) {
-                if (++count > 1) return true;
+                ++count;
             }
+        }
+        Rlog.d(LOG_TAG, "getRingingCallCount " + count); 
+        return count;
+    }
+
+    private boolean hasMoreThanOneRingingCall() {
+        
+        if(getRingingCallCount() > 1) {
+            return true;
+        }
+        return false;
+    }
+
+
+    private void setWaitingOperation(WaitingReasonForHold operation, Call HoldCall, Phone WaitingPhone) {
+        mWaitingForHoldRequest = true;
+        mWaitingReasonForHold = operation;
+        mPhoneForWaitingHoldRequest = WaitingPhone;
+        mActiveCallToBeHeld = HoldCall;               
+    }
+
+    private void resetWaitingOperation() {
+
+        Rlog.d(LOG_TAG, "Reset WaitingForHoldRequest variables");
+        
+        mWaitingForHoldRequest = false;
+        mWaitingReasonForHold = WaitingReasonForHold.NONE; 
+        mPhoneForWaitingHoldRequest = null;
+        mActiveCallToBeHeld = null;        
+    }    
+
+    /**
+     * Check if there is another action need to be performed after holding request is done.
+     *
+     * @return Return true if there exists action need to be perform, else return false.
+    */
+    private boolean handleWaitingOperation() throws CallStateException {
+        Rlog.d(LOG_TAG, "handleWaitingOperation begin");
+        Rlog.d(LOG_TAG, "mActiveCallToBeHeld.getState() = " + mActiveCallToBeHeld.getState());
+        Rlog.d(LOG_TAG, "mWaitingReasonForHold = " + mWaitingReasonForHold);
+        if (mWaitingForHoldRequest &&
+            ((mActiveCallToBeHeld.getState() == Call.State.HOLDING) || (mActiveCallToBeHeld.getState() == Call.State.DISCONNECTED))) {
+            switch (mWaitingReasonForHold) {
+                case ACCEPT_CALL:
+                    setAudioModeEarlierInAcceptCall();                        
+                    mPhoneForWaitingHoldRequest.acceptCall();
+                break;
+
+                case SWITCH_CALL:
+                    mPhoneForWaitingHoldRequest.switchHoldingAndActive();
+                    break;
+            }
+            resetWaitingOperation();
+            Rlog.d(LOG_TAG, "handleWaitingOperation end");            
+            return true;
         }
         return false;
     }
@@ -1742,15 +2057,23 @@ public final class CallManager {
 
         @Override
         public void handleMessage(Message msg) {
+            int index = (int)((msg.what - EVENT_BASE) / NOTIFICATION_ID_OFFSET);
 
-            switch (msg.what) {
+            if (VDBG) Rlog.d(LOG_TAG, " handleMessage msgid:" + msg.what);
+            
+            switch (((msg.what - EVENT_BASE) % NOTIFICATION_ID_OFFSET) + EVENT_BASE ) {
                 case EVENT_DISCONNECT:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_DISCONNECT)");
-                    mDisconnectRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mDisconnectRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_PRECISE_CALL_STATE_CHANGED:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_PRECISE_CALL_STATE_CHANGED)");
-                    mPreciseCallStateRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mPreciseCallStateRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
+                    try {
+                        handleWaitingOperation();
+                    } catch (Exception e) {
+                        //Do nothing.
+                    }
                     break;
                 case EVENT_NEW_RINGING_CONNECTION:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_NEW_RINGING_CONNECTION)");
@@ -1763,88 +2086,111 @@ public final class CallManager {
                             Rlog.w(LOG_TAG, "new ringing connection", e);
                         }
                     } else {
-                        mNewRingingConnectionRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                        mNewRingingConnectionRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     }
                     break;
                 case EVENT_UNKNOWN_CONNECTION:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_UNKNOWN_CONNECTION)");
-                    mUnknownConnectionRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mUnknownConnectionRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_INCOMING_RING:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_INCOMING_RING)");
                     // The event may come from RIL who's not aware of an ongoing fg call
                     if (!hasActiveFgCall()) {
-                        mIncomingRingRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                        mIncomingRingRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     }
                     break;
                 case EVENT_RINGBACK_TONE:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_RINGBACK_TONE)");
-                    mRingbackToneRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mRingbackToneRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_IN_CALL_VOICE_PRIVACY_ON:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_IN_CALL_VOICE_PRIVACY_ON)");
-                    mInCallVoicePrivacyOnRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mInCallVoicePrivacyOnRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_IN_CALL_VOICE_PRIVACY_OFF:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_IN_CALL_VOICE_PRIVACY_OFF)");
-                    mInCallVoicePrivacyOffRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mInCallVoicePrivacyOffRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_CALL_WAITING:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_CALL_WAITING)");
-                    mCallWaitingRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mCallWaitingRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_DISPLAY_INFO:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_DISPLAY_INFO)");
-                    mDisplayInfoRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mDisplayInfoRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_SIGNAL_INFO:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_SIGNAL_INFO)");
-                    mSignalInfoRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mSignalInfoRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_CDMA_OTA_STATUS_CHANGE:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_CDMA_OTA_STATUS_CHANGE)");
-                    mCdmaOtaStatusChangeRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mCdmaOtaStatusChangeRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_RESEND_INCALL_MUTE:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_RESEND_INCALL_MUTE)");
-                    mResendIncallMuteRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mResendIncallMuteRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_MMI_INITIATE:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_MMI_INITIATE)");
-                    mMmiInitiateRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mMmiInitiateRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_MMI_COMPLETE:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_MMI_COMPLETE)");
-                    mMmiCompleteRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    AsyncResult r = (AsyncResult)msg.obj;
+                    MmiCode mmiCode = (MmiCode)r.result;
+                    boolean bErrorMessage = (mmiCode.getState() == MmiCode.State.FAILED);
+                    if (!bErrorMessage) {
+                        mMmiCompleteRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
+                    }
                     break;
                 case EVENT_ECM_TIMER_RESET:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_ECM_TIMER_RESET)");
-                    mEcmTimerResetRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mEcmTimerResetRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_SUBSCRIPTION_INFO_READY:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_SUBSCRIPTION_INFO_READY)");
-                    mSubscriptionInfoReadyRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mSubscriptionInfoReadyRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_SUPP_SERVICE_FAILED:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_SUPP_SERVICE_FAILED)");
-                    mSuppServiceFailedRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mSuppServiceFailedRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
+
+                    resetWaitingOperation();
+
+                    /* To recovery previous audio mode when failed to hold active call */
+                    if (mPreviousAudioMode != -1) {
+                        mHelper.getAudioManager().setMode(mPreviousAudioMode);
+                        mPreviousAudioMode = -1;
+                    }
+					
                     break;
                 case EVENT_SERVICE_STATE_CHANGED:
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_SERVICE_STATE_CHANGED)");
-                    mServiceStateChangedRegistrants.notifyRegistrants((AsyncResult) msg.obj);
+                    mServiceStateChangedRegistrants[index].notifyRegistrants((AsyncResult) msg.obj);
                     break;
                 case EVENT_POST_DIAL_CHARACTER:
                     // we need send the character that is being processed in msg.arg1
                     // so can't use notifyRegistrants()
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_POST_DIAL_CHARACTER)");
-                    for(int i=0; i < mPostDialCharacterRegistrants.size(); i++) {
+                    for(int i=0; i < mPostDialCharacterRegistrants[index].size(); i++) {
                         Message notifyMsg;
-                        notifyMsg = ((Registrant)mPostDialCharacterRegistrants.get(i)).messageForRegistrant();
+                        notifyMsg = ((Registrant)mPostDialCharacterRegistrants[index].get(i)).messageForRegistrant();
                         notifyMsg.obj = msg.obj;
                         notifyMsg.arg1 = msg.arg1;
                         notifyMsg.sendToTarget();
                     }
                     break;
+                case EVENT_RADIO_OFF_OR_NOT_AVAILABLE:
+                    if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_RADIO_OFF_OR_NOT_AVAILABLE)");
+
+                    /*  Sometimes will happen radio off but there is still active call exist.  
+                     *  We need to set audio mode to normal earlier.
+                     */
+                    setAudioMode();
+                    break;
+                                   
             }
         }
     };

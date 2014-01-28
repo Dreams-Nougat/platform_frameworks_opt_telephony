@@ -93,6 +93,7 @@ public class GSMPhone extends PhoneBase {
     static final String LOG_TAG = "GSMPhone";
     private static final boolean LOCAL_DEBUG = true;
     private static final boolean VDBG = false; /* STOPSHIP if true */
+    private static final boolean DBG_PORT = false; /* STOPSHIP if true */
 
     // Key used to read/write current ciphering state
     public static final String CIPHERING_KEY = "ciphering_key";
@@ -113,6 +114,9 @@ public class GSMPhone extends PhoneBase {
 
     /** List of Registrants to receive Supplementary Service Notifications. */
     RegistrantList mSsnRegistrants = new RegistrantList();
+
+    Thread mDebugPortThread;
+    ServerSocket mDebugSocket;
 
     private String mImei;
     private String mImeiSv;
@@ -135,12 +139,22 @@ public class GSMPhone extends PhoneBase {
 
     public
     GSMPhone (Context context, CommandsInterface ci, PhoneNotifier notifier) {
-        this(context,ci,notifier, false);
+        this(context,ci,notifier, false, PhoneConstants.SIM_ID_1);
+    }
+  
+    public
+    GSMPhone (Context context, CommandsInterface ci, PhoneNotifier notifier, int simId) {
+        this(context,ci,notifier, false, simId);
     }
 
     public
     GSMPhone (Context context, CommandsInterface ci, PhoneNotifier notifier, boolean unitTestMode) {
-        super("GSM", notifier, context, ci, unitTestMode);
+        this(context,ci,notifier, unitTestMode, PhoneConstants.SIM_ID_1);
+    }
+
+    public
+    GSMPhone (Context context, CommandsInterface ci, PhoneNotifier notifier, boolean unitTestMode, int simId) {
+        super("GSM", notifier, context, ci, unitTestMode, simId);
 
         if (ci instanceof SimulatedRadioControl) {
             mSimulatedRadioControl = (SimulatedRadioControl) ci;
@@ -162,6 +176,41 @@ public class GSMPhone extends PhoneBase {
         mCi.setOnUSSD(this, EVENT_USSD, null);
         mCi.setOnSuppServiceNotification(this, EVENT_SSN, null);
         mSST.registerForNetworkAttached(this, EVENT_REGISTERED_TO_NETWORK, null);
+
+        if (DBG_PORT) {
+            try {
+                //debugSocket = new LocalServerSocket("com.android.internal.telephony.debug");
+                mDebugSocket = new ServerSocket();
+                mDebugSocket.setReuseAddress(true);
+                mDebugSocket.bind (new InetSocketAddress("127.0.0.1", 6666));
+
+                mDebugPortThread
+                    = new Thread(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                for(;;) {
+                                    try {
+                                        Socket sock;
+                                        sock = mDebugSocket.accept();
+                                        Rlog.i(LOG_TAG, "New connection; resetting radio");
+                                        mCi.resetRadio(null);
+                                        sock.close();
+                                    } catch (IOException ex) {
+                                        Rlog.w(LOG_TAG,
+                                            "Exception accepting socket", ex);
+                                    }
+                                }
+                            }
+                        },
+                        "GSMPhone debug");
+
+                mDebugPortThread.start();
+
+            } catch (IOException ex) {
+                Rlog.w(LOG_TAG, "Failure to open com.android.internal.telephony.debug socket", ex);
+            }
+        }
 
         //Change the system property
         SystemProperties.set(TelephonyProperties.CURRENT_ACTIVE_PHONE,
@@ -358,8 +407,6 @@ public class GSMPhone extends PhoneBase {
     /*package*/ void
     notifyDisconnect(Connection cn) {
         mDisconnectRegistrants.notifyResult(cn);
-
-        mNotifier.notifyDisconnectCause(cn.getDisconnectCause(), cn.getPreciseDisconnectCause());
     }
 
     void notifyUnknownConnection() {
@@ -419,6 +466,12 @@ public class GSMPhone extends PhoneBase {
     public void
     rejectCall() throws CallStateException {
         mCT.rejectCall();
+    }
+
+    @Override
+    public void
+    hangupActiveCall() throws CallStateException {
+        mCT.hangupActiveCall();
     }
 
     @Override
@@ -780,7 +833,7 @@ public class GSMPhone extends PhoneBase {
     private void storeVoiceMailNumber(String number) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         SharedPreferences.Editor editor = sp.edit();
-        editor.putString(VM_NUMBER, number);
+        editor.putString(VM_NUMBER + mSimId, number);
         editor.apply();
         setVmSimImsi(getSubscriberId());
     }
@@ -792,20 +845,20 @@ public class GSMPhone extends PhoneBase {
         String number = (r != null) ? r.getVoiceMailNumber() : "";
         if (TextUtils.isEmpty(number)) {
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
-            number = sp.getString(VM_NUMBER, null);
+            number = sp.getString(VM_NUMBER + mSimId, null);
         }
         return number;
     }
 
     private String getVmSimImsi() {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
-        return sp.getString(VM_SIM_IMSI, null);
+        return sp.getString(VM_SIM_IMSI + mSimId, null);
     }
 
     private void setVmSimImsi(String imsi) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         SharedPreferences.Editor editor = sp.edit();
-        editor.putString(VM_SIM_IMSI, imsi);
+        editor.putString(VM_SIM_IMSI + mSimId, imsi);
         editor.apply();
     }
 
@@ -1451,8 +1504,20 @@ public class GSMPhone extends PhoneBase {
         // nsm.operatorNumeric is "" if we're in automatic.selection.
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         SharedPreferences.Editor editor = sp.edit();
-        editor.putString(NETWORK_SELECTION_KEY, nsm.operatorNumeric);
-        editor.putString(NETWORK_SELECTION_NAME_KEY, nsm.operatorAlphaLong);
+        
+        if (mSimId == PhoneConstants.SIM_ID_1) {
+            editor.putString(NETWORK_SELECTION_KEY, nsm.operatorNumeric);
+            editor.putString(NETWORK_SELECTION_NAME_KEY, nsm.operatorAlphaLong);
+        } else if (mSimId == PhoneConstants.SIM_ID_2){
+            editor.putString(NETWORK_SELECTION_KEY_2, nsm.operatorNumeric);
+            editor.putString(NETWORK_SELECTION_NAME_KEY_2, nsm.operatorAlphaLong);
+        } else if (mSimId == PhoneConstants.SIM_ID_3){
+            editor.putString(NETWORK_SELECTION_KEY_3, nsm.operatorNumeric);
+            editor.putString(NETWORK_SELECTION_NAME_KEY_3, nsm.operatorAlphaLong);
+        } else if (mSimId == PhoneConstants.SIM_ID_4){
+            editor.putString(NETWORK_SELECTION_KEY_4, nsm.operatorNumeric);
+            editor.putString(NETWORK_SELECTION_NAME_KEY_4, nsm.operatorAlphaLong);
+        }
 
         // commit and log the result.
         if (! editor.commit()) {
@@ -1589,6 +1654,6 @@ public class GSMPhone extends PhoneBase {
     }
 
     protected void log(String s) {
-        Rlog.d(LOG_TAG, "[GSMPhone] " + s);
+        Rlog.d(LOG_TAG, "[GSMPhone" + mSimId + "]: " + s);
     }
 }

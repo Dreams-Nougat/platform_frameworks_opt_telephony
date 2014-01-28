@@ -18,11 +18,14 @@ package com.android.internal.telephony;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.telephony.TelephonyManager;
 
 import com.android.internal.util.HexDump;
 
 import java.util.Arrays;
 import java.util.Date;
+
+import android.telephony.SubscriptionManager;
 
 /**
  * Tracker for an incoming SMS message ready to broadcast to listeners.
@@ -63,6 +66,9 @@ public final class InboundSmsTracker {
     /** Destination port mask (16-bit unsigned value on GSM and CDMA). */
     private static final int DEST_PORT_MASK = 0xffff;
 
+    /** Subscription identify */
+    private long mSubId;
+
     /**
      * Create a tracker for a single-part SMS.
      * @param pdu the message PDU
@@ -83,6 +89,7 @@ public final class InboundSmsTracker {
         mReferenceNumber = -1;
         mSequenceNumber = getIndexOffset();     // 0 or 1, depending on type
         mMessageCount = 1;
+        mSubId = TelephonyManager.getDefaultSim();
     }
 
     /**
@@ -105,6 +112,31 @@ public final class InboundSmsTracker {
     public InboundSmsTracker(byte[] pdu, long timestamp, int destPort, boolean is3gpp2,
             String address, int referenceNumber, int sequenceNumber, int messageCount,
             boolean is3gpp2WapPdu) {
+        this(pdu, timestamp, destPort, is3gpp2, address, referenceNumber, 
+            sequenceNumber, messageCount, is3gpp2WapPdu, TelephonyManager.getDefaultSim());
+    }
+
+    /**
+     * Create a tracker for a multi-part SMS. Sequence numbers start at 1 for 3GPP and regular
+     * concatenated 3GPP2 messages, but CDMA WAP push sequence numbers start at 0. The caller
+     * will subtract 1 if necessary so that the sequence number is always 0-based. When loading
+     * and saving to the raw table, the sequence number is adjusted if necessary for backwards
+     * compatibility.
+     *
+     * @param pdu the message PDU
+     * @param timestamp the message timestamp
+     * @param destPort the destination port
+     * @param is3gpp2 true for 3GPP2 format; false for 3GPP format
+     * @param address the originating address
+     * @param referenceNumber the concatenated reference number
+     * @param sequenceNumber the sequence number of this segment (0-based)
+     * @param messageCount the total number of segments
+     * @param is3gpp2WapPdu true for 3GPP2 format WAP PDU; false otherwise
+     * @param simId 0 for SIM1; 1 for SIM2; 2 for SIM3; 3 for SIM4
+     */
+    public InboundSmsTracker(byte[] pdu, long timestamp, int destPort, boolean is3gpp2,
+            String address, int referenceNumber, int sequenceNumber, int messageCount,
+            boolean is3gpp2WapPdu, long subId) {
         mPdu = pdu;
         mTimestamp = timestamp;
         mDestPort = destPort;
@@ -115,6 +147,7 @@ public final class InboundSmsTracker {
         mReferenceNumber = referenceNumber;
         mSequenceNumber = sequenceNumber;
         mMessageCount = messageCount;
+        mSubId = subId;
     }
 
     /**
@@ -172,6 +205,7 @@ public final class InboundSmsTracker {
             mDeleteWhereArgs = new String[]{mAddress,
                     Integer.toString(mReferenceNumber), Integer.toString(mMessageCount)};
         }
+        mSubId = SubscriptionManager.getDefaultSubId();
     }
 
     ContentValues getContentValues() {
@@ -201,6 +235,7 @@ public final class InboundSmsTracker {
             values.put("sequence", mSequenceNumber);
             values.put("count", mMessageCount);
         }
+        values.put("sub_id", mSubId);
         return values;
     }
 

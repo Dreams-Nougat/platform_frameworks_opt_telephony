@@ -23,12 +23,25 @@ import android.os.ServiceManager;
 
 
 public class PhoneSubInfoProxy extends IPhoneSubInfo.Stub {
+
+    private String[] PHONE_SUBINFO_SERVICE = {
+        "iphonesubinfo",
+        "iphonesubinfo2",
+        "iphonesubinfo3",
+        "iphonesubinfo4",
+    };
+    
     private PhoneSubInfo mPhoneSubInfo;
 
     public PhoneSubInfoProxy(PhoneSubInfo phoneSubInfo) {
+        this(phoneSubInfo,PhoneConstants.SIM_ID_1);
+    }
+
+    public PhoneSubInfoProxy(PhoneSubInfo phoneSubInfo, int simId) {
         mPhoneSubInfo = phoneSubInfo;
-        if(ServiceManager.getService("iphonesubinfo") == null) {
-            ServiceManager.addService("iphonesubinfo", this);
+
+        if(ServiceManager.getService(PHONE_SUBINFO_SERVICE[simId]) == null) {
+            ServiceManager.addService(PHONE_SUBINFO_SERVICE[simId], this);
         }
     }
 

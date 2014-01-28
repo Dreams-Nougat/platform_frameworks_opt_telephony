@@ -16,9 +16,9 @@
 
 package com.android.internal.telephony.uicc;
 
-import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA;
-import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_OPERATOR_ISO_COUNTRY;
-import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC;
+import static com.android.internal.telephony.TelephonyProperties.SIM_PROPERTY_ICC_OPERATOR_NUMERIC;
+import static com.android.internal.telephony.TelephonyProperties.SIM_PROPERTY_ICC_OPERATOR_ALPHA;
+import static com.android.internal.telephony.TelephonyProperties.SIM_PROPERTY_ICC_OPERATOR_ISO_COUNTRY;
 import android.content.Context;
 import android.os.AsyncResult;
 import android.os.Message;
@@ -181,11 +181,14 @@ public class SIMRecords extends IccRecords {
         "405931", "405932", "502142", "502143", "502145", "502146", "502147", "502148"
     };
 
+    private int mSimId;
     // ***** Constructor
 
     public SIMRecords(UiccCardApplication app, Context c, CommandsInterface ci) {
         super(app, c, ci);
 
+        mSimId = app.getSimId();
+        if(DBG) log("SIMRecords construct");
         mAdnCache = new AdnRecordCache(mFh);
 
         mVmConfig = new VoiceMailConstants();
@@ -203,6 +206,8 @@ public class SIMRecords extends IccRecords {
         resetRecords();
         mParentApp.registerForReady(this, EVENT_APP_READY, null);
         if (DBG) log("SIMRecords X ctor this=" + this);
+
+        mFh.loadEFTransparent(EF_ICCID, obtainMessage(EVENT_GET_ICCID_DONE));
     }
 
     @Override
@@ -239,9 +244,9 @@ public class SIMRecords extends IccRecords {
         mAdnCache.reset();
 
         log("SIMRecords: onRadioOffOrNotAvailable set 'gsm.sim.operator.numeric' to operator=null");
-        SystemProperties.set(PROPERTY_ICC_OPERATOR_NUMERIC, null);
-        SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, null);
-        SystemProperties.set(PROPERTY_ICC_OPERATOR_ISO_COUNTRY, null);
+        SystemProperties.set(SIM_PROPERTY_ICC_OPERATOR_NUMERIC[mSimId], null);
+        SystemProperties.set(SIM_PROPERTY_ICC_OPERATOR_ALPHA[mSimId], null);
+        SystemProperties.set(SIM_PROPERTY_ICC_OPERATOR_ISO_COUNTRY[mSimId], null);
 
         // recordsRequested is set to false indicating that the SIM
         // read requests made so far are not valid. This is set to
@@ -825,7 +830,8 @@ public class SIMRecords extends IccRecords {
                 mIccId = IccUtils.bcdToString(data, 0, data.length);
 
                 log("iccid: " + mIccId);
-
+                
+                mIccReadyRegistrants.notifyRegistrants();
             break;
 
 
@@ -1332,14 +1338,14 @@ public class SIMRecords extends IccRecords {
         if (!TextUtils.isEmpty(operator)) {
             log("onAllRecordsLoaded set 'gsm.sim.operator.numeric' to operator='" +
                     operator + "'");
-            SystemProperties.set(PROPERTY_ICC_OPERATOR_NUMERIC, operator);
+            SystemProperties.set(SIM_PROPERTY_ICC_OPERATOR_NUMERIC[mSimId], operator);
         } else {
             log("onAllRecordsLoaded empty 'gsm.sim.operator.numeric' skipping");
         }
 
         if (!TextUtils.isEmpty(mImsi)) {
             log("onAllRecordsLoaded set mcc imsi=" + mImsi);
-            SystemProperties.set(PROPERTY_ICC_OPERATOR_ISO_COUNTRY,
+            SystemProperties.set(SIM_PROPERTY_ICC_OPERATOR_ISO_COUNTRY[mSimId],
                     MccTable.countryCodeForMcc(Integer.parseInt(mImsi.substring(0,3))));
         } else {
             log("onAllRecordsLoaded empty imsi skipping setting mcc");
@@ -1382,8 +1388,8 @@ public class SIMRecords extends IccRecords {
         mCi.getIMSIForApp(mParentApp.getAid(), obtainMessage(EVENT_GET_IMSI_DONE));
         mRecordsToLoad++;
 
-        mFh.loadEFTransparent(EF_ICCID, obtainMessage(EVENT_GET_ICCID_DONE));
-        mRecordsToLoad++;
+        //mFh.loadEFTransparent(EF_ICCID, obtainMessage(EVENT_GET_ICCID_DONE));
+        //mRecordsToLoad++;
 
         // FIXME should examine EF[MSISDN]'s capability configuration
         // to determine which is the voice/data/fax line
@@ -1576,7 +1582,7 @@ public class SIMRecords extends IccRecords {
 
                     if (DBG) log("Load EF_SPN: " + mSpn
                             + " spnDisplayCondition: " + mSpnDisplayCondition);
-                    SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
+                    SystemProperties.set(SIM_PROPERTY_ICC_OPERATOR_ALPHA[mSimId], mSpn);
 
                     mSpnState = GetSpnFsmState.IDLE;
                 } else {
@@ -1597,7 +1603,7 @@ public class SIMRecords extends IccRecords {
                     mSpn = IccUtils.adnStringFieldToString(data, 0, data.length);
 
                     if (DBG) log("Load EF_SPN_CPHS: " + mSpn);
-                    SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
+                    SystemProperties.set(SIM_PROPERTY_ICC_OPERATOR_ALPHA[mSimId], mSpn);
 
                     mSpnState = GetSpnFsmState.IDLE;
                 } else {
@@ -1614,7 +1620,7 @@ public class SIMRecords extends IccRecords {
                     mSpn = IccUtils.adnStringFieldToString(data, 0, data.length);
 
                     if (DBG) log("Load EF_SPN_SHORT_CPHS: " + mSpn);
-                    SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
+                    SystemProperties.set(SIM_PROPERTY_ICC_OPERATOR_ALPHA[mSimId], mSpn);
                 }else {
                     if (DBG) log("No SPN loaded in either CHPS or 3GPP");
                 }
@@ -1677,20 +1683,20 @@ public class SIMRecords extends IccRecords {
 
     @Override
     protected void log(String s) {
-        Rlog.d(LOG_TAG, "[SIMRecords] " + s);
+        Rlog.d(LOG_TAG, "[SIMRecords] [SIM" + mSimId + "]" + s);
     }
 
     @Override
     protected void loge(String s) {
-        Rlog.e(LOG_TAG, "[SIMRecords] " + s);
+        Rlog.e(LOG_TAG, "[SIMRecords] [SIM" + mSimId + "]"  + s);
     }
 
     protected void logw(String s, Throwable tr) {
-        Rlog.w(LOG_TAG, "[SIMRecords] " + s, tr);
+        Rlog.w(LOG_TAG, "[SIMRecords] [SIM" + mSimId + "]" + s, tr);
     }
 
     protected void logv(String s) {
-        Rlog.v(LOG_TAG, "[SIMRecords] " + s);
+        Rlog.v(LOG_TAG, "[SIMRecords] [SIM" + mSimId + "]"  + s);
     }
 
     /**

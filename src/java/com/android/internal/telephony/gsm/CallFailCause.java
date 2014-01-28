@@ -50,4 +50,21 @@ public interface CallFailCause {
     static final int CALL_BARRED        = 240;
     static final int FDN_BLOCKED        = 241;
     static final int ERROR_UNSPECIFIED = 0xffff;
+    static final int NO_ROUTE_TO_DESTINATION = 3;
+    static final int NO_USER_RESPONDING = 18;
+    static final int USER_ALERTING_NO_ANSWER = 19;
+    static final int CALL_REJECTED = 21;
+    static final int INVALID_NUMBER_FORMAT = 28;
+    static final int FACILITY_REJECTED = 29;
+
+    static final int NETWORK_OUT_OF_ORDER = 38;
+    static final int RESOURCE_UNAVAILABLE = 47;
+    static final int BEARER_NOT_AUTHORIZED = 57;
+    static final int SERVICE_NOT_AVAILABLE = 63;
+    static final int BEARER_NOT_IMPLEMENT = 65;
+    static final int FACILITY_NOT_IMPLEMENT = 69;
+    static final int RESTRICTED_BEARER_AVAILABLE = 70;
+    static final int OPTION_NOT_AVAILABLE = 79;
+    static final int INCOMPATIBLE_DESTINATION = 88;
+    static final int CM_MM_RR_CONNECTION_RELEASE = 2165;
 }

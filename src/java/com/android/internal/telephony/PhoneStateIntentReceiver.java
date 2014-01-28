@@ -45,8 +45,8 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
     private static final int NOTIF_SIGNAL   = 1 << 2;
 
     PhoneConstants.State mPhoneState = PhoneConstants.State.IDLE;
-    ServiceState mServiceState = new ServiceState();
-    SignalStrength mSignalStrength = new SignalStrength();
+    private ServiceState[] mServiceState = null;
+    private SignalStrength[] mSignalStrength = null;
 
     private Context mContext;
     private Handler mTarget;
@@ -65,6 +65,10 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
         this();
         setContext(context);
         setTarget(target);
+        
+        int simCount = TelephonyManager.from(context).getSimCount();
+        mServiceState = new ServiceState[simCount];
+        mSignalStrength = new SignalStrength[simCount];
     }
 
     public void setContext(Context c) {
@@ -88,7 +92,7 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
             throw new RuntimeException
                 ("client must call notifyServiceState(int)");
         }
-        return mServiceState;
+        return mServiceState[TelephonyManager.getDefault().getDefaultSim()];
     }
 
     /**
@@ -102,7 +106,7 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
             throw new RuntimeException
                 ("client must call notifySignalStrength(int)");
         }
-        return mSignalStrength.getAsuLevel();
+        return mSignalStrength[TelephonyManager.getDefault().getDefaultSim()].getAsuLevel();
     }
 
     /**
@@ -117,7 +121,7 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
             throw new RuntimeException
                 ("client must call notifySignalStrength(int)");
         }
-        return mSignalStrength.getDbm();
+        return mSignalStrength[TelephonyManager.getDefault().getDefaultSim()].getDbm();
     }
 
     public void notifyPhoneCallState(int eventWhat) {
@@ -164,7 +168,8 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
 
         try {
             if (TelephonyIntents.ACTION_SIGNAL_STRENGTH_CHANGED.equals(action)) {
-                mSignalStrength = SignalStrength.newFromBundle(intent.getExtras());
+                SignalStrength tempSignalStrength = SignalStrength.newFromBundle(intent.getExtras());
+                mSignalStrength[tempSignalStrength.getSimId()] = tempSignalStrength;
 
                 if (mTarget != null && getNotifySignalStrength()) {
                     Message message = Message.obtain(mTarget, mAsuEventWhat);
@@ -183,7 +188,8 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
                     mTarget.sendMessage(message);
                 }
             } else if (TelephonyIntents.ACTION_SERVICE_STATE_CHANGED.equals(action)) {
-                mServiceState = ServiceState.newFromBundle(intent.getExtras());
+                ServiceState tempServiceState = ServiceState.newFromBundle(intent.getExtras());
+                mServiceState[tempServiceState.getSimId()] = tempServiceState;
 
                 if (mTarget != null && getNotifyServiceState()) {
                     Message message = Message.obtain(mTarget,
@@ -197,4 +203,30 @@ public final class PhoneStateIntentReceiver extends BroadcastReceiver {
         }
     }
 
+    public ServiceState getServiceState(int simId) {
+        if ((mWants & NOTIF_SERVICE) == 0) {
+            throw new RuntimeException
+                ("client must call notifyServiceState(int)");
+        }
+
+        return mServiceState[simId];
+    }
+
+    public int getSignalStrength(int simId) {
+        if ((mWants & NOTIF_SIGNAL) == 0) {
+            throw new RuntimeException
+                ("client must call notifySignalStrength(int)");
+        }
+
+        return mSignalStrength[simId].getAsuLevel();
+    }
+
+    public int getSignalStrengthDbm(int simId) {
+        if ((mWants & NOTIF_SIGNAL) == 0) {
+            throw new RuntimeException
+                ("client must call notifySignalStrength(int)");
+        }
+
+        return mSignalStrength[simId].getDbm();
+    }    
 }

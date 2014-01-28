@@ -55,6 +55,7 @@ import com.android.internal.telephony.EventLogTags;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.PhoneConstants;
+import com.android.internal.telephony.PhoneProxyManager;
 import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.UiccController;
 import com.android.internal.util.AsyncChannel;
@@ -468,13 +469,20 @@ public abstract class DcTrackerBase extends Handler {
     protected void onActionIntentReconnectAlarm(Intent intent) {
         String reason = intent.getStringExtra(INTENT_RECONNECT_ALARM_EXTRA_REASON);
         String apnType = intent.getStringExtra(INTENT_RECONNECT_ALARM_EXTRA_TYPE);
+        int simId = intent.getIntExtra(PhoneConstants.SIM_ID_KEY, PhoneConstants.SIM_ID_1);
+
+        if (simId != mPhone.getSimId()) {
+            log("receive ReconnectAlarm but simId incorrect, ignore");
+            return;
+        }
 
         ApnContext apnContext = mApnContexts.get(apnType);
 
         if (DBG) {
             log("onActionIntentReconnectAlarm: mState=" + mState + " reason=" + reason +
                     " apnType=" + apnType + " apnContext=" + apnContext +
-                    " mDataConnectionAsyncChannels=" + mDataConnectionAcHashMap);
+                    " mDataConnectionAsyncChannels=" + mDataConnectionAcHashMap +
+                    " simId=" + simId);
         }
 
         if ((apnContext != null) && (apnContext.isEnabled())) {
@@ -506,6 +514,13 @@ public abstract class DcTrackerBase extends Handler {
 
     protected void onActionIntentRestartTrySetupAlarm(Intent intent) {
         String apnType = intent.getStringExtra(INTENT_RESTART_TRYSETUP_ALARM_EXTRA_TYPE);
+        int simId = intent.getIntExtra(PhoneConstants.SIM_ID_KEY, PhoneConstants.SIM_ID_1);
+
+        if (simId != mPhone.getSimId()) {
+            log("receive RestartTrySetup but simId incorrect, ignore");
+            return;
+        }
+
         ApnContext apnContext = mApnContexts.get(apnType);
         if (DBG) {
             log("onActionIntentRestartTrySetupAlarm: mState=" + mState +
@@ -516,7 +531,15 @@ public abstract class DcTrackerBase extends Handler {
     }
 
     protected void onActionIntentDataStallAlarm(Intent intent) {
-        if (VDBG_STALL) log("onActionIntentDataStallAlarm: action=" + intent.getAction());
+        int simId = intent.getIntExtra(PhoneConstants.SIM_ID_KEY, PhoneConstants.SIM_ID_1);
+        if (VDBG_STALL) log("onActionIntentDataStallAlarm: action=" + intent.getAction() +
+                " simId=" + simId);
+
+        if (simId != mPhone.getSimId()) {
+            log("receive ReconnectAlarm but simId incorrect, ignore");
+            return;
+        }
+
         Message msg = obtainMessage(DctConstants.EVENT_DATA_STALL_ALARM,
                 intent.getAction());
         msg.arg1 = intent.getIntExtra(DATA_STALL_ALARM_TAG_EXTRA, 0);
@@ -530,10 +553,10 @@ public abstract class DcTrackerBase extends Handler {
      */
     protected DcTrackerBase(PhoneBase phone) {
         super();
-        if (DBG) log("DCT.constructor");
         mPhone = phone;
+        if (DBG) log("DCT.constructor");
         mResolver = mPhone.getContext().getContentResolver();
-        mUiccController = UiccController.getInstance();
+        mUiccController = UiccController.getInstance(mPhone.getSimId());
         mUiccController.registerForIccChanged(this, DctConstants.EVENT_ICC_CHANGED, null);
         mAlarmManager =
                 (AlarmManager) mPhone.getContext().getSystemService(Context.ALARM_SERVICE);
@@ -550,7 +573,7 @@ public abstract class DcTrackerBase extends Handler {
         filter.addAction(INTENT_PROVISIONING_APN_ALARM);
 
         mUserDataEnabled = Settings.Global.getInt(
-                mPhone.getContext().getContentResolver(), Settings.Global.MOBILE_DATA, 1) == 1;
+                mPhone.getContext().getContentResolver(), Settings.Global.MOBILE_DATA, -1) >= PhoneConstants.SIM_ID_1;
 
         mPhone.getContext().registerReceiver(mIntentReceiver, filter, null, mPhone);
 
@@ -661,8 +684,14 @@ public abstract class DcTrackerBase extends Handler {
      */
     public void setDataOnRoamingEnabled(boolean enabled) {
         if (getDataOnRoamingEnabled() != enabled) {
+            StringBuffer sb = new StringBuffer();
             final ContentResolver resolver = mPhone.getContext().getContentResolver();
-            Settings.Global.putInt(resolver, Settings.Global.DATA_ROAMING, enabled ? 1 : 0);
+            Phone[] phones = PhoneProxyManager.getPhoneProxys();
+            for (Phone phone : phones)
+                sb.append(phone.getDataRoamingEnabled() ? "1," : "0,");
+            sb.deleteCharAt(sb.length()-1); //remove the last comma
+            if (DBG) log("Data roaming: " + sb);
+            Settings.Global.putString(resolver, Settings.Global.DATA_ROAMING, sb.toString());
             // will trigger handleDataOnRoamingChange() through observer
         }
     }
@@ -671,12 +700,17 @@ public abstract class DcTrackerBase extends Handler {
      * Return current {@link android.provider.Settings.Global#DATA_ROAMING} value.
      */
     public boolean getDataOnRoamingEnabled() {
-        try {
-            final ContentResolver resolver = mPhone.getContext().getContentResolver();
-            return Settings.Global.getInt(resolver, Settings.Global.DATA_ROAMING) != 0;
-        } catch (SettingNotFoundException snfe) {
-            return false;
+        boolean result = false;
+        final ContentResolver resolver = mPhone.getContext().getContentResolver();
+        String dataRoaming = Settings.Global.getString(resolver, Settings.Global.DATA_ROAMING);
+        if (DBG) log("Data roaming: " + dataRoaming);
+        if (dataRoaming != null) {
+            String[] dataRoamingSettings = dataRoaming.split(",");
+            int simId = mPhone.getSimId();
+            if (simId < dataRoamingSettings.length)
+                result = "1".equals(dataRoamingSettings[simId]);
         }
+        return result;
     }
 
     // abstract methods
@@ -1324,7 +1358,7 @@ public abstract class DcTrackerBase extends Handler {
             if (mUserDataEnabled != enabled) {
                 mUserDataEnabled = enabled;
                 Settings.Global.putInt(mPhone.getContext().getContentResolver(),
-                        Settings.Global.MOBILE_DATA, enabled ? 1 : 0);
+                        Settings.Global.MOBILE_DATA, enabled ? PhoneConstants.SIM_ID_1 : -1);
                 if (getDataOnRoamingEnabled() == false &&
                         mPhone.getServiceState().getRoaming() == true) {
                     if (enabled) {
@@ -1664,6 +1698,7 @@ public abstract class DcTrackerBase extends Handler {
             }
             Intent intent = new Intent(INTENT_DATA_STALL_ALARM);
             intent.putExtra(DATA_STALL_ALARM_TAG_EXTRA, mDataStallAlarmTag);
+            intent.putExtra(PhoneConstants.SIM_ID_KEY, mPhone.getSimId());
             mDataStallAlarmIntent = PendingIntent.getBroadcast(mPhone.getContext(), 0, intent,
                     PendingIntent.FLAG_UPDATE_CURRENT);
             mAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,

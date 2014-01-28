@@ -629,6 +629,12 @@ public interface Phone {
     void rejectCall() throws CallStateException;
 
     /**
+     * used to release all connections in the foregrond call.
+     * @internal
+     */
+    void hangupActiveCall() throws CallStateException;
+
+    /**
      * Places any active calls on hold, and makes any held calls
      *  active. Switch occurs asynchronously and may fail.
      * Final notification occurs via
@@ -1723,4 +1729,19 @@ public interface Phone {
      * @param voiceRadioTech The new voice radio technology
      */
     void updatePhoneObject(int voiceRadioTech);
+
+    /**
+     * Update polocy data
+     *
+     * @param enabled policy data is enabled or not
+     */
+    void setPolicyDataEnable(boolean enabled);
+
+    /**
+     * Gets the sim id of current phone.
+     * @return sim id. {@link PhoneConstants#SIM_ID_1}, {@link PhoneConstants#SIM_ID_2}
+     * , {@link PhoneConstants#SIM_ID_3} or {@link PhoneConstants#SIM_ID_4}
+     *
+     */
+    int getSimId();
 }

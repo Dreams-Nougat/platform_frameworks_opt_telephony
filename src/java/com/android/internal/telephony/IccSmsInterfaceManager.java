@@ -120,8 +120,27 @@ public class IccSmsInterfaceManager extends ISms.Stub {
         mAppOps = (AppOpsManager) mContext.getSystemService(Context.APP_OPS_SERVICE);
         mDispatcher = new ImsSMSDispatcher(phone,
                 phone.mSmsStorageMonitor, phone.mSmsUsageMonitor);
-        if (ServiceManager.getService("isms") == null) {
-            ServiceManager.addService("isms", this);
+        int simId = phone.getSimId();
+        if (PhoneConstants.SIM_ID_1 == simId) {
+            if(ServiceManager.getService("isms") == null) {
+                ServiceManager.addService("isms", this);
+            }
+        } else if (PhoneConstants.SIM_ID_2 == simId) {
+            if(ServiceManager.getService("isms2") == null) {
+                ServiceManager.addService("isms2", this);
+            }
+        } else if (PhoneConstants.SIM_ID_3 == simId) {
+            if(ServiceManager.getService("isms3") == null) {
+                ServiceManager.addService("isms3", this);
+            }
+        } else if (PhoneConstants.SIM_ID_4 == simId) {
+            if(ServiceManager.getService("isms4") == null) {
+                ServiceManager.addService("isms4", this);
+            }
+        } else {
+            if(ServiceManager.getService("isms") == null) {
+                ServiceManager.addService("isms", this);
+            }
         }
     }
 
@@ -164,9 +183,9 @@ public class IccSmsInterfaceManager extends ISms.Stub {
     }
 
     protected void enforceReceiveAndSend(String message) {
-        mContext.enforceCallingPermission(
+        mContext.enforceCallingOrSelfPermission(
                 Manifest.permission.RECEIVE_SMS, message);
-        mContext.enforceCallingPermission(
+        mContext.enforceCallingOrSelfPermission(
                 Manifest.permission.SEND_SMS, message);
     }
 
@@ -463,14 +482,17 @@ public class IccSmsInterfaceManager extends ISms.Stub {
 
         ret = new ArrayList<SmsRawData>(count);
 
+        int validSmsCount = 0;
         for (int i = 0; i < count; i++) {
             byte[] ba = messages.get(i);
             if (ba[0] == STATUS_ON_ICC_FREE) {
                 ret.add(null);
             } else {
+                validSmsCount++;
                 ret.add(new SmsRawData(messages.get(i)));
             }
         }
+        log("validSmsCount = " + validSmsCount);
 
         return ret;
     }
@@ -483,12 +505,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
      * @return byte array for the record.
      */
     protected byte[] makeSmsRecordData(int status, byte[] pdu) {
-        byte[] data;
-        if (PhoneConstants.PHONE_TYPE_GSM == mPhone.getPhoneType()) {
-            data = new byte[IccConstants.SMS_RECORD_LENGTH];
-        } else {
-            data = new byte[IccConstants.CDMA_SMS_RECORD_LENGTH];
-        }
+        byte[] data = new byte[IccConstants.SMS_RECORD_LENGTH];
 
         // Status bits for this record.  See TS 51.011 10.5.3
         data[0] = (byte)(status & 7);
@@ -496,7 +513,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
         System.arraycopy(pdu, 0, data, 1, pdu.length);
 
         // Pad out with 0xFF's.
-        for (int j = pdu.length+1; j < data.length; j++) {
+        for (int j = pdu.length+1; j < IccConstants.SMS_RECORD_LENGTH; j++) {
             data[j] = -1;
         }
 
@@ -752,6 +769,9 @@ public class IccSmsInterfaceManager extends ISms.Stub {
             }
         }
 
+        if (!activate && mSuccess) {
+            mCellBroadcastRangeManager.clearAllRanges();
+        }
         return mSuccess;
     }
 
@@ -796,7 +816,7 @@ public class IccSmsInterfaceManager extends ISms.Stub {
     }
 
     protected void log(String msg) {
-        Log.d(LOG_TAG, "[IccSmsInterfaceManager] " + msg);
+        Rlog.d(LOG_TAG, "[IccSmsInterfaceManager] " + msg);
     }
 
     public boolean isImsSmsSupported() {

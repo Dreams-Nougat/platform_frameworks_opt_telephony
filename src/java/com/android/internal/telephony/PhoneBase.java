@@ -75,7 +75,12 @@ public abstract class PhoneBase extends Handler implements Phone {
     public static final String NETWORK_SELECTION_KEY = "network_selection_key";
     // Key used to read and write the saved network selection operator name
     public static final String NETWORK_SELECTION_NAME_KEY = "network_selection_name_key";
-
+    public static final String NETWORK_SELECTION_KEY_2 = "network_selection_key_2";
+    public static final String NETWORK_SELECTION_NAME_KEY_2 = "network_selection_name_key_2";
+    public static final String NETWORK_SELECTION_KEY_3 = "network_selection_key_3";
+    public static final String NETWORK_SELECTION_NAME_KEY_3 = "network_selection_name_key_3";
+    public static final String NETWORK_SELECTION_KEY_4 = "network_selection_key_4";
+    public static final String NETWORK_SELECTION_NAME_KEY_4 = "network_selection_name_key_4";
 
     // Key used to read/write "disable data connection on boot" pref (used for testing)
     public static final String DATA_DISABLED_ON_BOOT_KEY = "disabled_on_boot_key";
@@ -144,6 +149,9 @@ public abstract class PhoneBase extends Handler implements Phone {
     private final String mName;
     private final String mActionDetached;
     private final String mActionAttached;
+
+
+    protected int mSimId;
 
     @Override
     public String getPhoneName() {
@@ -234,7 +242,11 @@ public abstract class PhoneBase extends Handler implements Phone {
      * @param ci the CommandsInterface
      */
     protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci) {
-        this(name, notifier, context, ci, false);
+        this(name, notifier, context, ci, false, PhoneConstants.SIM_ID_1);
+    }
+
+    protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci, int simId) {
+        this(name, notifier, context, ci, false, simId);
     }
 
     /**
@@ -249,6 +261,12 @@ public abstract class PhoneBase extends Handler implements Phone {
      */
     protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci,
             boolean unitTestMode) {
+        this(name, notifier, context, ci, unitTestMode, PhoneConstants.SIM_ID_1);
+    }
+     
+    protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci,
+            boolean unitTestMode, int simId) {
+        mSimId = simId;
         mName = name;
         mNotifier = notifier;
         mContext = context;
@@ -299,7 +317,7 @@ public abstract class PhoneBase extends Handler implements Phone {
         // Initialize device storage and outgoing SMS usage monitors for SMSDispatchers.
         mSmsStorageMonitor = new SmsStorageMonitor(this);
         mSmsUsageMonitor = new SmsUsageMonitor(context);
-        mUiccController = UiccController.getInstance();
+        mUiccController = UiccController.getInstance(simId);
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
     }
 
@@ -432,8 +450,6 @@ public abstract class PhoneBase extends Handler implements Phone {
     protected void notifyPreciseCallStateChangedP() {
         AsyncResult ar = new AsyncResult(null, this, null);
         mPreciseCallStateRegistrants.notifyRegistrants(ar);
-
-        mNotifier.notifyPreciseCallState(this);
     }
 
     // Inherited documentation suffices.
@@ -1376,11 +1392,6 @@ public abstract class PhoneBase extends Handler implements Phone {
         mNotifier.notifyDataConnectionFailed(this, reason, apnType);
     }
 
-    public void notifyPreciseDataConnectionFailed(String reason, String apnType, String apn,
-            String failCause) {
-        mNotifier.notifyPreciseDataConnectionFailed(this, reason, apnType, apn, failCause);
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -1412,6 +1423,17 @@ public abstract class PhoneBase extends Handler implements Phone {
     public UsimServiceTable getUsimServiceTable() {
         IccRecords r = mIccRecords.get();
         return (r != null) ? r.getUsimServiceTable() : null;
+    }
+
+    public void hangupActiveCall() throws CallStateException {
+    }
+
+    @Override
+    public void setPolicyDataEnable(boolean enabled) {
+    }
+
+    public int getSimId() {
+        return mSimId;
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

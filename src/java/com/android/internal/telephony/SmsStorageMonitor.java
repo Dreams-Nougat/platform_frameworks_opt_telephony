@@ -27,6 +27,9 @@ import android.os.PowerManager;
 import android.provider.Telephony.Sms.Intents;
 import android.telephony.Rlog;
 
+import com.android.internal.telephony.PhoneConstants;
+import android.telephony.SubscriptionManager;
+
 /**
  * Monitors the device and ICC storage, and sends the appropriate events.
  *
@@ -63,6 +66,8 @@ public final class SmsStorageMonitor extends Handler {
      */
     private static final int WAKE_LOCK_TIMEOUT = 5000;
 
+    /** it is use to put in to extra value for SIM_FULL_ACTION and SMS_REJECTED_ACTION */
+    PhoneBase mPhone;
     /**
      * Creates an SmsStorageMonitor and registers for events.
      * @param phone the Phone to use
@@ -70,6 +75,8 @@ public final class SmsStorageMonitor extends Handler {
     public SmsStorageMonitor(PhoneBase phone) {
         mContext = phone.getContext();
         mCi = phone.mCi;
+        /** it is use to put in to extra value for SIM_FULL_ACTION and SMS_REJECTED_ACTION */
+        mPhone = phone;
 
         createWakelock();
 
@@ -138,6 +145,10 @@ public final class SmsStorageMonitor extends Handler {
     private void handleIccFull() {
         // broadcast SIM_FULL intent
         Intent intent = new Intent(Intents.SIM_FULL_ACTION);
+        intent.putExtra(PhoneConstants.SIM_ID_KEY, mPhone.getSimId());
+        long [] subIds = SubscriptionManager.getSubId(mPhone.getSimId());
+        // TODO: Always return the first one. But it may activate second one.
+        intent.putExtra(PhoneConstants.SUB_ID_KEY, subIds[0]);
         mWakeLock.acquire(WAKE_LOCK_TIMEOUT);
         mContext.sendBroadcast(intent, android.Manifest.permission.RECEIVE_SMS);
     }
