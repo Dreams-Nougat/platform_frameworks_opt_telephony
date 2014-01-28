@@ -304,6 +304,16 @@ public final class CdmaCallTracker extends CallTracker {
         }
     }
 
+    void hangupActiveCall() throws CallStateException {
+        if (Phone.DEBUG_PHONE) log("hangupActiveCall");
+
+        if (mForegroundCall.getConnections().size() == 0) {
+            throw new CallStateException("no connections in call");
+        }
+		
+        hangupAllConnections(mForegroundCall);			
+    }
+
     void
     switchWaitingOrHoldingAndActive() throws CallStateException {
         // Should we bother with this check?

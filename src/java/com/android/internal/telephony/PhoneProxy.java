@@ -73,14 +73,14 @@ public class PhoneProxy extends Handler implements Phone {
                 new IccSmsInterfaceManager((PhoneBase) this.mActivePhone);
         mIccPhoneBookInterfaceManagerProxy = new IccPhoneBookInterfaceManagerProxy(
                 phone.getIccPhoneBookInterfaceManager());
-        mPhoneSubInfoProxy = new PhoneSubInfoProxy(phone.getPhoneSubInfo());
+        mPhoneSubInfoProxy = new PhoneSubInfoProxy(phone.getPhoneSubInfo(), phone.getSimId());
         mCommandsInterface = ((PhoneBase)mActivePhone).mCi;
 
         mCommandsInterface.registerForRilConnected(this, EVENT_RIL_CONNECTED, null);
         mCommandsInterface.registerForOn(this, EVENT_RADIO_ON, null);
         mCommandsInterface.registerForVoiceRadioTechChanged(
                              this, EVENT_VOICE_RADIO_TECH_CHANGED, null);
-        mIccCardProxy = new IccCardProxy(phone.getContext(), mCommandsInterface);
+        mIccCardProxy = new IccCardProxy(phone.getContext(), mCommandsInterface, phone.getSimId());
         if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
             // For the purpose of IccCardProxy we only care about the technology family
             mIccCardProxy.setVoiceRadioTech(ServiceState.RIL_RADIO_TECHNOLOGY_UMTS);
@@ -572,6 +572,11 @@ public class PhoneProxy extends Handler implements Phone {
     @Override
     public void rejectCall() throws CallStateException {
         mActivePhone.rejectCall();
+    }
+    
+    @Override
+    public void hangupActiveCall() throws CallStateException {
+        mActivePhone.hangupActiveCall();
     }
 
     @Override
@@ -1186,5 +1191,14 @@ public class PhoneProxy extends Handler implements Phone {
     public void removeReferences() {
         mActivePhone = null;
         mCommandsInterface = null;
+    }
+
+    @Override
+    public void setPolicyDataEnable(boolean enabled) {
+        mActivePhone.setPolicyDataEnable(enabled);
+    }
+
+    public int getSimId() {
+        return mActivePhone.getSimId();
     }
 }

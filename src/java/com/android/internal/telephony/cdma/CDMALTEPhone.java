@@ -70,7 +70,11 @@ public class CDMALTEPhone extends CDMAPhone {
 
     // Constructors
     public CDMALTEPhone(Context context, CommandsInterface ci, PhoneNotifier notifier) {
-        super(context, ci, notifier, false);
+        super(context, ci, notifier, false, PhoneConstants.SIM_ID_1);
+    }
+
+    public CDMALTEPhone(Context context, CommandsInterface ci, PhoneNotifier notifier, int simId) {
+        super(context, ci, notifier, false, simId);
     }
 
     @Override

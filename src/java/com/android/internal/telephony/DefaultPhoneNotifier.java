@@ -27,6 +27,8 @@ import android.telephony.TelephonyManager;
 
 import com.android.internal.telephony.ITelephonyRegistry;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -35,11 +37,32 @@ import java.util.List;
 public class DefaultPhoneNotifier implements PhoneNotifier {
 
     private ITelephonyRegistry mRegistry;
+    private int mSimId;
+    private ArrayList<IDataStateChangedCallback> mDataStateChangedCallbacks
+            = new ArrayList<IDataStateChangedCallback>();
 
     /*package*/
     DefaultPhoneNotifier() {
         mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
                     "telephony.registry"));
+    }
+
+    public DefaultPhoneNotifier(int simId) {
+        mSimId = simId;
+		
+        if (simId == PhoneConstants.SIM_ID_1) {
+            mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
+                        "telephony.registry"));
+        } else if(simId == PhoneConstants.SIM_ID_2){
+            mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
+                        "telephony.registry2"));
+        } else if(simId == PhoneConstants.SIM_ID_3){
+            mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
+                        "telephony.registry3"));
+        } else if(simId == PhoneConstants.SIM_ID_4){
+            mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
+                        "telephony.registry4"));
+        }
     }
 
     @Override
@@ -128,6 +151,18 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
         }
         ServiceState ss = sender.getServiceState();
         if (ss != null) roaming = ss.getRoaming();
+
+        try {
+            notifyDataStateChangeCallback(
+                    state.toString(),
+                    reason,
+                    sender.getActiveApnHost(apnType),
+                    apnType,
+                    sender.isDataConnectivityPossible(apnType),
+                    mSimId);
+        } catch (Exception e) {
+            // callback process is dead
+        }
 
         try {
             mRegistry.notifyDataConnection(
@@ -283,5 +318,30 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
             default:
                 return Phone.DataActivityState.NONE;
         }
+    }
+
+    
+
+    public void registerDataStateChangeCallback(IDataStateChangedCallback callback) {
+        mDataStateChangedCallbacks.add(callback);
+    }
+
+    public void unregisterDataStateChangeCallback(IDataStateChangedCallback callback) {
+        mDataStateChangedCallbacks.remove(callback);
+    }
+
+    private void notifyDataStateChangeCallback(String state, String reason, String apnName,
+            String apnType, boolean unavailable, int simId)
+    {
+        Iterator<IDataStateChangedCallback> iterator = mDataStateChangedCallbacks.iterator();
+        while (iterator.hasNext()) {
+            IDataStateChangedCallback callback = iterator.next();
+            callback.onDataStateChanged(state, reason, apnName, apnType, unavailable, simId);
+        }
+    }
+
+    public interface IDataStateChangedCallback {
+        void onDataStateChanged(String state, String reason, String apnName,
+            String apnType, boolean unavailable, int simId);
     }
 }

@@ -140,14 +140,27 @@ public class CDMAPhone extends PhoneBase {
 
     // Constructors
     public CDMAPhone(Context context, CommandsInterface ci, PhoneNotifier notifier) {
-        super("CDMA", notifier, context, ci, false);
+        super("CDMA", notifier, context, ci, false, PhoneConstants.SIM_ID_1);
+        initSstIcc();
+        init(context, notifier);
+    }
+
+    public CDMAPhone(Context context, CommandsInterface ci, PhoneNotifier notifier, int simId) {
+        super("CDMA", notifier, context, ci, false, simId);
         initSstIcc();
         init(context, notifier);
     }
 
     public CDMAPhone(Context context, CommandsInterface ci, PhoneNotifier notifier,
             boolean unitTestMode) {
-        super("CDMA", notifier, context, ci, unitTestMode);
+        super("CDMA", notifier, context, ci, unitTestMode, PhoneConstants.SIM_ID_1);
+        initSstIcc();
+        init(context, notifier);
+    }
+
+    public CDMAPhone(Context context, CommandsInterface ci, PhoneNotifier notifier,
+            boolean unitTestMode, int simId) {
+        super("CDMA", notifier, context, ci, unitTestMode, simId);
         initSstIcc();
         init(context, notifier);
     }
@@ -440,6 +453,12 @@ public class CDMAPhone extends PhoneBase {
     public void
     rejectCall() throws CallStateException {
         mCT.rejectCall();
+    }
+
+    @Override
+    public void
+    hangupActiveCall() throws CallStateException {
+        mCT.hangupActiveCall();
     }
 
     @Override

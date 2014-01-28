@@ -31,6 +31,7 @@ import android.os.Registrant;
 import android.os.RegistrantList;
 import android.telephony.Rlog;
 import android.view.WindowManager;
+import android.telephony.TelephonyManager;
 
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.PhoneBase;
@@ -78,8 +79,15 @@ public class UiccCard {
     private static final int EVENT_CARD_REMOVED = 13;
     private static final int EVENT_CARD_ADDED = 14;
 
+    private int mSimId;
+    
     public UiccCard(Context c, CommandsInterface ci, IccCardStatus ics) {
-        if (DBG) log("Creating");
+        this(c, ci, ics, TelephonyManager.getDefaultSim());
+    }
+
+    public UiccCard(Context c, CommandsInterface ci, IccCardStatus ics, int simId) {
+        mSimId = simId;
+        if (DBG) log("Creating simId " + simId);
         mCardState = ics.mCardState;
         update(c, ci, ics);
     }
@@ -347,12 +355,16 @@ public class UiccCard {
         }
     }
 
+    public int getSimId() {
+        return mSimId;
+    }
+
     private void log(String msg) {
-        Rlog.d(LOG_TAG, msg);
+        Rlog.d(LOG_TAG, "[SIM " + mSimId + "]" + msg);
     }
 
     private void loge(String msg) {
-        Rlog.e(LOG_TAG, msg);
+        Rlog.e(LOG_TAG, "[SIM " + mSimId + "]" + msg);
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

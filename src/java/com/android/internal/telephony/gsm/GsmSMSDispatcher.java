@@ -65,7 +65,7 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
         super(phone, usageMonitor, imsSMSDispatcher);
         mCi.setOnSmsStatus(this, EVENT_NEW_SMS_STATUS_REPORT, null);
         mGsmInboundSmsHandler = gsmInboundSmsHandler;
-        mUiccController = UiccController.getInstance();
+        mUiccController = UiccController.getInstance(mSimId);
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
         Rlog.d(TAG, "GsmSMSDispatcher created");
     }

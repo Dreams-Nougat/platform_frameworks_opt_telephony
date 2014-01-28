@@ -49,7 +49,13 @@ import com.android.internal.telephony.uicc.UiccController;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 
+import com.android.internal.telephony.PhoneConstants;
 import static com.android.internal.telephony.TelephonyProperties.PROPERTY_SIM_STATE;
+import static com.android.internal.telephony.TelephonyProperties.PROPERTY_SIM_STATE_2;
+import static com.android.internal.telephony.TelephonyProperties.PROPERTY_SIM_STATE_3;
+import static com.android.internal.telephony.TelephonyProperties.PROPERTY_SIM_STATE_4;
+import android.telephony.TelephonyManager;
+
 
 /**
  * @Deprecated use {@link UiccController}.getUiccCard instead.
@@ -103,14 +109,20 @@ public class IccCardProxy extends Handler implements IccCard {
                                         // ACTION_SIM_STATE_CHANGED intents
     private boolean mInitialized = false;
     private State mExternalState = State.UNKNOWN;
+    private int mSimId;
 
     public IccCardProxy(Context context, CommandsInterface ci) {
+        this(context, ci, TelephonyManager.getDefaultSim());
+    }
+
+    public IccCardProxy(Context context, CommandsInterface ci, int simId) {
+        mSimId = simId;
         log("Creating");
         mContext = context;
         mCi = ci;
         mCdmaSSM = CdmaSubscriptionSourceManager.getInstance(context,
                 ci, this, EVENT_CDMA_SUBSCRIPTION_SOURCE_CHANGED, null);
-        mUiccController = UiccController.getInstance();
+        mUiccController = UiccController.getInstance(mSimId);
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
         ci.registerForOn(this,EVENT_RADIO_ON, null);
         ci.registerForOffOrNotAvailable(this, EVENT_RADIO_OFF_OR_UNAVAILABLE, null);
@@ -346,9 +358,9 @@ public class IccCardProxy extends Handler implements IccCard {
             intent.putExtra(PhoneConstants.PHONE_NAME_KEY, "Phone");
             intent.putExtra(IccCardConstants.INTENT_KEY_ICC_STATE, value);
             intent.putExtra(IccCardConstants.INTENT_KEY_LOCKED_REASON, reason);
-
+            intent.putExtra(PhoneConstants.SIM_ID_KEY, mSimId);
             if (DBG) log("Broadcasting intent ACTION_SIM_STATE_CHANGED " +  value
-                    + " reason " + reason);
+                    + " reason " + reason + " sim id " + mSimId);
             ActivityManagerNative.broadcastStickyIntent(intent, READ_PHONE_STATE,
                     UserHandle.USER_ALL);
         }
@@ -398,6 +410,7 @@ public class IccCardProxy extends Handler implements IccCard {
     }
 
     private void setExternalState(State newState) {
+        if (DBG) log("setExternalState(): newState =  " + newState);
         setExternalState(newState, false);
     }
 
@@ -721,12 +734,16 @@ public class IccCardProxy extends Handler implements IccCard {
         }
     }
 
+    public int getSimId() {
+        return mSimId;
+    }
+
     private void log(String s) {
-        Rlog.d(LOG_TAG, s);
+        Rlog.d(LOG_TAG, "[SIM" + (getSimId()+1) + "] "+ s);
     }
 
     private void loge(String msg) {
-        Rlog.e(LOG_TAG, msg);
+        Rlog.e(LOG_TAG, "[SIM" + (getSimId()+1) + "] "+ msg);
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

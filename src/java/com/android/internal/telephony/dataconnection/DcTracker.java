@@ -57,6 +57,7 @@ import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.DctConstants;
 import com.android.internal.telephony.EventLogTags;
 import com.android.internal.telephony.TelephonyIntents;
+import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.gsm.GSMPhone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.RILConstants;
@@ -436,6 +437,11 @@ public final class DcTracker extends DcTrackerBase {
      */
     @Override
     public synchronized int enableApnType(String apnType) {
+        if (PhoneConstants.APN_TYPE_DEFAULT.equals(apnType)) {
+             if (DBG) log("enableApnType: type is default and enable user data");
+            setUserDataEnabled(true);
+        }
+
         ApnContext apnContext = mApnContexts.get(apnType);
         if (apnContext == null || !isApnTypeAvailable(apnType)) {
             if (DBG) log("enableApnType: " + apnType + " is type not available");
@@ -458,12 +464,17 @@ public final class DcTracker extends DcTrackerBase {
     }
 
     @Override
-    public synchronized int disableApnType(String type) {
-        if (DBG) log("disableApnType:" + type);
-        ApnContext apnContext = mApnContexts.get(type);
+    public synchronized int disableApnType(String apnType) {
+        if (DBG) log("disableApnType:" + apnType);
+        if (PhoneConstants.APN_TYPE_DEFAULT.equals(apnType)) {
+             if (DBG) log("disableApnType: type is default and disable user data");
+            setUserDataEnabled(false);
+        }
+
+        ApnContext apnContext = mApnContexts.get(apnType);
 
         if (apnContext != null) {
-            setEnabled(apnTypeToId(type), false);
+            setEnabled(apnTypeToId(apnType), false);
             if (apnContext.getState() != DctConstants.State.IDLE && apnContext.getState()
                     != DctConstants.State.FAILED) {
                 if (DBG) log("diableApnType: return APN_REQUEST_STARTED");
@@ -562,6 +573,13 @@ public final class DcTracker extends DcTrackerBase {
         }
 
         boolean attachedState = mAttached.get();
+        boolean psRestricted = mIsPsRestricted;
+
+        if (SystemProperties.getInt(TelephonyProperties.PROPERTY_SIM_COUNT, 1) > 1) {
+            attachedState = true;
+            psRestricted = false;
+        }
+
         boolean desiredPowerState = mPhone.getServiceStateTracker().getDesiredPowerState();
         IccRecords r = mIccRecords.get();
         boolean recordsLoaded = (r != null) ? r.getRecordsLoaded() : false;
@@ -573,7 +591,7 @@ public final class DcTracker extends DcTrackerBase {
                      mPhone.getServiceStateTracker().isConcurrentVoiceAndDataAllowed()) &&
                     internalDataEnabled &&
                     (!mPhone.getServiceState().getRoaming() || getDataOnRoamingEnabled()) &&
-                    !mIsPsRestricted &&
+                    !psRestricted &&
                     desiredPowerState;
         if (!allowed && DBG) {
             String reason = "";
@@ -1259,6 +1277,7 @@ public final class DcTracker extends DcTrackerBase {
         Intent intent = new Intent(INTENT_RECONNECT_ALARM + "." + apnType);
         intent.putExtra(INTENT_RECONNECT_ALARM_EXTRA_REASON, apnContext.getReason());
         intent.putExtra(INTENT_RECONNECT_ALARM_EXTRA_TYPE, apnType);
+        intent.putExtra(PhoneConstants.SIM_ID_KEY, mPhone.getSimId());
 
         if (DBG) {
             log("startAlarmForReconnect: delay=" + delay + " action=" + intent.getAction()
@@ -1276,6 +1295,7 @@ public final class DcTracker extends DcTrackerBase {
         String apnType = apnContext.getApnType();
         Intent intent = new Intent(INTENT_RESTART_TRYSETUP_ALARM + "." + apnType);
         intent.putExtra(INTENT_RESTART_TRYSETUP_ALARM_EXTRA_TYPE, apnType);
+        intent.putExtra(PhoneConstants.SIM_ID_KEY, mPhone.getSimId());
 
         if (DBG) {
             log("startAlarmForRestartTrySetup: delay=" + delay + " action=" + intent.getAction()
@@ -1300,12 +1320,19 @@ public final class DcTracker extends DcTrackerBase {
     private void onRecordsLoaded() {
         if (DBG) log("onRecordsLoaded: createAllApnList");
         createAllApnList();
-        setInitialAttachApn();
+
+        int dataSim = Settings.Global.getInt(mPhone.getContext().getContentResolver(),
+                Settings.Global.MOBILE_DATA, -1);
+        int simCount = SystemProperties.getInt(TelephonyProperties.PROPERTY_SIM_COUNT, 1);
+
         if (mPhone.mCi.getRadioState().isOn()) {
             if (DBG) log("onRecordsLoaded: notifying data availability");
             notifyOffApnsOfAvailability(Phone.REASON_SIM_LOADED);
         }
-        setupDataOnConnectableApns(Phone.REASON_SIM_LOADED);
+        if (dataSim == mPhone.getSimId() || simCount == 1) {
+            setInitialAttachApn();
+            setupDataOnConnectableApns(Phone.REASON_SIM_LOADED);
+        }
     }
 
     @Override
@@ -1676,6 +1703,7 @@ public final class DcTracker extends DcTrackerBase {
                             TelephonyIntents.ACTION_DATA_CONNECTION_CONNECTED_TO_PROVISIONING_APN);
                     intent.putExtra(PhoneConstants.DATA_APN_KEY, apnContext.getApnSetting().apn);
                     intent.putExtra(PhoneConstants.DATA_APN_TYPE_KEY, apnContext.getApnType());
+                    intent.putExtra(PhoneConstants.SIM_ID_KEY, mPhone.getSimId());
 
                     String apnType = apnContext.getApnType();
                     LinkProperties linkProperties = getLinkProperties(apnType);
@@ -2346,14 +2374,35 @@ public final class DcTracker extends DcTrackerBase {
         }
     }
 
+    //set user data enabled but not trigger setup/cleanup data
+    //for enableApnType and disableApnType
+    private void setUserDataEnabled(boolean enabled) {
+        synchronized (mDataEnabledLock) {
+            final boolean prevEnabled = getAnyDataEnabled();
+            if (mUserDataEnabled != enabled) {
+                mUserDataEnabled = enabled;
+                Settings.Global.putInt(mPhone.getContext().getContentResolver(),
+                        Settings.Global.MOBILE_DATA, enabled ? PhoneConstants.SIM_ID_1 : -1);
+                if (getDataOnRoamingEnabled() == false &&
+                        mPhone.getServiceState().getRoaming() == true) {
+                    if (enabled) {
+                        notifyOffApnsOfAvailability(Phone.REASON_ROAMING_ON);
+                    } else {
+                        notifyOffApnsOfAvailability(Phone.REASON_DATA_DISABLED);
+                    }
+                }
+            }
+        }
+    }
+
     @Override
     protected void log(String s) {
-        Rlog.d(LOG_TAG, s);
+        Rlog.d(LOG_TAG, "[sim" + mPhone.getSimId() + "] " + s);
     }
 
     @Override
     protected void loge(String s) {
-        Rlog.e(LOG_TAG, s);
+        Rlog.e(LOG_TAG, "[sim" + mPhone.getSimId() + "] " + s);
     }
 
     @Override

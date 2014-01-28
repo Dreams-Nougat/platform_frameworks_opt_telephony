@@ -343,13 +343,19 @@ public class GsmConnection extends Connection {
             case CallFailCause.USER_BUSY:
                 return DisconnectCause.BUSY;
 
-            case CallFailCause.NO_CIRCUIT_AVAIL:
             case CallFailCause.TEMPORARY_FAILURE:
-            case CallFailCause.SWITCHING_CONGESTION:
             case CallFailCause.CHANNEL_NOT_AVAIL:
             case CallFailCause.QOS_NOT_AVAIL:
-            case CallFailCause.BEARER_NOT_AVAIL:
                 return DisconnectCause.CONGESTION;
+
+            case CallFailCause.NO_CIRCUIT_AVAIL:
+                return DisconnectCause.NO_CIRCUIT_AVAIL;
+
+            case CallFailCause.SWITCHING_CONGESTION:
+                return DisconnectCause.SWITCHING_CONGESTION;
+
+            case CallFailCause.BEARER_NOT_AVAIL:
+                return DisconnectCause.BEARER_NOT_AVAIL;
 
             case CallFailCause.ACM_LIMIT_EXCEEDED:
                 return DisconnectCause.LIMIT_EXCEEDED;
@@ -362,6 +368,55 @@ public class GsmConnection extends Connection {
 
             case CallFailCause.UNOBTAINABLE_NUMBER:
                 return DisconnectCause.UNOBTAINABLE_NUMBER;
+
+            case CallFailCause.NO_ROUTE_TO_DESTINATION:
+                return DisconnectCause.NO_ROUTE_TO_DESTINATION;
+
+            case CallFailCause.NO_USER_RESPONDING:
+                return DisconnectCause.NO_USER_RESPONDING;
+
+            case CallFailCause.USER_ALERTING_NO_ANSWER:
+                return DisconnectCause.USER_ALERTING_NO_ANSWER;
+
+            case CallFailCause.CALL_REJECTED:
+                return DisconnectCause.CALL_REJECTED;
+
+            case CallFailCause.NORMAL_UNSPECIFIED:
+                return DisconnectCause.NORMAL_UNSPECIFIED;
+
+            case CallFailCause.INVALID_NUMBER_FORMAT:
+                return DisconnectCause.INVALID_NUMBER_FORMAT;
+
+            case CallFailCause.FACILITY_REJECTED:
+                return DisconnectCause.FACILITY_REJECTED;
+
+            case CallFailCause.RESOURCE_UNAVAILABLE:
+                return DisconnectCause.RESOURCE_UNAVAILABLE;
+
+            case CallFailCause.BEARER_NOT_AUTHORIZED:
+                return DisconnectCause.BEARER_NOT_AUTHORIZED;
+
+            case CallFailCause.SERVICE_NOT_AVAILABLE:
+            case CallFailCause.NETWORK_OUT_OF_ORDER:
+                return DisconnectCause.SERVICE_NOT_AVAILABLE;
+
+            case CallFailCause.BEARER_NOT_IMPLEMENT:
+                return DisconnectCause.BEARER_NOT_IMPLEMENT;
+
+            case CallFailCause.FACILITY_NOT_IMPLEMENT:
+                return DisconnectCause.FACILITY_NOT_IMPLEMENT;
+
+            case CallFailCause.RESTRICTED_BEARER_AVAILABLE:
+                return DisconnectCause.RESTRICTED_BEARER_AVAILABLE;
+
+            case CallFailCause.OPTION_NOT_AVAILABLE:
+                return DisconnectCause.OPTION_NOT_AVAILABLE;
+
+            case CallFailCause.INCOMPATIBLE_DESTINATION:
+                return DisconnectCause.INCOMPATIBLE_DESTINATION;
+
+            case CallFailCause.CM_MM_RR_CONNECTION_RELEASE:
+                return DisconnectCause.CM_MM_RR_CONNECTION_RELEASE;
 
             case CallFailCause.ERROR_UNSPECIFIED:
             case CallFailCause.NORMAL_CLEARING:
@@ -626,7 +681,8 @@ public class GsmConnection extends Connection {
         }
 
         if (mPostDialString == null ||
-                mPostDialString.length() <= mNextPostDialChar) {
+                mPostDialString.length() <= mNextPostDialChar ||
+                mDisconnected == true) {
             setPostDialState(PostDialState.COMPLETE);
 
             // notifyMessage.arg1 is 0 on complete

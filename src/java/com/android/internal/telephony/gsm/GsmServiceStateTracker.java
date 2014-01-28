@@ -52,7 +52,9 @@ import android.telephony.gsm.GsmCellLocation;
 import android.text.TextUtils;
 import android.util.EventLog;
 import android.util.TimeUtils;
+import android.telephony.TelephonyManager;
 
+import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.EventLogTags;
@@ -165,6 +167,57 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     static final int PS_NOTIFICATION = 888;  // Id to update and cancel PS restricted
     static final int CS_NOTIFICATION = 999;  // Id to update and cancel CS restricted
 
+    private int mSimId;
+
+    private String[] PROPERTY_ICC_OPERATOR_NUMERIC = {
+        TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC,
+        TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC_2,
+        TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC_3,
+        TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC_4,
+    };
+
+    private String[] PROPERTY_ICC_OPERATOR_ALPHA = {
+        TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA,
+        TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA_2,
+        TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA_3,
+        TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA_4,
+    };
+
+    private String[] PROPERTY_OPERATOR_ALPHA = {
+        TelephonyProperties.PROPERTY_OPERATOR_ALPHA,
+        TelephonyProperties.PROPERTY_OPERATOR_ALPHA_2,
+        TelephonyProperties.PROPERTY_OPERATOR_ALPHA_3,
+        TelephonyProperties.PROPERTY_OPERATOR_ALPHA_4,
+    };
+
+    private String[] PROPERTY_OPERATOR_NUMERIC = {
+        TelephonyProperties.PROPERTY_OPERATOR_NUMERIC,
+        TelephonyProperties.PROPERTY_OPERATOR_NUMERIC_2,
+        TelephonyProperties.PROPERTY_OPERATOR_NUMERIC_3,
+        TelephonyProperties.PROPERTY_OPERATOR_NUMERIC_4,
+    };
+
+    private String[] PROPERTY_OPERATOR_ISO_COUNTRY = {
+        TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY,
+        TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY_2,
+        TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY_3,
+        TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY_4,
+    };
+
+    private String[] PROPERTY_DATA_NETWORK_TYPE = {
+        TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE,
+        TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE_2,
+        TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE_3,
+        TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE_4,
+    };
+
+    private String[] PROPERTY_OPERATOR_ISROAMING = {
+        TelephonyProperties.PROPERTY_OPERATOR_ISROAMING,
+        TelephonyProperties.PROPERTY_OPERATOR_ISROAMING_2,
+        TelephonyProperties.PROPERTY_OPERATOR_ISROAMING_3,
+        TelephonyProperties.PROPERTY_OPERATOR_ISROAMING_4,
+    };
+	
     private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -203,6 +256,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         mPhone = phone;
         mCellLoc = new GsmCellLocation();
         mNewCellLoc = new GsmCellLocation();
+
+        mSimId = phone.getSimId();
 
         PowerManager powerManager =
                 (PowerManager)phone.getContext().getSystemService(Context.POWER_SERVICE);
@@ -565,7 +620,10 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                         showPlmn, plmn, showSpn, spn));
             }
             Intent intent = new Intent(TelephonyIntents.SPN_STRINGS_UPDATED_ACTION);
-            intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
+            intent.putExtra(PhoneConstants.SIM_ID_KEY, mSimId);
+            if (TelephonyManager.from(mPhone.getContext()).getSimCount() == 1) {
+                intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
+            }			
             intent.putExtra(TelephonyIntents.EXTRA_SHOW_SPN, showSpn);
             intent.putExtra(TelephonyIntents.EXTRA_SPN, spn);
             intent.putExtra(TelephonyIntents.EXTRA_SHOW_PLMN, showPlmn);
@@ -758,7 +816,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     }
 
     private void setSignalStrengthDefaultValues() {
-        mSignalStrength = new SignalStrength(true);
+        mSignalStrength = new SignalStrength(mSimId);
     }
 
     /**
@@ -922,7 +980,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         }
 
         if (hasRilDataRadioTechnologyChanged) {
-            mPhone.setSystemProperty(TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE,
+            mPhone.setSystemProperty(PROPERTY_DATA_NETWORK_TYPE[mSimId],
                     ServiceState.rilRadioTechnologyToString(mSS.getRilVoiceRadioTechnology()));
         }
 
@@ -941,17 +999,17 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
 
             updateSpnDisplay();
 
-            mPhone.setSystemProperty(TelephonyProperties.PROPERTY_OPERATOR_ALPHA,
+            mPhone.setSystemProperty(PROPERTY_OPERATOR_ALPHA[mSimId],
                 mSS.getOperatorAlphaLong());
 
             String prevOperatorNumeric =
-                    SystemProperties.get(TelephonyProperties.PROPERTY_OPERATOR_NUMERIC, "");
+                    SystemProperties.get(PROPERTY_OPERATOR_NUMERIC[mSimId], "");
             operatorNumeric = mSS.getOperatorNumeric();
-            mPhone.setSystemProperty(TelephonyProperties.PROPERTY_OPERATOR_NUMERIC, operatorNumeric);
+            mPhone.setSystemProperty(PROPERTY_OPERATOR_NUMERIC[mSimId], operatorNumeric);
 
             if (operatorNumeric == null) {
                 if (DBG) log("operatorNumeric is null");
-                mPhone.setSystemProperty(TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY, "");
+                mPhone.setSystemProperty(PROPERTY_OPERATOR_ISO_COUNTRY[mSimId], "");
                 mGotCountryCode = false;
                 mNitzUpdatedTime = false;
             } else {
@@ -966,7 +1024,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                     loge("pollStateDone: countryCodeForMcc error" + ex);
                 }
 
-                mPhone.setSystemProperty(TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY, iso);
+                mPhone.setSystemProperty(PROPERTY_OPERATOR_ISO_COUNTRY[mSimId], iso);
                 mGotCountryCode = true;
 
                 TimeZone zone = null;
@@ -1065,7 +1123,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 }
             }
 
-            mPhone.setSystemProperty(TelephonyProperties.PROPERTY_OPERATOR_ISROAMING,
+            mPhone.setSystemProperty(PROPERTY_OPERATOR_ISROAMING[mSimId],
                 mSS.getRoaming() ? "true" : "false");
 
             mPhone.notifyServiceStateChanged(mSS);
@@ -1315,7 +1373,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
      * @return true if same operator
      */
     private boolean isSameNamedOperators(ServiceState s) {
-        String spn = SystemProperties.get(TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA, "empty");
+        String spn = SystemProperties.get(PROPERTY_ICC_OPERATOR_ALPHA[mSimId], "empty");
 
         String onsl = s.getOperatorAlphaLong();
         String onss = s.getOperatorAlphaShort();
@@ -1333,8 +1391,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
      * @return true if both are same
      */
     private boolean currentMccEqualsSimMcc(ServiceState s) {
-        String simNumeric = SystemProperties.get(
-                TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, "");
+        String simNumeric = SystemProperties.get(PROPERTY_ICC_OPERATOR_NUMERIC[mSimId], "");
         String operatorNumeric = s.getOperatorNumeric();
         boolean equalsMcc = true;
 
@@ -1544,7 +1601,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 zone = TimeZone.getTimeZone( tzname );
             }
 
-            String iso = SystemProperties.get(TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY);
+            String iso = SystemProperties.get(PROPERTY_OPERATOR_ISO_COUNTRY[mSimId]);
 
             if (zone == null) {
 
@@ -1825,12 +1882,12 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     }
     @Override
     protected void log(String s) {
-        Rlog.d(LOG_TAG, "[GsmSST] " + s);
+        Rlog.d(LOG_TAG, "[GsmSST" + mSimId + "] " + s);
     }
 
     @Override
     protected void loge(String s) {
-        Rlog.e(LOG_TAG, "[GsmSST] " + s);
+        Rlog.e(LOG_TAG, "[GsmSST" + mSimId + "] " + s);
     }
 
     @Override

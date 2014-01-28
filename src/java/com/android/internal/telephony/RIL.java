@@ -73,8 +73,9 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerArray;
 import java.util.Random;
+import java.util.Vector;
 
 /**
  * {@hide}
@@ -84,7 +85,7 @@ class RILRequest {
 
     //***** Class Variables
     static Random sRandom = new Random();
-    static AtomicInteger sNextSerial = new AtomicInteger(0);
+    static AtomicIntegerArray sNextSerial = new AtomicIntegerArray(4);
     private static Object sPoolSync = new Object();
     private static RILRequest sPool = null;
     private static int sPoolSize = 0;
@@ -104,7 +105,7 @@ class RILRequest {
      * @param result sent when operation completes
      * @return a RILRequest instance from the pool.
      */
-    static RILRequest obtain(int request, Message result) {
+    static RILRequest obtain(int request, Message result, int simId) {
         RILRequest rr = null;
 
         synchronized(sPoolSync) {
@@ -120,7 +121,7 @@ class RILRequest {
             rr = new RILRequest();
         }
 
-        rr.mSerial = sNextSerial.getAndIncrement();
+        rr.mSerial = sNextSerial.getAndIncrement(simId);
 
         rr.mRequest = request;
         rr.mResult = result;
@@ -157,10 +158,10 @@ class RILRequest {
     }
 
     static void
-    resetSerial() {
+    resetSerial(int simId) {
         // use a random so that on recovery we probably don't mix old requests
         // with new.
-        sNextSerial.set(sRandom.nextInt());
+        sNextSerial.set(simId, sRandom.nextInt());
     }
 
     String
@@ -256,6 +257,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     static final int RESPONSE_UNSOLICITED = 1;
 
     static final String SOCKET_NAME_RIL = "rild";
+    static final String SOCKET_NAME_RIL_2 = "rild2";
 
     static final int SOCKET_OPEN_RETRY_MILLIS = 4 * 1000;
 
@@ -264,6 +266,20 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     private static final int CDMA_BSI_NO_OF_INTS_STRUCT = 3;
 
     private static final int CDMA_BROADCAST_SMS_NO_OF_SERVICE_CATEGORIES = 31;
+
+    private int mSimId;
+
+    /* DTMF request will be ignored when duplicated sending */
+    private int dtmfRequestCount = 0;
+    private final int MAXIMUM_DTMF_REQUEST = 32;    
+    private int getAvailableNetworkRequests = 0;    
+    private final boolean DTMF_STATUS_START = true;
+    private final boolean DTMF_STATUS_STOP = false;
+    private boolean mDtmfStatus = DTMF_STATUS_STOP;
+    private Vector mDtmfQueue = new Vector(MAXIMUM_DTMF_REQUEST);
+    private RILRequest mPendingCHLDRequest = null;
+    private boolean mIsSendChldRequest = false;
+    private Object mStkPciObject = null;
 
     BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
         @Override
@@ -455,23 +471,35 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
     class RILReceiver implements Runnable {
         byte[] buffer;
+        int mSimId;
 
-        RILReceiver() {
+        RILReceiver(int simId) {
             buffer = new byte[RIL_MAX_COMMAND_BYTES];
+            mSimId = simId;
+        }
+
+        private String getRilSocketName(int simId){
+            if (simId == PhoneConstants.SIM_ID_2) {
+                return SOCKET_NAME_RIL_2;
+            } else {
+                return SOCKET_NAME_RIL;
+            }
         }
 
         @Override
         public void
         run() {
             int retryCount = 0;
+            String socketRil = getRilSocketName(mSimId);
 
             try {for (;;) {
                 LocalSocket s = null;
                 LocalSocketAddress l;
 
+                    socketRil = getRilSocketName(mSimId);
                 try {
                     s = new LocalSocket();
-                    l = new LocalSocketAddress(SOCKET_NAME_RIL,
+                    l = new LocalSocketAddress(socketRil,
                             LocalSocketAddress.Namespace.RESERVED);
                     s.connect(l);
                 } catch (IOException ex){
@@ -488,12 +516,12 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
                     if (retryCount == 8) {
                         Rlog.e (RILJ_LOG_TAG,
-                            "Couldn't find '" + SOCKET_NAME_RIL
+                            "Couldn't find '" + socketRil
                             + "' socket after " + retryCount
                             + " times, continuing to retry silently");
                     } else if (retryCount > 0 && retryCount < 8) {
                         Rlog.i (RILJ_LOG_TAG,
-                            "Couldn't find '" + SOCKET_NAME_RIL
+                            "Couldn't find '" + socketRil
                             + "' socket; retrying after timeout");
                     }
 
@@ -509,7 +537,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 retryCount = 0;
 
                 mSocket = s;
-                Rlog.i(RILJ_LOG_TAG, "Connected to '" + SOCKET_NAME_RIL + "' socket");
+                Rlog.i(RILJ_LOG_TAG, "Connected to '" + socketRil + "' socket");
 
                 int length = 0;
                 try {
@@ -535,14 +563,14 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                         p.recycle();
                     }
                 } catch (java.io.IOException ex) {
-                    Rlog.i(RILJ_LOG_TAG, "'" + SOCKET_NAME_RIL + "' socket closed",
+                    Rlog.i(RILJ_LOG_TAG, "'" + socketRil + "' socket closed",
                           ex);
                 } catch (Throwable tr) {
                     Rlog.e(RILJ_LOG_TAG, "Uncaught exception read length=" + length +
                         "Exception:" + tr.toString());
                 }
 
-                Rlog.i(RILJ_LOG_TAG, "Disconnected from '" + SOCKET_NAME_RIL
+                Rlog.i(RILJ_LOG_TAG, "Disconnected from '" + socketRil
                       + "' socket");
 
                 setRadioState (RadioState.RADIO_UNAVAILABLE);
@@ -553,7 +581,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 }
 
                 mSocket = null;
-                RILRequest.resetSerial();
+                RILRequest.resetSerial(mSimId);
 
                 // Clear request list on close
                 clearRequestList(RADIO_NOT_AVAILABLE, false);
@@ -571,7 +599,12 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     //***** Constructors
 
     public RIL(Context context, int preferredNetworkType, int cdmaSubscription) {
+       this (context, preferredNetworkType, cdmaSubscription, PhoneConstants.SIM_ID_1);
+    }
+
+    public RIL(Context context, int preferredNetworkType, int cdmaSubscription, int simId) {
         super(context);
+        mSimId = simId;
         if (RILJ_LOGD) {
             riljLog("RIL(context, preferredNetworkType=" + preferredNetworkType +
                     " cdmaSubscription=" + cdmaSubscription + ")");
@@ -588,7 +621,15 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 DEFAULT_WAKE_LOCK_TIMEOUT);
         mWakeLockCount = 0;
 
-        mSenderThread = new HandlerThread("RILSender");
+        if (simId == PhoneConstants.SIM_ID_1) {
+            mSenderThread = new HandlerThread("RILSender1");
+        } else if(simId == PhoneConstants.SIM_ID_2){
+            mSenderThread = new HandlerThread("RILSender2");
+        } else if(simId == PhoneConstants.SIM_ID_3){
+            mSenderThread = new HandlerThread("RILSender3");
+        } else if(simId == PhoneConstants.SIM_ID_4){
+            mSenderThread = new HandlerThread("RILSender4");
+        }
         mSenderThread.start();
 
         Looper looper = mSenderThread.getLooper();
@@ -599,11 +640,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         if (cm.isNetworkSupported(ConnectivityManager.TYPE_MOBILE) == false) {
             riljLog("Not starting RILReceiver: wifi-only");
         } else {
-            riljLog("Starting RILReceiver");
-            mReceiver = new RILReceiver();
-            mReceiverThread = new Thread(mReceiver, "RILReceiver");
-            mReceiverThread.start();
-
+            startRilReceiver();
             IntentFilter filter = new IntentFilter();
             filter.addAction(Intent.ACTION_SCREEN_ON);
             filter.addAction(Intent.ACTION_SCREEN_OFF);
@@ -611,11 +648,25 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         }
     }
 
+    public void startRilReceiver() {  /* Aidan: MD workaround */
+        riljLog("Starting RILReceiver");
+        mReceiver = new RILReceiver(mSimId);
+        if (mSimId == PhoneConstants.SIM_ID_1) {
+            mReceiverThread = new Thread(mReceiver, "RILReceiver1");
+        } else if(mSimId == PhoneConstants.SIM_ID_2){
+            mReceiverThread = new Thread(mReceiver, "RILReceiver2");
+        } else if(mSimId == PhoneConstants.SIM_ID_3){
+            mReceiverThread = new Thread(mReceiver, "RILReceiver3");
+        } else if(mSimId == PhoneConstants.SIM_ID_4){
+            mReceiverThread = new Thread(mReceiver, "RILReceiver4");
+        }
+        mReceiverThread.start();
+    }
     //***** CommandsInterface implementation
 
     @Override
     public void getVoiceRadioTechnology(Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_VOICE_RADIO_TECH, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_VOICE_RADIO_TECH, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -624,7 +675,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
 
     public void getImsRegistrationState(Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_IMS_REGISTRATION_STATE, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_IMS_REGISTRATION_STATE, result, mSimId);
 
         if (RILJ_LOGD) {
             riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
@@ -650,7 +701,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     getIccCardStatus(Message result) {
         //Note: This RIL request has not been renamed to ICC,
         //       but this request is also valid for SIM and RUIM
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_SIM_STATUS, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_SIM_STATUS, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -666,7 +717,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     supplyIccPinForApp(String pin, String aid, Message result) {
         //Note: This RIL request has not been renamed to ICC,
         //       but this request is also valid for SIM and RUIM
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_ENTER_SIM_PIN, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_ENTER_SIM_PIN, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -686,7 +737,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     supplyIccPukForApp(String puk, String newPin, String aid, Message result) {
         //Note: This RIL request has not been renamed to ICC,
         //       but this request is also valid for SIM and RUIM
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_ENTER_SIM_PUK, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_ENTER_SIM_PUK, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -707,7 +758,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     supplyIccPin2ForApp(String pin, String aid, Message result) {
         //Note: This RIL request has not been renamed to ICC,
         //       but this request is also valid for SIM and RUIM
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_ENTER_SIM_PIN2, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_ENTER_SIM_PIN2, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -727,7 +778,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     supplyIccPuk2ForApp(String puk, String newPin2, String aid, Message result) {
         //Note: This RIL request has not been renamed to ICC,
         //       but this request is also valid for SIM and RUIM
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_ENTER_SIM_PUK2, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_ENTER_SIM_PUK2, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -748,7 +799,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     changeIccPinForApp(String oldPin, String newPin, String aid, Message result) {
         //Note: This RIL request has not been renamed to ICC,
         //       but this request is also valid for SIM and RUIM
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CHANGE_SIM_PIN, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CHANGE_SIM_PIN, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -769,7 +820,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     changeIccPin2ForApp(String oldPin2, String newPin2, String aid, Message result) {
         //Note: This RIL request has not been renamed to ICC,
         //       but this request is also valid for SIM and RUIM
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CHANGE_SIM_PIN2, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CHANGE_SIM_PIN2, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -784,7 +835,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     changeBarringPassword(String facility, String oldPwd, String newPwd, Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CHANGE_BARRING_PASSWORD, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CHANGE_BARRING_PASSWORD, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -799,7 +850,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     supplyNetworkDepersonalization(String netpin, Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_ENTER_NETWORK_DEPERSONALIZATION, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_ENTER_NETWORK_DEPERSONALIZATION, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -812,7 +863,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     getCurrentCalls (Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_CURRENT_CALLS, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_CURRENT_CALLS, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -828,7 +879,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     getDataCallList(Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_DATA_CALL_LIST, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_DATA_CALL_LIST, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -844,7 +895,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     dial(String address, int clirMode, UUSInfo uusInfo, Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_DIAL, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_DIAL, result, mSimId);
 
         rr.mParcel.writeString(address);
         rr.mParcel.writeInt(clirMode);
@@ -872,7 +923,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     getIMSIForApp(String aid, Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_IMSI, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_IMSI, result, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeString(aid);
@@ -887,7 +938,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     getIMEI(Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_IMEI, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_IMEI, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -897,7 +948,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     getIMEISV(Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_IMEISV, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_IMEISV, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -910,7 +961,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     hangupConnection (int gsmIndex, Message result) {
         if (RILJ_LOGD) riljLog("hangupConnection: gsmIndex=" + gsmIndex);
 
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_HANGUP, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_HANGUP, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest) + " " +
                 gsmIndex);
@@ -925,7 +976,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     hangupWaitingOrBackground (Message result) {
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_HANGUP_WAITING_OR_BACKGROUND,
-                                        result);
+                                        result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -938,7 +989,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         RILRequest rr
                 = RILRequest.obtain(
                         RIL_REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND,
-                                        result);
+                                        result, mSimId);
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
         send(rr);
@@ -950,7 +1001,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         RILRequest rr
                 = RILRequest.obtain(
                         RIL_REQUEST_SWITCH_WAITING_OR_HOLDING_AND_ACTIVE,
-                                        result);
+                                        result, mSimId);
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
         send(rr);
@@ -960,7 +1011,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     conference (Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_CONFERENCE, result);
+                = RILRequest.obtain(RIL_REQUEST_CONFERENCE, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -971,7 +1022,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void setPreferredVoicePrivacy(boolean enable, Message result) {
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_SET_PREFERRED_VOICE_PRIVACY_MODE,
-                result);
+                result, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(enable ? 1:0);
@@ -982,7 +1033,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void getPreferredVoicePrivacy(Message result) {
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_QUERY_PREFERRED_VOICE_PRIVACY_MODE,
-                result);
+                result, mSimId);
         send(rr);
     }
 
@@ -990,7 +1041,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     separateConnection (int gsmIndex, Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SEPARATE_CONNECTION, result);
+                = RILRequest.obtain(RIL_REQUEST_SEPARATE_CONNECTION, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
                             + " " + gsmIndex);
@@ -1005,7 +1056,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     acceptCall (Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_ANSWER, result);
+                = RILRequest.obtain(RIL_REQUEST_ANSWER, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1016,7 +1067,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     rejectCall (Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_UDUB, result);
+                = RILRequest.obtain(RIL_REQUEST_UDUB, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1027,7 +1078,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     explicitCallTransfer (Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_EXPLICIT_CALL_TRANSFER, result);
+                = RILRequest.obtain(RIL_REQUEST_EXPLICIT_CALL_TRANSFER, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1038,7 +1089,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     getLastCallFailCause (Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_LAST_CALL_FAIL_CAUSE, result);
+                = RILRequest.obtain(RIL_REQUEST_LAST_CALL_FAIL_CAUSE, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1062,7 +1113,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     getLastDataCallFailCause (Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_LAST_DATA_CALL_FAIL_CAUSE, result);
+                = RILRequest.obtain(RIL_REQUEST_LAST_DATA_CALL_FAIL_CAUSE, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1073,7 +1124,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     setMute (boolean enableMute, Message response) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SET_MUTE, response);
+                = RILRequest.obtain(RIL_REQUEST_SET_MUTE, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
                             + " " + enableMute);
@@ -1088,7 +1139,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     getMute (Message response) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_GET_MUTE, response);
+                = RILRequest.obtain(RIL_REQUEST_GET_MUTE, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1099,7 +1150,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     getSignalStrength (Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SIGNAL_STRENGTH, result);
+                = RILRequest.obtain(RIL_REQUEST_SIGNAL_STRENGTH, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1110,7 +1161,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     getVoiceRegistrationState (Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_VOICE_REGISTRATION_STATE, result);
+                = RILRequest.obtain(RIL_REQUEST_VOICE_REGISTRATION_STATE, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1121,7 +1172,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     getDataRegistrationState (Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_DATA_REGISTRATION_STATE, result);
+                = RILRequest.obtain(RIL_REQUEST_DATA_REGISTRATION_STATE, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1132,7 +1183,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     getOperator(Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_OPERATOR, result);
+                = RILRequest.obtain(RIL_REQUEST_OPERATOR, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1143,7 +1194,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     sendDtmf(char c, Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_DTMF, result);
+                = RILRequest.obtain(RIL_REQUEST_DTMF, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1155,31 +1206,59 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     startDtmf(char c, Message result) {
-        RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_DTMF_START, result);
-
-        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
-
-        rr.mParcel.writeString(Character.toString(c));
-
-        send(rr);
+        /* DTMF request will be ignored when the count of requests reaches 32 */
+        synchronized (mDtmfQueue) {
+            if (mIsSendChldRequest == false && mDtmfQueue.size() < MAXIMUM_DTMF_REQUEST) {
+                if (mDtmfStatus == DTMF_STATUS_STOP) {
+                    RILRequest rr = RILRequest.obtain(RIL_REQUEST_DTMF_START, result, mSimId);
+                    
+                    rr.mParcel.writeString(Character.toString(c));
+                    mDtmfStatus = DTMF_STATUS_START;
+                    mDtmfQueue.addElement(rr);
+                    if(mDtmfQueue.size() == 1) {
+                        riljLog("send start dtmf");
+                        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+                        send(rr);
+                    }
+                } else {
+                    riljLog("DTMF status conflict, want to start DTMF when status is " + mDtmfStatus);	
+                }
+                //MTK-END [mtk08470][130121][ALPS00446908]MTK added
+            }
+            else {
+                riljLog("reject start DTMF, mIsSendChldRequest = " + mIsSendChldRequest);
+            }
+        }
     }
-
     @Override
     public void
     stopDtmf(Message result) {
-        RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_DTMF_STOP, result);
+        /* DTMF request will be ignored when the count of requests reaches 32 */
+        synchronized (mDtmfQueue) {
+            if (mIsSendChldRequest == false && mDtmfQueue.size() < MAXIMUM_DTMF_REQUEST) {
+                if (mDtmfStatus == DTMF_STATUS_START) {
+                    RILRequest rr = RILRequest.obtain(RIL_REQUEST_DTMF_STOP, result, mSimId);
 
-        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
-
-        send(rr);
+                    mDtmfStatus = DTMF_STATUS_STOP;
+                    mDtmfQueue.addElement(rr);
+                    if(mDtmfQueue.size() == 1) {
+                        riljLog("send stop dtmf");
+                        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+                        send(rr);
+                    }
+                } else {
+                    riljLog("DTMF status conflict, want to start DTMF when status is " + mDtmfStatus);	
+                }
+            }
+            else {
+               riljLog("reject stop DTMF, mIsSendChldRequest = " + mIsSendChldRequest);
+            }
+        }
     }
-
     @Override
     public void
     sendBurstDtmf(String dtmfString, int on, int off, Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_BURST_DTMF, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_BURST_DTMF, result, mSimId);
 
         rr.mParcel.writeInt(3);
         rr.mParcel.writeString(dtmfString);
@@ -1202,7 +1281,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     sendSMS (String smscPDU, String pdu, Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SEND_SMS, result);
+                = RILRequest.obtain(RIL_REQUEST_SEND_SMS, result, mSimId);
 
         constructGsmSendSmsRilRequest(rr, smscPDU, pdu);
 
@@ -1254,7 +1333,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     sendCdmaSms(byte[] pdu, Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_CDMA_SEND_SMS, result);
+                = RILRequest.obtain(RIL_REQUEST_CDMA_SEND_SMS, result, mSimId);
 
         constructCdmaSendSmsRilRequest(rr, pdu);
 
@@ -1266,7 +1345,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     sendImsGsmSms (String smscPDU, String pdu, int retry, int messageRef,
             Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_IMS_SEND_SMS, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_IMS_SEND_SMS, result, mSimId);
 
         rr.mParcel.writeInt(RILConstants.GSM_PHONE);
         rr.mParcel.writeByte((byte)retry);
@@ -1281,7 +1360,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
     public void
     sendImsCdmaSms(byte[] pdu, int retry, int messageRef, Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_IMS_SEND_SMS, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_IMS_SEND_SMS, result, mSimId);
 
         rr.mParcel.writeInt(RILConstants.CDMA_PHONE);
         rr.mParcel.writeByte((byte)retry);
@@ -1297,7 +1376,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void deleteSmsOnSim(int index, Message response) {
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_DELETE_SMS_ON_SIM,
-                response);
+                response, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(index);
@@ -1312,7 +1391,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void deleteSmsOnRuim(int index, Message response) {
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_DELETE_SMS_ON_RUIM,
-                response);
+                response, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(index);
@@ -1329,7 +1408,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         status = translateStatus(status);
 
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_WRITE_SMS_TO_SIM,
-                response);
+                response, mSimId);
 
         rr.mParcel.writeInt(status);
         rr.mParcel.writeString(pdu);
@@ -1347,7 +1426,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         status = translateStatus(status);
 
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_WRITE_SMS_TO_RUIM,
-                response);
+                response, mSimId);
 
         rr.mParcel.writeInt(status);
         rr.mParcel.writeString(pdu);
@@ -1385,7 +1464,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             String user, String password, String authType, String protocol,
             Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SETUP_DATA_CALL, result);
+                = RILRequest.obtain(RIL_REQUEST_SETUP_DATA_CALL, result, mSimId);
 
         rr.mParcel.writeInt(7);
 
@@ -1409,7 +1488,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     deactivateDataCall(int cid, int reason, Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_DEACTIVATE_DATA_CALL, result);
+                = RILRequest.obtain(RIL_REQUEST_DEACTIVATE_DATA_CALL, result, mSimId);
 
         rr.mParcel.writeInt(2);
         rr.mParcel.writeString(Integer.toString(cid));
@@ -1424,7 +1503,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     setRadioPower(boolean on, Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_RADIO_POWER, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_RADIO_POWER, result, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(on ? 1 : 0);
@@ -1441,7 +1520,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     setSuppServiceNotifications(boolean enable, Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SET_SUPP_SVC_NOTIFICATION, result);
+                = RILRequest.obtain(RIL_REQUEST_SET_SUPP_SVC_NOTIFICATION, result, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(enable ? 1 : 0);
@@ -1456,7 +1535,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     acknowledgeLastIncomingGsmSms(boolean success, int cause, Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SMS_ACKNOWLEDGE, result);
+                = RILRequest.obtain(RIL_REQUEST_SMS_ACKNOWLEDGE, result, mSimId);
 
         rr.mParcel.writeInt(2);
         rr.mParcel.writeInt(success ? 1 : 0);
@@ -1472,7 +1551,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     acknowledgeLastIncomingCdmaSms(boolean success, int cause, Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_CDMA_SMS_ACKNOWLEDGE, result);
+                = RILRequest.obtain(RIL_REQUEST_CDMA_SMS_ACKNOWLEDGE, result, mSimId);
 
         rr.mParcel.writeInt(success ? 0 : 1); //RIL_CDMA_SMS_ErrorClass
         // cause code according to X.S004-550E
@@ -1488,7 +1567,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     acknowledgeIncomingGsmSmsWithPdu(boolean success, String ackPdu, Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU, result);
+                = RILRequest.obtain(RIL_REQUEST_ACKNOWLEDGE_INCOMING_GSM_SMS_WITH_PDU, result, mSimId);
 
         rr.mParcel.writeInt(2);
         rr.mParcel.writeString(success ? "1" : "0");
@@ -1513,7 +1592,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         //Note: This RIL request has not been renamed to ICC,
         //       but this request is also valid for SIM and RUIM
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SIM_IO, result);
+                = RILRequest.obtain(RIL_REQUEST_SIM_IO, result, mSimId);
 
         rr.mParcel.writeInt(command);
         rr.mParcel.writeInt(fileid);
@@ -1540,7 +1619,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     getCLIR(Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_GET_CLIR, result);
+                = RILRequest.obtain(RIL_REQUEST_GET_CLIR, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1551,7 +1630,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     setCLIR(int clirMode, Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SET_CLIR, result);
+                = RILRequest.obtain(RIL_REQUEST_SET_CLIR, result, mSimId);
 
         // count ints
         rr.mParcel.writeInt(1);
@@ -1568,7 +1647,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     queryCallWaiting(int serviceClass, Message response) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_QUERY_CALL_WAITING, response);
+                = RILRequest.obtain(RIL_REQUEST_QUERY_CALL_WAITING, response, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(serviceClass);
@@ -1583,7 +1662,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     setCallWaiting(boolean enable, int serviceClass, Message response) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SET_CALL_WAITING, response);
+                = RILRequest.obtain(RIL_REQUEST_SET_CALL_WAITING, response, mSimId);
 
         rr.mParcel.writeInt(2);
         rr.mParcel.writeInt(enable ? 1 : 0);
@@ -1600,7 +1679,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     setNetworkSelectionModeAutomatic(Message response) {
         RILRequest rr
                 = RILRequest.obtain(RIL_REQUEST_SET_NETWORK_SELECTION_AUTOMATIC,
-                                    response);
+                                    response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1612,7 +1691,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     setNetworkSelectionModeManual(String operatorNumeric, Message response) {
         RILRequest rr
                 = RILRequest.obtain(RIL_REQUEST_SET_NETWORK_SELECTION_MANUAL,
-                                    response);
+                                    response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
                     + " " + operatorNumeric);
@@ -1627,7 +1706,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     getNetworkSelectionMode(Message response) {
         RILRequest rr
                 = RILRequest.obtain(RIL_REQUEST_QUERY_NETWORK_SELECTION_MODE,
-                                    response);
+                                    response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1639,7 +1718,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     getAvailableNetworks(Message response) {
         RILRequest rr
                 = RILRequest.obtain(RIL_REQUEST_QUERY_AVAILABLE_NETWORKS,
-                                    response);
+                                    response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1651,7 +1730,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     setCallForward(int action, int cfReason, int serviceClass,
                 String number, int timeSeconds, Message response) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SET_CALL_FORWARD, response);
+                = RILRequest.obtain(RIL_REQUEST_SET_CALL_FORWARD, response, mSimId);
 
         rr.mParcel.writeInt(action);
         rr.mParcel.writeInt(cfReason);
@@ -1672,7 +1751,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     queryCallForwardStatus(int cfReason, int serviceClass,
                 String number, Message response) {
         RILRequest rr
-            = RILRequest.obtain(RIL_REQUEST_QUERY_CALL_FORWARD_STATUS, response);
+            = RILRequest.obtain(RIL_REQUEST_QUERY_CALL_FORWARD_STATUS, response, mSimId);
 
         rr.mParcel.writeInt(2); // 2 is for query action, not in used anyway
         rr.mParcel.writeInt(cfReason);
@@ -1691,7 +1770,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     queryCLIP(Message response) {
         RILRequest rr
-            = RILRequest.obtain(RIL_REQUEST_QUERY_CLIP, response);
+            = RILRequest.obtain(RIL_REQUEST_QUERY_CLIP, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1703,7 +1782,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     getBasebandVersion (Message response) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_BASEBAND_VERSION, response);
+                = RILRequest.obtain(RIL_REQUEST_BASEBAND_VERSION, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1721,7 +1800,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     queryFacilityLockForApp(String facility, String password, int serviceClass, String appId,
                             Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_QUERY_FACILITY_LOCK, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_QUERY_FACILITY_LOCK, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
                                                  + " [" + facility + " " + serviceClass
@@ -1752,7 +1831,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                         int serviceClass, String appId, Message response) {
         String lockString;
          RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SET_FACILITY_LOCK, response);
+                = RILRequest.obtain(RIL_REQUEST_SET_FACILITY_LOCK, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
                                                         + " [" + facility + " " + lockState
@@ -1776,7 +1855,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void
     sendUSSD (String ussdString, Message response) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SEND_USSD, response);
+                = RILRequest.obtain(RIL_REQUEST_SEND_USSD, response, mSimId);
 
         if (RILJ_LOGD) {
             String logUssdString = "*******";
@@ -1794,7 +1873,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void cancelPendingUssd (Message response) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_CANCEL_USSD, response);
+                = RILRequest.obtain(RIL_REQUEST_CANCEL_USSD, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString()
                 + "> " + requestToString(rr.mRequest));
@@ -1806,7 +1885,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void resetRadio(Message result) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_RESET_RADIO, result);
+                = RILRequest.obtain(RIL_REQUEST_RESET_RADIO, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1816,7 +1895,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void invokeOemRilRequestRaw(byte[] data, Message response) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_OEM_HOOK_RAW, response);
+                = RILRequest.obtain(RIL_REQUEST_OEM_HOOK_RAW, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
                + "[" + IccUtils.bytesToHexString(data) + "]");
@@ -1830,7 +1909,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void invokeOemRilRequestStrings(String[] strings, Message response) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_OEM_HOOK_STRINGS, response);
+                = RILRequest.obtain(RIL_REQUEST_OEM_HOOK_STRINGS, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1848,7 +1927,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void setBandMode (int bandMode, Message response) {
         RILRequest rr
-                = RILRequest.obtain(RIL_REQUEST_SET_BAND_MODE, response);
+                = RILRequest.obtain(RIL_REQUEST_SET_BAND_MODE, response, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(bandMode);
@@ -1870,7 +1949,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void queryAvailableBandMode (Message response) {
         RILRequest rr
                 = RILRequest.obtain(RIL_REQUEST_QUERY_AVAILABLE_BAND_MODE,
-                response);
+                response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1883,7 +1962,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void sendTerminalResponse(String contents, Message response) {
         RILRequest rr = RILRequest.obtain(
-                RILConstants.RIL_REQUEST_STK_SEND_TERMINAL_RESPONSE, response);
+                RILConstants.RIL_REQUEST_STK_SEND_TERMINAL_RESPONSE, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1897,7 +1976,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void sendEnvelope(String contents, Message response) {
         RILRequest rr = RILRequest.obtain(
-                RILConstants.RIL_REQUEST_STK_SEND_ENVELOPE_COMMAND, response);
+                RILConstants.RIL_REQUEST_STK_SEND_ENVELOPE_COMMAND, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1911,7 +1990,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void sendEnvelopeWithStatus(String contents, Message response) {
         RILRequest rr = RILRequest.obtain(
-                RILConstants.RIL_REQUEST_STK_SEND_ENVELOPE_WITH_STATUS, response);
+                RILConstants.RIL_REQUEST_STK_SEND_ENVELOPE_WITH_STATUS, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
                 + '[' + contents + ']');
@@ -1929,7 +2008,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
         RILRequest rr = RILRequest.obtain(
             RILConstants.RIL_REQUEST_STK_HANDLE_CALL_SETUP_REQUESTED_FROM_SIM,
-            response);
+            response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1955,7 +2034,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void setPreferredNetworkType(int networkType , Message response) {
         RILRequest rr = RILRequest.obtain(
-                RILConstants.RIL_REQUEST_SET_PREFERRED_NETWORK_TYPE, response);
+                RILConstants.RIL_REQUEST_SET_PREFERRED_NETWORK_TYPE, response, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(networkType);
@@ -1975,7 +2054,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void getPreferredNetworkType(Message response) {
         RILRequest rr = RILRequest.obtain(
-                RILConstants.RIL_REQUEST_GET_PREFERRED_NETWORK_TYPE, response);
+                RILConstants.RIL_REQUEST_GET_PREFERRED_NETWORK_TYPE, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -1988,7 +2067,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void getNeighboringCids(Message response) {
         RILRequest rr = RILRequest.obtain(
-                RILConstants.RIL_REQUEST_GET_NEIGHBORING_CELL_IDS, response);
+                RILConstants.RIL_REQUEST_GET_NEIGHBORING_CELL_IDS, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -2000,7 +2079,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
     @Override
     public void setLocationUpdates(boolean enable, Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SET_LOCATION_UPDATES, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SET_LOCATION_UPDATES, response, mSimId);
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(enable ? 1 : 0);
 
@@ -2015,7 +2094,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
     @Override
     public void getSmscAddress(Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_SMSC_ADDRESS, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_SMSC_ADDRESS, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -2027,7 +2106,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
     @Override
     public void setSmscAddress(String address, Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SET_SMSC_ADDRESS, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SET_SMSC_ADDRESS, result, mSimId);
 
         rr.mParcel.writeString(address);
 
@@ -2042,7 +2121,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
     @Override
     public void reportSmsMemoryStatus(boolean available, Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_REPORT_SMS_MEMORY_STATUS, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_REPORT_SMS_MEMORY_STATUS, result, mSimId);
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(available ? 1 : 0);
 
@@ -2057,7 +2136,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
     @Override
     public void reportStkServiceIsRunning(Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_REPORT_STK_SERVICE_IS_RUNNING, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_REPORT_STK_SERVICE_IS_RUNNING, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -2069,7 +2148,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
     @Override
     public void getGsmBroadcastConfig(Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GSM_GET_BROADCAST_CONFIG, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GSM_GET_BROADCAST_CONFIG, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -2081,7 +2160,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
     @Override
     public void setGsmBroadcastConfig(SmsBroadcastConfigInfo[] config, Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GSM_SET_BROADCAST_CONFIG, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GSM_SET_BROADCAST_CONFIG, response, mSimId);
 
         int numOfConfig = config.length;
         rr.mParcel.writeInt(numOfConfig);
@@ -2110,7 +2189,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
     @Override
     public void setGsmBroadcastActivation(boolean activate, Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GSM_BROADCAST_ACTIVATION, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GSM_BROADCAST_ACTIVATION, response, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(activate ? 0 : 1);
@@ -2123,7 +2202,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     //***** Private Methods
 
     private void sendScreenState(boolean on) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SCREEN_STATE, null);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SCREEN_STATE, null, mSimId);
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(on ? 1 : 0);
 
@@ -2303,6 +2382,27 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             return null;
         }
 
+        /* DTMF request will be ignored when the count of requests reaches 32 */
+        if ((rr.mRequest == RIL_REQUEST_DTMF_START) || 
+            (rr.mRequest == RIL_REQUEST_DTMF_STOP)) {
+            synchronized (mDtmfQueue) {
+                mDtmfQueue.remove(rr);
+                riljLog("remove first item in dtmf queue done, size = " + mDtmfQueue.size());
+                if(mDtmfQueue.size() > 0) {
+                    RILRequest rr2 = (RILRequest)mDtmfQueue.get(0);
+                    if (RILJ_LOGD) riljLog(rr2.serialString() + "> " + requestToString(rr2.mRequest));
+                    send(rr2);
+                } else {
+                    if(mPendingCHLDRequest != null) {
+                        riljLog("send pending switch request");
+                        send(mPendingCHLDRequest);
+                        mIsSendChldRequest = true;
+                        mPendingCHLDRequest = null;
+                    }
+                }
+            }
+        }
+
         Object ret = null;
 
         if (error == 0 || p.dataAvail() > 0) {
@@ -2435,10 +2535,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_REQUEST_SET_INITIAL_ATTACH_APN: ret = responseVoid(p); break;
             case RIL_REQUEST_IMS_REGISTRATION_STATE: ret = responseInts(p); break;
             case RIL_REQUEST_IMS_SEND_SMS: ret =  responseSMS(p); break;
-            case RIL_REQUEST_SIM_TRANSMIT_APDU_BASIC: ret =  responseICC_IO(p); break;
-            case RIL_REQUEST_SIM_OPEN_CHANNEL: ret  = responseInts(p); break;
-            case RIL_REQUEST_SIM_CLOSE_CHANNEL: ret  = responseVoid(p); break;
-            case RIL_REQUEST_SIM_TRANSMIT_APDU_CHANNEL: ret = responseICC_IO(p); break;
+            case RIL_REQUEST_DATA_IDLE: ret = responseVoid(p); break;
             default:
                 throw new RuntimeException("Unrecognized solicited response: " + rr.mRequest);
             //break;
@@ -3744,10 +3841,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_REQUEST_SET_INITIAL_ATTACH_APN: return "RIL_REQUEST_SET_INITIAL_ATTACH_APN";
             case RIL_REQUEST_IMS_REGISTRATION_STATE: return "RIL_REQUEST_IMS_REGISTRATION_STATE";
             case RIL_REQUEST_IMS_SEND_SMS: return "RIL_REQUEST_IMS_SEND_SMS";
-            case RIL_REQUEST_SIM_TRANSMIT_APDU_BASIC: return "RIL_REQUEST_SIM_TRANSMIT_APDU_BASIC";
-            case RIL_REQUEST_SIM_OPEN_CHANNEL: return "RIL_REQUEST_SIM_OPEN_CHANNEL";
-            case RIL_REQUEST_SIM_CLOSE_CHANNEL: return "RIL_REQUEST_SIM_CLOSE_CHANNEL";
-            case RIL_REQUEST_SIM_TRANSMIT_APDU_CHANNEL: return "RIL_REQUEST_SIM_TRANSMIT_APDU_CHANNEL";
+            case RIL_REQUEST_DATA_IDLE: return "RIL_REQUEST_DATA_IDLE";
             default: return "<unknown request>";
         }
     }
@@ -3805,15 +3899,15 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     }
 
     private void riljLog(String msg) {
-        Rlog.d(RILJ_LOG_TAG, msg);
+        Rlog.d(RILJ_LOG_TAG, " RIL(" + mSimId + ") :" + msg);
     }
 
     private void riljLogv(String msg) {
-        Rlog.v(RILJ_LOG_TAG, msg);
+        Rlog.v(RILJ_LOG_TAG, " RIL(" + mSimId + ") :" + msg);
     }
 
     private void unsljLog(int response) {
-        riljLog("[UNSL]< " + responseToString(response));
+        riljLog("[UNSL" + mSimId + "]< " + responseToString(response));
     }
 
     private void unsljLogMore(int response, String more) {
@@ -3833,7 +3927,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     getDeviceIdentity(Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_DEVICE_IDENTITY, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_DEVICE_IDENTITY, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -3843,7 +3937,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     getCDMASubscription(Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_SUBSCRIPTION, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_SUBSCRIPTION, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -3862,7 +3956,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void queryCdmaRoamingPreference(Message response) {
         RILRequest rr = RILRequest.obtain(
-                RILConstants.RIL_REQUEST_CDMA_QUERY_ROAMING_PREFERENCE, response);
+                RILConstants.RIL_REQUEST_CDMA_QUERY_ROAMING_PREFERENCE, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -3875,7 +3969,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void setCdmaRoamingPreference(int cdmaRoamingType, Message response) {
         RILRequest rr = RILRequest.obtain(
-                RILConstants.RIL_REQUEST_CDMA_SET_ROAMING_PREFERENCE, response);
+                RILConstants.RIL_REQUEST_CDMA_SET_ROAMING_PREFERENCE, response, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(cdmaRoamingType);
@@ -3892,7 +3986,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void setCdmaSubscriptionSource(int cdmaSubscription , Message response) {
         RILRequest rr = RILRequest.obtain(
-                RILConstants.RIL_REQUEST_CDMA_SET_SUBSCRIPTION_SOURCE, response);
+                RILConstants.RIL_REQUEST_CDMA_SET_SUBSCRIPTION_SOURCE, response, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(cdmaSubscription);
@@ -3909,7 +4003,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void getCdmaSubscriptionSource(Message response) {
         RILRequest rr = RILRequest.obtain(
-                RILConstants.RIL_REQUEST_CDMA_GET_SUBSCRIPTION_SOURCE, response);
+                RILConstants.RIL_REQUEST_CDMA_GET_SUBSCRIPTION_SOURCE, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -3922,7 +4016,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void queryTTYMode(Message response) {
         RILRequest rr = RILRequest.obtain(
-                RILConstants.RIL_REQUEST_QUERY_TTY_MODE, response);
+                RILConstants.RIL_REQUEST_QUERY_TTY_MODE, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -3935,7 +4029,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void setTTYMode(int ttyMode, Message response) {
         RILRequest rr = RILRequest.obtain(
-                RILConstants.RIL_REQUEST_SET_TTY_MODE, response);
+                RILConstants.RIL_REQUEST_SET_TTY_MODE, response, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(ttyMode);
@@ -3952,7 +4046,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void
     sendCDMAFeatureCode(String FeatureCode, Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_FLASH, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_FLASH, response, mSimId);
 
         rr.mParcel.writeString(FeatureCode);
 
@@ -3964,14 +4058,14 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
     @Override
     public void getCdmaBroadcastConfig(Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_GET_BROADCAST_CONFIG, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_GET_BROADCAST_CONFIG, response, mSimId);
 
         send(rr);
     }
 
     @Override
     public void setCdmaBroadcastConfig(CdmaSmsBroadcastConfigInfo[] configs, Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_SET_BROADCAST_CONFIG, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_SET_BROADCAST_CONFIG, response, mSimId);
 
         // Convert to 1 service category per config (the way RIL takes is)
         ArrayList<CdmaSmsBroadcastConfigInfo> processedConfigs =
@@ -4006,7 +4100,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
     @Override
     public void setCdmaBroadcastActivation(boolean activate, Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_BROADCAST_ACTIVATION, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_CDMA_BROADCAST_ACTIVATION, response, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(activate ? 0 :1);
@@ -4021,7 +4115,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
     @Override
     public void exitEmergencyCallbackMode(Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_EXIT_EMERGENCY_CALLBACK_MODE, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_EXIT_EMERGENCY_CALLBACK_MODE, response, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -4030,7 +4124,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
     @Override
     public void requestIsimAuthentication(String nonce, Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_ISIM_AUTHENTICATION, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_ISIM_AUTHENTICATION, response, mSimId);
 
         rr.mParcel.writeString(nonce);
 
@@ -4044,7 +4138,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
     @Override
     public void getCellInfoList(Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_CELL_INFO_LIST, result);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_CELL_INFO_LIST, result, mSimId);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -4057,7 +4151,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     @Override
     public void setCellInfoListRate(int rateInMillis, Message response) {
         if (RILJ_LOGD) riljLog("setCellInfoListRate: " + rateInMillis);
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SET_UNSOL_CELL_INFO_LIST_RATE, response);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SET_UNSOL_CELL_INFO_LIST_RATE, response, mSimId);
 
         rr.mParcel.writeInt(1);
         rr.mParcel.writeInt(rateInMillis);
@@ -4069,7 +4163,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
     public void setInitialAttachApn(String apn, String protocol, int authType, String username,
             String password, Message result) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SET_INITIAL_ATTACH_APN, null);
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SET_INITIAL_ATTACH_APN, null, mSimId);
 
         if (RILJ_LOGD) riljLog("Set RIL_REQUEST_SET_INITIAL_ATTACH_APN");
 
@@ -4093,6 +4187,14 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     public void testingEmergencyCall() {
         if (RILJ_LOGD) riljLog("testingEmergencyCall");
         mTestingEmergencyCall.set(true);
+    }
+
+    @Override
+    public void requestDataIdle(Message result) {
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_DATA_IDLE, result, mSimId);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+        send(rr);
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
@@ -4119,80 +4221,54 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         pw.println(" mTestingEmergencyCall=" + mTestingEmergencyCall.get());
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void iccOpenLogicalChannel(String AID, Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SIM_OPEN_CHANNEL, response);
-        rr.mParcel.writeString(AID);
-
-        if (RILJ_LOGD)
-            riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
-
-        send(rr);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void iccCloseLogicalChannel(int channel, Message response) {
-        RILRequest rr = RILRequest.obtain(RIL_REQUEST_SIM_CLOSE_CHANNEL, response);
-        rr.mParcel.writeInt(1);
-        rr.mParcel.writeInt(channel);
-
-        if (RILJ_LOGD)
-            riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
-
-        send(rr);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void iccTransmitApduLogicalChannel(int channel, int cla, int instruction,
-            int p1, int p2, int p3, String data, Message response) {
-        if (channel <= 0) {
-            throw new RuntimeException(
-                "Invalid channel in iccTransmitApduLogicalChannel: " + channel);
-        }
-
-        iccTransmitApduHelper(channel, cla, instruction, p1, p2, p3, data, response);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void iccTransmitApduBasicChannel(int cla, int instruction, int p1, int p2,
-            int p3, String data, Message response) {
-        iccTransmitApduHelper(0, cla, instruction, p1, p2, p3, data, response);
-    }
-
     /*
-     * Helper function for the iccTransmitApdu* commands above.
+     * to protect modem status we need to avoid two case : 
+     * 1. DTMF start -> CHLD request -> DTMF stop 
+     * 2. CHLD request -> DTMF request
      */
-    private void iccTransmitApduHelper(int channel, int cla, int instruction,
-            int p1, int p2, int p3, String data, Message response) {
-        RILRequest rr;
-        if (channel == 0)
-            rr = RILRequest.obtain(RIL_REQUEST_SIM_TRANSMIT_APDU_BASIC, response);
-        else
-            rr = RILRequest.obtain(RIL_REQUEST_SIM_TRANSMIT_APDU_CHANNEL, response);
-
-        rr.mParcel.writeInt(channel);
-        rr.mParcel.writeInt(cla);
-        rr.mParcel.writeInt(instruction);
-        rr.mParcel.writeInt(p1);
-        rr.mParcel.writeInt(p2);
-        rr.mParcel.writeInt(p3);
-        rr.mParcel.writeString(data);
-
-        if (RILJ_LOGD)
-            riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
-
-        send(rr);
+    private void handleChldRelatedRequest(RILRequest rr) {
+        synchronized (mDtmfQueue) { 
+            int queueSize = mDtmfQueue.size();
+            int i,j;
+            if(queueSize > 0) {
+                RILRequest rr2 = (RILRequest)mDtmfQueue.get(0);
+                if(rr2.mRequest == RIL_REQUEST_DTMF_START) {
+                    // need to send the STOP command
+                    if (RILJ_LOGD) riljLog("DTMF queue isn't 0, first request is START, send stop dtmf and pending switch");
+                    if(queueSize > 1) {
+                        j = 2;
+                    } else {
+                        // need to create a new STOP command
+                        j = 1;
+                    }
+                    if (RILJ_LOGD) riljLog("queue size  "+ mDtmfQueue.size());
+                    
+                    for(i = queueSize-1; i >= j; i--) {
+                        mDtmfQueue.removeElementAt(i);
+                    }
+                    if (RILJ_LOGD) riljLog("queue size  after "+ mDtmfQueue.size());
+                    if(mDtmfQueue.size() == 1) { // only start command, we need to add stop command
+                        RILRequest rr3 = RILRequest.obtain(RIL_REQUEST_DTMF_STOP, null, mSimId);
+                        if (RILJ_LOGD) riljLog("add dummy stop dtmf request");
+                        mDtmfStatus = DTMF_STATUS_STOP;
+                        mDtmfQueue.addElement(rr3);
+                    }
+                } 
+                else {
+                    // first request is STOP, just remove it and send switch
+                    if (RILJ_LOGD) riljLog("DTMF queue isn't 0, first request is STOP, penging switch");
+                    j = 1;
+                    for(i = queueSize; i >= j; i--) {
+                        mDtmfQueue.removeElementAt(i);
+                    }
+                }
+                mPendingCHLDRequest = rr;
+            } else {
+                if (RILJ_LOGD) riljLog("DTMF queue is 0, send switch Immediately");
+                mIsSendChldRequest = true;
+                send(rr);
+            }
+        }
     }
+
 }

@@ -181,11 +181,14 @@ public class SIMRecords extends IccRecords {
         "405931", "405932", "502142", "502143", "502145", "502146", "502147", "502148"
     };
 
+    private int mSimId;
     // ***** Constructor
 
     public SIMRecords(UiccCardApplication app, Context c, CommandsInterface ci) {
         super(app, c, ci);
 
+        mSimId = app.getSimId();
+        if(DBG) log("SIMRecords construct");
         mAdnCache = new AdnRecordCache(mFh);
 
         mVmConfig = new VoiceMailConstants();
@@ -1677,20 +1680,20 @@ public class SIMRecords extends IccRecords {
 
     @Override
     protected void log(String s) {
-        Rlog.d(LOG_TAG, "[SIMRecords] " + s);
+        Rlog.d(LOG_TAG, "[SIMRecords] [SIM" + mSimId + "]" + s);
     }
 
     @Override
     protected void loge(String s) {
-        Rlog.e(LOG_TAG, "[SIMRecords] " + s);
+        Rlog.e(LOG_TAG, "[SIMRecords] [SIM" + mSimId + "]"  + s);
     }
 
     protected void logw(String s, Throwable tr) {
-        Rlog.w(LOG_TAG, "[SIMRecords] " + s, tr);
+        Rlog.w(LOG_TAG, "[SIMRecords] [SIM" + mSimId + "]" + s, tr);
     }
 
     protected void logv(String s) {
-        Rlog.v(LOG_TAG, "[SIMRecords] " + s);
+        Rlog.v(LOG_TAG, "[SIMRecords] [SIM" + mSimId + "]"  + s);
     }
 
     /**
