@@ -18,7 +18,7 @@ package com.android.internal.telephony;
 
 import android.os.ServiceManager;
 import com.android.internal.telephony.uicc.AdnRecord;
-
+import android.telephony.TelephonyManager;
 
 import java.util.List;
 
@@ -32,9 +32,29 @@ public class IccPhoneBookInterfaceManagerProxy extends IIccPhoneBook.Stub {
 
     public IccPhoneBookInterfaceManagerProxy(IccPhoneBookInterfaceManager
             iccPhoneBookInterfaceManager) {
+        this(iccPhoneBookInterfaceManager, TelephonyManager.getDefault().getDefaultSim());
+    }
+
+    public IccPhoneBookInterfaceManagerProxy(IccPhoneBookInterfaceManager
+            iccPhoneBookInterfaceManager, int simId) {
         mIccPhoneBookInterfaceManager = iccPhoneBookInterfaceManager;
-        if(ServiceManager.getService("simphonebook") == null) {
-            ServiceManager.addService("simphonebook", this);
+
+        if (PhoneConstants.SIM_ID_1 == simId) {
+            if (ServiceManager.getService("simphonebook") == null) {
+                ServiceManager.addService("simphonebook", this);
+            }
+        } else if (PhoneConstants.SIM_ID_2 == simId){
+            if (ServiceManager.getService("simphonebook2") == null) {
+                ServiceManager.addService("simphonebook2", this);
+            }
+        } else if (PhoneConstants.SIM_ID_3 == simId){
+            if (ServiceManager.getService("simphonebook3") == null) {
+                ServiceManager.addService("simphonebook3", this);
+            }
+        } else {
+            if (ServiceManager.getService("simphonebook4") == null) {
+                ServiceManager.addService("simphonebook4", this);
+            }
         }
     }
 

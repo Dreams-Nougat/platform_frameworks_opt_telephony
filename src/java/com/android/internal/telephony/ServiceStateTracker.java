@@ -38,6 +38,7 @@ import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppState;
 import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.UiccCardApplication;
 import com.android.internal.telephony.uicc.UiccController;
+import android.telephony.TelephonyManager;
 
 /**
  * {@hide}
@@ -57,8 +58,8 @@ public abstract class ServiceStateTracker extends Handler {
 
     protected boolean mVoiceCapable;
 
-    public ServiceState mSS = new ServiceState();
-    protected ServiceState mNewSS = new ServiceState();
+    public ServiceState mSS;
+    protected ServiceState mNewSS;
 
     private static final long LAST_CELL_INFO_LIST_MAX_AGE_MS = 2000;
     protected long mLastCellInfoListTime;
@@ -68,7 +69,7 @@ public abstract class ServiceStateTracker extends Handler {
     // so we don't want the reference to change.
     protected final CellInfo mCellInfo;
 
-    protected SignalStrength mSignalStrength = new SignalStrength();
+    protected SignalStrength mSignalStrength;
 
     // TODO - this should not be public, right now used externally GsmConnetion.
     public RestrictedState mRestrictedState = new RestrictedState();
@@ -199,15 +200,23 @@ public abstract class ServiceStateTracker extends Handler {
     protected static final String REGISTRATION_DENIED_AUTH = "Authentication Failure";
 
     protected ServiceStateTracker(PhoneBase phoneBase, CommandsInterface ci, CellInfo cellInfo) {
+        this(phoneBase,ci,cellInfo,TelephonyManager.getDefaultSim());
+    }
+
+    protected ServiceStateTracker(PhoneBase phoneBase, CommandsInterface ci, CellInfo cellInfo, int mSimId) {
         mPhoneBase = phoneBase;
         mCellInfo = cellInfo;
         mCi = ci;
         mVoiceCapable = mPhoneBase.getContext().getResources().getBoolean(
                 com.android.internal.R.bool.config_voice_capable);
-        mUiccController = UiccController.getInstance();
+        mUiccController = UiccController.getInstance(phoneBase.getSimId());
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
         mCi.setOnSignalStrengthUpdate(this, EVENT_SIGNAL_STRENGTH_UPDATE, null);
         mCi.registerForCellInfoList(this, EVENT_UNSOL_CELL_INFO_LIST, null);
+
+        mSignalStrength = new SignalStrength(mSimId);
+        mSS = new ServiceState(mSimId);
+        mNewSS = new ServiceState(mSimId);
 
         mPhoneBase.setSystemProperty(TelephonyProperties.PROPERTY_DATA_NETWORK_TYPE,
             ServiceState.rilRadioTechnologyToString(ServiceState.RIL_RADIO_TECHNOLOGY_UNKNOWN));
@@ -631,7 +640,8 @@ public abstract class ServiceStateTracker extends Handler {
             mSignalStrength.setGsm(isGsm);
         } else {
             log("onSignalStrengthResult() Exception from RIL : " + ar.exception);
-            mSignalStrength = new SignalStrength(isGsm);
+			
+            mSignalStrength = new SignalStrength(isGsm,mSignalStrength.getSimId());
         }
 
         return notifySignalStrength();

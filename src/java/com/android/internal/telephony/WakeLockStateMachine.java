@@ -27,6 +27,8 @@ import android.telephony.Rlog;
 import com.android.internal.util.State;
 import com.android.internal.util.StateMachine;
 
+import com.android.internal.telephony.PhoneConstants;
+
 /**
  * Generic state machine for handling messages and waiting for ordered broadcasts to complete.
  * Subclasses implement {@link #handleSmsMessage}, which returns true to transition into waiting
@@ -61,6 +63,7 @@ public abstract class WakeLockStateMachine extends StateMachine {
     private final IdleState mIdleState = new IdleState();
     private final WaitingState mWaitingState = new WaitingState();
 
+    protected int mSimId = PhoneConstants.SIM_ID_1;
     protected WakeLockStateMachine(String debugTag, Context context, PhoneBase phone) {
         super(debugTag);
 
@@ -75,6 +78,11 @@ public abstract class WakeLockStateMachine extends StateMachine {
         addState(mIdleState, mDefaultState);
         addState(mWaitingState, mDefaultState);
         setInitialState(mIdleState);
+
+        if (phone != null) {
+            // CDMA may not pass phone object to parent class
+            mSimId = phone.getSimId();
+        }
     }
 
     public void updatePhoneObject(PhoneBase phone) {

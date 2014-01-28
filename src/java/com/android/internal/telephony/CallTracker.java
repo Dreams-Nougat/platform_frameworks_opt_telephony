@@ -63,6 +63,9 @@ public abstract class CallTracker extends Handler {
     protected static final int EVENT_CALL_WAITING_INFO_CDMA        = 15;
     protected static final int EVENT_THREE_WAY_DIAL_L2_RESULT_CDMA = 16;
 
+    protected static final int EVENT_HANG_UP_RESULT                = 17;
+    protected static final int EVENT_DIAL_CALL_RESULT              = 18;
+    protected static final int EVENT_RADIO_OFF_OR_NOT_AVAILABLE    = 19;
     protected void pollCallsWhenSafe() {
         mNeedsPoll = true;
 

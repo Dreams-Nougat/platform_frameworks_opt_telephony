@@ -97,8 +97,10 @@ public final class RuimRecords extends IccRecords {
 
     private static final int EVENT_RUIM_REFRESH = 31;
 
+    private int mSimId;
     public RuimRecords(UiccCardApplication app, Context c, CommandsInterface ci) {
         super(app, c, ci);
+        mSimId = app.getSimId();
 
         mAdnCache = new AdnRecordCache(mFh);
 

@@ -26,8 +26,10 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.text.TextUtils;
 import android.telephony.Rlog;
+import android.telephony.TelephonyManager;
 
 import java.util.List;
+import com.android.internal.telephony.PhoneConstants;
 
 import com.android.internal.telephony.IIccPhoneBook;
 import com.android.internal.telephony.uicc.AdnRecord;
@@ -52,6 +54,18 @@ public class IccProvider extends ContentProvider {
     private static final int ADN = 1;
     private static final int FDN = 2;
     private static final int SDN = 3;
+    private static final int ADN1 = 101;
+    private static final int FDN1 = 102;
+    private static final int SDN1 = 103;
+    private static final int ADN2 = 201;
+    private static final int FDN2 = 202;
+    private static final int SDN2 = 203;
+    private static final int ADN3 = 301;
+    private static final int FDN3 = 302;
+    private static final int SDN3 = 303;
+    private static final int ADN4 = 401;
+    private static final int FDN4 = 402;
+    private static final int SDN4 = 403;
 
     private static final String STR_TAG = "tag";
     private static final String STR_NUMBER = "number";
@@ -65,6 +79,18 @@ public class IccProvider extends ContentProvider {
         URL_MATCHER.addURI("icc", "adn", ADN);
         URL_MATCHER.addURI("icc", "fdn", FDN);
         URL_MATCHER.addURI("icc", "sdn", SDN);
+        URL_MATCHER.addURI("icc", "adn1", ADN1);
+        URL_MATCHER.addURI("icc", "fdn1", FDN1);
+        URL_MATCHER.addURI("icc", "sdn1", SDN1);
+        URL_MATCHER.addURI("icc", "adn2", ADN2);
+        URL_MATCHER.addURI("icc", "fdn2", FDN2);
+        URL_MATCHER.addURI("icc", "sdn2", SDN2);
+        URL_MATCHER.addURI("icc", "adn3", ADN3);
+        URL_MATCHER.addURI("icc", "fdn3", FDN3);
+        URL_MATCHER.addURI("icc", "sdn3", SDN3);
+        URL_MATCHER.addURI("icc", "adn4", ADN4);
+        URL_MATCHER.addURI("icc", "fdn4", FDN4);
+        URL_MATCHER.addURI("icc", "sdn4", SDN4);
     }
 
 
@@ -76,27 +102,33 @@ public class IccProvider extends ContentProvider {
     @Override
     public Cursor query(Uri url, String[] projection, String selection,
             String[] selectionArgs, String sort) {
-        switch (URL_MATCHER.match(url)) {
-            case ADN:
-                return loadFromEf(IccConstants.EF_ADN);
-
-            case FDN:
-                return loadFromEf(IccConstants.EF_FDN);
-
-            case SDN:
-                return loadFromEf(IccConstants.EF_SDN);
-
-            default:
-                throw new IllegalArgumentException("Unknown URL " + url);
-        }
+        int efType;
+        int simId;
+        int match = URL_MATCHER.match(url);
+        efType = getRequestType(match);
+        simId = getRequestSim(match);
+        Cursor results = loadFromEf(efType, simId);
+        return results;
     }
 
     @Override
     public String getType(Uri url) {
         switch (URL_MATCHER.match(url)) {
             case ADN:
+            case ADN1:
+            case ADN2:
+            case ADN3:
+            case ADN4:
             case FDN:
+            case FDN1:
+            case FDN2:
+            case FDN3:
+            case FDN4:
             case SDN:
+            case SDN1:
+            case SDN2:
+            case SDN3:
+            case SDN4:
                 return "vnd.android.cursor.dir/sim-contact";
 
             default:
@@ -109,29 +141,30 @@ public class IccProvider extends ContentProvider {
         Uri resultUri;
         int efType;
         String pin2 = null;
+        int simId;
 
         if (DBG) log("insert");
 
         int match = URL_MATCHER.match(url);
+        efType = getRequestType(match);
+        simId = getRequestSim(match);
         switch (match) {
-            case ADN:
-                efType = IccConstants.EF_ADN;
-                break;
-
             case FDN:
-                efType = IccConstants.EF_FDN;
+            case FDN1:
+            case FDN2:
+            case FDN3:
+            case FDN4:
                 pin2 = initialValues.getAsString("pin2");
                 break;
 
             default:
-                throw new UnsupportedOperationException(
-                        "Cannot insert into URL: " + url);
+                break;
         }
 
         String tag = initialValues.getAsString("tag");
         String number = initialValues.getAsString("number");
         // TODO(): Read email instead of sending null.
-        boolean success = addIccRecordToEf(efType, tag, number, null, pin2);
+        boolean success = addIccRecordToEf(efType, tag, number, null, pin2, simId);
 
         if (!success) {
             return null;
@@ -142,9 +175,32 @@ public class IccProvider extends ContentProvider {
             case ADN:
                 buf.append("adn/");
                 break;
-
+            case ADN1:
+                buf.append("adn1/");
+                break;
+            case ADN2:
+                buf.append("adn2/");
+                break;
+            case ADN3:
+                buf.append("adn3/");
+                break;
+            case ADN4:
+                buf.append("adn4/");
+                break;
             case FDN:
                 buf.append("fdn/");
+                break;
+            case FDN1:
+                buf.append("fdn1/");
+                break;
+            case FDN2:
+                buf.append("fdn2/");
+                break;
+            case FDN3:
+                buf.append("fdn3/");
+                break;
+            case FDN4:
+                buf.append("fdn4/");
                 break;
         }
 
@@ -176,23 +232,13 @@ public class IccProvider extends ContentProvider {
     @Override
     public int delete(Uri url, String where, String[] whereArgs) {
         int efType;
+        int simId;
 
         if (DBG) log("delete");
 
         int match = URL_MATCHER.match(url);
-        switch (match) {
-            case ADN:
-                efType = IccConstants.EF_ADN;
-                break;
-
-            case FDN:
-                efType = IccConstants.EF_FDN;
-                break;
-
-            default:
-                throw new UnsupportedOperationException(
-                        "Cannot insert into URL: " + url);
-        }
+        efType = getRequestType(match);
+        simId = getRequestSim(match);
 
         // parse where clause
         String tag = null;
@@ -232,7 +278,7 @@ public class IccProvider extends ContentProvider {
             return 0;
         }
 
-        boolean success = deleteIccRecordFromEf(efType, tag, number, emails, pin2);
+        boolean success = deleteIccRecordFromEf(efType, tag, number, emails, pin2, simId);
         if (!success) {
             return 0;
         }
@@ -244,23 +290,24 @@ public class IccProvider extends ContentProvider {
     public int update(Uri url, ContentValues values, String where, String[] whereArgs) {
         int efType;
         String pin2 = null;
+        int simId;
 
         if (DBG) log("update");
 
         int match = URL_MATCHER.match(url);
+        efType = getRequestType(match);
+        simId = getRequestSim(match);
         switch (match) {
-            case ADN:
-                efType = IccConstants.EF_ADN;
-                break;
-
             case FDN:
-                efType = IccConstants.EF_FDN;
+            case FDN1:
+            case FDN2:
+            case FDN3:
+            case FDN4:
                 pin2 = values.getAsString("pin2");
                 break;
 
             default:
-                throw new UnsupportedOperationException(
-                        "Cannot insert into URL: " + url);
+                break;
         }
 
         String tag = values.getAsString("tag");
@@ -271,7 +318,7 @@ public class IccProvider extends ContentProvider {
         String[] newEmails = null;
         // TODO(): Update for email.
         boolean success = updateIccRecordInEf(efType, tag, number,
-                newTag, newNumber, pin2);
+                newTag, newNumber, pin2, simId);
 
         if (!success) {
             return 0;
@@ -280,13 +327,12 @@ public class IccProvider extends ContentProvider {
         return 1;
     }
 
-    private MatrixCursor loadFromEf(int efType) {
+    private MatrixCursor loadFromEf(int efType, int simId) {
         if (DBG) log("loadFromEf: efType=" + efType);
 
         List<AdnRecord> adnRecords = null;
         try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
+            IIccPhoneBook iccIpb = getIccPhbService(simId);
             if (iccIpb != null) {
                 adnRecords = iccIpb.getAdnRecordsInEf(efType);
             }
@@ -313,9 +359,9 @@ public class IccProvider extends ContentProvider {
     }
 
     private boolean
-    addIccRecordToEf(int efType, String name, String number, String[] emails, String pin2) {
+    addIccRecordToEf(int efType, String name, String number, String[] emails, String pin2, int simId) {
         if (DBG) log("addIccRecordToEf: efType=" + efType + ", name=" + name +
-                ", number=" + number + ", emails=" + emails);
+                ", number=" + number + ", emails=" + emails + ", simId=" + simId);
 
         boolean success = false;
 
@@ -325,8 +371,7 @@ public class IccProvider extends ContentProvider {
         // hopefully, we can remove this requirement.
 
         try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
+            IIccPhoneBook iccIpb = getIccPhbService(simId);
             if (iccIpb != null) {
                 success = iccIpb.updateAdnRecordsInEfBySearch(efType, "", "",
                         name, number, pin2);
@@ -342,15 +387,14 @@ public class IccProvider extends ContentProvider {
 
     private boolean
     updateIccRecordInEf(int efType, String oldName, String oldNumber,
-            String newName, String newNumber, String pin2) {
+            String newName, String newNumber, String pin2, int simId) {
         if (DBG) log("updateIccRecordInEf: efType=" + efType +
                 ", oldname=" + oldName + ", oldnumber=" + oldNumber +
                 ", newname=" + newName + ", newnumber=" + newNumber);
         boolean success = false;
 
         try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
+            IIccPhoneBook iccIpb = getIccPhbService(simId);
             if (iccIpb != null) {
                 success = iccIpb.updateAdnRecordsInEfBySearch(efType,
                         oldName, oldNumber, newName, newNumber, pin2);
@@ -366,15 +410,14 @@ public class IccProvider extends ContentProvider {
 
 
     private boolean deleteIccRecordFromEf(int efType, String name, String number, String[] emails,
-            String pin2) {
+            String pin2, int simId) {
         if (DBG) log("deleteIccRecordFromEf: efType=" + efType +
                 ", name=" + name + ", number=" + number + ", emails=" + emails + ", pin2=" + pin2);
 
         boolean success = false;
 
         try {
-            IIccPhoneBook iccIpb = IIccPhoneBook.Stub.asInterface(
-                    ServiceManager.getService("simphonebook"));
+            IIccPhoneBook iccIpb = getIccPhbService(simId);
             if (iccIpb != null) {
                 success = iccIpb.updateAdnRecordsInEfBySearch(efType,
                         name, number, "", "", pin2);
@@ -423,4 +466,75 @@ public class IccProvider extends ContentProvider {
         Rlog.d(TAG, "[IccProvider] " + msg);
     }
 
+    private IIccPhoneBook getIccPhbService(int simId) {
+
+        IIccPhoneBook iccIpb;
+        if (simId == PhoneConstants.SIM_ID_1) {
+            iccIpb = IIccPhoneBook.Stub.asInterface(
+                    ServiceManager.getService("simphonebook"));
+        } else if (simId == PhoneConstants.SIM_ID_2){
+            iccIpb = IIccPhoneBook.Stub.asInterface(
+                    ServiceManager.getService("simphonebook2"));
+        } else if (simId == PhoneConstants.SIM_ID_3){
+            iccIpb = IIccPhoneBook.Stub.asInterface(
+                    ServiceManager.getService("simphonebook3"));
+        } else {
+            iccIpb = IIccPhoneBook.Stub.asInterface(
+            ServiceManager.getService("simphonebook4"));
+        }
+
+        return iccIpb;
+    }
+
+    private int getRequestType(int match) {
+        switch (match) {
+            case ADN:
+            case ADN1:
+            case ADN2:
+            case ADN3:
+            case ADN4:
+                return IccConstants.EF_ADN;
+            case FDN:
+            case FDN1:
+            case FDN2:
+            case FDN3:
+            case FDN4:
+                return IccConstants.EF_FDN;
+            case SDN:
+            case SDN1:
+            case SDN2:
+            case SDN3:
+            case SDN4:
+                return IccConstants.EF_SDN;
+            default:
+                throw new IllegalArgumentException("Unknown URL " + match);
+        }
+    }
+
+    private int getRequestSim(int match) {
+        switch (match) {
+            case ADN:
+            case FDN:
+            case SDN:
+                return TelephonyManager.getDefault().getDefaultSim();
+            case ADN1:
+            case FDN1:
+            case SDN1:
+                return PhoneConstants.SIM_ID_1;
+            case ADN2:
+            case FDN2:
+            case SDN2:
+                return PhoneConstants.SIM_ID_2;
+            case ADN3:
+            case FDN3:
+            case SDN3:
+                return PhoneConstants.SIM_ID_3;
+            case ADN4:
+            case FDN4:
+            case SDN4:
+                return PhoneConstants.SIM_ID_4;
+            default:
+                throw new IllegalArgumentException("Unknown URL " + match);
+        }
+    }
 }

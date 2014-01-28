@@ -145,6 +145,9 @@ public abstract class PhoneBase extends Handler implements Phone {
     private final String mActionDetached;
     private final String mActionAttached;
 
+
+    protected int mSimId;
+
     @Override
     public String getPhoneName() {
         return mName;
@@ -234,7 +237,11 @@ public abstract class PhoneBase extends Handler implements Phone {
      * @param ci the CommandsInterface
      */
     protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci) {
-        this(name, notifier, context, ci, false);
+        this(name, notifier, context, ci, false, PhoneConstants.SIM_ID_1);
+    }
+
+    protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci, int simId) {
+        this(name, notifier, context, ci, false, simId);
     }
 
     /**
@@ -249,6 +256,12 @@ public abstract class PhoneBase extends Handler implements Phone {
      */
     protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci,
             boolean unitTestMode) {
+        this(name, notifier, context, ci, unitTestMode, PhoneConstants.SIM_ID_1);
+    }
+     
+    protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci,
+            boolean unitTestMode, int simId) {
+        mSimId = simId;
         mName = name;
         mNotifier = notifier;
         mContext = context;
@@ -299,7 +312,7 @@ public abstract class PhoneBase extends Handler implements Phone {
         // Initialize device storage and outgoing SMS usage monitors for SMSDispatchers.
         mSmsStorageMonitor = new SmsStorageMonitor(this);
         mSmsUsageMonitor = new SmsUsageMonitor(context);
-        mUiccController = UiccController.getInstance();
+        mUiccController = UiccController.getInstance(simId);
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
     }
 
@@ -1405,6 +1418,17 @@ public abstract class PhoneBase extends Handler implements Phone {
     public UsimServiceTable getUsimServiceTable() {
         IccRecords r = mIccRecords.get();
         return (r != null) ? r.getUsimServiceTable() : null;
+    }
+
+    public void hangupActiveCall() throws CallStateException {
+    }
+
+    @Override
+    public void setPolicyDataEnable(boolean enabled) {
+    }
+
+    public int getSimId() {
+        return mSimId;
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

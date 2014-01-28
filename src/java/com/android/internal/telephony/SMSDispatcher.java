@@ -161,6 +161,9 @@ public abstract class SMSDispatcher extends Handler {
 
     protected int mRemainingMessages = -1;
 
+    /** sim identity */
+    protected int mSimId = PhoneConstants.SIM_ID_1;
+
     protected static int getNextConcatenatedRef() {
         sConcatenatedRef += 1;
         return sConcatenatedRef;
@@ -190,6 +193,7 @@ public abstract class SMSDispatcher extends Handler {
                                 TelephonyProperties.PROPERTY_SMS_SEND, mSmsCapable);
         Rlog.d(TAG, "SMSDispatcher: ctor mSmsCapable=" + mSmsCapable + " format=" + getFormat()
                 + " mSmsSendDisabled=" + mSmsSendDisabled);
+        mSimId = mPhone.getSimId();
     }
 
     /**
@@ -368,7 +372,11 @@ public abstract class SMSDispatcher extends Handler {
                     } else {
                         sentIntent.send(Activity.RESULT_OK);
                     }
-                } catch (CanceledException ex) {}
+                } catch (CanceledException ex) {
+                    Rlog.d(TAG, "CanceledException happened when send sms success with sentIntent");
+                }
+            } else {
+                Rlog.d(TAG, "Send sms success without sentIntent");
             }
         } else {
             if (DBG) Rlog.d(TAG, "SMS send failed");
@@ -391,6 +399,7 @@ public abstract class SMSDispatcher extends Handler {
 
             // if sms over IMS is not supported on data and voice is not available...
             if (!isIms() && ss != ServiceState.STATE_IN_SERVICE) {
+                Rlog.d(TAG, "handleSendComplete: No service");
                 handleNotInService(ss, tracker.mSentIntent);
             } else if ((((CommandException)(ar.exception)).getCommandError()
                     == CommandException.Error.SMS_FAIL_RETRY) &&
@@ -428,7 +437,11 @@ public abstract class SMSDispatcher extends Handler {
                     }
 
                     tracker.mSentIntent.send(mContext, error, fillIn);
-                } catch (CanceledException ex) {}
+                } catch (CanceledException ex) {
+                    Rlog.d(TAG, "CanceledException happened when send sms fail with sentIntent");
+                }
+            } else {
+                Rlog.d(TAG, "Send sms fail without sentIntent");
             }
         }
     }
@@ -450,7 +463,11 @@ public abstract class SMSDispatcher extends Handler {
                 } else {
                     sentIntent.send(RESULT_ERROR_NO_SERVICE);
                 }
-            } catch (CanceledException ex) {}
+            } catch (CanceledException ex) {
+                Rlog.d(TAG, "CanceledException happened when send sms fail with sentIntent due to no service");
+            }
+        } else {
+            Rlog.d(TAG, "Send sms fail without sentIntent due to no service");
         }
     }
 
@@ -728,19 +745,19 @@ public abstract class SMSDispatcher extends Handler {
             int rule = mPremiumSmsRule.get();
             int smsCategory = SmsUsageMonitor.CATEGORY_NOT_SHORT_CODE;
             if (rule == PREMIUM_RULE_USE_SIM || rule == PREMIUM_RULE_USE_BOTH) {
-                String simCountryIso = mTelephonyManager.getSimCountryIso();
+                String simCountryIso = mTelephonyManager.getSimCountryIso(mSimId);
                 if (simCountryIso == null || simCountryIso.length() != 2) {
                     Rlog.e(TAG, "Can't get SIM country Iso: trying network country Iso");
-                    simCountryIso = mTelephonyManager.getNetworkCountryIso();
+                    simCountryIso = mTelephonyManager.getNetworkCountryIso(mSimId);
                 }
 
                 smsCategory = mUsageMonitor.checkDestination(tracker.mDestAddress, simCountryIso);
             }
             if (rule == PREMIUM_RULE_USE_NETWORK || rule == PREMIUM_RULE_USE_BOTH) {
-                String networkCountryIso = mTelephonyManager.getNetworkCountryIso();
+                String networkCountryIso = mTelephonyManager.getNetworkCountryIso(mSimId);
                 if (networkCountryIso == null || networkCountryIso.length() != 2) {
                     Rlog.e(TAG, "Can't get Network country Iso: trying SIM country Iso");
-                    networkCountryIso = mTelephonyManager.getSimCountryIso();
+                    networkCountryIso = mTelephonyManager.getSimCountryIso(mSimId);
                 }
 
                 smsCategory = SmsUsageMonitor.mergeShortCodeCategories(smsCategory,

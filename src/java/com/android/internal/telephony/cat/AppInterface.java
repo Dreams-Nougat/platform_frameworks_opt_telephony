@@ -31,7 +31,18 @@ public interface AppInterface {
                                     "android.intent.action.stk.command";
     public static final String CAT_SESSION_END_ACTION =
                                     "android.intent.action.stk.session_end";
-
+    public static final String CAT_CMD_ACTION_2 =
+            "android.intent.action.stk.command_2";
+    public static final String CAT_SESSION_END_ACTION_2 =
+            "android.intent.action.stk.session_end_2";
+    public static final String CAT_CMD_ACTION_3 =
+        "android.intent.action.stk.command_3";
+    public static final String CAT_SESSION_END_ACTION_3 =
+        "android.intent.action.stk.session_end_3";
+    public static final String CAT_CMD_ACTION_4 =
+        "android.intent.action.stk.command_4";
+    public static final String CAT_SESSION_END_ACTION_4 =
+        "android.intent.action.stk.session_end_4";
     /*
      * Callback function from app to telephony to pass a result code and user's
      * input back to the ICC.
