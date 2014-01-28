@@ -47,6 +47,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
 
 import static android.telephony.TelephonyManager.PHONE_TYPE_CDMA;
+import android.telephony.SubscriptionController;
 
 /**
  * This class broadcasts incoming SMS messages to interested apps after storing them in
@@ -94,7 +95,7 @@ public abstract class InboundSmsHandler extends StateMachine {
     static final int ID_COLUMN = 7;
 
     static final String SELECT_BY_ID = "_id=?";
-    static final String SELECT_BY_REFERENCE = "address=? AND reference_number=? AND count=?";
+    static final String SELECT_BY_REFERENCE = "address=? AND reference_number=? AND count=? AND sub_id=?";
 
     /** New SMS received as an AsyncResult. */
     public static final int EVENT_NEW_SMS = 1;
@@ -156,6 +157,11 @@ public abstract class InboundSmsHandler extends StateMachine {
 
     protected CellBroadcastHandler mCellBroadcastHandler;
 
+    /** Identify the SIM */
+    protected int mSimId = PhoneConstants.SIM_ID_1;
+
+    /** sms database raw table locker */
+    protected Object mRawLock = new Object();
 
     /**
      * Create a new SMS broadcast helper.
@@ -191,6 +197,8 @@ public abstract class InboundSmsHandler extends StateMachine {
 
         setInitialState(mStartupState);
         if (DBG) log("created InboundSmsHandler");
+
+        mSimId = phone.getSimId();
     }
 
     /**
@@ -550,7 +558,7 @@ public abstract class InboundSmsHandler extends StateMachine {
 
             tracker = new InboundSmsTracker(sms.getPdu(), sms.getTimestampMillis(), destPort,
                     is3gpp2(), sms.getOriginatingAddress(), concatRef.refNumber,
-                    concatRef.seqNumber, concatRef.msgCount, false);
+                    concatRef.seqNumber, concatRef.msgCount, false, mSimId);
         }
 
         if (VDBG) log("created tracker: " + tracker);
@@ -595,54 +603,61 @@ public abstract class InboundSmsHandler extends StateMachine {
             // single-part message
             pdus = new byte[][]{tracker.getPdu()};
         } else {
-            // multi-part message
-            Cursor cursor = null;
-            try {
-                // used by several query selection arguments
-                String address = tracker.getAddress();
-                String refNumber = Integer.toString(tracker.getReferenceNumber());
-                String count = Integer.toString(tracker.getMessageCount());
+            synchronized (mRawLock) {
+                // multi-part message
+                Cursor cursor = null;
+                try {
+                    // used by several query selection arguments
+                    String address = tracker.getAddress();
+                    String refNumber = Integer.toString(tracker.getReferenceNumber());
+                    String count = Integer.toString(tracker.getMessageCount());
+                    long [] subIds = SubscriptionController.getSubId(mSimId);
+                    // TODO: Always return the first one. But it may activate second one.
+                    String subId = Long.toString(subIds[0]);
 
-                // query for all segments and broadcast message if we have all the parts
-                String[] whereArgs = {address, refNumber, count};
-                cursor = mResolver.query(sRawUri, PDU_SEQUENCE_PORT_PROJECTION,
-                        SELECT_BY_REFERENCE, whereArgs, null);
+                    // query for all segments and broadcast message if we have all the parts
+                    String[] whereArgs = {address, refNumber, count, subId};
+                    cursor = mResolver.query(sRawUri, PDU_SEQUENCE_PORT_PROJECTION,
+                            SELECT_BY_REFERENCE, whereArgs, null);
 
-                int cursorCount = cursor.getCount();
-                if (cursorCount < messageCount) {
-                    // Wait for the other message parts to arrive. It's also possible for the last
-                    // segment to arrive before processing the EVENT_BROADCAST_SMS for one of the
-                    // earlier segments. In that case, the broadcast will be sent as soon as all
-                    // segments are in the table, and any later EVENT_BROADCAST_SMS messages will
-                    // get a row count of 0 and return.
-                    return false;
-                }
+                    int cursorCount = cursor.getCount();
+                    if (cursorCount < messageCount) {
+                        // Wait for the other message parts to arrive. It's also possible for the last
+                        // segment to arrive before processing the EVENT_BROADCAST_SMS for one of the
+                        // earlier segments. In that case, the broadcast will be sent as soon as all
+                        // segments are in the table, and any later EVENT_BROADCAST_SMS messages will
+                        // get a row count of 0 and return.
 
-                // All the parts are in place, deal with them
-                pdus = new byte[messageCount][];
-                while (cursor.moveToNext()) {
-                    // subtract offset to convert sequence to 0-based array index
-                    int index = cursor.getInt(SEQUENCE_COLUMN) - tracker.getIndexOffset();
+                        return false;
+                    }
 
-                    pdus[index] = HexDump.hexStringToByteArray(cursor.getString(PDU_COLUMN));
 
-                    // Read the destination port from the first segment (needed for CDMA WAP PDU).
-                    // It's not a bad idea to prefer the port from the first segment in other cases.
-                    if (index == 0 && !cursor.isNull(DESTINATION_PORT_COLUMN)) {
-                        int port = cursor.getInt(DESTINATION_PORT_COLUMN);
-                        // strip format flags and convert to real port number, or -1
-                        port = InboundSmsTracker.getRealDestPort(port);
-                        if (port != -1) {
-                            destPort = port;
+                    // All the parts are in place, deal with them
+                    pdus = new byte[messageCount][];
+                    while (cursor.moveToNext()) {
+                        // subtract offset to convert sequence to 0-based array index
+                        int index = cursor.getInt(SEQUENCE_COLUMN) - tracker.getIndexOffset();
+
+                        pdus[index] = HexDump.hexStringToByteArray(cursor.getString(PDU_COLUMN));
+
+                        // Read the destination port from the first segment (needed for CDMA WAP PDU).
+                        // It's not a bad idea to prefer the port from the first segment in other cases.
+                        if (index == 0 && !cursor.isNull(DESTINATION_PORT_COLUMN)) {
+                            int port = cursor.getInt(DESTINATION_PORT_COLUMN);
+                            // strip format flags and convert to real port number, or -1
+                            port = InboundSmsTracker.getRealDestPort(port);
+                            if (port != -1) {
+                                destPort = port;
+                            }
                         }
                     }
-                }
-            } catch (SQLException e) {
-                loge("Can't access multipart SMS database", e);
-                return false;
-            } finally {
-                if (cursor != null) {
-                    cursor.close();
+                } catch (SQLException e) {
+                    loge("Can't access multipart SMS database", e);
+                    return false;
+                } finally {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
                 }
             }
         }
@@ -656,7 +671,9 @@ public abstract class InboundSmsHandler extends StateMachine {
                 // 3GPP needs to extract the User Data from the PDU; 3GPP2 has already done this
                 if (!tracker.is3gpp2()) {
                     SmsMessage msg = SmsMessage.createFromPdu(pdu, SmsConstants.FORMAT_3GPP);
-                    pdu = msg.getUserData();
+                    if (msg != null) {
+                        pdu = msg.getUserData();
+                    }
                 }
                 output.write(pdu, 0, pdu.length);
             }
@@ -702,6 +719,10 @@ public abstract class InboundSmsHandler extends StateMachine {
     void dispatchIntent(Intent intent, String permission, int appOp,
             BroadcastReceiver resultReceiver) {
         intent.addFlags(Intent.FLAG_RECEIVER_NO_ABORT);
+        intent.putExtra(PhoneConstants.SIM_ID_KEY, mSimId);
+        long [] subIds = SubscriptionController.getSubId(mSimId);
+        // TODO: Always return the first one. But it may activate second one.
+        intent.putExtra(PhoneConstants.SUB_ID_KEY, subIds[0]);
         mContext.sendOrderedBroadcast(intent, permission, appOp, resultReceiver,
                 getHandler(), Activity.RESULT_OK, null, null);
     }
@@ -710,11 +731,13 @@ public abstract class InboundSmsHandler extends StateMachine {
      * Helper for {@link SmsBroadcastUndelivered} to delete an old message in the raw table.
      */
     void deleteFromRawTable(String deleteWhere, String[] deleteWhereArgs) {
-        int rows = mResolver.delete(sRawUri, deleteWhere, deleteWhereArgs);
-        if (rows == 0) {
-            loge("No rows were deleted from raw table!");
-        } else if (DBG) {
-            log("Deleted " + rows + " rows from raw table.");
+        synchronized (mRawLock) {
+            int rows = mResolver.delete(sRawUri, deleteWhere, deleteWhereArgs);
+            if (rows == 0) {
+                loge("No rows were deleted from raw table!");
+            } else if (DBG) {
+                log("Deleted " + rows + " rows from raw table.");
+            }
         }
     }
 
@@ -729,69 +752,74 @@ public abstract class InboundSmsHandler extends StateMachine {
      * @return true on success; false on failure to write to database
      */
     private int addTrackerToRawTable(InboundSmsTracker tracker) {
-        if (tracker.getMessageCount() != 1) {
-            // check for duplicate message segments
-            Cursor cursor = null;
-            try {
-                // sequence numbers are 1-based except for CDMA WAP, which is 0-based
-                int sequence = tracker.getSequenceNumber();
+        synchronized (mRawLock) {
+            if (tracker.getMessageCount() != 1) {
+                // check for duplicate message segments
+                Cursor cursor = null;
+                try {
+                    // sequence numbers are 1-based except for CDMA WAP, which is 0-based
+                    int sequence = tracker.getSequenceNumber();
 
-                // convert to strings for query
-                String address = tracker.getAddress();
-                String refNumber = Integer.toString(tracker.getReferenceNumber());
-                String count = Integer.toString(tracker.getMessageCount());
+                    // convert to strings for query
+                    String address = tracker.getAddress();
+                    String refNumber = Integer.toString(tracker.getReferenceNumber());
+                    String count = Integer.toString(tracker.getMessageCount());
 
-                String seqNumber = Integer.toString(sequence);
+                    String seqNumber = Integer.toString(sequence);
+                    long [] subIds = SubscriptionController.getSubId(mSimId);
+                    // TODO: Always return the first one. But it may activate second one.
+                    String subId = Long.toString(subIds[0]);
 
-                // set the delete selection args for multi-part message
-                String[] deleteWhereArgs = {address, refNumber, count};
-                tracker.setDeleteWhere(SELECT_BY_REFERENCE, deleteWhereArgs);
+                    // set the delete selection args for multi-part message
+                    String[] deleteWhereArgs = {address, refNumber, count, subId};
+                    tracker.setDeleteWhere(SELECT_BY_REFERENCE, deleteWhereArgs);
 
-                // Check for duplicate message segments
-                cursor = mResolver.query(sRawUri, PDU_PROJECTION,
-                        "address=? AND reference_number=? AND count=? AND sequence=?",
-                        new String[] {address, refNumber, count, seqNumber}, null);
+                    // Check for duplicate message segments
+                    cursor = mResolver.query(sRawUri, PDU_PROJECTION,
+                            "address=? AND reference_number=? AND count=? AND sequence=? AND sub_id=?",
+                            new String[] {address, refNumber, count, seqNumber, subId}, null);
 
-                // moveToNext() returns false if no duplicates were found
-                if (cursor.moveToNext()) {
-                    loge("Discarding duplicate message segment, refNumber=" + refNumber
-                            + " seqNumber=" + seqNumber);
-                    String oldPduString = cursor.getString(PDU_COLUMN);
-                    byte[] pdu = tracker.getPdu();
-                    byte[] oldPdu = HexDump.hexStringToByteArray(oldPduString);
-                    if (!Arrays.equals(oldPdu, tracker.getPdu())) {
-                        loge("Warning: dup message segment PDU of length " + pdu.length
-                                + " is different from existing PDU of length " + oldPdu.length);
+                    // moveToNext() returns false if no duplicates were found
+                    if (cursor.moveToNext()) {
+                        loge("Discarding duplicate message segment, refNumber=" + refNumber
+                                + " seqNumber=" + seqNumber);
+                        String oldPduString = cursor.getString(PDU_COLUMN);
+                        byte[] pdu = tracker.getPdu();
+                        byte[] oldPdu = HexDump.hexStringToByteArray(oldPduString);
+                        if (!Arrays.equals(oldPdu, tracker.getPdu())) {
+                            loge("Warning: dup message segment PDU of length " + pdu.length
+                                    + " is different from existing PDU of length " + oldPdu.length);
+                        }
+                        return Intents.RESULT_SMS_DUPLICATED;   // reject message
                     }
-                    return Intents.RESULT_SMS_DUPLICATED;   // reject message
-                }
-                cursor.close();
-            } catch (SQLException e) {
-                loge("Can't access multipart SMS database", e);
-                return Intents.RESULT_SMS_GENERIC_ERROR;    // reject message
-            } finally {
-                if (cursor != null) {
                     cursor.close();
+                } catch (SQLException e) {
+                    loge("Can't access multipart SMS database", e);
+                    return Intents.RESULT_SMS_GENERIC_ERROR;    // reject message
+                } finally {
+                    if (cursor != null) {
+                        cursor.close();
+                    }
                 }
             }
-        }
 
-        ContentValues values = tracker.getContentValues();
+            ContentValues values = tracker.getContentValues();
 
-        if (VDBG) log("adding content values to raw table: " + values.toString());
-        Uri newUri = mResolver.insert(sRawUri, values);
-        if (DBG) log("URI of new row -> " + newUri);
+            if (VDBG) log("adding content values to raw table: " + values.toString());
+            Uri newUri = mResolver.insert(sRawUri, values);
+            if (DBG) log("URI of new row -> " + newUri);
 
-        try {
-            long rowId = ContentUris.parseId(newUri);
-            if (tracker.getMessageCount() == 1) {
-                // set the delete selection args for single-part message
-                tracker.setDeleteWhere(SELECT_BY_ID, new String[]{Long.toString(rowId)});
+            try {
+                long rowId = ContentUris.parseId(newUri);
+                if (tracker.getMessageCount() == 1) {
+                    // set the delete selection args for single-part message
+                    tracker.setDeleteWhere(SELECT_BY_ID, new String[]{Long.toString(rowId)});
+                }
+                return Intents.RESULT_SMS_HANDLED;
+            } catch (Exception e) {
+                loge("error parsing URI for new row: " + newUri, e);
+                return Intents.RESULT_SMS_GENERIC_ERROR;
             }
-            return Intents.RESULT_SMS_HANDLED;
-        } catch (Exception e) {
-            loge("error parsing URI for new row: " + newUri, e);
-            return Intents.RESULT_SMS_GENERIC_ERROR;
         }
     }
 

@@ -27,6 +27,8 @@ import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.Message;
 import android.telephony.Rlog;
+import android.telephony.SubscriptionController;
+
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
@@ -178,6 +180,15 @@ public final class CdmaMmiCode  extends Handler implements MmiCode {
     @Override
     public boolean isCancelable() {
         return false;
+    }
+
+    /**
+     * @return subId
+     */
+    @Override
+    public long getSubId(){
+        long[] subs = SubscriptionController.getSubId(mPhone.getSimId());
+        return subs[0];
     }
 
     // Instance Methods

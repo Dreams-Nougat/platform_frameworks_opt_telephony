@@ -28,6 +28,8 @@ import com.android.internal.telephony.CommandsInterface;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import com.android.internal.telephony.PhoneConstants;
+import android.telephony.TelephonyManager;
 
 /**
  * This class is responsible for keeping all knowledge about
@@ -81,34 +83,47 @@ public class UiccController extends Handler {
     private static final int EVENT_GET_ICC_STATUS_DONE = 2;
 
     private static final Object mLock = new Object();
-    private static UiccController mInstance;
+    private static UiccController[] mInstance = {null, null, null, null};
 
     private Context mContext;
     private CommandsInterface mCi;
     private UiccCard mUiccCard;
+    private int mSimId;
 
     private RegistrantList mIccChangedRegistrants = new RegistrantList();
 
     public static UiccController make(Context c, CommandsInterface ci) {
+        return make(c, ci, TelephonyManager.getDefaultSim());
+    }
+
+    public static UiccController make(Context c, CommandsInterface ci, int simId) {
         synchronized (mLock) {
-            if (mInstance != null) {
+            if(mInstance[simId] != null) {
                 throw new RuntimeException("UiccController.make() should only be called once");
             }
-            mInstance = new UiccController(c, ci);
-            return mInstance;
+            mInstance[simId] = new UiccController(c, ci, simId);
+            return mInstance[simId];
         }
     }
 
     public static UiccController getInstance() {
         synchronized (mLock) {
-            if (mInstance == null) {
+            if (mInstance[PhoneConstants.SIM_ID_1] == null) {
                 throw new RuntimeException(
                         "UiccController.getInstance can't be called before make()");
             }
-            return mInstance;
+            return mInstance[PhoneConstants.SIM_ID_1];
         }
     }
 
+    public static UiccController getInstance(int simId) {
+        if(mInstance[simId] == null) {
+            throw new RuntimeException(
+                "UiccController.getInstance can't be called before make()");
+        }
+        return mInstance[simId];
+    }
+        
     public UiccCard getUiccCard() {
         synchronized (mLock) {
             return mUiccCard;
@@ -188,14 +203,19 @@ public class UiccController extends Handler {
     }
 
     private UiccController(Context c, CommandsInterface ci) {
+        this(c, ci, TelephonyManager.getDefaultSim());
+    }
+
+    private UiccController(Context c, CommandsInterface ci, int simId) {
         if (DBG) log("Creating UiccController");
         mContext = c;
         mCi = ci;
+        mSimId = simId;
         mCi.registerForIccStatusChanged(this, EVENT_ICC_STATUS_CHANGED, null);
         // TODO remove this once modem correctly notifies the unsols
         mCi.registerForOn(this, EVENT_ICC_STATUS_CHANGED, null);
     }
-
+    
     private synchronized void onGetIccCardStatusDone(AsyncResult ar) {
         if (ar.exception != null) {
             Rlog.e(LOG_TAG,"Error getting ICC status. "
@@ -208,7 +228,7 @@ public class UiccController extends Handler {
 
         if (mUiccCard == null) {
             //Create new card
-            mUiccCard = new UiccCard(mContext, mCi, status);
+            mUiccCard = new UiccCard(mContext, mCi, status, mSimId);
         } else {
             //Update already existing card
             mUiccCard.update(mContext, mCi , status);
@@ -219,7 +239,7 @@ public class UiccController extends Handler {
     }
 
     private void log(String string) {
-        Rlog.d(LOG_TAG, string);
+        Rlog.d(LOG_TAG, "[SIM" + mSimId + "]" + string);
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

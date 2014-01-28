@@ -25,6 +25,7 @@ import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppState;
 
 import android.os.*;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.SubscriptionController;
 import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.telephony.Rlog;
@@ -179,7 +180,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
      * Please see flow chart in TS 22.030 6.5.3.2
      */
 
-    static GsmMmiCode
+    public static GsmMmiCode
     newFromDialString(String dialString, GSMPhone phone, UiccCardApplication app) {
         Matcher m;
         GsmMmiCode ret = null;
@@ -468,6 +469,15 @@ public final class GsmMmiCode extends Handler implements MmiCode {
         return mIsPendingUSSD;
     }
 
+    /**
+     * @return subId
+     */
+    @Override
+    public long getSubId(){
+        long[] subs = SubscriptionController.getSubId(mPhone.getSimId());
+        return subs[0];
+    }
+
     //***** Instance Methods
 
     /** Does this dial string contain a structured or unstructured MMI code? */
@@ -576,7 +586,7 @@ public final class GsmMmiCode extends Handler implements MmiCode {
      *  In temporary mode, to invoke CLIR for a single call enter:
      *       " # 31 # [called number] SEND "
      */
-    boolean
+    public boolean
     isTemporaryModeCLIR() {
         return mSc != null && mSc.equals(SC_CLIR) && mDialingNumber != null
                 && (isActivate() || isDeactivate());

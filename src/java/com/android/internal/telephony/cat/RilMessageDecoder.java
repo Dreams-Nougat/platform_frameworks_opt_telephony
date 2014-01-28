@@ -18,6 +18,7 @@ package com.android.internal.telephony.cat;
 
 import com.android.internal.telephony.uicc.IccFileHandler;
 import com.android.internal.telephony.uicc.IccUtils;
+import com.android.internal.telephony.PhoneConstants;
 
 import android.os.Handler;
 import com.android.internal.util.State;
@@ -35,10 +36,14 @@ class RilMessageDecoder extends StateMachine {
     private static final int CMD_PARAMS_READY = 2;
 
     // members
-    private static RilMessageDecoder sInstance = null;
     private CommandParamsFactory mCmdParamsFactory = null;
     private RilMessage mCurrentRilMessage = null;
     private Handler mCaller = null;
+
+    private static RilMessageDecoder sInstanceSim1 = null; 
+    private static RilMessageDecoder sInstanceSim2 = null;
+    private static RilMessageDecoder sInstanceSim3 = null;
+    private static RilMessageDecoder sInstanceSim4 = null;
 
     // States
     private StateStart mStateStart = new StateStart();
@@ -51,12 +56,31 @@ class RilMessageDecoder extends StateMachine {
      * @param fh
      * @return RilMesssageDecoder
      */
-    public static synchronized RilMessageDecoder getInstance(Handler caller, IccFileHandler fh) {
-        if (sInstance == null) {
-            sInstance = new RilMessageDecoder(caller, fh);
-            sInstance.start();
+    public static synchronized RilMessageDecoder getInstance(Handler caller, IccFileHandler fh,
+            int simId) {
+        RilMessageDecoder tempInstance = null;
+
+        if ((PhoneConstants.SIM_ID_1 == simId && sInstanceSim1 == null) 
+	    || (PhoneConstants.SIM_ID_2 == simId && sInstanceSim2 == null)
+	    || (PhoneConstants.SIM_ID_3 == simId && sInstanceSim3 == null)
+	    || (PhoneConstants.SIM_ID_4 == simId && sInstanceSim4 == null)) {
+            tempInstance = new RilMessageDecoder(caller, fh);
+            tempInstance.start();
         }
-        return sInstance;
+
+        if(PhoneConstants.SIM_ID_1 == simId) {
+            sInstanceSim1 = tempInstance;
+            return sInstanceSim1;
+        } else if(PhoneConstants.SIM_ID_2 == simId) {
+            sInstanceSim2 = tempInstance;
+            return sInstanceSim2;
+        } else if(PhoneConstants.SIM_ID_3 == simId) {
+            sInstanceSim3 = tempInstance;
+            return sInstanceSim3;
+        } else { 
+            sInstanceSim4 = tempInstance;
+            return sInstanceSim4;
+        }
     }
 
     /**

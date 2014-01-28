@@ -76,10 +76,13 @@ public class UiccCardApplication {
     private RegistrantList mPinLockedRegistrants = new RegistrantList();
     private RegistrantList mNetworkLockedRegistrants = new RegistrantList();
 
+    private int mSimId;
+
     UiccCardApplication(UiccCard uiccCard,
                         IccCardApplicationStatus as,
                         Context c,
                         CommandsInterface ci) {
+        mSimId = uiccCard.getSimId();
         if (DBG) log("Creating UiccApp: " + as);
         mUiccCard = uiccCard;
         mAppState = as.app_state;
@@ -801,11 +804,15 @@ public class UiccCardApplication {
     }
 
     private void log(String msg) {
-        Rlog.d(LOG_TAG, msg);
+        Rlog.d(LOG_TAG, "[SIM " + mSimId + "]" + msg);
     }
 
     private void loge(String msg) {
-        Rlog.e(LOG_TAG, msg);
+        Rlog.e(LOG_TAG, "[SIM " + mSimId + "]" + msg);
+    }
+
+    public int getSimId() {
+        return mSimId;
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

@@ -57,6 +57,25 @@ public abstract class Connection {
         CS_RESTRICTED_NORMAL,           /* call was blocked by restricted normal voice access */
         CS_RESTRICTED_EMERGENCY,        /* call was blocked by restricted emergency voice access */
         UNOBTAINABLE_NUMBER,            /* Unassigned number (3GPP TS 24.008 table 10.5.123) */
+        NO_ROUTE_TO_DESTINATION,        
+        NO_USER_RESPONDING,             
+        USER_ALERTING_NO_ANSWER,        
+        CALL_REJECTED,                  
+        INVALID_NUMBER_FORMAT,          
+        FACILITY_REJECTED,              
+        NORMAL_UNSPECIFIED,             
+        NO_CIRCUIT_AVAIL,               
+        SWITCHING_CONGESTION,           
+        RESOURCE_UNAVAILABLE,           
+        BEARER_NOT_AUTHORIZED,          
+        BEARER_NOT_AVAIL,               
+        SERVICE_NOT_AVAILABLE,          
+        BEARER_NOT_IMPLEMENT,           
+        FACILITY_NOT_IMPLEMENT,         
+        RESTRICTED_BEARER_AVAILABLE,   
+        OPTION_NOT_AVAILABLE,          
+        INCOMPATIBLE_DESTINATION,      
+        CM_MM_RR_CONNECTION_RELEASE,    
         CDMA_LOCKED_UNTIL_POWER_CYCLE,  /* MS is locked until next power cycle */
         CDMA_DROP,
         CDMA_INTERCEPT,                 /* INTERCEPT order received, MS state idle entered */

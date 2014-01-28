@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * {@hide}
  */
-class GsmCall extends Call {
+public class GsmCall extends Call {
     /*************************** Instance Variables **************************/
 
     /*package*/ GsmCallTracker mOwner;
@@ -76,7 +76,43 @@ class GsmCall extends Call {
     @Override
     public boolean
     isMultiparty() {
-        return mConnections.size() > 1;
+
+        int DiscConn = 0;
+        boolean isMptyCall = false;
+        
+        for (int j = mConnections.size() - 1 ; j >= 0 ; j--) {
+            GsmConnection cn = (GsmConnection)(mConnections.get(j));
+
+            if (cn.getState() == GsmCall.State.DISCONNECTED) {
+                DiscConn++;
+            }
+        }
+
+        if(mConnections.size() <= 1)
+        {
+            isMptyCall = false;
+        }
+        else if(mConnections.size() > 1)
+        {
+            if((mConnections.size() - DiscConn) <= 1)
+            {
+                isMptyCall = false;
+            }
+            else if(getState() == GsmCall.State.DIALING)
+            {
+                isMptyCall = false;
+            }
+            else
+            {
+                isMptyCall = true;
+            }            
+        }
+        else
+        {
+            isMptyCall = false;
+        }
+        
+        return isMptyCall;
     }
 
     /** Please note: if this is the foreground call and a

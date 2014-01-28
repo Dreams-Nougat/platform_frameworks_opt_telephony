@@ -16,11 +16,9 @@
 
 package com.android.internal.telephony.uicc;
 
-
-import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_OPERATOR_ISO_COUNTRY;
-import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC;
-
-import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA;
+import static com.android.internal.telephony.TelephonyProperties.SIM_PROPERTY_ICC_OPERATOR_NUMERIC;
+import static com.android.internal.telephony.TelephonyProperties.SIM_PROPERTY_ICC_OPERATOR_ALPHA;
+import static com.android.internal.telephony.TelephonyProperties.SIM_PROPERTY_ICC_OPERATOR_ISO_COUNTRY;
 import static com.android.internal.telephony.TelephonyProperties.PROPERTY_TEST_CSIM;
 
 import java.io.FileDescriptor;
@@ -97,8 +95,10 @@ public final class RuimRecords extends IccRecords {
 
     private static final int EVENT_RUIM_REFRESH = 31;
 
+    private int mSimId;
     public RuimRecords(UiccCardApplication app, Context c, CommandsInterface ci) {
         super(app, c, ci);
+        mSimId = app.getSimId();
 
         mAdnCache = new AdnRecordCache(mFh);
 
@@ -115,6 +115,9 @@ public final class RuimRecords extends IccRecords {
 
         mParentApp.registerForReady(this, EVENT_APP_READY, null);
         if (DBG) log("RuimRecords X ctor this=" + this);
+
+        mFh.loadEFTransparent(EF_ICCID,
+                obtainMessage(EVENT_GET_ICCID_DONE));
     }
 
     @Override
@@ -319,7 +322,7 @@ public final class RuimRecords extends IccRecords {
             }
             if (DBG) log("spn=" + mSpn);
             if (DBG) log("spnCondition=" + mCsimSpnDisplayCondition);
-            SystemProperties.set(PROPERTY_ICC_OPERATOR_ALPHA, mSpn);
+            SystemProperties.set(SIM_PROPERTY_ICC_OPERATOR_ALPHA[mSimId], mSpn);
         }
     }
 
@@ -517,6 +520,7 @@ public final class RuimRecords extends IccRecords {
 
                 log("iccid: " + mIccId);
 
+                mIccReadyRegistrants.notifyRegistrants();
             break;
 
             case EVENT_UPDATE_DONE:
@@ -634,14 +638,14 @@ public final class RuimRecords extends IccRecords {
         if (!TextUtils.isEmpty(operator)) {
             log("onAllRecordsLoaded set 'gsm.sim.operator.numeric' to operator='" +
                     operator + "'");
-            SystemProperties.set(PROPERTY_ICC_OPERATOR_NUMERIC, operator);
+            SystemProperties.set(SIM_PROPERTY_ICC_OPERATOR_NUMERIC[mSimId], operator);
         } else {
             log("onAllRecordsLoaded empty 'gsm.sim.operator.numeric' skipping");
         }
 
         if (!TextUtils.isEmpty(mImsi)) {
             log("onAllRecordsLoaded set mcc imsi=" + mImsi);
-            SystemProperties.set(PROPERTY_ICC_OPERATOR_ISO_COUNTRY,
+            SystemProperties.set(SIM_PROPERTY_ICC_OPERATOR_ISO_COUNTRY[mSimId],
                     MccTable.countryCodeForMcc(Integer.parseInt(mImsi.substring(0,3))));
         } else {
             log("onAllRecordsLoaded empty imsi skipping setting mcc");
@@ -668,9 +672,9 @@ public final class RuimRecords extends IccRecords {
         mCi.getIMSIForApp(mParentApp.getAid(), obtainMessage(EVENT_GET_IMSI_DONE));
         mRecordsToLoad++;
 
-        mFh.loadEFTransparent(EF_ICCID,
-                obtainMessage(EVENT_GET_ICCID_DONE));
-        mRecordsToLoad++;
+        //mFh.loadEFTransparent(EF_ICCID,
+        //        obtainMessage(EVENT_GET_ICCID_DONE));
+        //mRecordsToLoad++;
 
         mFh.loadEFTransparent(EF_PL,
                 obtainMessage(EVENT_GET_ICC_RECORD_DONE, new EfPlLoaded()));

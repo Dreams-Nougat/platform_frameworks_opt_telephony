@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import static android.telephony.TelephonyManager.PHONE_TYPE_CDMA;
-
+import android.telephony.SubscriptionController;
 
 /**
  * A Short Message Service message.
@@ -96,6 +96,13 @@ public class SmsMessage {
      */
     public SmsMessageBase mWrappedSmsMessage;
 
+    /**
+     * indicate the subscription indentity for this message.
+     *
+     * @hide
+     */
+    private long mSubId;
+
     public static class SubmitPdu {
 
         public byte[] encodedScAddress; // Null if not applicable.
@@ -120,7 +127,12 @@ public class SmsMessage {
     }
 
     private SmsMessage(SmsMessageBase smb) {
+        this(smb, SubscriptionController.getDefaultSubId());
+    }
+
+    private SmsMessage(SmsMessageBase smb, long subId) {
         mWrappedSmsMessage = smb;
+        mSubId = subId;
     }
 
     /**
@@ -165,6 +177,21 @@ public class SmsMessage {
      * @hide pending API council approval
      */
     public static SmsMessage createFromPdu(byte[] pdu, String format) {
+        return createFromPdu(pdu, format, SubscriptionController.getDefaultSubId());
+    }
+
+    /**
+     * Create an SmsMessage from a raw PDU with the specified message format. The
+     * message format is passed in the {@code SMS_RECEIVED_ACTION} as the {@code format}
+     * String extra, and will be either "3gpp" for GSM/UMTS/LTE messages in 3GPP format
+     * or "3gpp2" for CDMA/LTE messages in 3GPP2 format.
+     *
+     * @param pdu the message PDU from the SMS_RECEIVED_ACTION intent
+     * @param format the format extra from the SMS_RECEIVED_ACTION intent
+     * @param subId the subscription identity from the SMS_RECEIVED_ACTION intent
+     * @hide pending API council approval
+     */
+    public static SmsMessage createFromPdu(byte[] pdu, String format, long subId) {
         SmsMessageBase wrappedMessage;
 
         if (SmsConstants.FORMAT_3GPP2.equals(format)) {
@@ -176,7 +203,7 @@ public class SmsMessage {
             return null;
         }
 
-        return new SmsMessage(wrappedMessage);
+        return new SmsMessage(wrappedMessage, subId);
     }
 
     /**
@@ -216,6 +243,21 @@ public class SmsMessage {
      * @hide
      */
     public static SmsMessage createFromEfRecord(int index, byte[] data) {
+        return createFromEfRecord(index, data, SubscriptionController.getDefaultSubId());
+    }
+
+    /**
+     * Create an SmsMessage from an SMS EF record.
+     *
+     * @param index Index of SMS record. This should be index in ArrayList
+     *              returned by SmsManager.getAllMessagesFromSim + 1.
+     * @param data Record data.
+     * @param subId the sim identity for the message
+     * @return An SmsMessage representing the record.
+     *
+     * @hide
+     */
+    public static SmsMessage createFromEfRecord(int index, byte[] data, long subId) {
         SmsMessageBase wrappedMessage;
 
         if (isCdmaVoice()) {
@@ -226,7 +268,7 @@ public class SmsMessage {
                     index, data);
         }
 
-        return wrappedMessage != null ? new SmsMessage(wrappedMessage) : null;
+        return wrappedMessage != null ? new SmsMessage(wrappedMessage, subId) : null;
     }
 
     /**
@@ -719,5 +761,15 @@ public class SmsMessage {
     private static boolean isCdmaVoice() {
         int activePhone = TelephonyManager.getDefault().getCurrentPhoneType();
         return (PHONE_TYPE_CDMA == activePhone);
+    }
+
+    /**
+     * Get the subscription identity for the message.
+     *
+     * @hide
+     * @return Subscription id
+     */
+    public long getSubId() {
+        return mSubId;
     }
 }

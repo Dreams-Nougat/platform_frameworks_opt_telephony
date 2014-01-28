@@ -24,6 +24,7 @@ import android.content.Intent;
 import android.os.Message;
 import android.provider.Telephony;
 import android.telephony.SmsCbMessage;
+import android.telephony.SubscriptionController;
 
 /**
  * Dispatch new Cell Broadcasts to receivers. Acquires a private wakelock until the broadcast
@@ -88,6 +89,10 @@ public class CellBroadcastHandler extends WakeLockStateMachine {
             appOp = AppOpsManager.OP_RECEIVE_SMS;
         }
         intent.putExtra("message", message);
+        intent.putExtra(PhoneConstants.SIM_ID_KEY, mSimId);
+        long [] subIds = SubscriptionController.getSubId(mSimId);
+        // TODO: Always return the first one. But it may activate second one.
+        intent.putExtra(PhoneConstants.SUB_ID_KEY, subIds[0]);
         mContext.sendOrderedBroadcast(intent, receiverPermission, appOp, mReceiver,
                 getHandler(), Activity.RESULT_OK, null, null);
     }

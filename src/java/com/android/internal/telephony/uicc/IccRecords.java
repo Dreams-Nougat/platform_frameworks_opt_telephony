@@ -48,6 +48,7 @@ public abstract class IccRecords extends Handler implements IccConstants {
     protected RegistrantList mRecordsEventsRegistrants = new RegistrantList();
     protected RegistrantList mNewSmsRegistrants = new RegistrantList();
     protected RegistrantList mNetworkSelectionModeAutomaticRegistrants = new RegistrantList();
+    protected RegistrantList mIccReadyRegistrants = new RegistrantList();
 
     protected int mRecordsToLoad;  // number of pending load requests
 
@@ -107,6 +108,7 @@ public abstract class IccRecords extends Handler implements IccConstants {
                 + " mNewSmsRegistrants=" + mNewSmsRegistrants
                 + " mNetworkSelectionModeAutomaticRegistrants="
                         + mNetworkSelectionModeAutomaticRegistrants
+                + " mIccReadyRegistrants=" + mIccReadyRegistrants
                 + " recordsToLoad=" + mRecordsToLoad
                 + " adnCache=" + mAdnCache
                 + " recordsRequested=" + mRecordsRequested
@@ -227,6 +229,22 @@ public abstract class IccRecords extends Handler implements IccConstants {
     }
     public void unregisterForNetworkSelectionModeAutomatic(Handler h) {
         mNetworkSelectionModeAutomaticRegistrants.remove(h);
+    }
+
+    public void registerForIccReady(Handler h, int what, Object obj) {
+        if (mDestroyed.get()) {
+            return;
+        }
+
+        Registrant r = new Registrant(h, what, obj);
+        mIccReadyRegistrants.add(r);
+
+        if (mIccId != null) {
+            r.notifyRegistrant(new AsyncResult(null, null, null));
+        }
+    }
+    public void unregisterForIccReady(Handler h) {
+        mIccReadyRegistrants.remove(h);
     }
 
     /**
@@ -537,6 +555,11 @@ public abstract class IccRecords extends Handler implements IccConstants {
             pw.println("  mNetworkSelectionModeAutomaticRegistrants[" + i + "]="
                     + ((Registrant)mNetworkSelectionModeAutomaticRegistrants.get(i)).getHandler());
         }
+        pw.println(" mIccReadyRegistrants: size=" + mIccReadyRegistrants.size());
+        for (int i = 0; i < mIccReadyRegistrants.size(); i++) {
+            pw.println("  mIccReadyRegistrants[" + i + "]="
+                    + ((Registrant)mIccReadyRegistrants.get(i)).getHandler());
+        }        
         pw.println(" mRecordsRequested=" + mRecordsRequested);
         pw.println(" mRecordsToLoad=" + mRecordsToLoad);
         pw.println(" mRdnCache=" + mAdnCache);
