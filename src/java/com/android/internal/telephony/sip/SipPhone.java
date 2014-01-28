@@ -32,6 +32,7 @@ import android.telephony.ServiceState;
 import android.text.TextUtils;
 import android.telephony.Rlog;
 
+import com.android.internal.telephony.CallManager;
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallStateException;
 import com.android.internal.telephony.Connection;
@@ -61,6 +62,7 @@ public class SipPhone extends SipPhoneBase {
 
     private SipManager mSipManager;
     private SipProfile mProfile;
+    private CallManager mCM = CallManager.getInstance();
 
     SipPhone (Context context, PhoneNotifier notifier, SipProfile profile) {
         super("SIP:" + profile.getUriString(), context, notifier);
@@ -115,6 +117,13 @@ public class SipPhone extends SipPhoneBase {
             }
 
             try {
+                // check if any incoming calls exist
+                for (Call call : mCM.getRingingCalls()) {
+                    if (call.getState().isRinging()) {
+                        return false;
+                    }
+                }
+
                 SipAudioCall sipAudioCall = (SipAudioCall) incomingCall;
                 if (DBG) log("canTake: taking call from: "
                         + sipAudioCall.getPeerProfile().getUriString());
@@ -213,6 +222,13 @@ public class SipPhone extends SipPhoneBase {
     @Override
     public void switchHoldingAndActive() throws CallStateException {
         if (DBG) log("dialInternal: switch fg and bg");
+        
+        if ((mForegroundCall.getState() == SipCall.State.DIALING)) {
+             throw new CallStateException("wrong state to swap calls: fg="
+                        + mForegroundCall.getState() + ", bg="
+                        + mBackgroundCall.getState());
+        }
+            
         synchronized (SipPhone.class) {
             mForegroundCall.switchWith(mBackgroundCall);
             if (mBackgroundCall.getState().isAlive()) mBackgroundCall.hold();
@@ -245,6 +261,11 @@ public class SipPhone extends SipPhoneBase {
             if (!(that instanceof SipCall)) {
                 throw new CallStateException("expect " + SipCall.class
                         + ", cannot merge with " + that.getClass());
+            }
+            if ((mForegroundCall.getState() != SipCall.State.ACTIVE)) {
+                throw new CallStateException("wrong state to merge calls: fg="
+                        + mForegroundCall.getState() + ", bg="
+                        + mBackgroundCall.getState());
             }
             mForegroundCall.merge((SipCall) that);
         }
@@ -859,21 +880,47 @@ public class SipPhone extends SipPhoneBase {
         }
 
         void hold() throws CallStateException {
-            setState(Call.State.HOLDING);
-            try {
-                mSipAudioCall.holdCall(TIMEOUT_HOLD_CALL);
-            } catch (SipException e) {
-                throw new CallStateException("hold(): " + e);
-            }
+            synchronized (SipPhone.class) {           
+                if (mSipAudioCall == null){
+                    Call.State currentState = getState();					
+                    log("SipConnection.hold():mSipAudioCall is null, state=" + currentState);
+                    if (currentState == Call.State.DISCONNECTED) {
+                        //This sipConnection is already DISCONNECTED -> Can't be held, do nothing & return directly						
+                        return;   
+                    } else {
+                        throw new CallStateException("hold(): mSipAudioCall is null");
+                    } 						
+                }
+            
+                setState(Call.State.HOLDING);
+                try {
+                    mSipAudioCall.holdCall(TIMEOUT_HOLD_CALL);
+                } catch (SipException e) {
+                    throw new CallStateException("hold(): " + e);
+                }
+            }				
         }
 
         void unhold(AudioGroup audioGroup) throws CallStateException {
-            mSipAudioCall.setAudioGroup(audioGroup);
-            setState(Call.State.ACTIVE);
-            try {
-                mSipAudioCall.continueCall(TIMEOUT_HOLD_CALL);
-            } catch (SipException e) {
-                throw new CallStateException("unhold(): " + e);
+            synchronized (SipPhone.class) {             
+                if (mSipAudioCall == null){
+                    Call.State currentState = getState();					
+                    log("SipConnection.unhold():mSipAudioCall is null, state=" + currentState);
+                    if (currentState == Call.State.DISCONNECTED) {
+                        //This sipConnection is already DISCONNECTED -> Can't be retrieved, do nothing & return directly
+                        return;
+                    } else {
+                        throw new CallStateException("unhold(): mSipAudioCall is null");
+                    }
+                }
+                
+                mSipAudioCall.setAudioGroup(audioGroup);
+                setState(Call.State.ACTIVE);
+                try {
+                    mSipAudioCall.continueCall(TIMEOUT_HOLD_CALL);
+                } catch (SipException e) {
+                    throw new CallStateException("unhold(): " + e);
+                }
             }
         }
 

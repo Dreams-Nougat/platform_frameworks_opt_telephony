@@ -23,6 +23,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.provider.Telephony;
 import android.text.format.DateUtils;
+import android.telephony.SubscriptionManager;
 
 /**
  * Application wrapper for {@link SmsCbMessage}. This is Parcelable so that
@@ -48,23 +49,27 @@ public class CellBroadcastMessage implements Parcelable {
 
     private final long mDeliveryTime;
     private boolean mIsRead;
+    private long mSubId;
 
     public CellBroadcastMessage(SmsCbMessage message) {
         mSmsCbMessage = message;
         mDeliveryTime = System.currentTimeMillis();
         mIsRead = false;
+        mSubId = SubscriptionManager.getDefaultSubId();
     }
 
     private CellBroadcastMessage(SmsCbMessage message, long deliveryTime, boolean isRead) {
         mSmsCbMessage = message;
         mDeliveryTime = deliveryTime;
         mIsRead = isRead;
+        mSubId = SubscriptionManager.getDefaultSubId();
     }
 
     private CellBroadcastMessage(Parcel in) {
         mSmsCbMessage = new SmsCbMessage(in);
         mDeliveryTime = in.readLong();
         mIsRead = (in.readInt() != 0);
+        mSubId = in.readLong();
     }
 
     /** Parcelable: no special flags. */
@@ -78,6 +83,7 @@ public class CellBroadcastMessage implements Parcelable {
         mSmsCbMessage.writeToParcel(out, flags);
         out.writeLong(mDeliveryTime);
         out.writeInt(mIsRead ? 1 : 0);
+        out.writeLong(mSubId);
     }
 
     public static final Parcelable.Creator<CellBroadcastMessage> CREATOR
@@ -114,6 +120,8 @@ public class CellBroadcastMessage implements Parcelable {
                 cursor.getColumnIndexOrThrow(Telephony.CellBroadcasts.MESSAGE_FORMAT));
         int priority = cursor.getInt(
                 cursor.getColumnIndexOrThrow(Telephony.CellBroadcasts.MESSAGE_PRIORITY));
+        long subId = cursor.getLong(
+                cursor.getColumnIndexOrThrow(Telephony.CellBroadcasts.SIM_ID));
 
         String plmn;
         int plmnColumn = cursor.getColumnIndex(Telephony.CellBroadcasts.PLMN);
@@ -216,7 +224,9 @@ public class CellBroadcastMessage implements Parcelable {
         boolean isRead = (cursor.getInt(cursor.getColumnIndexOrThrow(
                 Telephony.CellBroadcasts.MESSAGE_READ)) != 0);
 
-        return new CellBroadcastMessage(msg, deliveryTime, isRead);
+        CellBroadcastMessage cbMsg = new CellBroadcastMessage(msg, deliveryTime, isRead);
+        cbMsg.setSubId(subId);
+        return cbMsg;
     }
 
     /**
@@ -224,7 +234,7 @@ public class CellBroadcastMessage implements Parcelable {
      * @return a new ContentValues object containing this object's data
      */
     public ContentValues getContentValues() {
-        ContentValues cv = new ContentValues(16);
+        ContentValues cv = new ContentValues(17);
         SmsCbMessage msg = mSmsCbMessage;
         cv.put(Telephony.CellBroadcasts.GEOGRAPHICAL_SCOPE, msg.getGeographicalScope());
         SmsCbLocation location = msg.getLocation();
@@ -243,6 +253,7 @@ public class CellBroadcastMessage implements Parcelable {
         cv.put(Telephony.CellBroadcasts.MESSAGE_BODY, msg.getMessageBody());
         cv.put(Telephony.CellBroadcasts.DELIVERY_TIME, mDeliveryTime);
         cv.put(Telephony.CellBroadcasts.MESSAGE_READ, mIsRead);
+        cv.put(Telephony.CellBroadcasts.SUB_ID, mSubId);
         cv.put(Telephony.CellBroadcasts.MESSAGE_FORMAT, msg.getMessageFormat());
         cv.put(Telephony.CellBroadcasts.MESSAGE_PRIORITY, msg.getMessagePriority());
 
@@ -406,5 +417,13 @@ public class CellBroadcastMessage implements Parcelable {
     public String getSpokenDateString(Context context) {
         int flags = DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_SHOW_DATE;
         return DateUtils.formatDateTime(context, mDeliveryTime, flags);
+    }
+
+    public void setSubId(long subId) {
+        mSubId = subId;
+     }
+
+    public long getSubId() {
+        return mSubId;
     }
 }

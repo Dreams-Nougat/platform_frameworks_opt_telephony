@@ -59,4 +59,10 @@ public interface MmiCode
      * @return true if an outstanding request can be canceled.
      */
     public boolean isCancelable();
+
+    /**
+     * @return subId
+     */
+    public long getSubId(); 
+    
 }

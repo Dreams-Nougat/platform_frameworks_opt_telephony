@@ -15,6 +15,7 @@
  */
 
 package com.android.internal.telephony;
+import android.telephony.SubscriptionManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +72,14 @@ public abstract class Call {
     public abstract boolean isMultiparty();
     public abstract void hangup() throws CallStateException;
 
+    public long getSubId() {
+        long[] subs = SubscriptionManager.getSubId(getPhone().getSimId());
+
+        if(subs == null)
+            return SubscriptionManager.SIM_NOT_INSERTED;
+
+        return subs[0];
+    }
 
     /**
      * hasConnection

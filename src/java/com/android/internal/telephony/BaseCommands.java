@@ -64,6 +64,8 @@ public abstract class BaseCommands implements CommandsInterface {
     protected RegistrantList mRilConnectedRegistrants = new RegistrantList();
     protected RegistrantList mIccRefreshRegistrants = new RegistrantList();
     protected RegistrantList mRilCellInfoListRegistrants = new RegistrantList();
+    protected RegistrantList mSimPlugOutRegistrants= new RegistrantList();
+    protected RegistrantList mSimPlugInRegistrants= new RegistrantList();
 
     protected Registrant mGsmSmsRegistrant;
     protected Registrant mCdmaSmsRegistrant;
@@ -658,6 +660,24 @@ public abstract class BaseCommands implements CommandsInterface {
      */
     @Override
     public void setCurrentPreferredNetworkType() {
+    }
+
+    public void registerForSimPlugOut(Handler h, int what, Object obj) {
+        Registrant r = new Registrant (h, what, obj);
+        mSimPlugOutRegistrants.add(r);
+    }
+
+    public void unregisterForSimPlugOut(Handler h) {
+        mSimPlugOutRegistrants.remove(h);
+    }
+
+    public void registerForSimPlugIn(Handler h, int what, Object obj) {
+        Registrant r = new Registrant (h, what, obj);
+        mSimPlugInRegistrants.add(r);
+    }
+
+    public void unregisterForSimPlugIn(Handler h) {
+        mSimPlugInRegistrants.remove(h);
     }
 
     //***** Protected Methods
