@@ -1,0 +1,11 @@
+Revision: 06c7768cb5c76a9c8b078f9b7315a409320a56c4
+Patch-set: 2
+File: src/java/com/android/internal/telephony/MSimDefaultPhoneNotifier.java
+
+65
+Wed Jan 29 18:56:05 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: d26c224a_83cb9ee6
+Bytes: 32
+This file needs to be revisited.
+
