@@ -114,7 +114,7 @@ public class MSimIccCardProxy extends IccCardProxy {
                         }
 
                         // Update MCC MNC device configuration information only for default sub.
-                        if (sub == TelephonyManager.getDefaultSubscription()) {
+                        if (sub == MSimTelephonyManager.getDefaultSubscription()) {
                             log("Update mccmnc config for default subscription.");
                             MccTable.updateMccMncConfiguration(mContext, operator);
                         }
