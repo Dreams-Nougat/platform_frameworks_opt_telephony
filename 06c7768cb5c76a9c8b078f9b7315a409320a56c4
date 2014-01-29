@@ -9,3 +9,21 @@ UUID: d26c224a_83cb9ee6
 Bytes: 32
 This file needs to be revisited.
 
+File: src/java/com/android/internal/telephony/PhoneSubInfo.java
+
+67
+Wed Jan 29 18:57:13 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: d26c224a_c3c596d1
+Bytes: 33
+remove commented code whole file.
+
+File: src/java/com/android/internal/telephony/PhoneSubInfoProxy.java
+
+31
+Wed Jan 29 18:57:13 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 52a672d4_ffe2df81
+Bytes: 33
+remove commented code whole file.
+
