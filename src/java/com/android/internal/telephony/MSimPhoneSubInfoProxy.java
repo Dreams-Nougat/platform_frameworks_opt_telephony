@@ -22,22 +22,27 @@ import android.telephony.Rlog;
 import java.lang.NullPointerException;
 import java.lang.ArrayIndexOutOfBoundsException;
 
-import com.android.internal.telephony.IPhoneSubInfoMSim;
+import com.android.internal.telephony.IPhoneSubInfo;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneSubInfoProxy;
 
-public class MSimPhoneSubInfoProxy extends IPhoneSubInfoMSim.Stub {
+public class MSimPhoneSubInfoProxy extends IPhoneSubInfo.Stub {
     private static final String TAG = "MSimPhoneSubInfoProxy";
     private Phone[] mPhone;
 
     public MSimPhoneSubInfoProxy(Phone[] phone) {
         mPhone = phone;
-        if (ServiceManager.getService("iphonesubinfo_msim") == null) {
-            ServiceManager.addService("iphonesubinfo_msim", this);
+        if (ServiceManager.getService("iphonesubinfo") == null) {
+            ServiceManager.addService("iphonesubinfo", this);
         }
     }
 
-    public String getDeviceId(int subscription) {
+
+    public String getDeviceId() {
+        return getDeviceIdOnSubscription(getDefaultSubscription());
+    }
+
+    public String getDeviceIdOnSubscription(int subscription) {
         PhoneSubInfoProxy phoneSubInfoProxy = getPhoneSubInfoProxy(subscription);
         if (phoneSubInfoProxy != null) {
             return getPhoneSubInfoProxy(subscription).getDeviceId();
@@ -48,7 +53,11 @@ public class MSimPhoneSubInfoProxy extends IPhoneSubInfoMSim.Stub {
         }
     }
 
-    public String getDeviceSvn(int subscription) {
+    public String getDeviceSvn() {
+        return getDeviceSvnOnSubscription(getDefaultSubscription());
+    }
+
+    public String getDeviceSvnOnSubscription(int subscription) {
         PhoneSubInfoProxy phoneSubInfoProxy = getPhoneSubInfoProxy(subscription);
         if (phoneSubInfoProxy != null) {
             return getPhoneSubInfoProxy(subscription).getDeviceSvn();
@@ -59,7 +68,11 @@ public class MSimPhoneSubInfoProxy extends IPhoneSubInfoMSim.Stub {
         }
     }
 
-    public String getSubscriberId(int subscription) {
+    public String getSubscriberId() {
+        return getSubscriberIdOnSubscription(getDefaultSubscription());
+    }
+
+    public String getSubscriberIdOnSubscription(int subscription) {
         PhoneSubInfoProxy phoneSubInfoProxy = getPhoneSubInfoProxy(subscription);
         if (phoneSubInfoProxy != null) {
             return getPhoneSubInfoProxy(subscription).getSubscriberId();
@@ -73,7 +86,11 @@ public class MSimPhoneSubInfoProxy extends IPhoneSubInfoMSim.Stub {
     /**
      * Retrieves the serial number of the ICC, if applicable.
      */
-    public String getIccSerialNumber(int subscription) {
+    public String getIccSerialNumber() {
+        return getIccSerialNumberOnSubscription(getDefaultSubscription());
+    }
+
+    public String getIccSerialNumberOnSubscription(int subscription) {
         PhoneSubInfoProxy phoneSubInfoProxy = getPhoneSubInfoProxy(subscription);
         if (phoneSubInfoProxy != null) {
             return getPhoneSubInfoProxy(subscription).getIccSerialNumber();
@@ -84,7 +101,11 @@ public class MSimPhoneSubInfoProxy extends IPhoneSubInfoMSim.Stub {
         }
     }
 
-    public String getLine1Number(int subscription) {
+    public String getLine1Number() {
+        return getLine1NumberOnSubscription(getDefaultSubscription());
+    }
+
+    public String getLine1NumberOnSubscription(int subscription) {
         PhoneSubInfoProxy phoneSubInfoProxy = getPhoneSubInfoProxy(subscription);
         if (phoneSubInfoProxy != null) {
             return getPhoneSubInfoProxy(subscription).getLine1Number();
@@ -95,7 +116,11 @@ public class MSimPhoneSubInfoProxy extends IPhoneSubInfoMSim.Stub {
         }
     }
 
-    public String getLine1AlphaTag(int subscription) {
+    public String getLine1AlphaTag() {
+        return getLine1AlphaTagOnSubscription(getDefaultSubscription());
+    }
+
+    public String getLine1AlphaTagOnSubscription(int subscription) {
         PhoneSubInfoProxy phoneSubInfoProxy = getPhoneSubInfoProxy(subscription);
         if (phoneSubInfoProxy != null) {
             return getPhoneSubInfoProxy(subscription).getLine1AlphaTag();
@@ -106,7 +131,11 @@ public class MSimPhoneSubInfoProxy extends IPhoneSubInfoMSim.Stub {
         }
     }
 
-    public String getMsisdn(int subscription) {
+    public String getMsisdn() {
+        return getMsisdnOnSubscription(getDefaultSubscription());
+    }
+
+    public String getMsisdnOnSubscription(int subscription) {
         PhoneSubInfoProxy phoneSubInfoProxy = getPhoneSubInfoProxy(subscription);
         if (phoneSubInfoProxy != null) {
             return getPhoneSubInfoProxy(subscription).getMsisdn();
@@ -117,7 +146,11 @@ public class MSimPhoneSubInfoProxy extends IPhoneSubInfoMSim.Stub {
         }
     }
 
-    public String getVoiceMailNumber(int subscription) {
+    public String getVoiceMailNumber() {
+        return getVoiceMailNumberOnSubscription(getDefaultSubscription());
+    }
+
+    public String getVoiceMailNumberOnSubscription(int subscription) {
         PhoneSubInfoProxy phoneSubInfoProxy = getPhoneSubInfoProxy(subscription);
         if (phoneSubInfoProxy != null) {
             return getPhoneSubInfoProxy(subscription).getVoiceMailNumber();
@@ -128,7 +161,11 @@ public class MSimPhoneSubInfoProxy extends IPhoneSubInfoMSim.Stub {
         }
     }
 
-    public String getCompleteVoiceMailNumber(int subscription) {
+    public String getCompleteVoiceMailNumber() {
+        return getCompleteVoiceMailNumberOnSubscription(getDefaultSubscription());
+    }
+
+    public String getCompleteVoiceMailNumberOnSubscription(int subscription) {
         PhoneSubInfoProxy phoneSubInfoProxy = getPhoneSubInfoProxy(subscription);
         if (phoneSubInfoProxy != null) {
             return getPhoneSubInfoProxy(subscription).getCompleteVoiceMailNumber();
@@ -139,7 +176,11 @@ public class MSimPhoneSubInfoProxy extends IPhoneSubInfoMSim.Stub {
         }
     }
 
-    public String getVoiceMailAlphaTag(int subscription) {
+    public String getVoiceMailAlphaTag() {
+        return getVoiceMailAlphaTagOnSubscription(getDefaultSubscription());
+    }
+
+    public String getVoiceMailAlphaTagOnSubscription(int subscription) {
         PhoneSubInfoProxy phoneSubInfoProxy = getPhoneSubInfoProxy(subscription);
         if (phoneSubInfoProxy != null) {
             return getPhoneSubInfoProxy(subscription).getVoiceMailAlphaTag();
@@ -166,4 +207,30 @@ public class MSimPhoneSubInfoProxy extends IPhoneSubInfoMSim.Stub {
             return null;
         }
     }
+
+    private int getDefaultSubscription() {
+        return MSimPhoneFactory.getDefaultSubscription();
+    }
+
+
+    public String getIsimImpi() {
+        PhoneSubInfoProxy mPhoneSubInfo = getPhoneSubInfoProxy(getDefaultSubscription());
+        return mPhoneSubInfo.getIsimImpi();
+    }
+
+    public String getIsimDomain() {
+        PhoneSubInfoProxy mPhoneSubInfo = getPhoneSubInfoProxy(getDefaultSubscription());
+        return mPhoneSubInfo.getIsimDomain();
+    }
+
+    public String[] getIsimImpu() {
+        PhoneSubInfoProxy mPhoneSubInfo = getPhoneSubInfoProxy(getDefaultSubscription());
+        return mPhoneSubInfo.getIsimImpu();
+    }
+
+     public String getGroupIdLevel1() {
+        PhoneSubInfoProxy mPhoneSubInfo = getPhoneSubInfoProxy(getDefaultSubscription());
+        return mPhoneSubInfo.getGroupIdLevel1();
+     }
+
 }
