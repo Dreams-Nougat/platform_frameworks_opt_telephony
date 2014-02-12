@@ -27,6 +27,7 @@ import android.telephony.TelephonyManager;
 import com.android.internal.telephony.cdma.CDMALTEPhone;
 import com.android.internal.telephony.cdma.CDMAPhone;
 import com.android.internal.telephony.cdma.CdmaSubscriptionSourceManager;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.gsm.GSMPhone;
 import com.android.internal.telephony.sip.SipPhone;
 import com.android.internal.telephony.sip.SipPhoneFactory;
@@ -44,6 +45,7 @@ public class PhoneFactory {
 
     static private Phone sProxyPhone = null;
     static private CommandsInterface sCommandsInterface = null;
+    static private ProxyController mProxyController;
 
     static private boolean sMadeDefaults = false;
     static private PhoneNotifier sPhoneNotifier;
@@ -137,6 +139,13 @@ public class PhoneFactory {
                     }
                 }
 
+                // CAF_MSIM TODO
+                Phone[] proxyPhone = {sProxyPhone};
+                CommandsInterface[] commandsInterface = {sCommandsInterface};
+
+                mProxyController = ProxyController.getInstance(context, proxyPhone,
+                        null, commandsInterface);
+
                 // Ensure that we have a default SMS app. Requesting the app with
                 // updateIfNeeded set to true is enough to configure a default SMS app.
                 ComponentName componentName =
@@ -201,4 +210,71 @@ public class PhoneFactory {
     public static SipPhone makeSipPhone(String sipUri) {
         return SipPhoneFactory.makePhone(sipUri, sContext, sPhoneNotifier);
     }
+
+    /* Sets the default subscription. If only one phone instance is active that
+     * subscription is set as default subscription. If both phone instances
+     * are active the first instance "0" is set as default subscription
+     */
+    // CAF_MSIM TODO
+    public static void setDefaultSubscription(int subscription) {
+    }
+
+    /* Gets the default subscription */
+    // CAF_MSIM TODO
+    public static int getDefaultSubscription() {
+        return MSimConstants.DEFAULT_SUBSCRIPTION;
+    }
+
+    /* Gets User preferred Voice subscription setting*/
+    // CAF_MSIM TODO
+    public static int getVoiceSubscription() {
+        return MSimConstants.DEFAULT_SUBSCRIPTION;
+    }
+
+    /* Returns User Prompt property,  enabed or not */
+    // CAF_MSIM TODO
+    public static boolean isPromptEnabled() {
+       return false;
+    }
+
+    /*Sets User Prompt property,  enabed or not */
+    // CAF_MSIM TODO
+    public static void setPromptEnabled(boolean enabled) {
+    }
+
+    /* Returns User SMS Prompt property,  enabled or not */
+    // CAF_MSIM TODO
+    public static boolean isSMSPromptEnabled() {
+       return false;
+    }
+
+    /*Sets User SMS Prompt property,  enable or not */
+    // CAF_MSIM TODO
+    public static void setSMSPromptEnabled(boolean enabled) {
+    }
+
+    /* Gets User preferred Data subscription setting*/
+    // CAF_MSIM TODO
+    public static int getDataSubscription() {
+        return MSimConstants.DEFAULT_SUBSCRIPTION;
+    }
+
+    /* Gets User preferred SMS subscription setting*/
+    // CAF_MSIM TODO
+    public static int getSMSSubscription() {
+        return MSimConstants.DEFAULT_SUBSCRIPTION;
+    }
+
+    // CAF_MSIM TODO
+    static public void setVoiceSubscription(int subscription) {
+    }
+
+    // CAF_MSIM TODO
+    static public void setDataSubscription(int subscription) {
+    }
+
+    // CAF_MSIM TODO
+    static public void setSMSSubscription(int subscription) {
+    }
+
 }
