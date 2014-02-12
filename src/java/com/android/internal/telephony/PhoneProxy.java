@@ -1187,4 +1187,17 @@ public class PhoneProxy extends Handler implements Phone {
         mActivePhone = null;
         mCommandsInterface = null;
     }
+
+    public IccSmsInterfaceManager getIccSmsInterfaceManager(){
+        return mIccSmsInterfaceManager;
+    }
+
+    public PhoneSubInfoProxy getPhoneSubInfoProxy(){
+        return mPhoneSubInfoProxy;
+    }
+
+    public IccPhoneBookInterfaceManagerProxy getIccPhoneBookInterfaceManagerProxy() {
+        return mIccPhoneBookInterfaceManagerProxy;
+    }
+
 }
