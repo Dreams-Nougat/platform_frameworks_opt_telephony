@@ -36,10 +36,10 @@ import java.util.List;
  */
 public class DefaultPhoneNotifier implements PhoneNotifier {
 
-    private ITelephonyRegistry mRegistry;
+    private  ITelephonyRegistry mRegistry;
 
     /*package*/
-    DefaultPhoneNotifier() {
+    private  DefaultPhoneNotifier() {
         mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
                     "telephony.registry"));
     }
