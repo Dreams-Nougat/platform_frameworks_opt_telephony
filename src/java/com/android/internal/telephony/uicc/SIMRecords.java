@@ -19,9 +19,13 @@ package com.android.internal.telephony.uicc;
 import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA;
 import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_OPERATOR_ISO_COUNTRY;
 import static com.android.internal.telephony.TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC;
+import android.app.ActivityManagerNative;
+import android.app.IActivityManager;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.os.AsyncResult;
 import android.os.Message;
+import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.SmsMessage;
@@ -29,6 +33,7 @@ import android.text.TextUtils;
 import android.telephony.Rlog;
 
 import com.android.internal.telephony.CommandsInterface;
+import com.android.internal.telephony.GsmAlphabet;
 import com.android.internal.telephony.MccTable;
 import com.android.internal.telephony.SmsConstants;
 import com.android.internal.telephony.gsm.SimTlv;
@@ -37,6 +42,7 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * {@hide}
@@ -62,6 +68,9 @@ public class SIMRecords extends IccRecords {
      * States only used by getSpnFsm FSM
      */
     private GetSpnFsmState mSpnState;
+
+    private byte[] mEFpl = null;
+    private byte[] mEFli = null;
 
     /** CPHS service information (See CPHS 4.2 B.3.1.1)
      *  It will be set in onSimReady if reading GET_CPHS_INFO successfully
@@ -158,6 +167,8 @@ public class SIMRecords extends IccRecords {
     private static final int EVENT_GET_CFIS_DONE = 32;
     private static final int EVENT_GET_CSP_CPHS_DONE = 33;
     private static final int EVENT_GET_GID1_DONE = 34;
+    private static final int EVENT_GET_PL_DONE = 35;
+    private static final int EVENT_GET_LI_DONE = 36;
 
     // Lookup table for carriers known to produce SIMs which incorrectly indicate MNC length.
 
@@ -202,6 +213,7 @@ public class SIMRecords extends IccRecords {
         // Start off by setting empty state
         resetRecords();
         mParentApp.registerForReady(this, EVENT_APP_READY, null);
+        readPreferredLanguages();
         if (DBG) log("SIMRecords X ctor this=" + this);
     }
 
@@ -230,6 +242,8 @@ public class SIMRecords extends IccRecords {
         mIccId = null;
         // -1 means no EF_SPN found; treat accordingly.
         mSpnDisplayCondition = -1;
+        mEFpl = null;
+        mEFli = null;
         mEfMWIS = null;
         mEfCPHS_MWI = null;
         mSpdiNetworks = null;
@@ -534,6 +548,7 @@ public class SIMRecords extends IccRecords {
             // A future optimization would be to inspect fileList and
             // only reload those files that we care about.  For now,
             // just re-fetch all SIM records that we cache.
+            readPreferredLanguages();
             fetchSimRecords();
         }
     }
@@ -1161,6 +1176,26 @@ public class SIMRecords extends IccRecords {
 
                 break;
 
+            case EVENT_GET_PL_DONE:
+                ar = (AsyncResult)msg.obj;
+
+                if (ar.exception == null) {
+                    mEFpl = (byte[])ar.result;
+                    if (DBG) log("EF_PL=" + IccUtils.bytesToHexString(mEFpl));
+                }
+
+                setPreferredLanguage();
+                break;
+
+            case EVENT_GET_LI_DONE:
+                ar = (AsyncResult)msg.obj;
+
+                if (ar.exception == null) {
+                    mEFli = (byte[])ar.result;
+                    if (DBG) log("EF_LI=" + IccUtils.bytesToHexString(mEFli));
+                }
+                break;
+
             default:
                 super.handleMessage(msg);   // IccRecords handles generic record load responses
 
@@ -1202,6 +1237,7 @@ public class SIMRecords extends IccRecords {
                 // voicemail number.
                 // TODO: Handle other cases, instead of fetching all.
                 mAdnCache.reset();
+                readPreferredLanguages();
                 fetchSimRecords();
                 break;
         }
@@ -1227,6 +1263,7 @@ public class SIMRecords extends IccRecords {
             case IccRefreshResponse.REFRESH_RESULT_INIT:
                 if (DBG) log("handleSimRefresh with SIM_REFRESH_INIT");
                 // need to reload all files (that we care about)
+                readPreferredLanguages();
                 onIccRefreshInit();
                 break;
             case IccRefreshResponse.REFRESH_RESULT_RESET:
@@ -1359,6 +1396,67 @@ public class SIMRecords extends IccRecords {
     }
 
     //***** Private methods
+
+    private void readPreferredLanguages() {
+        mEFpl = null;
+        mEFli = null;
+
+        mFh.loadEFTransparent(EF_LI, obtainMessage(EVENT_GET_LI_DONE));
+        mFh.loadEFTransparent(EF_PL, obtainMessage(EVENT_GET_PL_DONE));
+    }
+
+    private String findBestLanguage(byte[] languages) {
+        String[] locales = mContext.getAssets().getLocales();
+
+        if ((languages == null) || (locales == null)) return null;
+
+        // Each 2-bytes consists of one language
+        for (int i = 0; (i + 1) < languages.length; i += 2) {
+            try {
+                String lang = GsmAlphabet.gsm8BitUnpackedToString(languages, i, 2);
+                for (int j = 0; j < locales.length; j++) {
+                    if (locales[j] != null && locales[j].length() >= 2
+                            && locales[j].substring(0, 2).equals(lang)) {
+                        return lang;
+                    }
+                }
+            } catch (IndexOutOfBoundsException e) {
+                log("Failed to parse SIM language records");
+            }
+        }
+        // no match found. return null
+        return null;
+    }
+
+    private void setPreferredLanguage() {
+        String language = SystemProperties.get("persist.sys.language");
+
+	if (language == null || language.length() == 0) {
+            String prefLang = null;
+
+            // check EFli then EFpl
+            prefLang = findBestLanguage(mEFli);
+
+            if (prefLang == null || prefLang.length() == 0) {
+                prefLang = findBestLanguage(mEFpl);
+            }
+
+            if (prefLang != null && prefLang.length() != 0) {
+                log("change language to: " + prefLang);
+                IActivityManager am = ActivityManagerNative.getDefault();
+                try {
+                    Configuration config = am.getConfiguration();
+                    config.locale = new Locale(prefLang);
+                    config.userSetLocale = false;
+                    am.updateConfiguration(config);
+                } catch (RemoteException e) {
+                    log("failed to change locale language");
+                }
+            } else {
+                log("sim doesn't have information on preferred language");
+            }
+        }
+    }
 
     private void setSpnFromConfig(String carrier) {
         if (mSpnOverride.containsCarrier(carrier)) {
