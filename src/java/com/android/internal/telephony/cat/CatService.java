@@ -143,6 +143,9 @@ public class CatService extends Handler implements AppInterface {
         mCmdIf.unSetOnCatEvent(this);
         mCmdIf.unSetOnCatCallSetUp(this);
 
+        if (mUiccApplication != null) {
+            mUiccApplication.unregisterForReady(this);
+        }
         removeCallbacksAndMessages(null);
     }
 
