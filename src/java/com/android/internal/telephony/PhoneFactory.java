@@ -39,16 +39,27 @@ public class PhoneFactory {
     static final String LOG_TAG = "PhoneFactory";
     static final int SOCKET_OPEN_RETRY_MILLIS = 2 * 1000;
     static final int SOCKET_OPEN_MAX_RETRY = 3;
+    protected static final String PHONE_PACKAGE_NAME = "com.android.phone";
 
     //***** Class Variables
 
-    static private Phone sProxyPhone = null;
-    static private CommandsInterface sCommandsInterface = null;
+    static final String LOG_TAG = "PHONE";
+    static private Phone[] sProxyPhones = null;
+    static private CommandsInterface[] sCommandsInterfaces = null;
+    static private boolean sMadeMultiSimDefaults = false;
 
-    static private boolean sMadeDefaults = false;
-    static private PhoneNotifier sPhoneNotifier;
-    static private Looper sLooper;
-    static private Context sContext;
+    static private ProxyManager mProxyManager;
+    static private CardSubscriptionManager mCardSubscriptionManager;
+    static private SubscriptionManager mSubscriptionManager;
+    static private UiccController mUiccController;
+
+    static protected Phone sProxyPhone = null;
+    static protected CommandsInterface sCommandsInterface = null;
+
+    static protected boolean sMadeDefaults = false;
+    static protected PhoneNotifier sPhoneNotifier;
+    static protected Looper sLooper;
+    static protected Context sContext;
 
     //***** Class Methods
 
@@ -103,39 +114,74 @@ public class PhoneFactory {
                 if (TelephonyManager.getLteOnCdmaModeStatic() == PhoneConstants.LTE_ON_CDMA_TRUE) {
                     preferredNetworkMode = Phone.NT_MODE_GLOBAL;
                 }
-                int networkMode = Settings.Global.getInt(context.getContentResolver(),
-                        Settings.Global.PREFERRED_NETWORK_MODE, preferredNetworkMode);
-                Rlog.i(LOG_TAG, "Network Mode set to " + Integer.toString(networkMode));
 
                 int cdmaSubscription = CdmaSubscriptionSourceManager.getDefault(context);
                 Rlog.i(LOG_TAG, "Cdma Subscription set to " + cdmaSubscription);
 
-                //reads the system properties and makes commandsinterface
-                sCommandsInterface = new RIL(context, networkMode, cdmaSubscription);
+                /* In case of multi SIM mode two instances of PhoneProxy, RIL are created,
+                   where as in single SIM mode only instance. isMultiSimEnabled() function checks
+                   whether it is single SIM or multi SIM mode */
+                int numPhones = TelephonyManager.getDefault().getPhoneCount();
+                int[] networkModes = new int[numPhones];
+                sProxyPhones = new PhoneProxy[numPhones];
+                sCommandsInterfaces = new RIL[numPhones];
 
-                // Instantiate UiccController so that all other classes can just call getInstance()
-                UiccController.make(context, sCommandsInterface);
-
-                int phoneType = TelephonyManager.getPhoneType(networkMode);
-                if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
-                    Rlog.i(LOG_TAG, "Creating GSMPhone");
-                    sProxyPhone = new PhoneProxy(new GSMPhone(context,
-                            sCommandsInterface, sPhoneNotifier));
-                } else if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
-                    switch (TelephonyManager.getLteOnCdmaModeStatic()) {
-                        case PhoneConstants.LTE_ON_CDMA_TRUE:
-                            Rlog.i(LOG_TAG, "Creating CDMALTEPhone");
-                            sProxyPhone = new PhoneProxy(new CDMALTEPhone(context,
-                                sCommandsInterface, sPhoneNotifier));
-                            break;
-                        case PhoneConstants.LTE_ON_CDMA_FALSE:
-                        default:
-                            Rlog.i(LOG_TAG, "Creating CDMAPhone");
-                            sProxyPhone = new PhoneProxy(new CDMAPhone(context,
-                                    sCommandsInterface, sPhoneNotifier));
-                            break;
+                for (int i = 0; i < numPhones; i++) {
+                    //reads the system properties and makes commandsinterface
+                    try {
+                        networkModes[i]  = TelephonyManager.getIntAtIndex(
+                                context.getContentResolver(),
+                                Settings.Global.PREFERRED_NETWORK_MODE, i);
+                    } catch (SettingNotFoundException snfe) {
+                        Rlog.e(LOG_TAG, "Settings Exception Reading Value At Index for"+
+                                " Settings.Global.PREFERRED_NETWORK_MODE");
+                        networkModes[i] = preferredNetworkMode;
                     }
+
+                    if (SystemProperties.getBoolean("persist.env.phone.global", false) &&
+                            i == MSimConstants.SUB1) {
+                        networkModes[i] = Phone.NT_MODE_LTE_CMDA_EVDO_GSM_WCDMA;
+                        TelephonyManager.putIntAtIndex( context.getContentResolver(),
+                            Settings.Global.PREFERRED_NETWORK_MODE, i, networkModes[i]);
+                    }
+
+                    Rlog.i(LOG_TAG, "Network Mode set to " + Integer.toString(networkModes[i]));
+                    sCommandsInterfaces[i] = new RIL(context, networkModes[i],
+                            cdmaSubscription, i);
                 }
+
+                // Instantiate UiccController so that all other classes can just
+                // call getInstance()
+                mUiccController = UiccController.make(context, sCommandsInterfaces);
+
+                mCardSubscriptionManager = CardSubscriptionManager.getInstance(context,
+                        mUiccController, sCommandsInterfaces);
+                mSubscriptionManager = SubscriptionManager.getInstance(context,
+                        mUiccController, sCommandsInterfaces);
+
+                for (int i = 0; i < numPhones; i++) {
+                    PhoneBase phone = null;
+                    int phoneType = TelephonyManager.getPhoneType(networkModes[i]);
+                    if (phoneType == PhoneConstants.PHONE_TYPE_GSM) {
+                        phone = new GSMPhone(context,
+                                sCommandsInterfaces[i], sPhoneNotifier, i);
+                    } else if (phoneType == PhoneConstants.PHONE_TYPE_CDMA) {
+                        phone = new CDMALTEPhone(context,
+                                sCommandsInterfaces[i], sPhoneNotifier, i);
+                    }
+                    Rlog.i(LOG_TAG, "Creating Phone with type = " + phoneType + " sub = " + i);
+
+                    sProxyPhones[i] = new PhoneProxy(phone);
+                }
+                mProxyManager = ProxyManager.getInstance(context, sProxyPhones,
+                        mUiccController, sCommandsInterfaces);
+
+                sMadeMultiSimDefaults = true;
+
+                // Set the default phone in base class
+                sProxyPhone = sProxyPhones[MSimConstants.DEFAULT_SUBSCRIPTION];
+                sCommandsInterface = sCommandsInterfaces[MSimConstants.DEFAULT_SUBSCRIPTION];
+                sMadeDefaults = true;
 
                 // Ensure that we have a default SMS app. Requesting the app with
                 // updateIfNeeded set to true is enough to configure a default SMS app.
@@ -155,6 +201,23 @@ public class PhoneFactory {
         }
     }
 
+    public static Phone getCdmaPhone(int subscription) {
+        Phone phone;
+        synchronized(PhoneProxy.lockForRadioTechnologyChange) {
+            phone = new CDMALTEPhone(sContext, sCommandsInterfaces[subscription],
+                    sPhoneNotifier, subscription);
+        }
+        return phone;
+    }
+
+    public static Phone getGsmPhone(int subscription) {
+        synchronized(PhoneProxy.lockForRadioTechnologyChange) {
+            Phone phone = new GSMPhone(sContext, sCommandsInterfaces[subscription],
+                    sPhoneNotifier, subscription);
+            return phone;
+        }
+    }
+
     public static Phone getDefaultPhone() {
         if (sLooper != Looper.myLooper()) {
             throw new RuntimeException(
@@ -165,6 +228,21 @@ public class PhoneFactory {
             throw new IllegalStateException("Default phones haven't been made yet!");
         }
        return sProxyPhone;
+    }
+
+    public static Phone getPhone(int subscription) {
+        if (sLooper != Looper.myLooper()) {
+            throw new RuntimeException(
+                "PhoneFactory.getPhone must be called from Looper thread");
+        }
+        if (!sMadeMultiSimDefaults) {
+            if (!sMadeDefaults) {
+                throw new IllegalStateException("Default phones haven't been made yet!");
+            } else if (subscription == MSimConstants.DEFAULT_SUBSCRIPTION) {
+                return sProxyPhone;
+            }
+        }
+        return sProxyPhones[subscription];
     }
 
     public static Phone getCdmaPhone() {
@@ -201,4 +279,188 @@ public class PhoneFactory {
     public static SipPhone makeSipPhone(String sipUri) {
         return SipPhoneFactory.makePhone(sipUri, sContext, sPhoneNotifier);
     }
+
+    /* Sets the default subscription. If only one phone instance is active that
+     * subscription is set as default subscription. If both phone instances
+     * are active the first instance "0" is set as default subscription
+     */
+    public static void setDefaultSubscription(int subscription) {
+        SystemProperties.set(PROPERTY_DEFAULT_SUBSCRIPTION, Integer.toString(subscription));
+
+        // Set the default phone in base class
+        if (subscription >= 0 && subscription < sProxyPhones.length) {
+            sProxyPhone = sProxyPhones[subscription];
+            sCommandsInterface = sCommandsInterfaces[subscription];
+            sMadeDefaults = true;
+        }
+
+        // Update MCC MNC device configuration information
+        String defaultMccMnc = MSimTelephonyManager.getDefault().getSimOperator(subscription);
+        MccTable.updateMccMncConfiguration(sContext, defaultMccMnc);
+
+        // Broadcast an Intent for default sub change
+        Intent intent = new Intent(MSimTelephonyIntents.ACTION_DEFAULT_SUBSCRIPTION_CHANGED);
+        intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
+        intent.putExtra(MSimConstants.SUBSCRIPTION_KEY, subscription);
+        Rlog.d(LOG_TAG, "setDefaultSubscription : " + subscription
+                + " Broadcasting Default Subscription Changed...");
+        sContext.sendStickyBroadcastAsUser(intent, UserHandle.ALL);
+    }
+
+    /* Gets the default subscription */
+    public static int getDefaultSubscription() {
+        return SystemProperties.getInt(PROPERTY_DEFAULT_SUBSCRIPTION, 0);
+    }
+
+    /* Gets User preferred Voice subscription setting*/
+    public static int getVoiceSubscription() {
+        int subscription = 0;
+
+        try {
+            subscription = Settings.Global.getInt(sContext.getContentResolver(),
+                    Settings.Global.MULTI_SIM_VOICE_CALL_SUBSCRIPTION);
+        } catch (SettingNotFoundException snfe) {
+            Rlog.e(LOG_TAG, "Settings Exception Reading Dual Sim Voice Call Values");
+        }
+
+        // Set subscription to 0 if current subscription is invalid.
+        // Ex: multisim.config property is TSTS and subscription is 2.
+        // If user is trying to set multisim.config to DSDS and reboots
+        // in this case index 2 is invalid so need to set to 0.
+        if (subscription < 0 || subscription >= MSimTelephonyManager.getDefault().getPhoneCount()) {
+            Rlog.i(LOG_TAG, "Subscription is invalid..." + subscription + " Set to 0");
+            subscription = 0;
+            setVoiceSubscription(subscription);
+        }
+
+        return subscription;
+    }
+
+    /* Returns User Prompt property,  enabed or not */
+    public static boolean isPromptEnabled() {
+        boolean prompt = false;
+        int value = 0;
+        try {
+            value = Settings.Global.getInt(sContext.getContentResolver(),
+                    Settings.Global.MULTI_SIM_VOICE_PROMPT);
+        } catch (SettingNotFoundException snfe) {
+            Rlog.e(LOG_TAG, "Settings Exception Reading Dual Sim Voice Prompt Values");
+        }
+        prompt = (value == 0) ? false : true ;
+        Rlog.d(LOG_TAG, "Prompt option:" + prompt);
+
+       return prompt;
+    }
+
+    /*Sets User Prompt property,  enabed or not */
+    public static void setPromptEnabled(boolean enabled) {
+        int value = (enabled == false) ? 0 : 1;
+        Settings.Global.putInt(sContext.getContentResolver(),
+                Settings.Global.MULTI_SIM_VOICE_PROMPT, value);
+        Rlog.d(LOG_TAG, "setVoicePromptOption to " + enabled);
+    }
+
+    /* Returns User SMS Prompt property,  enabled or not */
+    public static boolean isSMSPromptEnabled() {
+        boolean prompt = false;
+        int value = 0;
+        try {
+            value = Settings.Global.getInt(sContext.getContentResolver(),
+                    Settings.Global.MULTI_SIM_SMS_PROMPT);
+        } catch (SettingNotFoundException snfe) {
+            Rlog.e(LOG_TAG, "Settings Exception Reading Dual Sim SMS Prompt Values");
+        }
+        prompt = (value == 0) ? false : true ;
+        Rlog.d(LOG_TAG, "SMS Prompt option:" + prompt);
+
+       return prompt;
+    }
+
+    /*Sets User SMS Prompt property,  enable or not */
+    public static void setSMSPromptEnabled(boolean enabled) {
+        int value = (enabled == false) ? 0 : 1;
+        Settings.Global.putInt(sContext.getContentResolver(),
+                Settings.Global.MULTI_SIM_SMS_PROMPT, value);
+        Rlog.d(LOG_TAG, "setSMSPromptOption to " + enabled);
+    }
+
+    /* Gets User preferred Data subscription setting*/
+    public static int getDataSubscription() {
+        int subscription = 0;
+
+        try {
+            subscription = Settings.Global.getInt(sContext.getContentResolver(),
+                    Settings.Global.MULTI_SIM_DATA_CALL_SUBSCRIPTION);
+        } catch (SettingNotFoundException snfe) {
+            Rlog.e(LOG_TAG, "Settings Exception Reading Dual Sim Data Call Values");
+        }
+
+        if (subscription < 0 || subscription >= MSimTelephonyManager.getDefault().getPhoneCount()) {
+            Rlog.i(LOG_TAG, "Subscription is invalid..." + subscription + " Set to 0");
+            subscription = 0;
+            setDataSubscription(subscription);
+        }
+
+        return subscription;
+    }
+
+    /* Gets User preferred SMS subscription setting*/
+    public static int getSMSSubscription() {
+        int subscription = 0;
+        try {
+            subscription = Settings.Global.getInt(sContext.getContentResolver(),
+                    Settings.Global.MULTI_SIM_SMS_SUBSCRIPTION);
+        } catch (SettingNotFoundException snfe) {
+            Rlog.e(LOG_TAG, "Settings Exception Reading Dual Sim SMS Values");
+        }
+
+        if (subscription < 0 || subscription >= MSimTelephonyManager.getDefault().getPhoneCount()) {
+            Rlog.i(LOG_TAG, "Subscription is invalid..." + subscription + " Set to 0");
+            subscription = 0;
+            setSMSSubscription(subscription);
+        }
+
+        return subscription;
+    }
+
+    static public void setVoiceSubscription(int subscription) {
+        Settings.Global.putInt(sContext.getContentResolver(),
+                Settings.Global.MULTI_SIM_VOICE_CALL_SUBSCRIPTION, subscription);
+        Rlog.d(LOG_TAG, "setVoiceSubscription : " + subscription);
+    }
+
+    static public void setDataSubscription(int subscription) {
+        boolean enabled;
+
+        Settings.Global.putInt(sContext.getContentResolver(),
+                Settings.Global.MULTI_SIM_DATA_CALL_SUBSCRIPTION, subscription);
+        Rlog.d(LOG_TAG, "setDataSubscription: " + subscription);
+
+        // Update the current mobile data flag
+        enabled = Settings.Global.getInt(sContext.getContentResolver(),
+                Settings.Global.MOBILE_DATA + subscription, 0) != 0;
+        Settings.Global.putInt(sContext.getContentResolver(),
+                Settings.Global.MOBILE_DATA, enabled ? 1 : 0);
+        Rlog.d(LOG_TAG, "set mobile_data: " + enabled);
+
+        // Update the current data roaming flag
+        enabled = Settings.Global.getInt(sContext.getContentResolver(),
+                Settings.Global.DATA_ROAMING + subscription, 0) != 0;
+        Settings.Global.putInt(sContext.getContentResolver(),
+                Settings.Global.DATA_ROAMING, enabled ? 1 : 0);
+        Rlog.d(LOG_TAG, "set data_roaming: " + enabled);
+    }
+
+    static public void setSMSSubscription(int subscription) {
+        Settings.Global.putInt(sContext.getContentResolver(),
+                Settings.Global.MULTI_SIM_SMS_SUBSCRIPTION, subscription);
+
+        Intent intent = new Intent("com.android.mms.transaction.SEND_MESSAGE");
+        sContext.sendBroadcast(intent);
+
+        // Change occured in SMS preferred sub, update the default
+        // SMS interface Manager object with the new SMS preferred subscription.
+        Rlog.d(LOG_TAG, "setSMSSubscription : " + subscription);
+    }
+
 }
