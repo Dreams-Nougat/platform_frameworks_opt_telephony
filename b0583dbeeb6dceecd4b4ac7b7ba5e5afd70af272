@@ -1,0 +1,28 @@
+Revision: b0583dbeeb6dceecd4b4ac7b7ba5e5afd70af272
+Patch-set: 1
+File: src/java/com/android/internal/telephony/PhoneFactory.java
+
+59
+Sat Feb 15 18:39:24 2014 +0000
+Author: srikanth chintala <1004552@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2f02758d_46e91290
+Bytes: 34
+check why all these are protected?
+
+File: src/java/com/android/internal/telephony/PhoneProxy.java
+
+81
+Sat Feb 15 18:39:24 2014 +0000
+Author: srikanth chintala <1004552@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: effbfdcb_c4885e0f
+Bytes: 102
+why init is required separately now? this was introduced extends PhoneProxy and create MSimPhoneProxy.
+
+267
+Sat Feb 15 18:39:24 2014 +0000
+Author: srikanth chintala <1004552@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff8f9d4_03978eeb
+Bytes: 96
+check this why it is written as separate function,
+now nothing should be there in derived class.
+
