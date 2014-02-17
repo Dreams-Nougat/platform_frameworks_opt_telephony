@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.android.internal.telephony.PhoneConstants.DEFAULT_SUBSCRIPTION;
 
 /**
  * (<em>Not for SDK use</em>)
@@ -145,6 +146,10 @@ public abstract class PhoneBase extends Handler implements Phone {
     private final String mActionDetached;
     private final String mActionAttached;
 
+    // Holds the subscription information
+    protected Subscription mSubscriptionData = null;
+    protected int mSubscription = DEFAULT_SUBSCRIPTION;
+
     @Override
     public String getPhoneName() {
         return mName;
@@ -175,6 +180,7 @@ public abstract class PhoneBase extends Handler implements Phone {
     /**
      * Set a system property, unless we're in unit test mode
      */
+    // CAF_MSIM TODO this need to be replated with TelephonyManager API ?
     public void setSystemProperty(String property, String value) {
         if(getUnitTestMode()) {
             return;
@@ -208,6 +214,9 @@ public abstract class PhoneBase extends Handler implements Phone {
             = new RegistrantList();
 
     protected final RegistrantList mSuppServiceFailedRegistrants
+            = new RegistrantList();
+
+    protected final RegistrantList mSimRecordsLoadedRegistrants
             = new RegistrantList();
 
     protected Looper mLooper; /* to insure registrants are in correct thread*/
@@ -249,6 +258,23 @@ public abstract class PhoneBase extends Handler implements Phone {
      */
     protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci,
             boolean unitTestMode) {
+        this(name, notifier, context, ci, unitTestMode, DEFAULT_SUBSCRIPTION);
+    }
+
+    /**
+     * Constructs a PhoneBase in normal (non-unit test) mode.
+     *
+     * @param notifier An instance of DefaultPhoneNotifier,
+     * @param context Context object from hosting application
+     * unless unit testing.
+     * @param ci is CommandsInterface
+     * @param unitTestMode when true, prevents notifications
+     * of state change events
+     * @param subscription is current phone subscription
+     */
+    protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci,
+            boolean unitTestMode, int subscription) {
+        mSubscription = subscription;
         mName = name;
         mNotifier = notifier;
         mContext = context;
@@ -560,6 +586,14 @@ public abstract class PhoneBase extends Handler implements Phone {
         checkCorrectThread(h);
 
         mMmiCompleteRegistrants.remove(h);
+    }
+
+    public void registerForSimRecordsLoaded(Handler h, int what, Object obj) {
+        logUnexpectedCdmaMethodCall("registerForSimRecordsLoaded");
+    }
+
+    public void unregisterForSimRecordsLoaded(Handler h) {
+        logUnexpectedCdmaMethodCall("unregisterForSimRecordsLoaded");
     }
 
     /**
@@ -1450,5 +1484,17 @@ public abstract class PhoneBase extends Handler implements Phone {
         pw.println(" getActiveApnTypes()=" + getActiveApnTypes());
         pw.println(" isDataConnectivityPossible()=" + isDataConnectivityPossible());
         pw.println(" needsOtaServiceProvisioning=" + needsOtaServiceProvisioning());
+    }
+
+    /**
+     * Returns the subscription id.
+     * Always returns default subscription(ie., 0).
+     */
+    public int getSubscription() {
+        return mSubscription;
+    }
+    //Gets Subscription information in the Phone Object
+    public Subscription getSubscriptionInfo() {
+        return mSubscriptionData;
     }
 }
