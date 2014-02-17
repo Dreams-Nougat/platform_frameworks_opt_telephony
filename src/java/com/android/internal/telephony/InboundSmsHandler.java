@@ -558,6 +558,13 @@ public abstract class InboundSmsHandler extends StateMachine {
             return Intents.RESULT_SMS_HANDLED;
         }
 
+        if ("encrypted".equals(SystemProperties.get("ro.crypto.state"))
+                && !"trigger_restart_framework".equals(SystemProperties.get("vold.decrypt"))) {
+            // Device is unable to receive SMS in encrypted state
+            log("Received a short message in encrypted state. Rejecting.");
+            return Intents.RESULT_SMS_GENERIC_ERROR;
+        }
+
         return dispatchMessageRadioSpecific(smsb);
     }
 
