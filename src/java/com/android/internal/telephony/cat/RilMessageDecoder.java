@@ -101,6 +101,10 @@ class RilMessageDecoder extends StateMachine {
         mCmdParamsFactory = CommandParamsFactory.getInstance(this, fh);
     }
 
+    private RilMessageDecoder() {
+        super("RilMessageDecoder");
+    }
+
     private class StateStart extends State {
         @Override
         public boolean processMessage(Message msg) {
