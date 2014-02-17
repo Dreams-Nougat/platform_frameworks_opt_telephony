@@ -38,6 +38,7 @@ import android.telephony.CellInfoCdma;
 import android.telephony.Rlog;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
+import android.telephony.TelephonyManager;
 import android.telephony.cdma.CdmaCellLocation;
 import android.text.TextUtils;
 import android.util.EventLog;
@@ -48,9 +49,10 @@ import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.CommandsInterface.RadioState;
 import com.android.internal.telephony.EventLogTags;
 import com.android.internal.telephony.MccTable;
-import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneConstants;
+import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.ServiceStateTracker;
+import com.android.internal.telephony.SubscriptionManager;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.dataconnection.DcTrackerBase;
@@ -529,6 +531,10 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
     protected void updateSpnDisplay() {
         // mOperatorAlphaLong contains the ERI text
         String plmn = mSS.getOperatorAlphaLong();
+
+       SubscriptionManager subMgr = SubscriptionManager.getInstance();
+       long [] subId = subMgr.getSubId(mPhone.getSubscription());
+
         if (!TextUtils.equals(plmn, mCurPlmn)) {
             // Allow A blank plmn, "" to set showPlmn to true. Previously, we
             // would set showPlmn to true only if plmn was not empty, i.e. was not
@@ -545,6 +551,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
             intent.putExtra(TelephonyIntents.EXTRA_SPN, "");
             intent.putExtra(TelephonyIntents.EXTRA_SHOW_PLMN, showPlmn);
             intent.putExtra(TelephonyIntents.EXTRA_PLMN, plmn);
+            intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY, subId[0]);
             mPhone.getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
         }
 
@@ -1282,7 +1289,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
      */
     private
     boolean isRoamingBetweenOperators(boolean cdmaRoaming, ServiceState s) {
-        String spn = SystemProperties.get(TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA, "empty");
+        String spn = getSystemProperty(TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA, "empty");
 
         // NOTE: in case of RUIM we should completely ignore the ERI data file and
         // mOperatorAlphaLong is set from RIL_REQUEST_OPERATOR response 0 (alpha ONS)
@@ -1368,7 +1375,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
                 zone = TimeZone.getTimeZone( tzname );
             }
 
-            String iso = SystemProperties.get(TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY);
+            String iso = getSystemProperty(TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY, "");
 
             if (zone == null) {
                 if (mGotCountryCode) {
@@ -1625,7 +1632,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
      */
     String getImsi() {
         // TODO: When RUIM is enabled, IMSI will come from RUIM not build-time props.
-        String operatorNumeric = SystemProperties.get(
+        String operatorNumeric = getSystemProperty(
                 TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, "");
 
         if (!TextUtils.isEmpty(operatorNumeric) && getCdmaMin() != null) {
@@ -1721,14 +1728,23 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
         }
     }
 
+    protected UiccCardApplication getUiccCardApplication() {
+        if (TelephonyManager.getDefault().isMultiSimEnabled()) {
+            return  mUiccController.getUiccCardApplication(SubscriptionManager.
+                    getInstance().getSlotId(mPhone.getSubscription()),
+                    UiccController.APP_FAM_3GPP2);
+        } else {
+             return  mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP2);
+        }
+    }
+
     @Override
     protected void onUpdateIccAvailability() {
         if (mUiccController == null ) {
             return;
         }
 
-        UiccCardApplication newUiccApplication =
-                mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP2);
+        UiccCardApplication newUiccApplication = getUiccCardApplication();
 
         if (mUiccApplcation != newUiccApplication) {
             if (mUiccApplcation != null) {
