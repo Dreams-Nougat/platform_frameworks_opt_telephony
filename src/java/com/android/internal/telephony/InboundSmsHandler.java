@@ -39,6 +39,7 @@ import android.telephony.Rlog;
 import android.telephony.SmsMessage;
 import android.telephony.TelephonyManager;
 
+import com.android.internal.telephony.PhoneBase;
 import com.android.internal.util.HexDump;
 import com.android.internal.util.State;
 import com.android.internal.util.StateMachine;
@@ -217,6 +218,11 @@ public abstract class InboundSmsHandler extends StateMachine {
         while (mWakeLock.isHeld()) {
             mWakeLock.release();
         }
+    }
+
+    // CAF_MSIM Is this used anywhere ? if not remove it
+    public PhoneBase getPhone() {
+        return mPhone;
     }
 
     /**
@@ -699,9 +705,14 @@ public abstract class InboundSmsHandler extends StateMachine {
      * @param permission receivers are required to have this permission
      * @param appOp app op that is being performed when dispatching to a receiver
      */
-    void dispatchIntent(Intent intent, String permission, int appOp,
+    protected void dispatchIntent(Intent intent, String permission, int appOp,
             BroadcastReceiver resultReceiver) {
+
+        SubscriptionManager subMgr = SubscriptionManager.getInstance();
+        long [] subId = subMgr.getSubId(mPhone.getSubscription());
         intent.addFlags(Intent.FLAG_RECEIVER_NO_ABORT);
+        intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY,
+                subId[0]);//Subscription information to be passed in an intent
         mContext.sendOrderedBroadcast(intent, permission, appOp, resultReceiver,
                 getHandler(), Activity.RESULT_OK, null, null);
     }

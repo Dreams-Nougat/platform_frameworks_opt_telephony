@@ -22,12 +22,17 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.telephony.CellInfo;
+import android.telephony.Rlog;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.telephony.PreciseCallState;
 import android.telephony.DisconnectCause;
 
+import com.android.internal.telephony.Call;
+import com.android.internal.telephony.CallManager;
+import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.ITelephonyRegistry;
+import com.android.internal.telephony.PhoneConstants;
 
 import java.util.List;
 
@@ -35,11 +40,12 @@ import java.util.List;
  * broadcast intents
  */
 public class DefaultPhoneNotifier implements PhoneNotifier {
+    static final String LOG_TAG = "DefaultPhoneNotifier";
 
-    private ITelephonyRegistry mRegistry;
+    protected ITelephonyRegistry mRegistry;
 
     /*package*/
-    DefaultPhoneNotifier() {
+    protected DefaultPhoneNotifier() {
         mRegistry = ITelephonyRegistry.Stub.asInterface(ServiceManager.getService(
                     "telephony.registry"));
     }
@@ -47,12 +53,53 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
     @Override
     public void notifyPhoneState(Phone sender) {
         Call ringingCall = sender.getRingingCall();
+        long subscription = sender.getSubscription();
         String incomingNumber = "";
         if (ringingCall != null && ringingCall.getEarliestConnection() != null){
             incomingNumber = ringingCall.getEarliestConnection().getAddress();
         }
         try {
-            mRegistry.notifyCallState(convertCallState(sender.getState()), incomingNumber);
+            mRegistry.notifyCallStateUsingSub(subscription,
+                    convertCallState(sender.getState()), incomingNumber);
+        } catch (RemoteException ex) {
+            // system process is dead
+        }
+        notifyCallStateToTelephonyRegistry(sender);
+    }
+
+    /*
+     *  Suppose, some third party app e.g. FM app registers for a call state changed indication
+     *  through TelephonyManager/PhoneStateListener and an incoming call is received on sub1 or
+     *  sub2. Then ir-respective of sub1/sub2 FM app should be informed of call state
+     *  changed(onCallStateChanged()) indication so that FM app can be paused.
+     *  Hence send consolidated call state information to apps. (i.e. sub1 or sub2 active
+     *  call state,  in priority order RINGING > OFFHOOK > IDLE)
+     */
+    public void notifyCallStateToTelephonyRegistry(Phone sender) {
+        Call ringingCall = null;
+        CallManager cm = CallManager.getInstance();
+        PhoneConstants.State state = sender.getState();
+        String incomingNumber = "";
+        for (Phone phone : cm.getAllPhones()) {
+            if (phone.getState() == PhoneConstants.State.RINGING) {
+                ringingCall = phone.getRingingCall();
+                if (ringingCall != null && ringingCall.getEarliestConnection() != null) {
+                    incomingNumber = ringingCall.getEarliestConnection().getAddress();
+                }
+                sender = phone;
+                state = PhoneConstants.State.RINGING;
+                break;
+            } else if (phone.getState() == PhoneConstants.State.OFFHOOK) {
+                if (state == PhoneConstants.State.IDLE) {
+                    state = PhoneConstants.State.OFFHOOK;
+                    sender = phone;
+                }
+            }
+        }
+        Rlog.d(LOG_TAG, "notifyCallStateToTelephonyRegistry, subscription = " + sender.getSubscription()
+                + " state = " + state);
+        try {
+            mRegistry.notifyCallState(convertCallState(state), incomingNumber);
         } catch (RemoteException ex) {
             // system process is dead
         }
@@ -61,12 +108,13 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
     @Override
     public void notifyServiceState(Phone sender) {
         ServiceState ss = sender.getServiceState();
+        long subscription = sender.getSubscription();
         if (ss == null) {
             ss = new ServiceState();
             ss.setStateOutOfService();
         }
         try {
-            mRegistry.notifyServiceState(ss);
+            mRegistry.notifyServiceStateUsingSub(subscription, ss);
         } catch (RemoteException ex) {
             // system process is dead
         }
@@ -74,8 +122,9 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
 
     @Override
     public void notifySignalStrength(Phone sender) {
+        long subscription = sender.getSubscription();
         try {
-            mRegistry.notifySignalStrength(sender.getSignalStrength());
+            mRegistry.notifySignalStrengthUsingSub(subscription, sender.getSignalStrength());
         } catch (RemoteException ex) {
             // system process is dead
         }
@@ -83,8 +132,10 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
 
     @Override
     public void notifyMessageWaitingChanged(Phone sender) {
+        long subscription = sender.getSubscription();
         try {
-            mRegistry.notifyMessageWaitingChanged(sender.getMessageWaitingIndicator());
+            mRegistry.notifyMessageWaitingChangedUsingSub(subscription,
+                    sender.getMessageWaitingIndicator());
         } catch (RemoteException ex) {
             // system process is dead
         }
@@ -92,8 +143,10 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
 
     @Override
     public void notifyCallForwardingChanged(Phone sender) {
+        long subscription = sender.getSubscription();
         try {
-            mRegistry.notifyCallForwardingChanged(sender.getCallForwardingIndicator());
+            mRegistry.notifyCallForwardingChangedUsingSub(subscription,
+                    sender.getCallForwardingIndicator());
         } catch (RemoteException ex) {
             // system process is dead
         }
@@ -116,6 +169,10 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
 
     private void doNotifyDataConnection(Phone sender, String reason, String apnType,
             PhoneConstants.DataState state) {
+        long subscription = sender.getSubscription();
+        int dds = PhoneFactory.getDataSubscription();
+        Rlog.d(LOG_TAG, "subscription = " + subscription + ", DDS = " + dds);
+
         // TODO
         // use apnType as the key to which connection we're talking about.
         // pass apnType back up to fetch particular for this one.
@@ -132,14 +189,14 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
         if (ss != null) roaming = ss.getRoaming();
 
         try {
-            mRegistry.notifyDataConnection(
+            mRegistry.notifyDataConnectionUsingSub(subscription,
                     convertDataState(state),
                     sender.isDataConnectivityPossible(apnType), reason,
                     sender.getActiveApnHost(apnType),
                     apnType,
                     linkProperties,
                     linkCapabilities,
-                    ((telephony!=null) ? telephony.getNetworkType() :
+                    ((telephony!=null) ? telephony.getDataNetworkType(subscription) :
                     TelephonyManager.NETWORK_TYPE_UNKNOWN),
                     roaming);
         } catch (RemoteException ex) {
@@ -149,8 +206,9 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
 
     @Override
     public void notifyDataConnectionFailed(Phone sender, String reason, String apnType) {
+        long subscription = sender.getSubscription();
         try {
-            mRegistry.notifyDataConnectionFailed(reason, apnType);
+            mRegistry.notifyDataConnectionFailedUsingSub(subscription, reason, apnType);
         } catch (RemoteException ex) {
             // system process is dead
         }
@@ -158,10 +216,11 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
 
     @Override
     public void notifyCellLocation(Phone sender) {
+        long subscription = sender.getSubscription();
         Bundle data = new Bundle();
         sender.getCellLocation().fillInNotifierBundle(data);
         try {
-            mRegistry.notifyCellLocation(data);
+            mRegistry.notifyCellLocationUsingSub(subscription, data);
         } catch (RemoteException ex) {
             // system process is dead
         }
@@ -169,8 +228,9 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
 
     @Override
     public void notifyCellInfo(Phone sender, List<CellInfo> cellInfo) {
+        long subscription = sender.getSubscription();
         try {
-            mRegistry.notifyCellInfo(cellInfo);
+            mRegistry.notifyCellInfoUsingSub(subscription, cellInfo);
         } catch (RemoteException ex) {
 
         }

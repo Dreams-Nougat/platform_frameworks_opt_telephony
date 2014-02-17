@@ -87,7 +87,11 @@ public class CellBroadcastHandler extends WakeLockStateMachine {
             receiverPermission = Manifest.permission.RECEIVE_SMS;
             appOp = AppOpsManager.OP_RECEIVE_SMS;
         }
+        SubscriptionManager subManager = SubscriptionManager.getInstance();
+        long [] subId = subManager.getSubId(mPhone.getSubscription());
         intent.putExtra("message", message);
+        intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY,
+                subId[0]); //Subscription information to be passed in an intent
         mContext.sendOrderedBroadcast(intent, receiverPermission, appOp, mReceiver,
                 getHandler(), Activity.RESULT_OK, null, null);
     }
