@@ -35,12 +35,11 @@ import com.android.internal.telephony.gsm.GsmInboundSmsHandler;
 import com.android.internal.telephony.cdma.CdmaInboundSmsHandler;
 import com.android.internal.telephony.SmsBroadcastUndelivered;
 
-public final class ImsSMSDispatcher extends SMSDispatcher {
+public class ImsSMSDispatcher extends SMSDispatcher {
     private static final String TAG = "RIL_ImsSms";
 
     private SMSDispatcher mCdmaDispatcher;
     private SMSDispatcher mGsmDispatcher;
-
     private GsmInboundSmsHandler mGsmInboundSmsHandler;
     private CdmaInboundSmsHandler mCdmaInboundSmsHandler;
 
@@ -54,8 +53,6 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
         super(phone, usageMonitor, null);
         Rlog.d(TAG, "ImsSMSDispatcher created");
 
-        // Create dispatchers, inbound SMS handlers and
-        // broadcast undelivered messages in raw table.
         mCdmaDispatcher = new CdmaSMSDispatcher(phone, usageMonitor, this);
         mGsmInboundSmsHandler = GsmInboundSmsHandler.makeInboundSmsHandler(phone.getContext(),
                 storageMonitor, phone);
@@ -198,6 +195,19 @@ public final class ImsSMSDispatcher extends SMSDispatcher {
         } else {
             mGsmDispatcher.sendText(destAddr, scAddr,
                     text, sentIntent, deliveryIntent);
+        }
+    }
+
+    // CAF_MSIM is this related to MSIM, if not remove it
+    @Override
+    protected void sendTextWithPriority(String destAddr, String scAddr, String text,
+            PendingIntent sentIntent, PendingIntent deliveryIntent, int priority) {
+        Rlog.d(TAG, "sendTextWithPriority");
+        if (isCdmaMo()) {
+            mCdmaDispatcher.sendTextWithPriority(destAddr, scAddr,
+                    text, sentIntent, deliveryIntent, priority);
+        } else {
+            Rlog.e(TAG, "priority is not supported in 3gpp text message!");
         }
     }
 
