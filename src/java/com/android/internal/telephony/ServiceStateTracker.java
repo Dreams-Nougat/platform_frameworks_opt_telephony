@@ -25,6 +25,7 @@ import android.os.SystemClock;
 import android.telephony.CellInfo;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
+import android.telephony.TelephonyManager;
 import android.util.Pair;
 import android.util.TimeUtils;
 
@@ -104,8 +105,8 @@ public abstract class ServiceStateTracker extends Handler {
     protected RegistrantList mPsRestrictDisabledRegistrants = new RegistrantList();
 
     /* Radio power off pending flag and tag counter */
-    private boolean mPendingRadioPowerOffAfterDataOff = false;
-    private int mPendingRadioPowerOffAfterDataOffTag = 0;
+    protected boolean mPendingRadioPowerOffAfterDataOff = false;
+    protected int mPendingRadioPowerOffAfterDataOffTag = 0;
 
     /** Signal strength poll rate. */
     protected static final int POLL_PERIOD_MILLIS = 20 * 1000;
@@ -154,7 +155,7 @@ public abstract class ServiceStateTracker extends Handler {
     protected static final int EVENT_CDMA_SUBSCRIPTION_SOURCE_CHANGED  = 39;
     protected static final int EVENT_CDMA_PRL_VERSION_CHANGED          = 40;
     protected static final int EVENT_RADIO_ON                          = 41;
-    protected static final int EVENT_ICC_CHANGED                       = 42;
+    public static final int EVENT_ICC_CHANGED                          = 42;
     protected static final int EVENT_GET_CELL_INFO_LIST                = 43;
     protected static final int EVENT_UNSOL_CELL_INFO_LIST              = 44;
 
@@ -703,6 +704,10 @@ public abstract class ServiceStateTracker extends Handler {
                     " ltod=" + TimeUtils.logTimeOfDay(ctm));
         }
         return retVal;
+    }
+
+    public String getSystemProperty(String property, String defValue) {
+        return TelephonyManager.getTelephonyProperty(property, mPhoneBase.mSubscription, defValue);
     }
 
     /**

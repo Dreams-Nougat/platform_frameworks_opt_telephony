@@ -29,6 +29,7 @@ import android.provider.Telephony.Sms.Intents;
 import android.telephony.Rlog;
 
 import com.android.internal.telephony.uicc.IccUtils;
+import com.android.internal.telephony.PhoneConstants;
 
 /**
  * WAP push handler class.
@@ -93,6 +94,8 @@ public class WapPushOverSms implements ServiceConnection {
         int index = 0;
         int transactionId = pdu[index++] & 0xFF;
         int pduType = pdu[index++] & 0xFF;
+        SubscriptionManager subMgr = SubscriptionManager.getInstance();
+        long [] subId = subMgr.getSubId(handler.getPhone().getSubscription());
 
         if ((pduType != WspTypeDecoder.PDU_TYPE_PUSH) &&
                 (pduType != WspTypeDecoder.PDU_TYPE_CONFIRMED_PUSH)) {
@@ -200,6 +203,8 @@ public class WapPushOverSms implements ServiceConnection {
                     intent.putExtra("data", intentData);
                     intent.putExtra("contentTypeParameters",
                             pduDecoder.getContentParameters());
+                    intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY,
+                            subId[0]);
 
                     int procRet = wapPushMan.processMessage(wapAppId, contentType, intent);
                     if (DBG) Rlog.v(TAG, "procRet:" + procRet);
@@ -240,6 +245,7 @@ public class WapPushOverSms implements ServiceConnection {
         intent.putExtra("header", header);
         intent.putExtra("data", intentData);
         intent.putExtra("contentTypeParameters", pduDecoder.getContentParameters());
+        intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY, subId[0]);
 
         // Direct the intent to only the default MMS app. If we can't find a default MMS app
         // then sent it to all broadcast receivers.
