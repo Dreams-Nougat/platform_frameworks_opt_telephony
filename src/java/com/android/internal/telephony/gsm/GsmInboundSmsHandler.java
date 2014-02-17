@@ -17,12 +17,15 @@
 package com.android.internal.telephony.gsm;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Message;
 import android.provider.Telephony.Sms.Intents;
 
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.InboundSmsHandler;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.SmsConstants;
 import com.android.internal.telephony.SmsMessageBase;
@@ -38,10 +41,11 @@ public class GsmInboundSmsHandler extends InboundSmsHandler {
     /** Handler for SMS-PP data download messages to UICC. */
     private final UsimDataDownloadHandler mDataDownloadHandler;
 
+
     /**
      * Create a new GSM inbound SMS handler.
      */
-    private GsmInboundSmsHandler(Context context, SmsStorageMonitor storageMonitor,
+    protected GsmInboundSmsHandler(Context context, SmsStorageMonitor storageMonitor,
             PhoneBase phone) {
         super("GsmInboundSmsHandler", context, storageMonitor, phone,
                 GsmCellBroadcastHandler.makeGsmCellBroadcastHandler(context, phone));
@@ -173,5 +177,14 @@ public class GsmInboundSmsHandler extends InboundSmsHandler {
             default:
                 return CommandsInterface.GSM_SMS_FAIL_CAUSE_UNSPECIFIED_ERROR;
         }
+    }
+
+    @Override
+    protected void dispatchIntent(Intent intent, String permission, int appOp,
+            BroadcastReceiver resultReceiver) {
+        intent.putExtra(MSimConstants.SUBSCRIPTION_KEY,
+                mPhone.getSubscription()); //Subscription information to be passed in an intent
+        mContext.sendOrderedBroadcast(intent, permission, appOp, resultReceiver,
+                getHandler(), Activity.RESULT_OK, null, null);
     }
 }

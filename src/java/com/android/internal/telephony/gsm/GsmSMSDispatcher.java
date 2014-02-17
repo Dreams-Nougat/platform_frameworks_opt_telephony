@@ -35,6 +35,7 @@ import com.android.internal.telephony.SmsConstants;
 import com.android.internal.telephony.SmsHeader;
 import com.android.internal.telephony.SmsStorageMonitor;
 import com.android.internal.telephony.SmsUsageMonitor;
+import com.android.internal.telephony.SubscriptionManager;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.IccUtils;
@@ -47,7 +48,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class GsmSMSDispatcher extends SMSDispatcher {
+public class GsmSMSDispatcher extends SMSDispatcher {
     private static final String TAG = "GsmSMSDispatcher";
     private static final boolean VDBG = false;
     protected UiccController mUiccController = null;
@@ -182,6 +183,13 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
 
     /** {@inheritDoc} */
     @Override
+    protected void sendTextWithPriority(String destAddr, String scAddr, String text,
+            PendingIntent sentIntent, PendingIntent deliveryIntent, int priority) {
+        Rlog.e(TAG, "priority is not supported in 3gpp text message!");
+    }
+
+    /** {@inheritDoc} */
+    @Override
     protected GsmAlphabet.TextEncodingDetails calculateLength(CharSequence messageBody,
             boolean use7bitOnly) {
         return SmsMessage.calculateLength(messageBody, use7bitOnly);
@@ -264,7 +272,15 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
     }
 
     protected UiccCardApplication getUiccCardApplication() {
-        return mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP);
+        SubscriptionManager subMgr = SubscriptionManager.getInstance();
+        if (subMgr != null) {
+            Rlog.d(TAG, "GsmSMSDispatcher: subId = " + mPhone.getSubscription()
+                    + " slotId = " + mPhone.getSubscription());
+            return  ((UiccController) mUiccController).getUiccCardApplication(
+                    SubscriptionManager.getInstance().getSlotId(mPhone.getSubscription()),
+                    UiccController.APP_FAM_3GPP);
+        }
+        return null;
     }
 
     private void onUpdateIccAvailability() {

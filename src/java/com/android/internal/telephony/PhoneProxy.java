@@ -1,6 +1,5 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
- * Copyright (c) 2013, The Linux Foundation. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +33,12 @@ import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
 import android.telephony.Rlog;
 
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.test.SimulatedRadioControl;
+import com.android.internal.telephony.cdma.CDMALTEPhone;
+import com.android.internal.telephony.gsm.GSMPhone;
 import com.android.internal.telephony.uicc.IccCardProxy;
+import com.android.internal.telephony.uicc.IccFileHandler;
 import com.android.internal.telephony.uicc.IsimRecords;
 import com.android.internal.telephony.uicc.UsimServiceTable;
 import com.android.internal.telephony.CallManager;
@@ -45,12 +48,12 @@ import java.util.List;
 public class PhoneProxy extends Handler implements Phone {
     public final static Object lockForRadioTechnologyChange = new Object();
 
-    private Phone mActivePhone;
-    private CommandsInterface mCommandsInterface;
-    private IccSmsInterfaceManager mIccSmsInterfaceManager;
-    private IccPhoneBookInterfaceManagerProxy mIccPhoneBookInterfaceManagerProxy;
-    private PhoneSubInfoProxy mPhoneSubInfoProxy;
-    private IccCardProxy mIccCardProxy;
+    protected Phone mActivePhone;
+    protected CommandsInterface mCommandsInterface;
+    protected IccSmsInterfaceManager mIccSmsInterfaceManager;
+    protected IccPhoneBookInterfaceManagerProxy mIccPhoneBookInterfaceManagerProxy;
+    protected PhoneSubInfoProxy mPhoneSubInfoProxy;
+    protected IccCardProxy mIccCardProxy;
 
     private boolean mResetModemOnRadioTechnologyChange = false;
 
@@ -62,15 +65,15 @@ public class PhoneProxy extends Handler implements Phone {
     private static final int EVENT_RIL_CONNECTED = 4;
     private static final int EVENT_UPDATE_PHONE_OBJECT = 5;
 
-    private static final String LOG_TAG = "PhoneProxy";
+    private int mSubscription = 0;
+
+    protected static final String LOG_TAG = "PhoneProxy";
 
     //***** Class Methods
     public PhoneProxy(PhoneBase phone) {
         mActivePhone = phone;
         mResetModemOnRadioTechnologyChange = SystemProperties.getBoolean(
                 TelephonyProperties.PROPERTY_RESET_ON_RADIO_TECH_CHANGE, false);
-        mIccSmsInterfaceManager =
-                new IccSmsInterfaceManager((PhoneBase) this.mActivePhone);
         mIccPhoneBookInterfaceManagerProxy = new IccPhoneBookInterfaceManagerProxy(
                 phone.getIccPhoneBookInterfaceManager());
         mPhoneSubInfoProxy = new PhoneSubInfoProxy(phone.getPhoneSubInfo());
@@ -80,13 +83,21 @@ public class PhoneProxy extends Handler implements Phone {
         mCommandsInterface.registerForOn(this, EVENT_RADIO_ON, null);
         mCommandsInterface.registerForVoiceRadioTechChanged(
                              this, EVENT_VOICE_RADIO_TECH_CHANGED, null);
-        mIccCardProxy = new IccCardProxy(phone.getContext(), mCommandsInterface);
+        mSubscription = phone.getSubscription();
+        init();
+
         if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
             // For the purpose of IccCardProxy we only care about the technology family
             mIccCardProxy.setVoiceRadioTech(ServiceState.RIL_RADIO_TECHNOLOGY_UMTS);
         } else if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_CDMA) {
             mIccCardProxy.setVoiceRadioTech(ServiceState.RIL_RADIO_TECHNOLOGY_1xRTT);
         }
+    }
+
+    protected void init() {
+        mIccSmsInterfaceManager =
+                new IccSmsInterfaceManager((PhoneBase)this.mActivePhone);
+        mIccCardProxy = new IccCardProxy(mActivePhone.getContext(), mCommandsInterface, mActivePhone.getSubscription());
     }
 
     @Override
@@ -145,7 +156,7 @@ public class PhoneProxy extends Handler implements Phone {
         Rlog.e(LOG_TAG, "[PhoneProxy] " + msg);
     }
 
-    private void phoneObjectUpdater(int newVoiceRadioTech) {
+    public void phoneObjectUpdater(int newVoiceRadioTech) {
         logd("phoneObjectUpdater: newVoiceRadioTech=" + newVoiceRadioTech);
 
         if (mActivePhone != null) {
@@ -221,11 +232,15 @@ public class PhoneProxy extends Handler implements Phone {
 
         mCommandsInterface = ((PhoneBase)mActivePhone).mCi;
         mIccCardProxy.setVoiceRadioTech(newVoiceRadioTech);
+        sendBroadcastStickyIntent();
+    }
 
+    protected void sendBroadcastStickyIntent() {
         // Send an Intent to the PhoneApp that we had a radio technology change
         Intent intent = new Intent(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED);
         intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
         intent.putExtra(PhoneConstants.PHONE_NAME_KEY, mActivePhone.getPhoneName());
+        intent.putExtra(MSimConstants.SUBSCRIPTION_KEY, mSubscription);
         ActivityManagerNative.broadcastStickyIntent(intent, null, UserHandle.USER_ALL);
 
     }
@@ -255,11 +270,7 @@ public class PhoneProxy extends Handler implements Phone {
         // system is busy.
         // System.gc();
 
-        if (ServiceState.isCdma(newVoiceRadioTech)) {
-            mActivePhone = PhoneFactory.getCdmaPhone();
-        } else if (ServiceState.isGsm(newVoiceRadioTech)) {
-            mActivePhone = PhoneFactory.getGsmPhone();
-        }
+        createNewPhone(newVoiceRadioTech);
 
         if (oldPhone != null) {
             oldPhone.removeReferences();
@@ -270,6 +281,30 @@ public class PhoneProxy extends Handler implements Phone {
         }
 
         oldPhone = null;
+    }
+
+    protected void createNewPhone(int newVoiceRadioTech) {
+        if (ServiceState.isCdma(newVoiceRadioTech)) {
+            mActivePhone = PhoneFactory.getCdmaPhone();
+        } else if (ServiceState.isGsm(newVoiceRadioTech)) {
+            mActivePhone = PhoneFactory.getGsmPhone();
+        }
+    }
+
+    public IccSmsInterfaceManager getIccSmsInterfaceManager(){
+        return mIccSmsInterfaceManager;
+    }
+
+    public PhoneSubInfoProxy getPhoneSubInfoProxy(){
+        return mPhoneSubInfoProxy;
+    }
+
+    public IccPhoneBookInterfaceManagerProxy getIccPhoneBookInterfaceManagerProxy() {
+        return mIccPhoneBookInterfaceManagerProxy;
+    }
+
+    public IccFileHandler getIccFileHandler() {
+        return ((GSMPhone)mActivePhone).getIccFileHandler();
     }
 
     @Override
@@ -552,6 +587,15 @@ public class PhoneProxy extends Handler implements Phone {
     @Override
     public void unregisterForResendIncallMute(Handler h) {
         mActivePhone.unregisterForResendIncallMute(h);
+    }
+
+    @Override
+    public void registerForSimRecordsLoaded(Handler h, int what, Object obj) {
+        mActivePhone.registerForSimRecordsLoaded(h,what,obj);
+    }
+
+    public void unregisterForSimRecordsLoaded(Handler h) {
+        mActivePhone.unregisterForSimRecordsLoaded(h);
     }
 
     @Override
@@ -1187,4 +1231,78 @@ public class PhoneProxy extends Handler implements Phone {
         mActivePhone = null;
         mCommandsInterface = null;
     }
+
+    public boolean updateCurrentCarrierInProvider() {
+        if (mActivePhone instanceof CDMALTEPhone) {
+            return ((CDMALTEPhone)mActivePhone).updateCurrentCarrierInProvider();
+        } else if (mActivePhone instanceof GSMPhone) {
+            return ((GSMPhone)mActivePhone).updateCurrentCarrierInProvider();
+        } else {
+           loge("Phone object is not MultiSim. This should not hit!!!!");
+           return false;
+        }
+    }
+
+    public void updateDataConnectionTracker() {
+        logd("Updating Data Connection Tracker");
+        if (mActivePhone instanceof CDMALTEPhone) {
+            ((CDMALTEPhone)mActivePhone).updateDataConnectionTracker();
+        } else if (mActivePhone instanceof GSMPhone) {
+            ((GSMPhone)mActivePhone).updateDataConnectionTracker();
+        } else {
+           loge("Phone object is not MultiSim. This should not hit!!!!");
+        }
+    }
+
+    public void setInternalDataEnabled(boolean enable) {
+        setInternalDataEnabled(enable, null);
+    }
+
+    public boolean setInternalDataEnabledFlag(boolean enable) {
+        boolean flag = false;
+        if (mActivePhone instanceof CDMALTEPhone) {
+            flag = ((CDMALTEPhone)mActivePhone).setInternalDataEnabledFlag(enable);
+        } else if (mActivePhone instanceof GSMPhone) {
+            flag = ((GSMPhone)mActivePhone).setInternalDataEnabledFlag(enable);
+        } else {
+           loge("Phone object is not MultiSim. This should not hit!!!!");
+        }
+        return flag;
+    }
+
+    public void setInternalDataEnabled(boolean enable, Message onCompleteMsg) {
+        if (mActivePhone instanceof CDMALTEPhone) {
+            ((CDMALTEPhone)mActivePhone).setInternalDataEnabled(enable, onCompleteMsg);
+        } else if (mActivePhone instanceof GSMPhone) {
+            ((GSMPhone)mActivePhone).setInternalDataEnabled(enable, onCompleteMsg);
+        } else {
+           loge("Phone object is not MultiSim. This should not hit!!!!");
+        }
+    }
+
+    public void registerForAllDataDisconnected(Handler h, int what, Object obj) {
+        if (mActivePhone instanceof CDMALTEPhone) {
+            ((CDMALTEPhone)mActivePhone).registerForAllDataDisconnected(h, what, obj);
+        } else if (mActivePhone instanceof GSMPhone) {
+            ((GSMPhone)mActivePhone).registerForAllDataDisconnected(h, what, obj);
+        } else {
+           loge("Phone object is not MultiSim. This should not hit!!!!");
+        }
+    }
+
+    public void unregisterForAllDataDisconnected(Handler h) {
+        if (mActivePhone instanceof CDMALTEPhone) {
+            ((CDMALTEPhone)mActivePhone).unregisterForAllDataDisconnected(h);
+        } else if (mActivePhone instanceof GSMPhone) {
+            ((GSMPhone)mActivePhone).unregisterForAllDataDisconnected(h);
+        } else {
+           loge("Phone object is not MultiSim. This should not hit!!!!");
+        }
+    }
+
+
+    public int getSubscription() {
+        return mActivePhone.getSubscription();
+    }
+
 }

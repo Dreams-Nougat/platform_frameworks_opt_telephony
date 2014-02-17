@@ -32,6 +32,7 @@ import android.provider.Telephony;
 import android.telephony.CellLocation;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.ServiceState;
+import android.telephony.TelephonyManager;
 import com.android.internal.telephony.CallTracker;
 import android.text.TextUtils;
 import android.telephony.Rlog;
@@ -61,10 +62,13 @@ import com.android.internal.telephony.MmiCode;
 import com.android.internal.telephony.OperatorInfo;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneBase;
+import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneNotifier;
 import com.android.internal.telephony.PhoneProxy;
 import com.android.internal.telephony.PhoneSubInfo;
+import com.android.internal.telephony.Subscription;
+import com.android.internal.telephony.SubscriptionManager;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.UUSInfo;
 import com.android.internal.telephony.test.SimulatedRadioControl;
@@ -83,6 +87,10 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.android.internal.telephony.MSimConstants.EVENT_SUBSCRIPTION_ACTIVATED;
+import static com.android.internal.telephony.MSimConstants.EVENT_SUBSCRIPTION_DEACTIVATED;
+
+
 /**
  * {@hide}
  */
@@ -90,7 +98,7 @@ public class GSMPhone extends PhoneBase {
     // NOTE that LOG_TAG here is "GSM", which means that log messages
     // from this file will go into the radio log rather than the main
     // log.  (Use "adb logcat -b radio" to see them.)
-    static final String LOG_TAG = "GSMPhone";
+    protected static final String LOG_TAG = "GSMPhone";
     private static final boolean LOCAL_DEBUG = true;
     private static final boolean VDBG = false; /* STOPSHIP if true */
 
@@ -101,11 +109,19 @@ public class GSMPhone extends PhoneBase {
     // Key used to read/write the SIM IMSI used for storing the voice mail
     public static final String VM_SIM_IMSI = "vm_sim_imsi_key";
 
+    // CAF_MSIM check and remove
+    public String mVmNumGsmKey = null;
+    public String mVmImsi = null;
+
+    // Holds the subscription information
+    private Subscription mSubscriptionData = null;
+    private int mSubscription = 0;
+
     // Instance Variables
     GsmCallTracker mCT;
-    GsmServiceStateTracker mSST;
+    protected GsmServiceStateTracker mSST;
     ArrayList <GsmMmiCode> mPendingMMIs = new ArrayList<GsmMmiCode>();
-    SimPhoneBookInterfaceManager mSimPhoneBookIntManager;
+    protected SimPhoneBookInterfaceManager mSimPhoneBookIntManager;
     PhoneSubInfo mSubInfo;
 
 
@@ -114,8 +130,8 @@ public class GSMPhone extends PhoneBase {
     /** List of Registrants to receive Supplementary Service Notifications. */
     RegistrantList mSsnRegistrants = new RegistrantList();
 
-    private String mImei;
-    private String mImeiSv;
+    protected String mImei;
+    protected String mImeiSv;
     private String mVmNumber;
 
     // Create Cfu (Call forward unconditional) so that dialling number &
@@ -148,9 +164,9 @@ public class GSMPhone extends PhoneBase {
 
         mCi.setPhoneType(PhoneConstants.PHONE_TYPE_GSM);
         mCT = new GsmCallTracker(this);
-        mSST = new GsmServiceStateTracker (this);
 
-        mDcTracker = new DcTracker(this);
+        initSubscriptionSpecifics();
+
         if (!unitTestMode) {
             mSimPhoneBookIntManager = new SimPhoneBookInterfaceManager(this);
             mSubInfo = new PhoneSubInfo(this);
@@ -162,10 +178,46 @@ public class GSMPhone extends PhoneBase {
         mCi.setOnUSSD(this, EVENT_USSD, null);
         mCi.setOnSuppServiceNotification(this, EVENT_SSN, null);
         mSST.registerForNetworkAttached(this, EVENT_REGISTERED_TO_NETWORK, null);
+        setProperties();
+    }
 
-        //Change the system property
-        SystemProperties.set(TelephonyProperties.CURRENT_ACTIVE_PHONE,
+    public
+    GSMPhone (Context context, CommandsInterface ci, PhoneNotifier notifier, int subscription) {
+        this(context, ci, notifier, false, subscription);
+    }
+
+    public
+    GSMPhone (Context context, CommandsInterface ci,
+            PhoneNotifier notifier, boolean unitTestMode, int subscription) {
+        this(context, ci, notifier, unitTestMode);
+
+        mSubscription = subscription;
+
+        log("GSMPhone: constructor: sub = " + mSubscription);
+
+        mVmNumGsmKey = VM_NUMBER + mSubscription;
+        mVmImsi = VM_SIM_IMSI + mSubscription;
+
+        mDcTracker = new DcTracker (this);
+
+        SubscriptionManager subMgr = SubscriptionManager.getInstance();
+        subMgr.registerForSubscriptionActivated(mSubscription,
+                this, EVENT_SUBSCRIPTION_ACTIVATED, null);
+        subMgr.registerForSubscriptionDeactivated(mSubscription,
+                this, EVENT_SUBSCRIPTION_DEACTIVATED, null);
+
+        setProperties();
+    }
+
+    protected void setProperties() {
+        TelephonyManager.setTelephonyProperty(TelephonyProperties.CURRENT_ACTIVE_PHONE,
+                mSubscription,
                 new Integer(PhoneConstants.PHONE_TYPE_GSM).toString());
+    }
+
+    protected void initSubscriptionSpecifics() {
+        mSST = new GsmServiceStateTracker(this);
+        mDcTracker = new DcTracker(this);
     }
 
     @Override
@@ -190,6 +242,10 @@ public class GSMPhone extends PhoneBase {
             mSST.dispose();
             mSimPhoneBookIntManager.dispose();
             mSubInfo.dispose();
+            
+            SubscriptionManager subMgr = SubscriptionManager.getInstance();
+            subMgr.unregisterForSubscriptionActivated(mSubscription, this);
+            subMgr.unregisterForSubscriptionDeactivated(mSubscription, this);
         }
     }
 
@@ -210,6 +266,39 @@ public class GSMPhone extends PhoneBase {
     }
 
 
+    private void onSubscriptionActivated() {
+        SubscriptionManager subMgr = SubscriptionManager.getInstance();
+        mSubscriptionData = subMgr.getCurrentSubscription(mSubscription);
+
+        log("SUBSCRIPTION ACTIVATED : slotId : " + mSubscriptionData.slotId
+                + " appid : " + mSubscriptionData.m3gppIndex
+                + " subId : " + mSubscriptionData.subId
+                + " subStatus : " + mSubscriptionData.subStatus);
+
+        // Make sure properties are set for proper subscription.
+        setProperties();
+
+        onUpdateIccAvailability();
+        mSST.sendMessage(mSST.obtainMessage(ServiceStateTracker.EVENT_ICC_CHANGED));
+        ((DcTracker)mDcTracker).updateRecords();
+
+        // read the subscription specifics now
+        mCi.getIMEI(obtainMessage(EVENT_GET_IMEI_DONE));
+        mCi.getBasebandVersion(obtainMessage(EVENT_GET_BASEBAND_VERSION_DONE));
+        mCi.getIMEISV(obtainMessage(EVENT_GET_IMEISV_DONE));
+    }
+
+    private void onSubscriptionDeactivated() {
+        log("SUBSCRIPTION DEACTIVATED");
+        mSubscriptionData = null;
+        resetSubSpecifics();
+    }
+
+    //Gets Subscription information in the Phone Object
+    public Subscription getSubscriptionInfo() {
+        return mSubscriptionData;
+    }
+
     @Override
     public ServiceState
     getServiceState() {
@@ -219,6 +308,14 @@ public class GSMPhone extends PhoneBase {
             // avoid potential NPE in EmergencyCallHelper during Phone switch
             return new ServiceState();
         }
+    }
+
+    /**
+     * Returns the subscription id.
+     */
+    @Override
+    public int getSubscription() {
+        return mSubscription;
     }
 
     @Override
@@ -391,9 +488,9 @@ public class GSMPhone extends PhoneBase {
      * {@inheritDoc}
      */
     @Override
-    public final void
+    public void
     setSystemProperty(String property, String value) {
-        super.setSystemProperty(property, value);
+        TelephonyManager.setTelephonyProperty(property, mSubscription, value);
     }
 
     @Override
@@ -407,6 +504,16 @@ public class GSMPhone extends PhoneBase {
     public void unregisterForSuppServiceNotification(Handler h) {
         mSsnRegistrants.remove(h);
         if (mSsnRegistrants.size() == 0) mCi.setSuppServiceNotifications(false, null);
+    }
+
+    @Override
+    public void registerForSimRecordsLoaded(Handler h, int what, Object obj) {
+        mSimRecordsLoadedRegistrants.addUnique(h, what, obj);
+    }
+
+    @Override
+    public void unregisterForSimRecordsLoaded(Handler h) {
+        mSimRecordsLoadedRegistrants.remove(h);
     }
 
     @Override
@@ -777,7 +884,7 @@ public class GSMPhone extends PhoneBase {
         mSST.setRadioPower(power);
     }
 
-    private void storeVoiceMailNumber(String number) {
+    protected void storeVoiceMailNumber(String number) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         SharedPreferences.Editor editor = sp.edit();
         editor.putString(VM_NUMBER, number);
@@ -802,7 +909,7 @@ public class GSMPhone extends PhoneBase {
         return sp.getString(VM_SIM_IMSI, null);
     }
 
-    private void setVmSimImsi(String imsi) {
+    protected void setVmSimImsi(String imsi) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         SharedPreferences.Editor editor = sp.edit();
         editor.putString(VM_SIM_IMSI, imsi);
@@ -917,6 +1024,13 @@ public class GSMPhone extends PhoneBase {
         }
     }
 
+    public String getSystemProperty(String property, String defValue) {
+        if(getUnitTestMode()) {
+            return null;
+        }
+        return TelephonyManager.getTelephonyProperty(property, mSubscription, defValue);
+    }
+
     private boolean isValidCommandInterfaceCFAction (int commandInterfaceCFAction) {
         switch (commandInterfaceCFAction) {
         case CF_ACTION_DISABLE:
@@ -927,6 +1041,10 @@ public class GSMPhone extends PhoneBase {
         default:
             return false;
         }
+    }
+
+    public void updateDataConnectionTracker() {
+        ((DcTracker)mDcTracker).update();
     }
 
     protected  boolean isCfEnable(int action) {
@@ -1226,6 +1344,7 @@ public class GSMPhone extends PhoneBase {
                     setVmSimImsi(null);
                 }
 
+                mSimRecordsLoadedRegistrants.notifyRegistrants();
             break;
 
             case EVENT_GET_BASEBAND_VERSION_DONE:
@@ -1359,9 +1478,34 @@ public class GSMPhone extends PhoneBase {
                 }
                 break;
 
+            case EVENT_SUBSCRIPTION_ACTIVATED:
+                log("EVENT_SUBSCRIPTION_ACTIVATED");
+                onSubscriptionActivated();
+                break;
+
+            case EVENT_SUBSCRIPTION_DEACTIVATED:
+                log("EVENT_SUBSCRIPTION_DEACTIVATED");
+                onSubscriptionDeactivated();
+                break;
+
              default:
                  super.handleMessage(msg);
         }
+    }
+
+    protected UiccCardApplication getUiccCardApplication() {
+        return  ((UiccController) mUiccController).getUiccCardApplication(SubscriptionManager.
+                getInstance().getSlotId(mSubscription), UiccController.APP_FAM_3GPP);
+    }
+
+    // Set the Card into the Phone Book.
+    @Override
+    protected void setCardInPhoneBook() {
+        if (mUiccController == null ) {
+            return;
+        }
+
+        mSimPhoneBookIntManager.setIccCard(mUiccController.getUiccCard());
     }
 
     @Override
@@ -1370,8 +1514,11 @@ public class GSMPhone extends PhoneBase {
             return;
         }
 
-        UiccCardApplication newUiccApplication =
-                mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP);
+        // Get the latest info on the card and
+        // send this to Phone Book
+        setCardInPhoneBook();
+
+        UiccCardApplication newUiccApplication = getUiccCardApplication();
 
         UiccCardApplication app = mUiccApplication.get();
         if (app != newUiccApplication) {
@@ -1379,7 +1526,6 @@ public class GSMPhone extends PhoneBase {
                 if (LOCAL_DEBUG) log("Removing stale icc objects.");
                 if (mIccRecords.get() != null) {
                     unregisterForSimRecordEvents();
-                    mSimPhoneBookIntManager.updateIccRecords(null);
                 }
                 mIccRecords.set(null);
                 mUiccApplication.set(null);
@@ -1389,7 +1535,6 @@ public class GSMPhone extends PhoneBase {
                 mUiccApplication.set(newUiccApplication);
                 mIccRecords.set(newUiccApplication.getIccRecords());
                 registerForSimRecordEvents();
-                mSimPhoneBookIntManager.updateIccRecords(mIccRecords.get());
             }
         }
     }
@@ -1411,12 +1556,17 @@ public class GSMPhone extends PhoneBase {
      * @return true for success; false otherwise.
      */
     public boolean updateCurrentCarrierInProvider() {
-        IccRecords r = mIccRecords.get();
-        if (r != null) {
+        int currentDds = PhoneFactory.getDataSubscription();
+        String operatorNumeric = getOperatorNumeric();
+
+        log("updateCurrentCarrierInProvider: mSubscription = " + getSubscription()
+                + " currentDds = " + currentDds + " operatorNumeric = " + operatorNumeric);
+
+        if (!TextUtils.isEmpty(operatorNumeric) && (getSubscription() == currentDds)) {
             try {
                 Uri uri = Uri.withAppendedPath(Telephony.Carriers.CONTENT_URI, "current");
                 ContentValues map = new ContentValues();
-                map.put(Telephony.Carriers.NUMERIC, r.getOperatorNumeric());
+                map.put(Telephony.Carriers.NUMERIC, operatorNumeric);
                 mContext.getContentResolver().insert(uri, map);
                 return true;
             } catch (SQLException e) {
@@ -1424,6 +1574,7 @@ public class GSMPhone extends PhoneBase {
             }
         }
         return false;
+
     }
 
     /**
@@ -1588,6 +1739,40 @@ public class GSMPhone extends PhoneBase {
         pw.println(" mVmNumber=" + mVmNumber);
     }
 
+    /**
+     * @return operator numeric.
+     */
+    public String getOperatorNumeric() {
+        String operatorNumeric = null;
+        IccRecords r = mIccRecords.get();
+        if (r != null) {
+            operatorNumeric = r.getOperatorNumeric();
+        }
+        return operatorNumeric;
+    }
+
+    public void registerForAllDataDisconnected(Handler h, int what, Object obj) {
+        ((DcTracker)mDcTracker)
+                .registerForAllDataDisconnected(h, what, obj);
+    }
+
+    public void unregisterForAllDataDisconnected(Handler h) {
+        ((DcTracker)mDcTracker).unregisterForAllDataDisconnected(h);
+    }
+
+    public void setInternalDataEnabled(boolean enable, Message onCompleteMsg) {
+        ((DcTracker)mDcTracker)
+                .setInternalDataEnabled(enable, onCompleteMsg);
+    }
+
+
+    public boolean setInternalDataEnabledFlag(boolean enable) {
+        return ((DcTracker)mDcTracker)
+                .setInternalDataEnabledFlag(enable);
+    }
+
+    public void resetSubSpecifics() {
+    }
     protected void log(String s) {
         Rlog.d(LOG_TAG, "[GSMPhone] " + s);
     }

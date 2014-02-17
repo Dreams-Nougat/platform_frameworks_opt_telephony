@@ -17,7 +17,9 @@
 package com.android.internal.telephony.cdma;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.os.Message;
@@ -30,6 +32,7 @@ import com.android.internal.telephony.CellBroadcastHandler;
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.InboundSmsHandler;
 import com.android.internal.telephony.InboundSmsTracker;
+import com.android.internal.telephony.MSimConstants;
 import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.SmsConstants;
 import com.android.internal.telephony.SmsMessageBase;
@@ -46,7 +49,7 @@ import java.util.Arrays;
 public class CdmaInboundSmsHandler extends InboundSmsHandler {
 
     private final CdmaSMSDispatcher mSmsDispatcher;
-    private final CdmaServiceCategoryProgramHandler mServiceCategoryProgramHandler;
+    protected CdmaServiceCategoryProgramHandler mServiceCategoryProgramHandler;
 
     private byte[] mLastDispatchedSmsFingerprint;
     private byte[] mLastAcknowledgedSmsFingerprint;
@@ -57,14 +60,18 @@ public class CdmaInboundSmsHandler extends InboundSmsHandler {
     /**
      * Create a new inbound SMS handler for CDMA.
      */
-    private CdmaInboundSmsHandler(Context context, SmsStorageMonitor storageMonitor,
+    protected CdmaInboundSmsHandler(Context context, SmsStorageMonitor storageMonitor,
             PhoneBase phone, CdmaSMSDispatcher smsDispatcher) {
         super("CdmaInboundSmsHandler", context, storageMonitor, phone,
                 CellBroadcastHandler.makeCellBroadcastHandler(context));
         mSmsDispatcher = smsDispatcher;
+        init(context, phone);
+        phone.mCi.setOnNewCdmaSms(getHandler(), EVENT_NEW_SMS, null);
+    }
+
+    protected void init(Context context, PhoneBase phone) {
         mServiceCategoryProgramHandler = CdmaServiceCategoryProgramHandler.makeScpHandler(context,
                 phone.mCi);
-        phone.mCi.setOnNewCdmaSms(getHandler(), EVENT_NEW_SMS, null);
     }
 
     /**
@@ -354,4 +361,22 @@ public class CdmaInboundSmsHandler extends InboundSmsHandler {
         String mimeType = pduDecoder.getValueString();
         return (WspTypeDecoder.CONTENT_TYPE_B_PUSH_SYNCML_NOTI.equals(mimeType));
     }
+
+    /**
+     * Dispatch the intent with the specified permission, appOp, and result receiver, using
+     * this state machine's handler thread to run the result receiver.
+     *
+     * @param intent the intent to broadcast
+     * @param permission receivers are required to have this permission
+     * @param appOp app op that is being performed when dispatching to a receiver
+     */
+    @Override
+    protected void dispatchIntent(Intent intent, String permission, int appOp,
+            BroadcastReceiver resultReceiver) {
+        intent.putExtra(MSimConstants.SUBSCRIPTION_KEY,
+                mPhone.getSubscription()); //Subscription information to be passed in an intent
+        mContext.sendOrderedBroadcast(intent, permission, appOp, resultReceiver,
+                getHandler(), Activity.RESULT_OK, null, null);
+    }
+
 }
