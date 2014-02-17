@@ -31,7 +31,7 @@ import android.telephony.SmsCbMessage;
  */
 public class CellBroadcastHandler extends WakeLockStateMachine {
 
-    private CellBroadcastHandler(Context context) {
+    protected CellBroadcastHandler(Context context) {
         this("CellBroadcastHandler", context, null);
     }
 
@@ -88,6 +88,8 @@ public class CellBroadcastHandler extends WakeLockStateMachine {
             appOp = AppOpsManager.OP_RECEIVE_SMS;
         }
         intent.putExtra("message", message);
+        intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY,
+                mPhone.getSubscription()); //Subscription information to be passed in an intent
         mContext.sendOrderedBroadcast(intent, receiverPermission, appOp, mReceiver,
                 getHandler(), Activity.RESULT_OK, null, null);
     }
