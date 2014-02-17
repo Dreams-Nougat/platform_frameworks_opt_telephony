@@ -57,10 +57,14 @@ import com.android.internal.telephony.CommandException;
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.EventLogTags;
 import com.android.internal.telephony.MccTable;
+import com.android.internal.telephony.MSimConstants;
+import com.android.internal.telephony.MSimProxyManager;
 import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.RILConstants;
 import com.android.internal.telephony.RestrictedState;
 import com.android.internal.telephony.ServiceStateTracker;
+import com.android.internal.telephony.SubscriptionManager;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.dataconnection.DcTrackerBase;
@@ -79,14 +83,17 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import static com.android.internal.telephony.MSimConstants.DEFAULT_SUBSCRIPTION;
+
 /**
  * {@hide}
  */
 final class GsmServiceStateTracker extends ServiceStateTracker {
-    private static final String LOG_TAG = "GsmSST";
-    private static final boolean VDBG = false;
-
-    GSMPhone mPhone;
+    static final String LOG_TAG = "GsmSST";
+    static final boolean VDBG = false;
+    //CAF_MSIM make it private ??
+    private static final int EVENT_ALL_DATA_DISCONNECTED = 1001;
+    private GSMPhone mPhone;
     GsmCellLocation mCellLoc;
     GsmCellLocation mNewCellLoc;
     int mPreferredNetworkType;
@@ -464,6 +471,20 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 onRestrictedStateChanged(ar);
                 break;
 
+            case EVENT_ALL_DATA_DISCONNECTED:
+                int dds = PhoneFactory.getDataSubscription();
+                MSimProxyManager.getInstance().unregisterForAllDataDisconnected(dds, this);
+                synchronized(this) {
+                    if (mPendingRadioPowerOffAfterDataOff) {
+                        if (DBG) log("EVENT_ALL_DATA_DISCONNECTED, turn radio off now.");
+                        hangupAndPowerOff();
+                        mPendingRadioPowerOffAfterDataOff = false;
+                    } else {
+                        log("EVENT_ALL_DATA_DISCONNECTED is stale");
+                    }
+                }
+                break;
+
             default:
                 super.handleMessage(msg);
             break;
@@ -570,6 +591,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
             intent.putExtra(TelephonyIntents.EXTRA_SPN, spn);
             intent.putExtra(TelephonyIntents.EXTRA_SHOW_PLMN, showPlmn);
             intent.putExtra(TelephonyIntents.EXTRA_PLMN, plmn);
+            intent.putExtra(MSimConstants.SUBSCRIPTION_KEY, mPhone.getSubscription());
             mPhone.getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
         }
 
@@ -1315,7 +1337,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
      * @return true if same operator
      */
     private boolean isSameNamedOperators(ServiceState s) {
-        String spn = SystemProperties.get(TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA, "empty");
+        String spn = getSystemProperty(TelephonyProperties.PROPERTY_ICC_OPERATOR_ALPHA, "empty");
 
         String onsl = s.getOperatorAlphaLong();
         String onss = s.getOperatorAlphaShort();
@@ -1333,7 +1355,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
      * @return true if both are same
      */
     private boolean currentMccEqualsSimMcc(ServiceState s) {
-        String simNumeric = SystemProperties.get(
+        String simNumeric = getSystemProperty(
                 TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, "");
         String operatorNumeric = s.getOperatorNumeric();
         boolean equalsMcc = true;
@@ -1544,7 +1566,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 zone = TimeZone.getTimeZone( tzname );
             }
 
-            String iso = SystemProperties.get(TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY);
+            String iso = getSystemProperty(TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY, "");
 
             if (zone == null) {
 
@@ -1793,14 +1815,19 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         }
     }
 
+    private UiccCardApplication getUiccCardApplication() {
+        return  mUiccController.getUiccCardApplication(SubscriptionManager.
+                getInstance().getSlotId(mPhone.getSubscription()),
+                UiccController.APP_FAM_3GPP);
+    }
+
     @Override
     protected void onUpdateIccAvailability() {
         if (mUiccController == null ) {
             return;
         }
 
-        UiccCardApplication newUiccApplication =
-                mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP);
+        UiccCardApplication newUiccApplication = getUiccCardApplication();
 
         if (mUiccApplcation != newUiccApplication) {
             if (mUiccApplcation != null) {
@@ -1867,5 +1894,54 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         pw.println(" mCurShowSpn=" + mCurShowSpn);
         pw.println(" mCurPlmn=" + mCurPlmn);
         pw.println(" mCurShowPlmn=" + mCurShowPlmn);
+    }
+
+
+    /**
+     * Clean up existing voice and data connection then turn off radio power.
+     *
+     * Hang up the existing voice calls to decrease call drop rate.
+     */
+    @Override
+    public void powerOffRadioSafely(DcTrackerBase dcTracker) {
+        synchronized (this) {
+            if (!mPendingRadioPowerOffAfterDataOff) {
+                int dds = PhoneFactory.getDataSubscription();
+                // To minimize race conditions we call cleanUpAllConnections on
+                // both if else paths instead of before this isDisconnected test.
+                if (dcTracker.isDisconnected()
+                        && (dds == mPhone.getSubscription()
+                            || (dds != mPhone.getSubscription()
+                                && MSimProxyManager.getInstance().isDataDisconnected(dds)))) {
+                    // To minimize race conditions we do this after isDisconnected
+                    dcTracker.cleanUpAllConnections(Phone.REASON_RADIO_TURNED_OFF);
+                    if (DBG) log("Data disconnected, turn off radio right away.");
+                    hangupAndPowerOff();
+                } else {
+                    dcTracker.cleanUpAllConnections(Phone.REASON_RADIO_TURNED_OFF);
+                    if (dds != mPhone.getSubscription()
+                            && !MSimProxyManager.getInstance().isDataDisconnected(dds)) {
+                        if (DBG) log("Data is active on DDS.  Wait for all data disconnect");
+                        // Data is not disconnected on DDS. Wait for the data disconnect complete
+                        // before sending the RADIO_POWER off.
+                        MSimProxyManager.getInstance().registerForAllDataDisconnected(dds, this,
+                                EVENT_ALL_DATA_DISCONNECTED, null);
+                        mPendingRadioPowerOffAfterDataOff = true;
+                    }
+                    Message msg = Message.obtain(this);
+                    msg.what = EVENT_SET_RADIO_POWER_OFF;
+                    msg.arg1 = ++mPendingRadioPowerOffAfterDataOffTag;
+                    if (sendMessageDelayed(msg, 30000)) {
+                        if (DBG) log("Wait upto 30s for data to disconnect, then turn off radio.");
+                        mPendingRadioPowerOffAfterDataOff = true;
+                    } else {
+                        log("Cannot send delayed Msg, turn off radio right away.");
+                        hangupAndPowerOff();
+                        mPendingRadioPowerOffAfterDataOff = false;
+                    }
+                }
+            }
+        }
+
     }
 }

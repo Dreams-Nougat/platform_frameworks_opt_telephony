@@ -47,6 +47,7 @@ import java.util.List;
 public final class SmsManager {
     /** Singleton object constructed during class initialization. */
     private static final SmsManager sInstance = new SmsManager();
+    private static final int DEFAULT_SUB = 0;
 
     /**
      * Send a text based SMS.
@@ -87,6 +88,15 @@ public final class SmsManager {
     public void sendTextMessage(
             String destinationAddress, String scAddress, String text,
             PendingIntent sentIntent, PendingIntent deliveryIntent) {
+        sendTextMessage( destinationAddress, scAddress, text,
+            sentIntent, deliveryIntent, getPreferredSmsSubscription());
+    }
+
+    /** @hide */
+    public void sendTextMessage(
+            String destinationAddress, String scAddress, String text,
+            PendingIntent sentIntent, PendingIntent deliveryIntent,
+            int subscription) {
         if (TextUtils.isEmpty(destinationAddress)) {
             throw new IllegalArgumentException("Invalid destinationAddress");
         }
@@ -98,8 +108,72 @@ public final class SmsManager {
         try {
             ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
             if (iccISms != null) {
-                iccISms.sendText(ActivityThread.currentPackageName(), destinationAddress,
+                iccISms.sendTextUsingSub(subscription, ActivityThread.currentPackageName(), destinationAddress,
                         scAddress, text, sentIntent, deliveryIntent);
+            }
+        } catch (RemoteException ex) {
+            // ignore it
+        }
+    }
+
+    /**
+     * Send a text based SMS.
+     *
+     * @param destinationAddress the address to send the message to
+     * @param scAddress is the service center address or null to use
+     *  the current default SMSC
+     * @param text the body of the message to send
+     * @param sentIntent if not NULL this <code>PendingIntent</code> is
+     *  broadcast when the message is successfully sent, or failed.
+     *  The result code will be <code>Activity.RESULT_OK</code> for success,
+     *  or one of these errors:<br>
+     *  <code>RESULT_ERROR_GENERIC_FAILURE</code><br>
+     *  <code>RESULT_ERROR_RADIO_OFF</code><br>
+     *  <code>RESULT_ERROR_NULL_PDU</code><br>
+     *  For <code>RESULT_ERROR_GENERIC_FAILURE</code> the sentIntent may include
+     *  the extra "errorCode" containing a radio technology specific value,
+     *  generally only useful for troubleshooting.<br>
+     *  The per-application based SMS control checks sentIntent. If sentIntent
+     *  is NULL the caller will be checked against all unknown applications,
+     *  which cause smaller number of SMS to be sent in checking period.
+     * @param deliveryIntent if not NULL this <code>PendingIntent</code> is
+     *  broadcast when the message is delivered to the recipient.  The
+     *  raw pdu of the status report is in the extended data ("pdu").
+     * @param priority Priority level of the message
+     *
+     * @throws IllegalArgumentException if destinationAddress or text are empty
+     * {@hide}
+     */
+    public void sendTextMessageWithPriority(
+            String destinationAddress, String scAddress, String text,
+            PendingIntent sentIntent, PendingIntent deliveryIntent, int priority) {
+        sendTextMessageWithPriority(
+            destinationAddress, scAddress, text, sentIntent, deliveryIntent,
+            priority, getPreferredSmsSubscription());
+    }
+
+    /** @hide */
+    public void sendTextMessageWithPriority(
+            String destinationAddress, String scAddress, String text,
+            PendingIntent sentIntent, PendingIntent deliveryIntent,
+            int priority, int subscription) {
+        if (TextUtils.isEmpty(destinationAddress)) {
+            throw new IllegalArgumentException("Invalid destinationAddress");
+        }
+
+        if (TextUtils.isEmpty(text)) {
+            throw new IllegalArgumentException("Invalid message body");
+        }
+
+        if (priority < 0 || priority > 3) {
+            throw new IllegalArgumentException("Invalid priority");
+        }
+
+        try {
+            ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
+            if (iccISms != null) {
+                iccISms.sendTextWithPriorityUsingSub(subscription,destinationAddress, scAddress, text, sentIntent,
+                        deliveryIntent, priority);
             }
         } catch (RemoteException ex) {
             // ignore it
@@ -167,6 +241,14 @@ public final class SmsManager {
     public void sendMultipartTextMessage(
             String destinationAddress, String scAddress, ArrayList<String> parts,
             ArrayList<PendingIntent> sentIntents, ArrayList<PendingIntent> deliveryIntents) {
+        sendMultipartTextMessage(destinationAddress, scAddress, parts, sentIntents,
+            deliveryIntents, getPreferredSmsSubscription());
+    }
+
+    /** @hide */
+    public void sendMultipartTextMessage(String destinationAddress, String scAddress,
+            ArrayList<String> parts, ArrayList<PendingIntent> sentIntents,
+            ArrayList<PendingIntent> deliveryIntents, int subscription) {
         if (TextUtils.isEmpty(destinationAddress)) {
             throw new IllegalArgumentException("Invalid destinationAddress");
         }
@@ -176,11 +258,11 @@ public final class SmsManager {
 
         if (parts.size() > 1) {
             try {
-                ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
+                ISms iccISms = ISms.Stub.asInterface(
+                        ServiceManager.getService("isms"));
                 if (iccISms != null) {
-                    iccISms.sendMultipartText(ActivityThread.currentPackageName(),
-                            destinationAddress, scAddress, parts,
-                            sentIntents, deliveryIntents);
+                    iccISms.sendMultipartTextUsingSub(subscription, ActivityThread.currentPackageName(),
+                            destinationAddress, scAddress, parts, sentIntents, deliveryIntents);
                 }
             } catch (RemoteException ex) {
                 // ignore it
@@ -195,10 +277,9 @@ public final class SmsManager {
                 deliveryIntent = deliveryIntents.get(0);
             }
             sendTextMessage(destinationAddress, scAddress, parts.get(0),
-                    sentIntent, deliveryIntent);
+                    sentIntent, deliveryIntent, subscription);
         }
     }
-
     /**
      * Send a data based SMS to a specific application port.
      *
@@ -232,6 +313,15 @@ public final class SmsManager {
     public void sendDataMessage(
             String destinationAddress, String scAddress, short destinationPort,
             byte[] data, PendingIntent sentIntent, PendingIntent deliveryIntent) {
+        sendDataMessage(
+            destinationAddress, scAddress, destinationPort,
+            data, sentIntent, deliveryIntent, getPreferredSmsSubscription());
+    }
+
+    /** @hide */
+    public void sendDataMessage(
+            String destinationAddress, String scAddress, short destinationPort,
+            byte[] data, PendingIntent sentIntent, PendingIntent deliveryIntent, int subscription) {
         if (TextUtils.isEmpty(destinationAddress)) {
             throw new IllegalArgumentException("Invalid destinationAddress");
         }
@@ -243,9 +333,8 @@ public final class SmsManager {
         try {
             ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
             if (iccISms != null) {
-                iccISms.sendData(ActivityThread.currentPackageName(),
-                        destinationAddress, scAddress, destinationPort & 0xFFFF,
-                        data, sentIntent, deliveryIntent);
+                iccISms.sendDataUsingSub(subscription, ActivityThread.currentPackageName(), destinationAddress,
+                        scAddress, destinationPort & 0xFFFF, data, sentIntent, deliveryIntent);
             }
         } catch (RemoteException ex) {
             // ignore it
@@ -280,6 +369,12 @@ public final class SmsManager {
      * {@hide}
      */
     public boolean copyMessageToIcc(byte[] smsc, byte[] pdu, int status) {
+        return copyMessageToIcc(smsc, pdu, status, getPreferredSmsSubscription());
+    }
+
+    /** @hide */
+    public boolean copyMessageToIcc(byte[] smsc, byte[] pdu, int status,
+            int subscription) {
         boolean success = false;
 
         if (null == pdu) {
@@ -288,9 +383,9 @@ public final class SmsManager {
         try {
             ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
             if (iccISms != null) {
-                success = iccISms.copyMessageToIccEf(ActivityThread.currentPackageName(),
-                        status, pdu, smsc);
-            }
+                success = iccISms.copyMessageToIccEfUsingSub(subscription, ActivityThread.currentPackageName(), status,
+                        pdu, smsc);
+           }
         } catch (RemoteException ex) {
             // ignore it
         }
@@ -310,6 +405,12 @@ public final class SmsManager {
      */
     public boolean
     deleteMessageFromIcc(int messageIndex) {
+        return deleteMessageFromIcc(messageIndex, getPreferredSmsSubscription());
+    }
+
+    /** @hide */
+    public boolean
+    deleteMessageFromIcc(int messageIndex, int subscription) {
         boolean success = false;
         byte[] pdu = new byte[IccConstants.SMS_RECORD_LENGTH-1];
         Arrays.fill(pdu, (byte)0xff);
@@ -317,7 +418,7 @@ public final class SmsManager {
         try {
             ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
             if (iccISms != null) {
-                success = iccISms.updateMessageOnIccEf(ActivityThread.currentPackageName(),
+                success = iccISms.updateMessageOnIccEfUsingSub(subscription, ActivityThread.currentPackageName(),
                         messageIndex, STATUS_ON_ICC_FREE, pdu);
             }
         } catch (RemoteException ex) {
@@ -342,12 +443,18 @@ public final class SmsManager {
      * {@hide}
      */
     public boolean updateMessageOnIcc(int messageIndex, int newStatus, byte[] pdu) {
+        return updateMessageOnIcc(messageIndex, newStatus, pdu, getPreferredSmsSubscription());
+    }
+
+    /** @hide */
+    public boolean updateMessageOnIcc(int messageIndex, int newStatus,
+                           byte[] pdu, int subscription) {
         boolean success = false;
 
         try {
             ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
             if (iccISms != null) {
-                success = iccISms.updateMessageOnIccEf(ActivityThread.currentPackageName(),
+                success = iccISms.updateMessageOnIccEfUsingSub(subscription, ActivityThread.currentPackageName(),
                         messageIndex, newStatus, pdu);
             }
         } catch (RemoteException ex) {
@@ -367,12 +474,17 @@ public final class SmsManager {
      * {@hide}
      */
     public static ArrayList<SmsMessage> getAllMessagesFromIcc() {
+        return getAllMessagesFromIcc(getPreferredSmsSubscription());
+    }
+
+    /** @hide */
+    public static ArrayList<SmsMessage> getAllMessagesFromIcc(int subscription) {
         List<SmsRawData> records = null;
 
         try {
             ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
             if (iccISms != null) {
-                records = iccISms.getAllMessagesFromIccEf(ActivityThread.currentPackageName());
+                records = iccISms.getAllMessagesFromIccEfUsingSub(subscription, ActivityThread.currentPackageName());
             }
         } catch (RemoteException ex) {
             // ignore it
@@ -380,6 +492,7 @@ public final class SmsManager {
 
         return createMessageListFromRawRecords(records);
     }
+
 
     /**
      * Enable reception of cell broadcast (SMS-CB) messages with the given
@@ -398,12 +511,17 @@ public final class SmsManager {
      * {@hide}
      */
     public boolean enableCellBroadcast(int messageIdentifier) {
+        return enableCellBroadcast(messageIdentifier, getPreferredSmsSubscription());
+    }
+
+     /** @hide */
+    public boolean enableCellBroadcast(int messageIdentifier, int subscription) {
         boolean success = false;
 
         try {
             ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
             if (iccISms != null) {
-                success = iccISms.enableCellBroadcast(messageIdentifier);
+                success = iccISms.enableCellBroadcastUsingSub(subscription, messageIdentifier);
             }
         } catch (RemoteException ex) {
             // ignore it
@@ -429,12 +547,17 @@ public final class SmsManager {
      * {@hide}
      */
     public boolean disableCellBroadcast(int messageIdentifier) {
+        return disableCellBroadcast(messageIdentifier, getPreferredSmsSubscription());
+    }
+
+    /** @hide */
+    public boolean disableCellBroadcast(int messageIdentifier, int subscription) {
         boolean success = false;
 
         try {
             ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
             if (iccISms != null) {
-                success = iccISms.disableCellBroadcast(messageIdentifier);
+                success = iccISms.disableCellBroadcastUsingSub(subscription, messageIdentifier);
             }
         } catch (RemoteException ex) {
             // ignore it
@@ -463,6 +586,12 @@ public final class SmsManager {
      * {@hide}
      */
     public boolean enableCellBroadcastRange(int startMessageId, int endMessageId) {
+        return enableCellBroadcastRange(startMessageId, endMessageId, getPreferredSmsSubscription());
+    }
+ 
+    /** @hide */
+    public boolean enableCellBroadcastRange(int startMessageId, int endMessageId,
+            int subscription) {
         boolean success = false;
 
         if (endMessageId < startMessageId) {
@@ -471,7 +600,8 @@ public final class SmsManager {
         try {
             ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
             if (iccISms != null) {
-                success = iccISms.enableCellBroadcastRange(startMessageId, endMessageId);
+                success = iccISms.enableCellBroadcastRangeUsingSub(subscription, startMessageId,
+                                  endMessageId);
             }
         } catch (RemoteException ex) {
             // ignore it
@@ -500,6 +630,12 @@ public final class SmsManager {
      * {@hide}
      */
     public boolean disableCellBroadcastRange(int startMessageId, int endMessageId) {
+        return disableCellBroadcastRange(startMessageId, endMessageId, getPreferredSmsSubscription());
+    }
+
+    /** @hide */
+    public boolean disableCellBroadcastRange(int startMessageId, int endMessageId,
+            int subscription) {
         boolean success = false;
 
         if (endMessageId < startMessageId) {
@@ -508,7 +644,8 @@ public final class SmsManager {
         try {
             ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
             if (iccISms != null) {
-                success = iccISms.disableCellBroadcastRange(startMessageId, endMessageId);
+                success = iccISms.disableCellBroadcastRangeUsingSub(subscription, startMessageId,
+                                  endMessageId);
             }
         } catch (RemoteException ex) {
             // ignore it
@@ -554,18 +691,22 @@ public final class SmsManager {
      * @hide
      */
     boolean isImsSmsSupported() {
+        return isImsSmsSupported(getPreferredSmsSubscription());
+    }
+
+    /** @hide */
+    boolean isImsSmsSupported(int subscription) {
         boolean boSupported = false;
         try {
             ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
             if (iccISms != null) {
-                boSupported = iccISms.isImsSmsSupported();
+                boSupported = iccISms.isImsSmsSupportedUsingSub(subscription);
             }
         } catch (RemoteException ex) {
             // ignore it
         }
         return boSupported;
     }
-
     /**
      * Gets SMS format supported on IMS.  SMS over IMS format is
      * either 3GPP or 3GPP2.
@@ -579,16 +720,57 @@ public final class SmsManager {
      * @hide
      */
     String getImsSmsFormat() {
+        return getImsSmsFormat(getPreferredSmsSubscription());
+    }
+
+    /** @hide */
+    String getImsSmsFormat(int subscription) {
         String format = com.android.internal.telephony.SmsConstants.FORMAT_UNKNOWN;
         try {
             ISms iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
             if (iccISms != null) {
-                format = iccISms.getImsSmsFormat();
+                format = iccISms.getImsSmsFormatUsingSub(subscription);
             }
         } catch (RemoteException ex) {
             // ignore it
         }
         return format;
+    }
+
+    /**
+     * Get the preferred sms subscription
+     *
+     * @return the preferred subscription
+     * @hide
+     */
+    public static int getPreferredSmsSubscription() {
+        ISms iccISms = null;
+        try {
+            iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
+            return iccISms.getPreferredSmsSubscription();
+        } catch (RemoteException ex) {
+            return DEFAULT_SUB;
+        } catch (NullPointerException ex) {
+            return DEFAULT_SUB;
+        }
+    }
+
+    /**
+     * Get SMS prompt property,  enabled or not
+     *
+     * @return true if enabled, false otherwise
+     * @hide
+     */
+    public boolean isSMSPromptEnabled() {
+        ISms iccISms = null;
+        try {
+            iccISms = ISms.Stub.asInterface(ServiceManager.getService("isms"));
+            return iccISms.isSMSPromptEnabled();
+        } catch (RemoteException ex) {
+            return false;
+        } catch (NullPointerException ex) {
+            return false;
+        }
     }
 
     // see SmsMessage.getStatusOnIcc
