@@ -1,0 +1,505 @@
+Revision: 50dc550d4b8bfa214120ee6dd691c89b75415849
+Patch-set: 1
+File: src/java/android/provider/Telephony.java
+
+29
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_77192a8e
+Bytes: 46
+we don't have MSimSmsManager now, remove this.
+
+328
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_d350462b
+Bytes: 34
+all MSimSmsManager to be replaced.
+
+File: src/java/android/telephony/MSimSmsManager.java
+
+45
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_b74fc282
+Bytes: 49
+The changes in this file should go to SMSManager.
+
+File: src/java/com/android/internal/telephony/BaseCommands.java
+
+658
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_77428a5c
+Bytes: 99
+we may need to remove this in future , when we remove unsol_uicc_subscription_status_changed event.
+
+File: src/java/com/android/internal/telephony/CallManager.java
+
+84
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_133faec7
+Bytes: 49
+remove this, only msim stuff to be there ideally.
+
+201
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_76428e5c
+Bytes: 17
+remove this line.
+
+458
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_173f96c7
+Bytes: 25
+why change required here?
+
+File: src/java/com/android/internal/telephony/CommandException.java
+
+47
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_f7821a3e
+Bytes: 29
+check this are we using this?
+
+File: src/java/com/android/internal/telephony/DefaultPhoneNotifier.java
+
+42
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_d67da294
+Bytes: 35
+all the code should be in basefile.
+
+File: src/java/com/android/internal/telephony/IccProvider.java
+
+47
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_b68ca66f
+Bytes: 8
+private.
+
+72
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_96872a4d
+Bytes: 29
+iccmsim to be changed to icc?
+
+245
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_379972ad
+Bytes: 8
+private.
+
+527
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_f66bfec3
+Bytes: 8
+private.
+
+552
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_96608ae2
+Bytes: 8
+private.
+
+File: src/java/com/android/internal/telephony/ImsSMSDispatcher.java
+
+41
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_57fd0e86
+Bytes: 16
+all are private.
+
+64
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_56d43210
+Bytes: 46
+do we need this initiDispatchers function now?
+
+File: src/java/com/android/internal/telephony/InboundSmsHandler.java
+
+707
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_77fa8a91
+Bytes: 8
+private?
+
+File: src/java/com/android/internal/telephony/MSimDefaultPhoneNotifier.java
+
+46
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_17f796a8
+Bytes: 36
+It should be combined in base class.
+
+File: src/java/com/android/internal/telephony/MSimIccPhoneBookInterfaceManagerProxy.java
+
+32
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_76d12e1f
+Bytes: 25
+change name of this file.
+
+File: src/java/com/android/internal/telephony/MSimIccSmsInterfaceManagerProxy.java
+
+34
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_37f412a1
+Bytes: 25
+change name of this file.
+
+File: src/java/com/android/internal/telephony/MSimPhoneSubInfoProxy.java
+
+29
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_36dbb63f
+Bytes: 25
+change name of this file.
+
+File: src/java/com/android/internal/telephony/MSimProxyManager.java
+
+32
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_d7b59ed5
+Bytes: 25
+change name of this file.
+
+File: src/java/com/android/internal/telephony/PhoneBase.java
+
+394
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_57caee5b
+Bytes: 60
+if this is not related to msim, would prefer to remove this.
+
+573
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_d60842f8
+Bytes: 88
+if this api is used in only in application side, would suggest to use intent ICC_LOADED.
+
+File: src/java/com/android/internal/telephony/PhoneFactory.java
+
+47
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_33dbd23f
+Bytes: 78
+don;t expect anything to be protected, unless otherwise base file it self has.
+
+147
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_77c7ea52
+Bytes: 45
+remove this check, it is not related to msim.
+
+File: src/java/com/android/internal/telephony/PhoneProxy.java
+
+51
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_d79efe53
+Bytes: 26
+all are private pls check.
+
+97
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_f7a3fa94
+Bytes: 35
+we need not have separate init now.
+
+159
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_96bf2ab2
+Bytes: 8
+private.
+
+238
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_b6c4a650
+Bytes: 32
+need not be a separate funciton.
+
+273
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_73faba91
+Bytes: 30
+need not be separate function.
+
+File: src/java/com/android/internal/telephony/cdma/CDMALTEPhone.java
+
+115
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_f6a3fe94
+Bytes: 33
+these apis can be called in init?
+
+430
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_36d1760e
+Bytes: 103
+these two calls can be removed. There is no restriction that these calls to be made when sub activated.
+
+479
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_b69d8656
+Bytes: 30
+where this function is called?
+
+577
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_16d47afd
+Bytes: 27
+remove this commented code.
+
+File: src/java/com/android/internal/telephony/cdma/CDMAPhone.java
+
+102
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_d69e0254
+Bytes: 53
+check these modifications, these may not be required.
+
+File: src/java/com/android/internal/telephony/cdma/CdmaCallTracker.java
+
+96
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_76b04ed8
+Bytes: 78
+change may not be required here. MSimCdmaCallTracker changes pulled in if any?
+
+File: src/java/com/android/internal/telephony/cdma/CdmaInboundSmsHandler.java
+
+52
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_d76cbe8f
+Bytes: 8
+private.
+
+63
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_16ad5a7b
+Bytes: 8
+private.
+
+72
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_d39e0654
+Bytes: 35
+init may not be required separtely.
+
+374
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_36aad664
+Bytes: 97
+need to be changed I think, single sim also we need to pass subscription key and make it generic.
+
+File: src/java/com/android/internal/telephony/cdma/CdmaLteServiceStateTracker.java
+
+607
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_f771ba68
+Bytes: 65
+what is this function, have common function for both single/msim.
+
+642
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_f3a30a95
+Bytes: 11
+space here.
+
+File: src/java/com/android/internal/telephony/cdma/CdmaServiceCategoryProgramHandler.java
+
+54
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_976646ac
+Bytes: 16
+all are private.
+
+File: src/java/com/android/internal/telephony/cdma/CdmaServiceStateTracker.java
+
+74
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_f688de0e
+Bytes: 8
+private.
+
+1728
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_93987e67
+Bytes: 48
+we should have generic function for single/msim.
+
+File: src/java/com/android/internal/telephony/cdma/EriManager.java
+
+90
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_b692663d
+Bytes: 43
+changes may not be required here pls check.
+
+File: src/java/com/android/internal/telephony/gsm/GSMPhone.java
+
+122
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_13ad6e7b
+Bytes: 26
+no changes here, pls check
+
+133
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_16823aea
+Bytes: 14
+same as above.
+
+168
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_f388ea0e
+Bytes: 33
+no separate function is required.
+
+286
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_f671be68
+Bytes: 72
+these 3 lines can be removed. handle message RADIO_AVAILABLE takes care.
+
+510
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_b66b4673
+Bytes: 99
+if these functions required only by an app, then we can remove this. app can use ICC_LOADED intent.
+
+File: src/java/com/android/internal/telephony/gsm/GsmServiceStateTracker.java
+
+92
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_938dde1d
+Bytes: 26
+no change w.r.t base code.
+
+97
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_f7ae9a64
+Bytes: 17
+remove protected.
+
+122
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_b392623d
+Bytes: 62
+check all these marked as protected, and move them to private.
+
+383
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_13824eea
+Bytes: 53
+not specific to msim, remove this and keep base code.
+
+File: src/java/com/android/internal/telephony/gsm/UsimPhoneBookManager.java
+
+151
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_365896e8
+Bytes: 42
+Not specific to msim, remove this for now.
+
+File: src/java/com/android/internal/telephony/uicc/IccCardProxy.java
+
+110
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_b7b822aa
+Bytes: 27
+check all protected marked.
+
+555
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_77bb6aa4
+Bytes: 70
+check all those marked as protected, these should be moved to private.
+
+File: src/java/com/android/internal/telephony/uicc/UiccCard.java
+
+70
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_d36cc68f
+Bytes: 23
+check protected marked.
+
+File: src/java/com/android/internal/telephony/uicc/UiccController.java
+
+75
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_f371ca68
+Bytes: 37
+check whole file marked with protects
+
+295
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_37c5f227
+Bytes: 29
+this function can be removed.
+
+367
+Tue Feb 18 03:12:10 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_b36b4273
+Bytes: 32
+u can remove this. not required.
+
