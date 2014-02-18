@@ -9,12 +9,28 @@ UUID: ef293d20_77192a8e
 Bytes: 46
 we don't have MSimSmsManager now, remove this.
 
+29
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ef293d20_77192a8e
+UUID: 6f8b8d70_7623888b
+Bytes: 4
+Done
+
 328
 Tue Feb 18 03:12:10 2014 +0000
 Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 6f8b8d70_d350462b
 Bytes: 34
 all MSimSmsManager to be replaced.
+
+328
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 6f8b8d70_d350462b
+UUID: cf26394f_d97dd394
+Bytes: 4
+Done
 
 File: src/java/android/telephony/MSimSmsManager.java
 
@@ -25,6 +41,14 @@ UUID: ef293d20_b74fc282
 Bytes: 49
 The changes in this file should go to SMSManager.
 
+45
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ef293d20_b74fc282
+UUID: 6f8b8d70_d63a74ac
+Bytes: 4
+Done
+
 File: src/java/com/android/internal/telephony/BaseCommands.java
 
 658
@@ -33,6 +57,14 @@ Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: ef293d20_77428a5c
 Bytes: 99
 we may need to remove this in future , when we remove unsol_uicc_subscription_status_changed event.
+
+658
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ef293d20_77428a5c
+UUID: 6f8b8d70_16823cea
+Bytes: 38
+Noted it down and will do it in future
 
 File: src/java/com/android/internal/telephony/CallManager.java
 
@@ -43,6 +75,14 @@ UUID: 6f8b8d70_133faec7
 Bytes: 49
 remove this, only msim stuff to be there ideally.
 
+84
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 6f8b8d70_133faec7
+UUID: ef293d20_9a342dc0
+Bytes: 4
+Done
+
 201
 Tue Feb 18 03:12:10 2014 +0000
 Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -50,12 +90,28 @@ UUID: cf26394f_76428e5c
 Bytes: 17
 remove this line.
 
+201
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: cf26394f_76428e5c
+UUID: 6f8b8d70_d66cb48f
+Bytes: 4
+Done
+
 458
 Tue Feb 18 03:12:10 2014 +0000
 Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: ef293d20_173f96c7
 Bytes: 25
 why change required here?
+
+458
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ef293d20_173f96c7
+UUID: 6f8b8d70_b66b3073
+Bytes: 103
+This is added for debug purpose, we modified this to log few messages which are useful while debugging.
 
 File: src/java/com/android/internal/telephony/CommandException.java
 
@@ -66,6 +122,14 @@ UUID: ef293d20_f7821a3e
 Bytes: 29
 check this are we using this?
 
+47
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ef293d20_f7821a3e
+UUID: cf26394f_39c72782
+Bytes: 40
+yes using it in SubscriptionManager,java
+
 File: src/java/com/android/internal/telephony/DefaultPhoneNotifier.java
 
 42
@@ -75,6 +139,14 @@ UUID: cf26394f_d67da294
 Bytes: 35
 all the code should be in basefile.
 
+42
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: cf26394f_d67da294
+UUID: ef293d20_3a46393d
+Bytes: 39
+This file is pending, will complete it.
+
 File: src/java/com/android/internal/telephony/IccProvider.java
 
 47
@@ -83,6 +155,14 @@ Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: cf26394f_b68ca66f
 Bytes: 8
 private.
+
+47
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: cf26394f_b68ca66f
+UUID: 6f8b8d70_36f3c084
+Bytes: 4
+Done
 
 72
 Tue Feb 18 03:12:10 2014 +0000
@@ -98,6 +178,14 @@ UUID: ef293d20_379972ad
 Bytes: 8
 private.
 
+245
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ef293d20_379972ad
+UUID: ef293d20_da0865f8
+Bytes: 4
+Done
+
 527
 Tue Feb 18 03:12:10 2014 +0000
 Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -105,12 +193,28 @@ UUID: cf26394f_f66bfec3
 Bytes: 8
 private.
 
+527
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: cf26394f_f66bfec3
+UUID: cf26394f_d911533e
+Bytes: 4
+Done
+
 552
 Tue Feb 18 03:12:10 2014 +0000
 Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: cf26394f_96608ae2
 Bytes: 8
 private.
+
+552
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: cf26394f_96608ae2
+UUID: 6f8b8d70_d620342d
+Bytes: 4
+Done
 
 File: src/java/com/android/internal/telephony/ImsSMSDispatcher.java
 
@@ -121,12 +225,28 @@ UUID: ef293d20_57fd0e86
 Bytes: 16
 all are private.
 
+41
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ef293d20_57fd0e86
+UUID: ef293d20_7afa7191
+Bytes: 4
+Done
+
 64
 Tue Feb 18 03:12:10 2014 +0000
 Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: cf26394f_56d43210
 Bytes: 46
 do we need this initiDispatchers function now?
+
+64
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: cf26394f_56d43210
+UUID: 6f8b8d70_7612a8e6
+Bytes: 22
+Not required. Removed.
 
 File: src/java/com/android/internal/telephony/InboundSmsHandler.java
 
@@ -136,6 +256,14 @@ Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: ef293d20_77fa8a91
 Bytes: 8
 private?
+
+707
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ef293d20_77fa8a91
+UUID: cf26394f_d9df132f
+Bytes: 4
+Done
 
 File: src/java/com/android/internal/telephony/MSimDefaultPhoneNotifier.java
 
@@ -329,6 +457,14 @@ UUID: cf26394f_36aad664
 Bytes: 97
 need to be changed I think, single sim also we need to pass subscription key and make it generic.
 
+374
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: cf26394f_36aad664
+UUID: cf26394f_f9e44fff
+Bytes: 4
+Done
+
 File: src/java/com/android/internal/telephony/cdma/CdmaLteServiceStateTracker.java
 
 607
@@ -424,6 +560,14 @@ Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 6f8b8d70_938dde1d
 Bytes: 26
 no change w.r.t base code.
+
+92
+Tue Feb 18 14:48:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 6f8b8d70_938dde1d
+UUID: cf26394f_99e99bd6
+Bytes: 4
+Done
 
 97
 Tue Feb 18 03:12:10 2014 +0000
