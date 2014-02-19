@@ -216,6 +216,55 @@ UUID: cff9d9ff_db5c13bb
 Bytes: 34
 restore privates from legacy file.
 
+112:61-112:62
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: effcddee_7fadeb7a
+Bytes: 52
+this method can be removed as its not being used now
+
+145:24-145:26
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_be02d525
+Bytes: 26
+this method can be removed
+
+438:4-438:13
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_20e4e4c0
+Bytes: 25
+it can be privated method
+
+450:4-450:13
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_e0d15ceb
+Bytes: 21
+no need for protected
+
+629:42-629:43
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_7ef84dee
+Bytes: 122
+This method is can be deleted as new method of getInstance with slotid is introduced and this old method is no longer used
+
+682:30-682:31
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: effcddee_1fb027d7
+Bytes: 62
+It can be modified to just return sInstance for use by Stk app
+
+856:14-856:21
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_3e17e566
+Bytes: 21
+no need for protected
+
 File: src/java/com/android/internal/telephony/cat/CommandParamsFactory.java
 
 34
@@ -224,6 +273,20 @@ Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: cff9d9ff_3b625770
 Bytes: 30
 restore base class specifiers.
+
+36:14-36:24
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_be2775ca
+Bytes: 7
+private
+
+39:4-39:13
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_9e2c39ae
+Bytes: 7
+private
 
 75
 Wed Feb 19 08:03:01 2014 +0000
@@ -241,6 +304,20 @@ UUID: effcddee_5c7abdce
 Bytes: 36
 specifiers to be modfied whole file.
 
+41:14-41:28
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_5e0e314c
+Bytes: 7
+private
+
+48:4-48:13
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: effcddee_3f78834f
+Bytes: 7
+private
+
 76
 Wed Feb 19 08:03:01 2014 +0000
 Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -256,6 +333,20 @@ Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 0ff0510e_3d31af1d
 Bytes: 26
 specifiers to be modified.
+
+39:4-39:13
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_80e178b3
+Bytes: 21
+no need for protected
+
+104:14-104:31
+Wed Feb 19 11:08:47 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_7e116d6e
+Bytes: 17
+it can be private
 
 File: src/java/com/android/internal/telephony/cdma/CDMAPhone.java
 
