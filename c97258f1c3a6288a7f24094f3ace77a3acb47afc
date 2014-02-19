@@ -1,0 +1,57 @@
+Revision: c97258f1c3a6288a7f24094f3ace77a3acb47afc
+Patch-set: 7
+File: src/java/com/android/internal/telephony/IccPhoneBookInterfaceManager.java
+
+45
+Wed Feb 19 02:14:56 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_9ae96a93
+Bytes: 20
+this can be removed.
+
+132
+Wed Feb 19 02:14:56 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_f120df2c
+Bytes: 23
+u can remove this code.
+
+372
+Wed Feb 19 02:14:56 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_ba01ce9a
+Bytes: 25
+you can remove this code.
+
+File: src/java/com/android/internal/telephony/IccSmsInterfaceManager.java
+
+51
+Wed Feb 19 02:14:56 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_3af63e74
+Bytes: 24
+no need of changes here.
+
+124
+Wed Feb 19 02:14:56 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_7115afcb
+Bytes: 29
+no need of separate function.
+
+422
+Wed Feb 19 02:14:56 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_5f4f5ea7
+Bytes: 32
+this api can be removed for now.
+
+File: src/java/com/android/internal/telephony/ProxyController.java
+
+89
+Wed Feb 19 02:14:56 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_7f31fa1b
+Bytes: 28
+subscriptionManager missing?
+
