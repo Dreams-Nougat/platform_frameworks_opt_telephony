@@ -1,0 +1,20 @@
+Revision: 214de2268a3bfbf1c2d78bab03d078c0b95c81c3
+Patch-set: 13
+File: src/java/com/android/internal/telephony/PhoneFactory.java
+
+249
+Wed Feb 19 10:46:22 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_00cd684b
+Bytes: 27
+Marks some todos for these.
+
+File: src/java/com/android/internal/telephony/ProxyController.java
+
+92
+Wed Feb 19 10:46:22 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_9e071936
+Bytes: 9
+mark todo
+
