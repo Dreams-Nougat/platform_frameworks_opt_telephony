@@ -105,6 +105,13 @@ remove this to do statement.
 
 File: src/java/com/android/internal/telephony/CallManager.java
 
+65:14-65:20
+Wed Feb 19 11:27:25 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_600c2cc3
+Bytes: 16
+make all private
+
 186
 Wed Feb 19 08:03:01 2014 +0000
 Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -456,4 +463,18 @@ Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: cff9d9ff_db35335b
 Bytes: 25
 check all the specifiers.
+
+183:55-183:57
+Wed Feb 19 11:27:25 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_a025943b
+Bytes: 65
+legacy constructors without subscription parameter can be deleted
+
+1468:14-1468:33
+Wed Feb 19 11:27:25 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_e01f9ceb
+Bytes: 7
+private
 
