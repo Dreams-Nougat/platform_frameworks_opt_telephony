@@ -1,0 +1,368 @@
+Revision: 1b42935ebf3bc283e67a283b17bdd0b699deef2e
+Patch-set: 3
+File: src/java/android/telephony/SmsManager.java
+
+99
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_e9855d87
+Bytes: 110
+subscrption to be as first parameter rather than last parameter,
+similar to adil we are doing for consistency.
+
+111
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_4d4fbda7
+Bytes: 10
+long line.
+
+156
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_68c0676b
+Bytes: 40
+Need to add comments for sub based apis.
+
+175
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_a560d4e1
+Bytes: 10
+long line.
+
+264
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_2575c49e
+Bytes: 10
+long line.
+
+336
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_88bdc3e8
+Bytes: 10
+long line.
+
+376
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_c935015b
+Bytes: 76
+want to study api in the context of one card two subs cases/cross map cases.
+
+386
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_a8ae7faa
+Bytes: 10
+long line.
+
+421
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_494251ca
+Bytes: 10
+long line.
+
+457
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_e53a5cac
+Bytes: 10
+long line.
+
+481
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_8976291b
+Bytes: 32
+comments to be put for each api.
+
+487
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_c8397bb6
+Bytes: 10
+long line.
+
+589
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_684f0753
+Bytes: 25
+long line and space here.
+
+File: src/java/com/android/internal/telephony/BaseCommands.java
+
+658
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_4546c83d
+Bytes: 28
+remove this to do statement.
+
+File: src/java/com/android/internal/telephony/CallManager.java
+
+186
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_a8667fab
+Bytes: 51
+Need to move ExtCallmanager changes to CallManager.
+
+File: src/java/com/android/internal/telephony/IccPhoneBookInterfaceManager.java
+
+132
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_3ec8663f
+Bytes: 54
+we can remove this code, as it is not related to msim.
+
+372
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6f8b8d70_b7980767
+Bytes: 39
+this change may not be related to msim.
+
+File: src/java/com/android/internal/telephony/IccSmsInterfaceManager.java
+
+51
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_5446613d
+Bytes: 9
+privates.
+
+121
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_72ecd1a1
+Bytes: 31
+separate function not required.
+
+422
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_92e96d93
+Bytes: 21
+remove this function.
+
+File: src/java/com/android/internal/telephony/ImsSMSDispatcher.java
+
+201
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef293d20_f4df6d2e
+Bytes: 12
+remove this.
+
+File: src/java/com/android/internal/telephony/MSimDefaultPhoneNotifier.java
+
+17
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: effcddee_dc6d2d18
+Bytes: 33
+move this file code to base file.
+
+File: src/java/com/android/internal/telephony/PhoneFactory.java
+
+206
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_bb4dc707
+Bytes: 102
+similar logic should be appliable that of getCdmaPhone, 
+getGsmPhone() functions defined in this file.
+
+File: src/java/com/android/internal/telephony/PhoneSubInfo.java
+
+30
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: effcddee_7c7df9c4
+Bytes: 16
+remove new line.
+
+File: src/java/com/android/internal/telephony/SMSDispatcher.java
+
+517
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_9d41e37c
+Bytes: 31
+remove this funtion altogether.
+
+File: src/java/com/android/internal/telephony/ServiceStateTracker.java
+
+108
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_fb574f95
+Bytes: 59
+change it to private.
+whole file keep base file specifiers.
+
+File: src/java/com/android/internal/telephony/cat/CatService.java
+
+69
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_db5c13bb
+Bytes: 34
+restore privates from legacy file.
+
+File: src/java/com/android/internal/telephony/cat/CommandParamsFactory.java
+
+34
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_3b625770
+Bytes: 30
+restore base class specifiers.
+
+75
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_1b5f9bac
+Bytes: 19
+this an be removed.
+
+File: src/java/com/android/internal/telephony/cat/IconLoader.java
+
+35
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: effcddee_5c7abdce
+Bytes: 36
+specifiers to be modfied whole file.
+
+76
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_7b6cdf5f
+Bytes: 20
+this can be removed.
+
+File: src/java/com/android/internal/telephony/cat/RilMessageDecoder.java
+
+31
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_3d31af1d
+Bytes: 26
+specifiers to be modified.
+
+File: src/java/com/android/internal/telephony/cdma/CDMAPhone.java
+
+95
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_5d28fbaa
+Bytes: 17
+remove protected?
+
+113
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: effcddee_3c4891a1
+Bytes: 18
+why this required?
+
+124
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_c0d9c09d
+Bytes: 33
+private check in this whole file.
+
+File: src/java/com/android/internal/telephony/cdma/CdmaInboundSmsHandler.java
+
+49
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_a0de3481
+Bytes: 14
+restore final.
+
+File: src/java/com/android/internal/telephony/cdma/CdmaSMSDispatcher.java
+
+126
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_e0e83c21
+Bytes: 21
+remove this function.
+
+File: src/java/com/android/internal/telephony/cdma/CdmaServiceCategoryProgramHandler.java
+
+49
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: effcddee_1c45d589
+Bytes: 23
+restore old specifiers.
+
+File: src/java/com/android/internal/telephony/cdma/CdmaServiceStateTracker.java
+
+1630
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: effcddee_7c521955
+Bytes: 14
+remove public.
+
+File: src/java/com/android/internal/telephony/cdma/SmsMessage.java
+
+877
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_9b3bab4f
+Bytes: 34
+remove priority apis in this file.
+
+File: src/java/com/android/internal/telephony/dataconnection/DcTracker.java
+
+576
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_fb30ef6c
+Bytes: 8
+private.
+
+806
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: effcddee_5c4f5da7
+Bytes: 8
+private?
+
+File: src/java/com/android/internal/telephony/dataconnection/DcTrackerBase.java
+
+115
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_20eb441b
+Bytes: 8
+private.
+
+File: src/java/com/android/internal/telephony/gsm/GSMPhone.java
+
+101
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: effcddee_bc3ca1f8
+Bytes: 15
+remove private.
+
+120
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cff9d9ff_db35335b
+Bytes: 25
+check all the specifiers.
+

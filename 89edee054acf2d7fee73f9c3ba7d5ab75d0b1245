@@ -1,0 +1,20 @@
+Revision: 89edee054acf2d7fee73f9c3ba7d5ab75d0b1245
+Base-for-patch-set: 3
+File: src/java/com/android/internal/telephony/ImsSMSDispatcher.java
+
+57
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: cf26394f_52f3d582
+Bytes: 39
+this may not need to removed pls check.
+
+File: src/java/com/android/internal/telephony/PhoneProxy.java
+
+225
+Wed Feb 19 08:03:01 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0ff0510e_3d488fa1
+Bytes: 17
+restore comments.
+
