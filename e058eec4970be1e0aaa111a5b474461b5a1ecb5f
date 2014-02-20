@@ -1,0 +1,32 @@
+Revision: e058eec4970be1e0aaa111a5b474461b5a1ecb5f
+Patch-set: 6
+File: src/java/com/android/internal/telephony/cat/CatService.java
+
+70:19-70:38
+Thu Feb 20 16:04:23 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0f193130_44a49832
+Bytes: 76
+above two shouldn't be static, remove these variables altogether if not used
+
+75:4-75:11
+Thu Feb 20 16:04:23 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef15bdf4_83f6a871
+Bytes: 60
+shouldn't be static, as it shouldn't be shared among objects
+
+88:4-88:13
+Thu Feb 20 16:04:23 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef15bdf4_23e4f4c0
+Bytes: 44
+remove protected, check for all in this file
+
+178:8-178:9
+Thu Feb 20 16:04:23 2014 +0000
+Author: sandeep kunta <1021718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef15bdf4_a352c4a6
+Bytes: 72
+can the constructors & getInstance methods be retained in the same form?
+
