@@ -33,6 +33,22 @@ UUID: ef1f7d43_8466c6fd
 Bytes: 47
 By conclusion, subscription should be long type
 
+286:8-287:58
+Mon Feb 24 11:11:03 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef1f7d43_e4b3fa14
+Bytes: 436
+The logic 
+        for (Phone phone : mPhones) {
+            if (phone.getSubscription() == subscription) {
+should be replaced by
+        getPhone(subscription) 
+to prevent duplicated code segment
+and interfaces between without subscription and with subscription should have reuse or abstraction for common part,
+not just duplicate a copy.
+
+P.S. not just for this function only, slimier issues happen on most new interface of this class
+
 553:20-553:28
 Mon Feb 24 07:40:46 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
