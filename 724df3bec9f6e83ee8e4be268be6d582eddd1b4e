@@ -26,6 +26,13 @@ For Different Phones, CallManager should known which phone the event come from. 
 App need to knonw this for some event.
 You can check MTK's modification for this part.
 
+247:27-247:30
+Mon Feb 24 10:41:43 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef1f7d43_8466c6fd
+Bytes: 47
+By conclusion, subscription should be long type
+
 553:20-553:28
 Mon Feb 24 07:40:46 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
