@@ -34,6 +34,15 @@ Bytes: 102
 Because others case RINGING/IDLE also need current mode,
 suggest to move this out off switch statement
 
+928:26-928:49
+Mon Feb 24 08:33:19 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0f3a11a9_8cdedaf3
+Bytes: 247
+Because dial() in Phone will do the same check for this
+If need to do here, we should remove the same code in Phone.
+Or we can view it dialable in canDial() check and do it in Phone. there should not be the same operation in CallManager and Phone.
+
 File: src/java/com/android/internal/telephony/uicc/IccCardProxy.java
 
 482:28-482:41
