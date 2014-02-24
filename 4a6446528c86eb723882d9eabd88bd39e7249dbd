@@ -1,0 +1,11 @@
+Revision: 4a6446528c86eb723882d9eabd88bd39e7249dbd
+Base-for-patch-set: 10
+File: src/java/com/android/internal/telephony/CallManager.java
+
+56:31-56:32
+Mon Feb 24 07:40:46 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef469d41_81c4e8d4
+Bytes: 29
+Why remove "final"  modifier?
+

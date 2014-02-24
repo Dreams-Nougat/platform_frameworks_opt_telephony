@@ -1,5 +1,39 @@
 Revision: 724df3bec9f6e83ee8e4be268be6d582eddd1b4e
 Patch-set: 10
+File: src/java/com/android/internal/telephony/CallManager.java
+
+66:12-66:13
+Mon Feb 24 07:40:46 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2f78b56e_8d5ee7d5
+Bytes: 55
+It should not be modified from "private" to "protected"
+
+110:23-110:33
+Mon Feb 24 07:40:46 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef469d41_a1856488
+Bytes: 84
+mActiveSub seems not have real usage in this file
+Could you help introduce its usage
+
+112:13-112:24
+Mon Feb 24 07:40:46 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ef469d41_61a45c21
+Bytes: 261
+For Different Phones, CallManager should known which phone the event come from. current design will lost the flexibility because CallManager use the same event for registry. 
+App need to knonw this for some event.
+You can check MTK's modification for this part.
+
+553:20-553:28
+Mon Feb 24 07:40:46 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0f3a11a9_2cb326e7
+Bytes: 102
+Because others case RINGING/IDLE also need current mode,
+suggest to move this out off switch statement
+
 File: src/java/com/android/internal/telephony/uicc/IccCardProxy.java
 
 482:28-482:41
