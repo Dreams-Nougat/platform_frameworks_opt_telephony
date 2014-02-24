@@ -1,0 +1,11 @@
+Revision: 724df3bec9f6e83ee8e4be268be6d582eddd1b4e
+Patch-set: 10
+File: src/java/com/android/internal/telephony/uicc/IccCardProxy.java
+
+482:28-482:41
+Mon Feb 24 06:07:29 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0f3a11a9_0cb4aafc
+Bytes: 146
+The key of subscription should not be put in MSimConstants. It should be PhoneConstants.SUBSCRIPTION_KEY instead of MSimConstants.SUBSCRIPTION_KEY
+
