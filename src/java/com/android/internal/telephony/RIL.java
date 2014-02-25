@@ -63,6 +63,8 @@ import com.android.internal.telephony.cdma.CdmaInformationRecords;
 import com.android.internal.telephony.cdma.CdmaSmsBroadcastConfigInfo;
 import com.android.internal.telephony.dataconnection.DcFailCause;
 import com.android.internal.telephony.dataconnection.DataCallResponse;
+import com.android.internal.telephony.TelephonyDevController;
+import com.android.internal.telephony.HardwareConfig;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -576,6 +578,9 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             riljLog("RIL(context, preferredNetworkType=" + preferredNetworkType +
                     " cdmaSubscription=" + cdmaSubscription + ")");
         }
+
+        TelephonyDevController tdc = TelephonyDevController.getInstance();
+        tdc.registerRIL(this);
 
         mCdmaSubscription  = cdmaSubscription;
         mPreferredNetworkType = preferredNetworkType;
@@ -1133,6 +1138,16 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     getOperator(Message result) {
         RILRequest rr
                 = RILRequest.obtain(RIL_REQUEST_OPERATOR, result);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+
+        send(rr);
+    }
+
+    @Override
+    public void
+    getHardwareConfig (Message result) {
+        RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_HARDWARE_CONFIG, result);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
@@ -2439,6 +2454,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_REQUEST_SIM_OPEN_CHANNEL: ret  = responseInts(p); break;
             case RIL_REQUEST_SIM_CLOSE_CHANNEL: ret  = responseVoid(p); break;
             case RIL_REQUEST_SIM_TRANSMIT_APDU_CHANNEL: ret = responseICC_IO(p); break;
+            case RIL_REQUEST_GET_HARDWARE_CONFIG: ret = responseHardwareConfig(p); break;
             default:
                 throw new RuntimeException("Unrecognized solicited response: " + rr.mRequest);
             //break;
@@ -2562,6 +2578,13 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 sb.append(cell).append(" ");
             }
             s = sb.toString();
+        }else if (req == RIL_REQUEST_GET_HARDWARE_CONFIG) {
+            ArrayList<HardwareConfig> hwcfgs = (ArrayList<HardwareConfig>) ret;
+            sb = new StringBuilder(" ");
+            for (HardwareConfig hwcfg : hwcfgs) {
+                sb.append("[").append(hwcfg).append("] ");
+            }
+            s = sb.toString();
         } else {
             s = ret.toString();
         }
@@ -2619,6 +2642,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_VOICE_RADIO_TECH_CHANGED: ret =  responseInts(p); break;
             case RIL_UNSOL_CELL_INFO_LIST: ret = responseCellInfoList(p); break;
             case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED: ret =  responseVoid(p); break;
+            case RIL_UNSOL_HARDWARE_CONFIG_CHANGED: ret = responseHardwareConfig(p); break;
 
             default:
                 throw new RuntimeException("Unrecognized unsol response: " + response);
@@ -2992,6 +3016,15 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 }
                 break;
             }
+
+            case RIL_UNSOL_HARDWARE_CONFIG_CHANGED:
+                if (RILJ_LOGD) unsljLogRet(response, ret);
+
+                if (mHardwareConfigChangeRegistrants != null) {
+                    mHardwareConfigChangeRegistrants.notifyRegistrants(
+                                             new AsyncResult (null, ret, null));
+                }
+                break;
         }
     }
 
@@ -3623,6 +3656,44 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         return response;
     }
 
+   private Object
+   responseHardwareConfig(Parcel p) {
+      int num;
+      ArrayList<HardwareConfig> response;
+      HardwareConfig hw;
+
+      num = p.readInt();
+      response = new ArrayList<HardwareConfig>(num);
+
+      if (RILJ_LOGV) {
+         riljLog("responseHardwareConfig: num=" + num);
+      }
+      for (int i = 0 ; i < num ; i++) {
+         int type = p.readInt();
+         switch(type) {
+            case HardwareConfig.DEV_HARDWARE_TYPE_MODEM: {
+               hw = new HardwareConfig(type);
+               hw.assignModem(p.readString(), p.readInt(), p.readInt(),
+                  p.readInt(), p.readInt(), p.readInt());
+               break;
+            }
+            case HardwareConfig.DEV_HARDWARE_TYPE_SIM: {
+               hw = new HardwareConfig(type);
+               hw.assignSim(p.readString(), p.readInt(), p.readString());
+               break;
+            }
+            default: {
+               throw new RuntimeException(
+                  "RIL_REQUEST_GET_HARDWARE_CONFIG invalid hardward type:" + type);
+            }
+         }
+
+         response.add(hw);
+      }
+
+      return response;
+   }
+
     static String
     requestToString(int request) {
 /*
@@ -3748,6 +3819,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_REQUEST_SIM_OPEN_CHANNEL: return "RIL_REQUEST_SIM_OPEN_CHANNEL";
             case RIL_REQUEST_SIM_CLOSE_CHANNEL: return "RIL_REQUEST_SIM_CLOSE_CHANNEL";
             case RIL_REQUEST_SIM_TRANSMIT_APDU_CHANNEL: return "RIL_REQUEST_SIM_TRANSMIT_APDU_CHANNEL";
+            case RIL_REQUEST_GET_HARDWARE_CONFIG: return "GET_HARDWARE_CONFIG";
             default: return "<unknown request>";
         }
     }
@@ -3800,6 +3872,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_CELL_INFO_LIST: return "UNSOL_CELL_INFO_LIST";
             case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED:
                 return "UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED";
+            case RIL_UNSOL_HARDWARE_CONFIG_CHANGED: return "RIL_UNSOL_HARDWARE_CONFIG_CHANGED";
             default: return "<unknown response>";
         }
     }
