@@ -63,6 +63,7 @@ import com.android.internal.telephony.cdma.CdmaInformationRecords;
 import com.android.internal.telephony.cdma.CdmaSmsBroadcastConfigInfo;
 import com.android.internal.telephony.dataconnection.DcFailCause;
 import com.android.internal.telephony.dataconnection.DataCallResponse;
+import com.android.internal.telephony.TelephonyDevController;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -576,6 +577,9 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             riljLog("RIL(context, preferredNetworkType=" + preferredNetworkType +
                     " cdmaSubscription=" + cdmaSubscription + ")");
         }
+
+        TelephonyDevController tdc = TelephonyDevController.getInstance();
+        tdc.registerRIL(this);
 
         mCdmaSubscription  = cdmaSubscription;
         mPreferredNetworkType = preferredNetworkType;
@@ -2619,6 +2623,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_VOICE_RADIO_TECH_CHANGED: ret =  responseInts(p); break;
             case RIL_UNSOL_CELL_INFO_LIST: ret = responseCellInfoList(p); break;
             case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED: ret =  responseVoid(p); break;
+            case RIL_UNSOL_HARDWARE_CONFIG_CHANGED: ret =  responseVoid(p); break;
 
             default:
                 throw new RuntimeException("Unrecognized unsol response: " + response);
@@ -2992,6 +2997,16 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 }
                 break;
             }
+
+            case RIL_UNSOL_HARDWARE_CONFIG_CHANGED:
+                // TODO
+                if (RILJ_LOGD) unsljLog(response);
+
+                if (mHardwareConfigChangeRegistrants != null) {
+                    mHardwareConfigChangeRegistrants.notifyRegistrants(
+                                             new AsyncResult (null, null, null));
+                }
+                break;
         }
     }
 
@@ -3800,6 +3815,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_CELL_INFO_LIST: return "UNSOL_CELL_INFO_LIST";
             case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED:
                 return "UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED";
+            case RIL_UNSOL_HARDWARE_CONFIG_CHANGED: return "RIL_UNSOL_HARDWARE_CONFIG_CHANGED";
             default: return "<unknown response>";
         }
     }

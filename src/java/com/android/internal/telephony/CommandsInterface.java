@@ -192,6 +192,12 @@ public interface CommandsInterface {
     void unregisterForInCallVoicePrivacyOff(Handler h);
 
     /**
+     * fires on any change in hardware configuration.
+     */
+    void registerForHardwareConfigChanged(Handler h, int what, Object obj);
+    void unregisterForHardwareConfigChanged(Handler h);
+
+    /**
      * unlike the register* methods, there's only one new 3GPP format SMS handler.
      * if you need to unregister, you should also tell the radio to stop
      * sending SMS's to you (via AT+CNMI)
