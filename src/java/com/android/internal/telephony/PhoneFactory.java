@@ -31,6 +31,7 @@ import com.android.internal.telephony.gsm.GSMPhone;
 import com.android.internal.telephony.sip.SipPhone;
 import com.android.internal.telephony.sip.SipPhoneFactory;
 import com.android.internal.telephony.uicc.UiccController;
+import com.android.internal.telephony.TelephonyDevController;
 
 /**
  * {@hide}
@@ -70,6 +71,9 @@ public class PhoneFactory {
                     throw new RuntimeException(
                         "PhoneFactory.makeDefaultPhone must be called from Looper thread");
                 }
+
+                // create the telephony device controller.
+                TelephonyDevController.create();
 
                 int retryCount = 0;
                 for(;;) {
