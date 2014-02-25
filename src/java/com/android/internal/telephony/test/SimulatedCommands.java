@@ -1699,4 +1699,9 @@ public final class SimulatedCommands extends BaseCommands
             int p3, String data, Message response) {
         unimplemented(response);
     }
+
+    @Override
+    public void getHardwareConfig(Message result) {
+        unimplemented(result);
+    }
 }

@@ -192,6 +192,12 @@ public interface CommandsInterface {
     void unregisterForInCallVoicePrivacyOff(Handler h);
 
     /**
+     * fires on any change in hardware configuration.
+     */
+    void registerForHardwareConfigChanged(Handler h, int what, Object obj);
+    void unregisterForHardwareConfigChanged(Handler h);
+
+    /**
      * unlike the register* methods, there's only one new 3GPP format SMS handler.
      * if you need to unregister, you should also tell the radio to stop
      * sending SMS's to you (via AT+CNMI)
@@ -1758,6 +1764,15 @@ public interface CommandsInterface {
      */
     public void iccTransmitApduBasicChannel(int cla, int instruction, int p1, int p2,
             int p3, String data, Message response);
+
+    /**
+     *  returned message
+     *  retMsg.obj = AsyncResult ar
+     *  ar.exception carries exception on failure
+     *  ar.userObject contains the orignal value of result.obj
+     *  ar.result contains a List of HardwareConfig
+     */
+    void getHardwareConfig (Message result);
 
     /**
      * @return version of the ril.
