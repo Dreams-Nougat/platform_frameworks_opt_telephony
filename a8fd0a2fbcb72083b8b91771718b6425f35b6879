@@ -2,6 +2,31 @@ Revision: a8fd0a2fbcb72083b8b91771718b6425f35b6879
 Patch-set: 1
 File: src/java/com/android/internal/telephony/TelephonyDevController.java
 
+29:0-29:2
+Tue Feb 25 23:36:25 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3c2475a3_9f6ebfd1
+Bytes: 21
+Make java doc:
+
+  /**
+
+37
+Tue Feb 25 23:36:25 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c0f6924_e08d186d
+Bytes: 217
+What's your thinking about how this get updated as sims/modems come and go?
+
+How about a first pass at modifying PhoneFactory to use this? I'm real curious how we're going to map this info to what "phone's" to create.
+
+46
+Tue Feb 25 23:36:25 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3c2475a3_7fb64308
+Bytes: 89
+Should all of these constants be public, they would need to be if used in other packages?
+
 47:20-47:44
 Tue Feb 25 23:25:52 2014 +0000
 Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -15,4 +40,41 @@ Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 9c3ac1c3_6bb8dd59
 Bytes: 61
 Should we include the RATs from RIL_RadioTechnology in ril.h?
+
+70:17-70:25
+Tue Feb 25 23:36:25 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c217195_db1b2b85
+Bytes: 11
+sp: standby
+
+79
+Tue Feb 25 23:36:25 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c0f6924_405e042b
+Bytes: 12
+java doc /**
+
+104:17-104:35
+Tue Feb 25 23:36:25 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c0f6924_6057c81e
+Bytes: 31
+Add some doc for each of these.
+
+184
+Tue Feb 25 23:36:25 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c0f6924_a06e00d1
+Bytes: 159
+For now accessors is fine, but if we need to expose this across process boundaries we'll probably want "getAllXxx" which would return a "read-only" collection.
+
+224
+Tue Feb 25 23:36:25 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c217195_5b571b1e
+Bytes: 65
+Maybe rename to getModemForSim?
+
+Do we need a getAllSimsForModem?
 
