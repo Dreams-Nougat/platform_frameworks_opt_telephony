@@ -1,0 +1,18 @@
+Revision: a8fd0a2fbcb72083b8b91771718b6425f35b6879
+Patch-set: 1
+File: src/java/com/android/internal/telephony/TelephonyDevController.java
+
+47:20-47:44
+Tue Feb 25 23:25:52 2014 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c3ac1c3_cb734927
+Bytes: 142
+I am a bit unclear on the purpose of this state. When is a modem considered disabled? Do we need to indicate the presence of a disabled modem?
+
+63:20-63:36
+Tue Feb 25 23:25:52 2014 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c3ac1c3_6bb8dd59
+Bytes: 61
+Should we include the RATs from RIL_RadioTechnology in ril.h?
+
