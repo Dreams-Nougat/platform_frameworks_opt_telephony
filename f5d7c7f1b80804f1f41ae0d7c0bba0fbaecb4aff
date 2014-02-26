@@ -1,0 +1,23 @@
+Revision: f5d7c7f1b80804f1f41ae0d7c0bba0fbaecb4aff
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/GsmMmiCode.java
+
+553:20-553:49
+Wed Feb 26 16:30:42 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1cf89137_514c9660
+Bytes: 602
+lets move this test inside the test above, something like:
+
+   if ((dialString.length() >= 1) && (dialString.length() <= MAX_LENGTH_SHORT_CODE)) {
+       if ((dialString.charAt(0) != '1') || (dialString.charAt(dialString.length() - 1) == END_OF_USSD_COMMAND) {
+                    return true;
+       }
+   }
+
+Not sure the test for >= 1 is absolutely necessary, but it logically possible that the dialString could be 0 length, so I added it to the exception case. But maybe we should test for it at the beginning of the method:
+
+   if ((dialString != null) && (dialString.length() >= 1)) {
+     ...
+   }
+
