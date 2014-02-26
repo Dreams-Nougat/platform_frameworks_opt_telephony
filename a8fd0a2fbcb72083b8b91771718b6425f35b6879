@@ -11,6 +11,14 @@ Make java doc:
 
   /**
 
+29:0-29:2
+Wed Feb 26 00:18:13 2014 +0000
+Author: Pierre Couillaud <1025044@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 3c2475a3_9f6ebfd1
+UUID: 3c2475a3_ffd6d315
+Bytes: 7
+will do
+
 37
 Tue Feb 25 23:36:25 2014 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -20,12 +28,30 @@ What's your thinking about how this get updated as sims/modems come and go?
 
 How about a first pass at modifying PhoneFactory to use this? I'm real curious how we're going to map this info to what "phone's" to create.
 
+37
+Wed Feb 26 00:18:13 2014 +0000
+Author: Pierre Couillaud <1025044@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 5c0f6924_e08d186d
+UUID: 5c0f6924_8011bc3b
+Bytes: 270
+i was going to hook something up from a RIL UNSOL since the raw data should really come from the closest to the HW.  but feel free to suggest something else?
+
+yes - other thing was to figure out where to hook this up to be created initially.  PhoneFactory seems natural.
+
 46
 Tue Feb 25 23:36:25 2014 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 3c2475a3_7fb64308
 Bytes: 89
 Should all of these constants be public, they would need to be if used in other packages?
+
+46
+Wed Feb 26 00:18:13 2014 +0000
+Author: Pierre Couillaud <1025044@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 3c2475a3_7fb64308
+UUID: 5c0f6924_6016a833
+Bytes: 2
+ok
 
 47:20-47:44
 Tue Feb 25 23:25:52 2014 +0000
@@ -64,12 +90,28 @@ UUID: 1c217195_db1b2b85
 Bytes: 11
 sp: standby
 
+70:17-70:25
+Wed Feb 26 00:18:13 2014 +0000
+Author: Pierre Couillaud <1025044@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1c217195_db1b2b85
+UUID: 3c2475a3_dfd31724
+Bytes: 2
+ok
+
 79
 Tue Feb 25 23:36:25 2014 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 5c0f6924_405e042b
 Bytes: 12
 java doc /**
+
+79
+Wed Feb 26 00:18:13 2014 +0000
+Author: Pierre Couillaud <1025044@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 5c0f6924_405e042b
+UUID: 3c2475a3_bfe05be6
+Bytes: 2
+ok
 
 104:17-104:35
 Tue Feb 25 23:36:25 2014 +0000
@@ -78,12 +120,28 @@ UUID: 5c0f6924_6057c81e
 Bytes: 31
 Add some doc for each of these.
 
+104:17-104:35
+Wed Feb 26 00:18:13 2014 +0000
+Author: Pierre Couillaud <1025044@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 5c0f6924_6057c81e
+UUID: 3c2475a3_9fdd9f32
+Bytes: 2
+ok
+
 184
 Tue Feb 25 23:36:25 2014 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 5c0f6924_a06e00d1
 Bytes: 159
 For now accessors is fine, but if we need to expose this across process boundaries we'll probably want "getAllXxx" which would return a "read-only" collection.
+
+184
+Wed Feb 26 00:18:13 2014 +0000
+Author: Pierre Couillaud <1025044@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 5c0f6924_a06e00d1
+UUID: 5c0f6924_401ba459
+Bytes: 2
+ok
 
 224
 Tue Feb 25 23:36:25 2014 +0000
@@ -93,4 +151,17 @@ Bytes: 65
 Maybe rename to getModemForSim?
 
 Do we need a getAllSimsForModem?
+
+224
+Wed Feb 26 00:18:13 2014 +0000
+Author: Pierre Couillaud <1025044@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1c217195_5b571b1e
+UUID: 3c2475a3_3f044be1
+Bytes: 215
+ok
+
+sure - can add the getAllSimsForModem
+
+
+at this point, i would expect the subscription controller (which i think may be the main user of this?) to tell me what is needed and this API will update to provide that.
 
