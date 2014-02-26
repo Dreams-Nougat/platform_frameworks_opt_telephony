@@ -9,6 +9,14 @@ UUID: 2f78b56e_8d5ee7d5
 Bytes: 55
 It should not be modified from "private" to "protected"
 
+66
+Wed Feb 26 16:19:45 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2f78b56e_8d5ee7d5
+UUID: 3cfb9535_25254d90
+Bytes: 35
+Will revert and make it as private.
+
 110:23-110:33
 Mon Feb 24 07:40:46 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -25,6 +33,16 @@ Bytes: 261
 For Different Phones, CallManager should known which phone the event come from. current design will lost the flexibility because CallManager use the same event for registry. 
 App need to knonw this for some event.
 You can check MTK's modification for this part.
+
+112
+Wed Feb 26 16:19:45 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ef469d41_61a45c21
+UUID: 1cf89137_8e38b901
+Bytes: 353
+We think  no new changes required here,  with the existing single registrants Apps can know on which Phone the event change triggered(or recived).
+
+Ex: When new ringing connection received, App will get the Connection object as user data, from Connection object App can know the Phone object and from Phone object we can get subscription/SIM id as well.
 
 247:27-247:30
 Mon Feb 24 10:41:43 2014 +0000
@@ -49,6 +67,14 @@ not just duplicate a copy.
 
 P.S. not just for this function only, slimier issues happen on most new interface of this class
 
+287
+Wed Feb 26 16:19:45 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ef1f7d43_e4b3fa14
+UUID: 5c44c956_f2cde6fd
+Bytes: 75
+Will re-use the base code in all overloaded methods and upload a new patch.
+
 553:20-553:28
 Mon Feb 24 07:40:46 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -56,6 +82,14 @@ UUID: 0f3a11a9_2cb326e7
 Bytes: 102
 Because others case RINGING/IDLE also need current mode,
 suggest to move this out off switch statement
+
+553
+Wed Feb 26 16:19:45 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0f3a11a9_2cb326e7
+UUID: 1cf89137_b1bbdaed
+Bytes: 39
+Agreed, will make the required changes.
 
 928:26-928:49
 Mon Feb 24 08:33:19 2014 +0000
