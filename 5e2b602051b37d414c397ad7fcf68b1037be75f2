@@ -1,0 +1,22 @@
+Revision: 5e2b602051b37d414c397ad7fcf68b1037be75f2
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/IccCardProxy.java
+
+215
+Wed Feb 26 23:43:44 2014 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c26d1b5_2d02ed66
+Bytes: 265
+I think IccCardProxy should be aware of the current card state. The quietmode flag should be used to filter the card state intents sent to the clients. 
+
+We are already doing this filtering on line#348
+
+What is the exact issue that this change is trying to address?
+
+225:20-225:30
+Wed Feb 26 23:43:44 2014 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c26d1b5_ed1bc5cd
+Bytes: 25
+Same comment as line #215
+
