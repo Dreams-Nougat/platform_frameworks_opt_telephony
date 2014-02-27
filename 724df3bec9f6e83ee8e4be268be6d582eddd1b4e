@@ -44,6 +44,16 @@ We think  no new changes required here,  with the existing single registrants Ap
 
 Ex: When new ringing connection received, App will get the Connection object as user data, from Connection object App can know the Phone object and from Phone object we can get subscription/SIM id as well.
 
+112
+Thu Feb 27 00:41:44 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1cf89137_8e38b901
+UUID: 1cf89137_14d03705
+Bytes: 186
+For the case EVENT_MMI_COMPLETE,
+the result is MMICode object and cannot get subId infomation.
+In your solution, every object need to add interface to get subId information. Is it right?
+
 247:27-247:30
 Mon Feb 24 10:41:43 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
