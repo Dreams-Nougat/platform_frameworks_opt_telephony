@@ -1,0 +1,46 @@
+Revision: b49706a7bb2e098866c11816ddabc8fdc9882050
+Patch-set: 4
+File: src/java/com/android/internal/telephony/TelephonyDevController.java
+
+58:3-58:6
+Fri Feb 28 16:58:49 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c58ad41_17ff3ed2
+Bytes: 162
+nit, usually javadoc comments are on there own line see: http://www.oracle.com/technetwork/java/javase/documentation/index-137868.html
+
+
+  /**
+    * ril ...
+    *
+
+65
+Fri Feb 28 16:58:49 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c58ad41_9c28f5ae
+Bytes: 160
+These are defined in ServiceState.java:
+
+  https://android.googlesource.com/platform/frameworks/base/+/master/telephony/java/android/telephony/ServiceState.java
+
+130
+Fri Feb 28 16:58:49 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c58ad41_f7ecaa36
+Bytes: 211
+A dumb question, but I would have expected that maxStandby would have some well know mathematical relationship between maxActiveVoiceCall and maxActiveDataCall? Can you point me to a "doc" that explains standby?
+
+180
+Fri Feb 28 16:58:49 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3c52b523_e9a971a5
+Bytes: 216
+Hmmm, a cmdsIf is associated with a "modem" connection and there will be  multiple connections which implies multiple TelephonyDevController's. Where as I thought this would be a "singleton" or I'm missing something?
+
+373
+Fri Feb 28 16:58:49 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c5da930_d6108a6a
+Bytes: 294
+Lets not return null, lets always return a list that can be empty. Also, we may want to return a "copy" so callers can't modify the data. Ditto below. Again, it may turn out not to be necessary so if its unused we can remove it or make it just package level if thats the only visibility needed.
+
