@@ -37,6 +37,14 @@ UUID: 3c52b523_e9a971a5
 Bytes: 216
 Hmmm, a cmdsIf is associated with a "modem" connection and there will be  multiple connections which implies multiple TelephonyDevController's. Where as I thought this would be a "singleton" or I'm missing something?
 
+180
+Fri Feb 28 18:45:36 2014 +0000
+Author: Pierre Couillaud <1025044@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 3c52b523_e9a971a5
+UUID: bc5ea529_cd959db2
+Bytes: 203
+okay ... yes, should be a singleton.  how would you suggest we go about that then?  we do need to get the data from the RILd itself since that is where the HW real time information will be coming from...
+
 373
 Fri Feb 28 16:58:49 2014 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
