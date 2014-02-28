@@ -65,6 +65,14 @@ yes, so the telephony-dev-controller is already a singleton in this scope...  ma
 
 i do not follow the comment on 'addRill(CommandsInterface cmdsIf)' ...  can you be more specific?
 
+180
+Fri Feb 28 20:12:24 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: bce78593_69bfb6b2
+UUID: 3c52b523_ef4731db
+Bytes: 230
+As a "RIL" connnections are created tdc.addRil(cmdsIf) would be called and addRil would then call cmdsIf.registerForHardwareConfigChanged to get notified of changes instead of it being called in the constructor as you have it now.
+
 373
 Fri Feb 28 16:58:49 2014 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
