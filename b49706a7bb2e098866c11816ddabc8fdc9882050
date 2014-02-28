@@ -55,6 +55,16 @@ For the moment, we're faking it I suggest that PhoneFactory or any one else call
 
 For now maybe we can have addRill(CommandsInterface cmdsIf) to which this can register for configuration changes.
 
+180
+Fri Feb 28 20:02:35 2014 +0000
+Author: Pierre Couillaud <1025044@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7c58ad41_9d6eafd1
+UUID: bce78593_69bfb6b2
+Bytes: 202
+yes, so the telephony-dev-controller is already a singleton in this scope...  maybe i should have said.
+
+i do not follow the comment on 'addRill(CommandsInterface cmdsIf)' ...  can you be more specific?
+
 373
 Fri Feb 28 16:58:49 2014 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
