@@ -1,0 +1,17 @@
+Revision: fc295cfca28c375d0d20cb2e7a0842c256b0a74e
+Patch-set: 5
+File: src/java/com/android/internal/telephony/TelephonyDevController.java
+
+176:14-176:70
+Fri Feb 28 21:53:41 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c8801e4_c1c32224
+Bytes: 122
+add:
+
+  import android.telephony.ServiceState;
+
+And then these become:
+
+  rat.set(Servicestate.RIL_RADIO_TECHNOLOGY_HSPA);
+
