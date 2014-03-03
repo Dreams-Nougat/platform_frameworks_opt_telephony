@@ -17,3 +17,20 @@ UUID: 5cf6894a_c8991e1d
 Bytes: 15
 Will revert it.
 
+Base-for-patch-set: 12
+File: src/java/com/android/internal/telephony/cdma/CDMAPhone.java
+
+1203
+Mon Mar 03 17:05:40 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3c52b523_21f55536
+Bytes: 11
+Why remove?
+
+1213
+Mon Mar 03 17:05:40 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c58ad41_dadae3ff
+Bytes: 11
+Why remove?
+
