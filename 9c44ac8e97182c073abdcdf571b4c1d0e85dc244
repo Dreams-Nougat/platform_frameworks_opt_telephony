@@ -20,3 +20,13 @@ If slotId is passed this becomes:
 
 and getUiccRecords is not needed.
 
+2371
+Mon Mar 03 16:56:44 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 3c52b523_064caf5f
+UUID: 3c52b523_4185f1ab
+Bytes: 221
+In case of mulit sim/single sim the slotId to be obtained from SubscriptionManager, at this point SubscriptionManager is not yet enabled for single sim, that resulted in check over here.
+
+Agree this needs to be optimized.
+
