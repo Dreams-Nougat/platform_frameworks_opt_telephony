@@ -1,0 +1,22 @@
+Revision: 9c44ac8e97182c073abdcdf571b4c1d0e85dc244
+Patch-set: 11
+File: src/java/com/android/internal/telephony/dataconnection/DcTracker.java
+
+2366
+Mon Mar 03 05:28:11 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c58ad41_947d6195
+Bytes: 141
+I suggest that slotId be passed as a parameter to this method, especially since its the value passed as the AsyncResult.result on IccChanged.
+
+2371:35-2371:78
+Mon Mar 03 05:28:11 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3c52b523_064caf5f
+Bytes: 148
+If slotId is passed this becomes:
+
+  IccRecords newIccRecords = mUiccController.getIccRecords(slotId, appFamily);
+
+and getUiccRecords is not needed.
+
