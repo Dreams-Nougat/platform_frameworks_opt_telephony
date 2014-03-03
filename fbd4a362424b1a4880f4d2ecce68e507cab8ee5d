@@ -1,5 +1,119 @@
 Revision: fbd4a362424b1a4880f4d2ecce68e507cab8ee5d
 Patch-set: 12
+File: src/java/android/provider/Telephony.java
+
+1038:47-1038:77
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c58ad41_208e7069
+Bytes: 79
+Suggest to define on PhoneConstants.java and consistent with other definitions.
+
+File: src/java/com/android/internal/telephony/CardSubscriptionManager.java
+
+1:0-915:1
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3c52b523_97cfaba1
+Bytes: 84
+What's the different with Subscription Manager? Is it the "Subscription controller"?
+
+File: src/java/com/android/internal/telephony/CellBroadcastHandler.java
+
+34:4-34:13
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c920913_736468f8
+Bytes: 42
+It should be private instead of protected.
+
+91:24-91:54
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c920913_335ee02a
+Bytes: 43
+It should be defined on PhoneConstants.java
+
+92:16-92:38
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c920913_f3c2b873
+Bytes: 70
+Phone depends on SIM slot. But this part needs to discuss in one-roof.
+
+File: src/java/com/android/internal/telephony/InboundSmsHandler.java
+
+711:24-711:54
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c920913_b3a3d0c1
+Bytes: 39
+It should define on PhoneConstants.java
+
+712:16-712:38
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c58ad41_6020e880
+Bytes: 70
+Phone depeeds on the SIM slot. It could not get the subscription here.
+
+File: src/java/com/android/internal/telephony/PhoneFactory.java
+
+396:4-412:5
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c920913_f31e3877
+Bytes: 101
+does it "Build time decision" to make a default behavior on original SDK interface? (SmsManager.java)
+
+File: src/java/com/android/internal/telephony/UiccSmsController.java
+
+73:46-73:85
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3c52b523_9738cbb3
+Bytes: 97
+Get via SIM slot making sense due to subscription will be changed while inserting a new SIM card.
+
+File: src/java/com/android/internal/telephony/WapPushOverSms.java
+
+204:36-204:66
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c920913_930fac00
+Bytes: 39
+It should define on PhoneConstants.java
+
+205:28-205:64
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c58ad41_80ed1ce5
+Bytes: 30
+Phone depends on the SIM slot.
+
+246:24-246:54
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c920913_d3f454a1
+Bytes: 44
+It's better to define on PhoneConstants.java
+
+246:56-246:92
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c920913_f3c87866
+Bytes: 16
+Same as Line 205
+
+File: src/java/com/android/internal/telephony/cdma/SmsMessage.java
+
+1037:4-1037:10
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c58ad41_8004fce2
+Bytes: 26
+Why it needs to be public?
+
 File: src/java/com/android/internal/telephony/gsm/GSMPhone.java
 
 191
@@ -8,4 +122,22 @@ Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 5c920913_c5dd6e31
 Bytes: 178
 Lots of duplicated code, but I assume we'll soon get rid of the  "single sim" mode and all constructors will have subscription, and the old constructors will be removed, correct?
+
+File: src/java/com/android/internal/telephony/gsm/GsmCellBroadcastHandler.java
+
+249:0-275:5
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3c52b523_17fe1b84
+Bytes: 100
+Dispatch the intent already handled by CellBroadcasthandler. This part does not need to override it.
+
+File: src/java/com/android/internal/telephony/gsm/GsmSMSDispatcher.java
+
+269:8-281:20
+Mon Mar 03 19:35:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5c920913_13787c4c
+Bytes: 132
+Why it needs to get the UiccCardApplication from SubscriptionManager? Each instance of SmsDispatcher belongs to each Phone instance.
 
