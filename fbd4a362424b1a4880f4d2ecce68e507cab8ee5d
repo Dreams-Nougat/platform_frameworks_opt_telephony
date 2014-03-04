@@ -9,6 +9,14 @@ UUID: 7c58ad41_208e7069
 Bytes: 79
 Suggest to define on PhoneConstants.java and consistent with other definitions.
 
+1038
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7c58ad41_208e7069
+UUID: dc76f9c4_16663a3f
+Bytes: 21
+We would modify this.
+
 File: src/java/com/android/internal/telephony/CardSubscriptionManager.java
 
 1:0-915:1
@@ -27,12 +35,28 @@ UUID: 5c920913_736468f8
 Bytes: 42
 It should be private instead of protected.
 
+34
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 5c920913_736468f8
+UUID: dc76f9c4_d64a029d
+Bytes: 29
+Yes, it needs to be modified.
+
 91:24-91:54
 Mon Mar 03 19:35:11 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 5c920913_335ee02a
 Bytes: 43
 It should be defined on PhoneConstants.java
+
+91
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 5c920913_335ee02a
+UUID: 1c7df19f_980fd9bb
+Bytes: 4
+Yes.
 
 92:16-92:38
 Mon Mar 03 19:35:11 2014 +0000
@@ -42,6 +66,20 @@ Bytes: 70
 Phone depends on SIM slot. But this part needs to discuss in one-roof.
 
 File: src/java/com/android/internal/telephony/InboundSmsHandler.java
+
+223
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_d631a21a
+Bytes: 21
+need to address todo.
+
+708
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_7643ee83
+Bytes: 17
+remove protected.
 
 711:24-711:54
 Mon Mar 03 19:35:11 2014 +0000
@@ -57,6 +95,14 @@ UUID: 7c58ad41_6020e880
 Bytes: 70
 Phone depeeds on the SIM slot. It could not get the subscription here.
 
+712
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7c58ad41_6020e880
+UUID: 7c66ed13_fe1b5984
+Bytes: 97
+If sub is activated, phone is associated with a subscription, it should be able to get, isn't it?
+
 File: src/java/com/android/internal/telephony/PhoneFactory.java
 
 396:4-412:5
@@ -66,6 +112,18 @@ UUID: 5c920913_f31e3877
 Bytes: 101
 does it "Build time decision" to make a default behavior on original SDK interface? (SmsManager.java)
 
+412
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 5c920913_f31e3877
+UUID: dc76f9c4_f9e92f24
+Bytes: 301
+Did not get the question here?
+
+getSMSSubscription/getVoiceSubscription values would be stored in sqllite db, these would be updated as per user preference menu "Multi SIM Settings" where user can change between sub1 or sub2.
+
+The voice/sms preferred values updated at runtime based on user selection.
+
 File: src/java/com/android/internal/telephony/UiccSmsController.java
 
 73:46-73:85
@@ -74,6 +132,14 @@ Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 3c52b523_9738cbb3
 Bytes: 97
 Get via SIM slot making sense due to subscription will be changed while inserting a new SIM card.
+
+73
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 3c52b523_9738cbb3
+UUID: 7c66ed13_3ee8f120
+Bytes: 122
+This api is mapped  copyMessageToIcc(sub, ..) at SDK SMSManager level, do you suggest to modify this api to be slot based?
 
 File: src/java/com/android/internal/telephony/WapPushOverSms.java
 
@@ -90,6 +156,16 @@ Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 7c58ad41_80ed1ce5
 Bytes: 30
 Phone depends on the SIM slot.
+
+205
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7c58ad41_80ed1ce5
+UUID: dc76f9c4_5900631f
+Bytes: 246
+this code would get hit when sub is activated and phone is tied to a sub. So phone is tied to a sub.
+
+If we have two subs from same card are activated for dsds, I expect the device to have two phone objects associated to each of the subscription.
 
 246:24-246:54
 Mon Mar 03 19:35:11 2014 +0000
@@ -114,6 +190,14 @@ UUID: 7c58ad41_8004fce2
 Bytes: 26
 Why it needs to be public?
 
+1037
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7c58ad41_8004fce2
+UUID: dc76f9c4_990d9b55
+Bytes: 24
+yes need to be modified.
+
 File: src/java/com/android/internal/telephony/gsm/GSMPhone.java
 
 191
@@ -122,6 +206,14 @@ Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 5c920913_c5dd6e31
 Bytes: 178
 Lots of duplicated code, but I assume we'll soon get rid of the  "single sim" mode and all constructors will have subscription, and the old constructors will be removed, correct?
+
+191
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 5c920913_c5dd6e31
+UUID: 1c7df19f_3896c530
+Bytes: 79
+Yes, this should go off only one constructor should be there with subscription.
 
 File: src/java/com/android/internal/telephony/gsm/GsmCellBroadcastHandler.java
 
@@ -132,6 +224,14 @@ UUID: 3c52b523_17fe1b84
 Bytes: 100
 Dispatch the intent already handled by CellBroadcasthandler. This part does not need to override it.
 
+275
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 3c52b523_17fe1b84
+UUID: dc76f9c4_36d9f6bf
+Bytes: 73
+Agree, looks like this got missed when code is being moved to base files.
+
 File: src/java/com/android/internal/telephony/gsm/GsmSMSDispatcher.java
 
 269:8-281:20
@@ -140,4 +240,16 @@ Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 5c920913_13787c4c
 Bytes: 132
 Why it needs to get the UiccCardApplication from SubscriptionManager? Each instance of SmsDispatcher belongs to each Phone instance.
+
+281
+Tue Mar 04 02:14:35 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 5c920913_13787c4c
+UUID: 1c7df19f_f844cdd8
+Bytes: 264
+when we support concepts one card two subs,  this would require. This class needs to get exact application/sub it is operating.
+
+At this point SubscriptionManager is not enabled for single SIM that resulted in isMultiSIM check over here.
+
+That needs to be changed.
 
