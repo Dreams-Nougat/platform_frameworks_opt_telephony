@@ -18,6 +18,15 @@ Bytes: 15
 Will revert it.
 
 Base-for-patch-set: 12
+File: src/java/com/android/internal/telephony/CallManager.java
+
+84:19-84:24
+Tue Mar 04 02:28:55 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c66ed13_3e20f17f
+Bytes: 31
+it should keep "final" property
+
 File: src/java/com/android/internal/telephony/cdma/CDMAPhone.java
 
 1203

@@ -17,6 +17,59 @@ UUID: dc76f9c4_16663a3f
 Bytes: 21
 We would modify this.
 
+File: src/java/com/android/internal/telephony/CallManager.java
+
+109:23-109:33
+Tue Mar 04 02:28:55 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c66ed13_5e3845b2
+Bytes: 59
+The variables is no use in this class
+Please introduce this
+
+170:10-170:24
+Tue Mar 04 02:28:55 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c66ed13_9e457d34
+Bytes: 82
+Please introduce how to know which sim the event comes from.
+App need to know that
+
+246:31-246:43
+Tue Mar 04 02:28:55 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c66ed13_dec8d566
+Bytes: 161
+We consider the arg of subscription should be subid. However, the subscription argument in interface look pretty much like SimId. Could you help to confirm this.
+
+850:19-850:32
+Tue Mar 04 02:28:55 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_3807a577
+Bytes: 90
+We suggest add "heldPhone != null && activePhone != null" check in canConference() method.
+
+909:4-909:10
+Tue Mar 04 02:28:55 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_b9c97797
+Bytes: 247
+Because dial() in Phone will do the same check for this If need to do here, we should remove the same code in Phone. Or we can view it dialable in canDial() check and do it in Phone. there should not be the same operation in CallManager and Phone.
+
+909:22-909:26
+Tue Mar 04 02:28:55 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_99711bb2
+Bytes: 271
+for switchHoldingAndActive / acceptCall method, it may cause fail when do the first operation switchHoldingAndActive for one Phone. It will be get worst for multi-Sim case, so we suggest to divide into two step and do the second operation only when the first one is done.
+
+945:20-945:56
+Tue Mar 04 02:28:55 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_58e1417e
+Bytes: 241
+For the case when 1A1H and accept new ringing call, use getActiveFgCall().hangup(); will resume bgcall after hangup operation. we give a new method hangupActiveCall() to fix that issue, Please also think about this for your new modification.
+
 File: src/java/com/android/internal/telephony/CardSubscriptionManager.java
 
 1:0-915:1
