@@ -184,6 +184,14 @@ UUID: 7c66ed13_fe1b5984
 Bytes: 97
 If sub is activated, phone is associated with a subscription, it should be able to get, isn't it?
 
+712
+Tue Mar 04 06:20:58 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7c66ed13_fe1b5984
+UUID: 7c66ed13_6157ac47
+Bytes: 125
+Based on the conclusion today, # of phone = MAX(MAX of standby, MAX of SIM slots). Phone could not get any subscription here.
+
 File: src/java/com/android/internal/telephony/PhoneFactory.java
 
 396:4-412:5
@@ -205,6 +213,15 @@ getSMSSubscription/getVoiceSubscription values would be stored in sqllite db, th
 
 The voice/sms preferred values updated at runtime based on user selection.
 
+412
+Tue Mar 04 06:20:58 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dc76f9c4_f9e92f24
+UUID: 7c66ed13_e14adc9c
+Bytes: 142
+Could you please show more detail about it? for what scenario? 
+As I know, the app should be able to show different sub to end user selection.
+
 File: src/java/com/android/internal/telephony/UiccSmsController.java
 
 73:46-73:85
@@ -221,6 +238,14 @@ Parent: 3c52b523_9738cbb3
 UUID: 7c66ed13_3ee8f120
 Bytes: 122
 This api is mapped  copyMessageToIcc(sub, ..) at SDK SMSManager level, do you suggest to modify this api to be slot based?
+
+73
+Tue Mar 04 06:20:58 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7c66ed13_3ee8f120
+UUID: 7c66ed13_a154e43c
+Bytes: 164
+It means it is query the phone via subscription. In today conclusion, one phone may contain many subscription. It needs to pass the slot or called logical phone id.
 
 File: src/java/com/android/internal/telephony/WapPushOverSms.java
 
@@ -247,6 +272,14 @@ Bytes: 246
 this code would get hit when sub is activated and phone is tied to a sub. So phone is tied to a sub.
 
 If we have two subs from same card are activated for dsds, I expect the device to have two phone objects associated to each of the subscription.
+
+205
+Tue Mar 04 06:20:58 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dc76f9c4_5900631f
+UUID: dc76f9c4_1c689979
+Bytes: 82
+Same as previous comment. The phone may contain lots of subscription not only one.
 
 246:24-246:54
 Mon Mar 03 19:35:11 2014 +0000
@@ -278,6 +311,14 @@ Parent: 7c58ad41_8004fce2
 UUID: dc76f9c4_990d9b55
 Bytes: 24
 yes need to be modified.
+
+1037
+Tue Mar 04 06:20:58 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dc76f9c4_990d9b55
+UUID: dc76f9c4_dc61c194
+Bytes: 16
+For what reason?
 
 File: src/java/com/android/internal/telephony/gsm/GSMPhone.java
 
