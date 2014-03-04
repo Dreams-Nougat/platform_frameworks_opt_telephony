@@ -42,6 +42,27 @@ UUID: 7c66ed13_dec8d566
 Bytes: 161
 We consider the arg of subscription should be subid. However, the subscription argument in interface look pretty much like SimId. Could you help to confirm this.
 
+376:17-376:31
+Tue Mar 04 02:49:48 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_39c48750
+Bytes: 51
+Could you help to introduce use case of the method.
+
+389:17-389:31
+Tue Mar 04 02:49:48 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_d9c8f366
+Bytes: 51
+Could you help to introduce use case of the method.
+
+407:19-407:32
+Tue Mar 04 02:49:48 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c66ed13_5e228535
+Bytes: 70
+We suggest mDefaultPhone bind the phone which the default subId is at.
+
 850:19-850:32
 Tue Mar 04 02:28:55 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -69,6 +90,13 @@ Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 1c7df19f_58e1417e
 Bytes: 241
 For the case when 1A1H and accept new ringing call, use getActiveFgCall().hangup(); will resume bgcall after hangup operation. we give a new method hangupActiveCall() to fix that issue, Please also think about this for your new modification.
+
+991:8-991:36
+Tue Mar 04 02:49:48 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_7bde7784
+Bytes: 69
+recall that statements should be replaced by "getPhone(subscription)"
 
 File: src/java/com/android/internal/telephony/CardSubscriptionManager.java
 
