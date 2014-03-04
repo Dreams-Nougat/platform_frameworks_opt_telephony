@@ -54,6 +54,21 @@ For the case EVENT_MMI_COMPLETE,
 the result is MMICode object and cannot get subId infomation.
 In your solution, every object need to add interface to get subId information. Is it right?
 
+112
+Tue Mar 04 15:17:13 2014 +0000
+Author: Sandeep Gutta <1019829@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1cf89137_14d03705
+UUID: dc76f9c4_c7da4e00
+Bytes: 434
+Yes, in above case we need to add subId in MMICode object.
+
+Along with the above event we also need modifications for few more events to pass the subId information.
+
+One more Example is mCallWaitingRegistrants, it sends CdmaCallWaitingNotification object to Apps. 
+The Apps to know on which SIM this event received, we have to pass SubId in CdmaCallWaitingNotification  object.
+
+Will make the required changes for all required events.
+
 247:27-247:30
 Mon Feb 24 10:41:43 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
