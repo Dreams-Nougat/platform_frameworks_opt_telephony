@@ -9,3 +9,15 @@ UUID: dc76f9c4_67b57ad1
 Bytes: 148
 Creating Phone by variable "i" which should be subscription id, but why value of "i" is 0~numPhones? It seems it is not a real subscription concept.
 
+163
+Tue Mar 04 16:48:20 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dc76f9c4_67b57ad1
+UUID: 7c66ed13_a7d2b40e
+Bytes: 270
+Like MTK uses SIM concept across classes, subscription is used across all classes in QC solution.
+
+It's a logical subscription that was thought earlier not actual card subscription.
+
+From yesterday's one-roof discussion it should be marked as Logical Phone id I believe.
+
