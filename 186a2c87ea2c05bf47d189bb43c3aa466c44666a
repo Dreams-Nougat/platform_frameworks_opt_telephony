@@ -48,3 +48,13 @@ UUID: dc76f9c4_cbd25010
 Bytes: 107
 There very well could be a problem here, but lets figure this out after we get the get things "integrated".
 
+0
+Wed Mar 05 07:17:20 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dc76f9c4_cbd25010
+UUID: 3cae3566_ec1b9f84
+Bytes: 414
+Hi, Wink,
+it will be a problem on our solution. QC handles the DSDS data on modem side but MTK handles the DSDS data on the framework side. It is obviously that MTK has problem here. Like as attach/de-attache for different sim card. Suggest that QC could check the following link that MTK do.
+https://android-review.googlesource.com/#/c/80180/3/src/java/com/android/internal/telephony/dataconnection/DcTracker.java
+
