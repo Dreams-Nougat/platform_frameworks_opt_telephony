@@ -21,3 +21,11 @@ It's a logical subscription that was thought earlier not actual card subscriptio
 
 From yesterday's one-roof discussion it should be marked as Logical Phone id I believe.
 
+163
+Wed Mar 05 00:30:27 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7c66ed13_a7d2b40e
+UUID: 1c7df19f_14906def
+Bytes: 210
+As today's discussion, the number of phone depends on the TelephonyDevController. Different vendor may have different phone for their design. Hence, it should have dynamic approach to create the phone instance.
+
