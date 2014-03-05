@@ -13,10 +13,31 @@ We are already doing this filtering on line#348
 
 What is the exact issue that this change is trying to address?
 
+215
+Wed Mar 05 19:49:55 2014 +0000
+Author: X.J. Lee <1041926@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1c26d1b5_2d02ed66
+UUID: dc76f9c4_06327f1e
+Bytes: 517
+The issue here is both the two cases will call setExternalState function, which will set SIM status property to ABSENT as below:
+SystemProperties.set(PROPERTY_SIM_STATE, mExternalState.toString());
+
+And We have a Public API getSimState in TelephonyManager.java which will get the property directly to any upper Application which care about this status, and these application will have wrong behavior on CDMA NV only phone because these think no SIM card ready from this API. We did met this issue in application.
+
+THX
+
 225:20-225:30
 Wed Feb 26 23:43:44 2014 +0000
 Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 1c26d1b5_ed1bc5cd
 Bytes: 25
 Same comment as line #215
+
+225:20-225:30
+Wed Mar 05 19:49:55 2014 +0000
+Author: X.J. Lee <1041926@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1c26d1b5_ed1bc5cd
+UUID: dc76f9c4_46387700
+Bytes: 36
+Same case with my reply on line #215
 
