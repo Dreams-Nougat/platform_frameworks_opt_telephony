@@ -1,0 +1,459 @@
+Revision: 2be1126b9b30ceadf20fd0aef24489db415d7a12
+Patch-set: 14
+File: src/java/android/telephony/CellBroadcastMessage.java
+
+57:12-57:22
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_e1fbad26
+Bytes: 46
+Should be long because all interface are long.
+
+64:25-64:34
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_a10db599
+Bytes: 15
+Should be long.
+
+73:11-73:14
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_61079d76
+Bytes: 14
+should be long
+
+File: src/java/android/telephony/SmsManager.java
+
+208:29-208:58
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_c141d1c6
+Bytes: 66
+subscription argument should be put on the front of the interface.
+
+247:54-247:71
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_e312d1ae
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+315:46-315:75
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_1aebcd60
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+349:81-349:98
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_9afedd18
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+398:51-398:80
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_5a086588
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+417:12-417:29
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_7a0d2197
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+448:50-448:79
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_2190c5ef
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+463:43-463:60
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_1a02ed66
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+496:64-496:93
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_e1996d1c
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+515:39-515:56
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_03a7cd39
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+589:54-589:83
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_61855dac
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+610:62-610:79
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_21776517
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+642:55-642:84
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_c1731127
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+662:63-662:80
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_81e19981
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+698:16-698:45
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_83dafdb5
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+720:12-720:29
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_a1e61596
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+759:71-759:100
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_43d4e587
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+781:12-781:29
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_41eb815f
+Bytes: 49
+Same as above and put on the front of interfaces.
+
+901:4-917:5
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_5ab3857e
+Bytes: 41
+Should not be needed that control by App.
+
+File: src/java/android/telephony/SmsMessage.java
+
+103:12-103:22
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_a38a9996
+Bytes: 46
+Should be long because all interface are long.
+
+109:25-109:34
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_011ca9c5
+Bytes: 15
+Should be long.
+
+117:11-117:14
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_e112cdae
+Bytes: 15
+Should be long.
+
+File: src/java/com/android/internal/telephony/CallManager.java
+
+19:0-19:51
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_63b00008
+Bytes: 65
+Need to add for applications.
+1. public int getRingingCallCount()
+
+109:19-109:33
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_212f65ba
+Bytes: 24
+Sub type should be long.
+
+246:27-246:43
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_c12b11aa
+Bytes: 20
+Type should be long.
+
+249:16-249:55
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_25ed3031
+Bytes: 47
+It should translate via SubscriptionController.
+
+282:41-282:57
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_15fabee1
+Bytes: 19
+Type should be long
+
+297:38-297:54
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_83ff5cd0
+Bytes: 20
+Type should be long.
+
+303:11-303:14
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_35ffbad2
+Bytes: 19
+Type should be long
+
+346:31-346:34
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_451cec7d
+Bytes: 20
+Type should be long.
+
+389:32-389:35
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_3551fa26
+Bytes: 19
+Type should be long
+
+477:28-477:31
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_634c8093
+Bytes: 20
+Type should be long.
+
+492:28-492:31
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_953f8ec5
+Bytes: 20
+Type should be long.
+
+507:33-507:36
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_557d9691
+Bytes: 20
+Type should be long.
+
+850:48-850:51
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_d590a683
+Bytes: 19
+Type should be long
+
+875:8-875:11
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_6387a04f
+Bytes: 20
+Type should be long.
+
+911:8-911:11
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_2391a885
+Bytes: 19
+Type should be long
+
+990:34-990:37
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_5564b6f7
+Bytes: 20
+type should be long.
+
+1009:8-1009:11
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_438e246a
+Bytes: 20
+Type should be long.
+
+1056:46-1056:49
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_d57746a5
+Bytes: 19
+Type should be long
+
+1761:35-1761:38
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_f574c2a2
+Bytes: 19
+Type should be long
+
+1778:35-1778:38
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_059834a6
+Bytes: 19
+Type should be long
+
+1795:40-1795:43
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_15d95e68
+Bytes: 20
+Type should be long.
+
+1820:32-1820:35
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_c569dcd0
+Bytes: 19
+Type should be long
+
+1847:55-1847:58
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_8363dcec
+Bytes: 19
+Type should be long
+
+1899:37-1899:40
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_2378c895
+Bytes: 19
+Type should be long
+
+1937:42-1937:45
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_b5c96a97
+Bytes: 19
+Type should be long
+
+1988:49-1988:52
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_e37170b0
+Bytes: 19
+Type should be long
+
+2012:49-2012:52
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_a3cff8a0
+Bytes: 19
+Type should be long
+
+2036:48-2036:51
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_056fd4cf
+Bytes: 19
+Type should be long
+
+2054:41-2054:44
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_a5cf00a1
+Bytes: 19
+Type should be long
+
+2069:41-2069:44
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_65d9e867
+Bytes: 19
+Type should be long
+
+2090:60-2090:63
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_85de844f
+Bytes: 19
+Type should be long
+
+2116:12-2116:15
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_25c3f079
+Bytes: 19
+Type should be long
+
+2144:46-2144:49
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_15b07e06
+Bytes: 19
+Type should be long
+
+2164:46-2164:49
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_45c06c6a
+Bytes: 19
+Type should be long
+
+File: src/java/com/android/internal/telephony/PhoneFactory.java
+
+197:37-197:40
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_c5731c6c
+Bytes: 136
+Should be long and transfer to the correct phone instance.
+And provide another API that get phone by SIM id (or called logical phone id)
+
+206:36-206:39
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_75d532d4
+Bytes: 136
+Should be long and transfer to the correct phone instance.
+And provide another API that get phone by SIM id (or called logical phone id)
+
+226:33-226:36
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc76f9c4_6568087b
+Bytes: 136
+Should be long and transfer to the correct phone instance.
+And provide another API that get phone by SIM id (or called logical phone id)
+
+File: src/java/com/android/internal/telephony/PhoneSubInfoController.java
+
+47:38-47:55
+Wed Mar 05 19:41:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_b5f40aa0
+Bytes: 59
+IMEI should be depends on SIM slot instead of subscription.
+
