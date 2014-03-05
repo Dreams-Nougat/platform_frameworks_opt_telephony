@@ -40,3 +40,11 @@ In data framework, we don't see any code in terms of DSDS(e.g. switch data conne
 In Qualcomm's architecture, seems the switching stuff might be putted in RILD, but that would cause large porting effort for customer if they use different modem.
 Therefore we highly recommended that Qualcomm would reference MTK's architecture. Thanks.
 
+0
+Wed Mar 05 06:19:07 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 3cae3566_e912b1e0
+UUID: dc76f9c4_cbd25010
+Bytes: 107
+There very well could be a problem here, but lets figure this out after we get the get things "integrated".
+
