@@ -29,3 +29,14 @@ UUID: 1c7df19f_14906def
 Bytes: 210
 As today's discussion, the number of phone depends on the TelephonyDevController. Different vendor may have different phone for their design. Hence, it should have dynamic approach to create the phone instance.
 
+File: src/java/com/android/internal/telephony/dataconnection/DcTracker.java
+
+0
+Wed Mar 05 05:59:55 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3cae3566_e912b1e0
+Bytes: 483
+In data framework, we don't see any code in terms of DSDS(e.g. switch data connection from SIM1 to SIM2). For instance, in MTK architecture, we have a DcSwitchManager, DcSwitchAsyncChannel, DcSwitchSate to do this kinda of things.
+In Qualcomm's architecture, seems the switching stuff might be putted in RILD, but that would cause large porting effort for customer if they use different modem.
+Therefore we highly recommended that Qualcomm would reference MTK's architecture. Thanks.
+
