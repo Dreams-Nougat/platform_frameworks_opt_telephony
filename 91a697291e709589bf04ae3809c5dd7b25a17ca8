@@ -27,6 +27,13 @@ UUID: dca43989_ccc26374
 Bytes: 101
 It should be int slot for each phone each slot. But it should be renamed and need further discussion.
 
+226:24-226:32
+Thu Mar 06 07:21:38 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_387d4fc6
+Bytes: 102
+Is is possible to add an API to get all phone proxys, such as "public static Phone[] getPhoneProxys()"
+
 275:46-275:49
 Thu Mar 06 07:13:53 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
