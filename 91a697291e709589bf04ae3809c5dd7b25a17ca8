@@ -124,6 +124,13 @@ UUID: 1c7df19f_d8c77bd9
 Bytes: 23
 It should be long based
 
+446:36-446:76
+Thu Mar 06 08:55:02 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dca43989_77e8d8d3
+Bytes: 52
+why this name? Is it involved with MMS transaction?!
+
 File: src/java/com/android/internal/telephony/UiccSmsController.java
 
 283:11-283:14
