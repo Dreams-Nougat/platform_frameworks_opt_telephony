@@ -9,6 +9,14 @@ UUID: dca43989_acda87fe
 Bytes: 24
 It should be long based.
 
+889
+Thu Mar 06 07:44:08 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dca43989_acda87fe
+UUID: dca43989_0cbddb48
+Bytes: 17
+will modify this.
+
 File: src/java/com/android/internal/telephony/CallManager.java
 
 109:19-109:33
@@ -17,6 +25,14 @@ Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 1c7df19f_184c1360
 Bytes: 30
 Subscription id should be long
+
+109
+Thu Mar 06 07:44:08 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1c7df19f_184c1360
+UUID: fca73d88_7e00b196
+Bytes: 17
+will modify this.
 
 File: src/java/com/android/internal/telephony/PhoneFactory.java
 
@@ -34,12 +50,30 @@ UUID: 1c7df19f_387d4fc6
 Bytes: 102
 Is is possible to add an API to get all phone proxys, such as "public static Phone[] getPhoneProxys()"
 
+226
+Thu Mar 06 07:44:08 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1c7df19f_387d4fc6
+UUID: fca73d88_3e0a39b7
+Bytes: 63
+Yes an apii,
+ public static Phone[] getPhones() would be added.
+
 275:46-275:49
 Thu Mar 06 07:13:53 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 1c7df19f_f8c4b7d6
 Bytes: 23
 It should be long based
+
+275
+Thu Mar 06 07:44:08 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dca43989_6cdfafa7
+Bytes: 202
+I think the apis setDefaultSub, getDefaultSub, setVoiceSub, getVoiceSub, getSMSSub, setSMSSub() should not be in this PhoneFactory class.
+
+It is better these are moved to SubscriptionManager/Controller?
 
 299:18-299:21
 Thu Mar 06 07:13:53 2014 +0000
@@ -98,6 +132,16 @@ Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: fca73d88_1e965d39
 Bytes: 24
 It should be long based.
+
+283
+Thu Mar 06 07:44:08 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: fca73d88_1e965d39
+UUID: 1c7df19f_cc2b3c98
+Bytes: 132
+For now we type cast it, I expect SMSprefered sub to be queried from subscriptionController/Manager.
+
+All preference voice/sms/data.
 
 File: src/java/com/android/internal/telephony/cat/CatService.java
 
