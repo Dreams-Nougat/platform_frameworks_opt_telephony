@@ -422,6 +422,22 @@ UUID: dc76f9c4_45c06c6a
 Bytes: 19
 Type should be long
 
+File: src/java/com/android/internal/telephony/IccProvider.java
+
+56:31-56:39
+Thu Mar 06 02:15:52 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_fdf3490d
+Bytes: 37
+How to support 4th~ subscription ids?
+
+72:28-72:35
+Thu Mar 06 02:15:52 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: fca73d88_2dde9551
+Bytes: 59
+For backward compatible, should use icc to replace iccmsim?
+
 File: src/java/com/android/internal/telephony/PhoneBase.java
 
 151:14-151:17
