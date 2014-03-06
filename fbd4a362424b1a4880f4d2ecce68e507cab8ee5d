@@ -62,6 +62,15 @@ UUID: 1c7df19f_499bb160
 Bytes: 73
 Yes, In this case the subscription means the SimId(i.e logical phone id).
 
+246
+Thu Mar 06 01:21:16 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1c7df19f_499bb160
+UUID: dc76f9c4_26c0db69
+Bytes: 190
+By our conclusion, we need to decide all interfaces belong to  subscription based or Sim based.
+If all interfaces in CallManager is Sim based, please help to rename to prevent from confusion
+
 376:17-376:31
 Tue Mar 04 02:49:48 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -150,6 +159,42 @@ As per my understanding  canDial() its required at both places.
 
 2. Phone.canDail() takes care of call state(Ex: mPendingMO should be null to dial a new call) of its own phone.
 
+909:22-909:26
+Thu Mar 06 01:21:16 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dc76f9c4_99711bb2
+UUID: dc76f9c4_666333ee
+Bytes: 54
+Could you also response for this suggestion, thank you
+
+909
+Thu Mar 06 01:21:16 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7c66ed13_8730d001
+UUID: 1c7df19f_68ff7ed1
+Bytes: 373
+About the check, I mean that Phone will check  
+
+String newDialString = PhoneNumberUtils.stripSeparators(dialString);
+
+if (handleInCallMmiCommands(newDialString)) {
+
+ return null;
+
+}
+
+in  dial() methond
+
+and your CallManager will also do the same check dial():
+
+if (basePhone.handleInCallMmiCommands(newDialString)) {
+
+ return null;
+
+}
+
+it look not like cross phones' check
+
 945:20-945:56
 Tue Mar 04 02:28:55 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -164,6 +209,25 @@ Parent: 1c7df19f_58e1417e
 UUID: 7c66ed13_67001c20
 Bytes: 144
 I did not get it clearly,  this code belongs to dial() method the mentioned usecase does not belong here. Could you please clarify more on this.
+
+945
+Thu Mar 06 01:21:16 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7c66ed13_67001c20
+UUID: 3cae3566_6c8b2fc5
+Bytes: 344
+getActiveFgCall().hangup() will call Call.hangup 
+
+and then call mOwner.hangup()
+
+and then call tracker.hangup (GsmCall call)
+
+Because the call is active call, so it will go to the case
+
+"else if (call == mForegroundCall)" and do 
+hangupForegroundResumeBackground()
+
+so if the BGcall exist, it will resume and then dail action will cause error.
 
 991:8-991:36
 Tue Mar 04 02:49:48 2014 +0000
@@ -181,6 +245,16 @@ Bytes: 331
 In some cases there is a possibility of two phones having same subscription id, in such cases its required to traverse through all phones.
 
 Example is: We cannot assign separate subscription id for SIPPhone,  so SIPPhone will hold the subscription id of any available CS Phone(either subscription id_1  OR subscription id_2) Phone.
+
+991
+Thu Mar 06 01:21:16 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dc76f9c4_e7150acb
+UUID: 3cae3566_cc9263fa
+Bytes: 311
+Could you help to introduce the case more than one phone with the same subscription. it seems not the conclusion MTK know.
+
+BTW, it the case is possible, we think that the  getPhone(subscription) should return a list not a single phone instance, and others interfaces can use the list to do the following action
 
 File: src/java/com/android/internal/telephony/CardSubscriptionManager.java
 
