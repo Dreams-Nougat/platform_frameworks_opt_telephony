@@ -30,3 +30,14 @@ For multiple SIM case, please add a new API for STK app usage to get correspondi
         return getInstance(null, null, null, simId);
     }
 
+File: src/java/com/android/internal/telephony/cat/RilMessageDecoder.java
+
+54:49-54:60
+Thu Mar 06 06:16:32 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: fca73d88_3e8c7971
+Bytes: 308
+For multiple SIM case, could you add new parameter "simId" in this API to get corresponding RilMessageDecoder instance for CatService. You can refer to RilMessageDecoder.java of MTK's upstream.
+public static synchronized RilMessageDecoder getInstance(Handler caller, IccFileHandler fh,
+            int simId)
+
