@@ -1,0 +1,11 @@
+Revision: 91a697291e709589bf04ae3809c5dd7b25a17ca8
+Patch-set: 15
+File: src/java/com/android/internal/telephony/CallManager.java
+
+109:19-109:33
+Thu Mar 06 05:47:50 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_184c1360
+Bytes: 30
+Subscription id should be long
+
