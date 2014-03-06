@@ -27,6 +27,71 @@ UUID: dca43989_ccc26374
 Bytes: 101
 It should be int slot for each phone each slot. But it should be renamed and need further discussion.
 
+275:46-275:49
+Thu Mar 06 07:13:53 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_f8c4b7d6
+Bytes: 23
+It should be long based
+
+299:18-299:21
+Thu Mar 06 07:13:53 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dca43989_0ceb9b60
+Bytes: 23
+It should be long based
+
+304:18-304:21
+Thu Mar 06 07:13:53 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dca43989_6ce6cf99
+Bytes: 23
+It should be long based
+
+376:18-376:21
+Thu Mar 06 07:13:53 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dca43989_8c730b28
+Bytes: 23
+It should be long based
+
+396:18-396:21
+Thu Mar 06 07:13:53 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: fca73d88_bea629a0
+Bytes: 24
+It should be long based.
+
+414:44-414:47
+Thu Mar 06 07:13:53 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_588feba7
+Bytes: 23
+It should be long based
+
+420:43-420:46
+Thu Mar 06 07:13:53 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dca43989_ccf4a33c
+Bytes: 23
+It should be long based
+
+442:42-442:45
+Thu Mar 06 07:13:53 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c7df19f_d8c77bd9
+Bytes: 23
+It should be long based
+
+File: src/java/com/android/internal/telephony/UiccSmsController.java
+
+283:11-283:14
+Thu Mar 06 07:13:53 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: fca73d88_1e965d39
+Bytes: 24
+It should be long based.
+
 File: src/java/com/android/internal/telephony/cat/CatService.java
 
 589:31-589:42
