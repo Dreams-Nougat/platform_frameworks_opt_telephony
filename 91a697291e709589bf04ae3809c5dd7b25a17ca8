@@ -75,6 +75,14 @@ I think the apis setDefaultSub, getDefaultSub, setVoiceSub, getVoiceSub, getSMSS
 
 It is better these are moved to SubscriptionManager/Controller?
 
+275
+Thu Mar 06 09:05:47 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dca43989_6cdfafa7
+UUID: fca73d88_f9427b5a
+Bytes: 96
+Yes. I think it is a good idea to put all subscription related functions to SubscriptionManager.
+
 299:18-299:21
 Thu Mar 06 07:13:53 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -149,6 +157,14 @@ Bytes: 132
 For now we type cast it, I expect SMSprefered sub to be queried from subscriptionController/Manager.
 
 All preference voice/sms/data.
+
+283
+Thu Mar 06 09:05:47 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1c7df19f_cc2b3c98
+UUID: dca43989_376d808a
+Bytes: 91
+Agree with you. All subscription setting and getting functions move to subscriptionManager.
 
 File: src/java/com/android/internal/telephony/cat/CatService.java
 
