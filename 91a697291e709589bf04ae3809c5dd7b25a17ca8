@@ -9,3 +9,24 @@ UUID: 1c7df19f_184c1360
 Bytes: 30
 Subscription id should be long
 
+File: src/java/com/android/internal/telephony/PhoneFactory.java
+
+226:33-226:49
+Thu Mar 06 06:00:41 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dca43989_ccc26374
+Bytes: 101
+It should be int slot for each phone each slot. But it should be renamed and need further discussion.
+
+File: src/java/com/android/internal/telephony/cat/CatService.java
+
+589:31-589:42
+Thu Mar 06 06:00:41 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dca43989_6cd48f31
+Bytes: 218
+For multiple SIM case, please add a new API for STK app usage to get corresponding CatService instance.
+    public static AppInterface getInstance(int simId) {
+        return getInstance(null, null, null, simId);
+    }
+
