@@ -158,6 +158,14 @@ UUID: 3cae3566_5ab3857e
 Bytes: 41
 Should not be needed that control by App.
 
+917
+Thu Mar 06 14:51:33 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 3cae3566_5ab3857e
+UUID: fca73d88_7973eb6d
+Bytes: 78
+It can be removed in future if it is not required by apps. Keeping it for now.
+
 File: src/java/android/telephony/SmsMessage.java
 
 103:12-103:22
