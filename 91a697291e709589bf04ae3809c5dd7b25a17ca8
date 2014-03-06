@@ -83,6 +83,14 @@ UUID: fca73d88_f9427b5a
 Bytes: 96
 Yes. I think it is a good idea to put all subscription related functions to SubscriptionManager.
 
+275
+Thu Mar 06 11:49:58 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: fca73d88_f9427b5a
+UUID: dca43989_527daa91
+Bytes: 168
+May be once the initial bring up is over You may want to move this to SubscriptionManager. For now lets keep this way otherwise it needs to modified in multiple places.
+
 299:18-299:21
 Thu Mar 06 07:13:53 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -138,6 +146,14 @@ Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: dca43989_77e8d8d3
 Bytes: 52
 why this name? Is it involved with MMS transaction?!
+
+446
+Thu Mar 06 11:49:58 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dca43989_77e8d8d3
+UUID: 1c7df19f_8f5e9628
+Bytes: 20
+this can be removed.
 
 File: src/java/com/android/internal/telephony/UiccSmsController.java
 
