@@ -9,6 +9,52 @@ UUID: 3cfb9535_ef9f3bcf
 Bytes: 131
 Looking at the code in TelephonyProvider these should return an empty string never null. Under what conditions are you seeing null?
 
+941
+Thu Mar 06 00:49:50 2014 +0000
+Author: X.J. Lee <1041926@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 3cfb9535_ef9f3bcf
+UUID: 1c7df19f_f70ccac7
+Bytes: 2112
+This case is:
+1. If the preload apns-conf.xml does not include mvno_type
+item for some carrier APN, during database create, the 
+loadApns function in TelephonyProvider will follow below
+code to initial mvno items:
+   if (row.containsKey(Telephony.Carriers.MVNO_TYPE) == false) {
+       row.put(Telephony.Carriers.MVNO_TYPE, "");
+       }
+  if (row.containsKey(Telephony.Carriers.MVNO_MATCH_DATA) == false) {
+       row.put(Telephony.Carriers.MVNO_MATCH_DATA, "");
+       }
+
+2. But the mvno_type and mvno_match_data can not be set as "" since it can not find key of Telephony.Carriers.MVNO_TYPE because it apns-conf.xml does not contain this key.
+
+3. Once we create APN list, it will read database with Id mvno_type, and it will return NULL. the Log is as below:
+
+
+Process: com.android.phone 
+Flags: 0xc8be4d 
+Package: com.android.stk v18 (4.3-232) 
+Package: com.android.providers.telephony v18 (4.3-232) 
+Package: com.android.phone v18 (4.3-232) 
+Build: motorola/falcon_retbr/falcon_umtsds:4.3/14.10.0Q3.X-14/232:userdebug/intcfg,test-keys 
+
+java.lang.NullPointerException 
+at com.android.internal.telephony.dataconnection.DcTracker.<D-c>mvnoMatches(DcTracker.java:1089) 
+at com.android.internal.telephony.dataconnection.DcTracker.createApnList(DcTracker.java:1164) 
+at com.android.internal.telephony.dataconnection.DcTracker.createAllApnList(DcTracker.java:2327) 
+at com.android.internal.telephony.dataconnection.DcTracker.onRecordsLoaded(DcTracker.java:1621) 
+at com.android.internal.telephony.dataconnection.DcTracker.handleMessage(DcTracker.java:2604) 
+at com.codeaurora.telephony.msim.MSimDcTracker.handleMessage(MSimDcTracker.java:137) 
+at android.os.Handler.dispatchMessage(Handler.java:99) 
+at android.os.Looper.loop(Looper.java:137) 
+at android.app.ActivityThread.main(ActivityThread.java:5222) 
+at java.lang.reflect.Method.invokeNative(Native Method) 
+at java.lang.reflect.Method.invoke(Method.java:525) 
+at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:737) 
+at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:553) 
+at dalvik.system.NativeStart.main(Native Method)
+
 952
 Wed Feb 26 02:21:17 2014 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
