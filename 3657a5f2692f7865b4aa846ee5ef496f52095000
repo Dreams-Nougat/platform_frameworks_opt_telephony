@@ -9,3 +9,51 @@ UUID: fc4c9db4_45cf00a2
 Bytes: 90
 We add a SUB_ID string for PendingMessages. It's necessary to record which SUB belongs to!
 
+File: src/java/com/android/internal/telephony/Phone.java
+
+1744:15-1744:30
+Fri Mar 07 08:27:27 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: fc4c9db4_a5bfe4dd
+Bytes: 92
+This API should be public long getPhoneId(), since phone id might by sim id, sub id and etc.
+
+File: src/java/com/android/internal/telephony/PhoneBase.java
+
+151:18-151:31
+Fri Mar 07 08:27:27 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c348108_2db1f86f
+Bytes: 42
+int mSubscription should be long mPhoneId.
+
+151:34-151:54
+Fri Mar 07 08:27:27 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c348108_cdca0ce4
+Bytes: 49
+Default value should not be DEFALUT_SUBSCRIPTION.
+
+File: src/java/com/android/internal/telephony/PhoneFactory.java
+
+197:41-197:53
+Fri Mar 07 08:27:27 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c348108_ad8fc8a6
+Bytes: 12
+long phoneId
+
+206:41-206:53
+Fri Mar 07 08:27:27 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: bc586570_7a5e192b
+Bytes: 12
+long phoneId
+
+226:37-226:49
+Fri Mar 07 08:27:27 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c348108_8d9484b8
+Bytes: 47
+getPhone(int subscrion)->getPhone(long phoneId)
+
