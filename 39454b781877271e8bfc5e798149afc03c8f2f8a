@@ -1,0 +1,11 @@
+Revision: 39454b781877271e8bfc5e798149afc03c8f2f8a
+Patch-set: 4
+File: src/java/com/android/internal/telephony/SimInfoUpdater.java
+
+192:21-192:35
+Fri Mar 07 02:47:49 2014 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c348108_cae95225
+Bytes: 140
+instead of using a constant, could we use an int here? It would make the code more extendable. We currently dont have this define in our f/w
+
