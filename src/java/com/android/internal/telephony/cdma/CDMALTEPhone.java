@@ -32,6 +32,7 @@ import android.os.PowerManager;
 import android.os.SystemProperties;
 import android.provider.Telephony;
 import android.text.TextUtils;
+import android.telephony.SubscriptionManager;
 import android.telephony.Rlog;
 
 import com.android.internal.telephony.CommandsInterface;
@@ -48,7 +49,6 @@ import com.android.internal.telephony.PhoneSubInfo;
 import com.android.internal.telephony.SMSDispatcher;
 import com.android.internal.telephony.SmsBroadcastUndelivered;
 import com.android.internal.telephony.Subscription;
-import com.android.internal.telephony.SubscriptionManager;
 import com.android.internal.telephony.gsm.GsmSMSDispatcher;
 import com.android.internal.telephony.gsm.SmsMessage;
 import com.android.internal.telephony.uicc.IsimRecords;
@@ -106,12 +106,6 @@ public class CDMALTEPhone extends CDMAPhone {
 
         mDcTracker = new DcTracker(this);
 
-
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        subMgr.registerForSubscriptionActivated(mSubscription,
-                this, EVENT_SUBSCRIPTION_ACTIVATED, null);
-        subMgr.registerForSubscriptionDeactivated(mSubscription,
-                this, EVENT_SUBSCRIPTION_DEACTIVATED, null);
     }
 
     // Constructors
@@ -405,8 +399,7 @@ public class CDMALTEPhone extends CDMAPhone {
     }
 
     private void onSubscriptionActivated() {
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        mSubscriptionData = subMgr.getCurrentSubscription(mSubscription);
+//        mSubscriptionData = SubscriptionManager.getCurrentSubscription(mSubscription);
 
         log("SUBSCRIPTION ACTIVATED : slotId : " + mSubscriptionData.slotId
                 + " appid : " + mSubscriptionData.m3gpp2Index
@@ -450,12 +443,8 @@ public class CDMALTEPhone extends CDMAPhone {
 
     @Override
     protected UiccCardApplication getUiccCardApplication() {
-        if (TelephonyManager.getDefault().isMultiSimEnabled()) {
-            return  ((UiccController) mUiccController).getUiccCardApplication(SubscriptionManager.
-                    getInstance().getSlotId(mSubscription), UiccController.APP_FAM_3GPP2);
-        } else {
-             return  mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP2);
-        }
+            return  ((UiccController) mUiccController).getUiccCardApplication(mSubscription,
+                    UiccController.APP_FAM_3GPP2);
     }
 
     @Override

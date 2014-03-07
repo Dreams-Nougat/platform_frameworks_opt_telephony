@@ -33,7 +33,7 @@ import android.telephony.gsm.GsmCellLocation;
 import com.android.internal.telephony.CellBroadcastHandler;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneBase;
-import com.android.internal.telephony.SubscriptionManager;
+import android.telephony.SubscriptionManager;
 import com.android.internal.telephony.TelephonyProperties;
 
 import java.util.HashMap;
@@ -268,8 +268,7 @@ public class GsmCellBroadcastHandler extends CellBroadcastHandler {
             receiverPermission = Manifest.permission.RECEIVE_SMS;
             appOp = AppOpsManager.OP_RECEIVE_SMS;
         }
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        long [] subId = subMgr.getSubId(mPhone.getSubscription());
+        long [] subId = SubscriptionManager.getSubId(mPhone.getSubscription());
         intent.putExtra("message", message);
         intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY,
                 subId[0]); //Subscription information to be passed in an intent

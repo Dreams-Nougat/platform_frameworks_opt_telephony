@@ -48,6 +48,7 @@ import android.provider.Telephony;
 import android.telephony.CellLocation;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
+import android.telephony.SubscriptionManager;
 import android.telephony.cdma.CdmaCellLocation;
 import android.telephony.gsm.GsmCellLocation;
 import android.text.TextUtils;
@@ -64,7 +65,6 @@ import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.gsm.GSMPhone;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.RILConstants;
-import com.android.internal.telephony.SubscriptionManager;
 import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.UiccController;
 import com.android.internal.util.AsyncChannel;
@@ -183,8 +183,8 @@ public class DcTracker extends DcTrackerBase {
                 DctConstants.EVENT_PS_RESTRICT_ENABLED, null);
         mPhone.getServiceStateTracker().registerForPsRestrictedDisabled(this,
                 DctConstants.EVENT_PS_RESTRICT_DISABLED, null);
-        SubscriptionManager.getInstance().registerForDdsSwitch(this,
-               DctConstants.EVENT_CLEAN_UP_ALL_CONNECTIONS, null);
+     //   SubscriptionManager.registerForDdsSwitch(this,
+     //          DctConstants.EVENT_CLEAN_UP_ALL_CONNECTIONS, null);
     }
     @Override
     public void dispose() {
@@ -217,7 +217,7 @@ public class DcTracker extends DcTrackerBase {
         mPhone.getServiceStateTracker().unregisterForRoamingOff(this);
         mPhone.getServiceStateTracker().unregisterForPsRestrictedEnabled(this);
         mPhone.getServiceStateTracker().unregisterForPsRestrictedDisabled(this);
-        SubscriptionManager.getInstance().unregisterForDdsSwitch(this);
+        //SubscriptionManager.unregisterForDdsSwitch(this);
     }
 
     @Override
@@ -2354,8 +2354,7 @@ public class DcTracker extends DcTrackerBase {
 
     private IccRecords getUiccRecords(int appFamily) {
         if (TelephonyManager.getDefault().isMultiSimEnabled()) {
-            return mUiccController.getIccRecords(
-                    SubscriptionManager.getInstance().getSlotId(mPhone.getSubscription()), appFamily);
+            return mUiccController.getIccRecords(mPhone.getSubscription(), appFamily);
         } else {
             return mUiccController.getIccRecords(appFamily);
         }

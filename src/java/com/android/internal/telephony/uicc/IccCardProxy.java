@@ -29,6 +29,7 @@ import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.telephony.Rlog;
 import android.telephony.ServiceState;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 
 import com.android.internal.telephony.CommandsInterface;
@@ -42,7 +43,6 @@ import com.android.internal.telephony.IccCardConstants.State;
 import com.android.internal.telephony.cdma.CdmaSubscriptionSourceManager;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.Subscription;
-import com.android.internal.telephony.SubscriptionManager;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppState;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus.PersoSubState;
 import com.android.internal.telephony.uicc.IccCardStatus.CardState;
@@ -135,13 +135,6 @@ public class IccCardProxy extends Handler implements IccCard {
         this(context, ci);
 
         mCardIndex = cardIndex;
-
-        //TODO: Card index and subscription are same???
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        subMgr.registerForSubscriptionActivated(mCardIndex,
-                this, EVENT_SUBSCRIPTION_ACTIVATED, null);
-        subMgr.registerForSubscriptionDeactivated(mCardIndex,
-                this, EVENT_SUBSCRIPTION_DEACTIVATED, null);
 
         resetProperties();
         setExternalState(State.NOT_READY, false);
@@ -325,8 +318,7 @@ public class IccCardProxy extends Handler implements IccCard {
     }
 
     private void onSubscriptionActivated() {
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        mSubscriptionData = subMgr.getCurrentSubscription(mCardIndex);
+        //mSubscriptionData = SubscriptionManager.getCurrentSubscription(mCardIndex);
 
         updateIccAvailability();
         updateStateProperty();
@@ -455,7 +447,7 @@ public class IccCardProxy extends Handler implements IccCard {
 
     private void updateStateProperty() {
         TelephonyManager.setTelephonyProperty(PROPERTY_SIM_STATE,
-                SubscriptionManager.getInstance().getSlotId(mCardIndex),getState().toString());
+                mCardIndex,getState().toString());
     }
 
     private void broadcastIccStateChangedIntent(String value, String reason) {
@@ -465,8 +457,7 @@ public class IccCardProxy extends Handler implements IccCard {
                 return;
             }
 
-            SubscriptionManager subMgr = SubscriptionManager.getInstance();
-            long [] subId = subMgr.getSubId(mCardIndex);
+            long [] subId = SubscriptionManager.getSubId(mCardIndex);
 
             if (mQuietMode) {
                 log("QuietMode: NOT Broadcasting intent ACTION_SIM_STATE_CHANGED " +  value
@@ -480,8 +471,9 @@ public class IccCardProxy extends Handler implements IccCard {
             intent.putExtra(IccCardConstants.INTENT_KEY_ICC_STATE, value);
             intent.putExtra(IccCardConstants.INTENT_KEY_LOCKED_REASON, reason);
 
+
             intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY, subId[0]);
-            intent.putExtra(PhoneConstants.SLOT_KEY, mCardIndex);
+            intent.putExtra(PhoneConstants.SIM_ID_KEY, mCardIndex);
             log("Broadcasting intent ACTION_SIM_STATE_CHANGED " +  value
                 + " reason " + reason + " for subscription : " + subId);
             ActivityManagerNative.broadcastStickyIntent(intent, READ_PHONE_STATE,

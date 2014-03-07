@@ -32,6 +32,7 @@ import android.telephony.CellInfo;
 import android.telephony.CellLocation;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
+import android.telephony.SubscriptionManager;
 import android.telephony.Rlog;
 
 import com.android.internal.telephony.PhoneConstants;
@@ -231,8 +232,7 @@ public class PhoneProxy extends Handler implements Phone {
         mIccCardProxy.setVoiceRadioTech(newVoiceRadioTech);
 
         // Send an Intent to the PhoneApp that we had a radio technology change
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        long [] subId = subMgr.getSubId(mSubscription);
+        long [] subId = SubscriptionManager.getSubId(mSubscription);
         Intent intent = new Intent(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED);
         intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
         intent.putExtra(PhoneConstants.PHONE_NAME_KEY, mActivePhone.getPhoneName());

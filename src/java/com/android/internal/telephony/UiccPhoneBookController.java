@@ -20,6 +20,7 @@ package com.android.internal.telephony;
 
 import android.os.ServiceManager;
 import android.os.RemoteException;
+import android.telephony.SubscriptionManager;
 import android.telephony.Rlog;
 
 import com.android.internal.telephony.IccPhoneBookInterfaceManagerProxy;
@@ -127,8 +128,7 @@ public class UiccPhoneBookController extends IIccPhoneBook.Stub {
     private IccPhoneBookInterfaceManagerProxy
             getIccPhoneBookInterfaceManagerProxy(long subscription) {
 
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        long phoneId = subMgr.getSimId(subscription);
+        long phoneId = SubscriptionManager.getSimId(subscription);
         try {
             return ((PhoneProxy)mPhone[(int)phoneId]).getIccPhoneBookInterfaceManagerProxy();
         } catch (NullPointerException e) {

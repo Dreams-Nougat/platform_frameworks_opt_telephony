@@ -345,7 +345,7 @@ public final class Telephony {
          */
         public static Uri addMessageToUri(ContentResolver resolver,
                 Uri uri, String address, String body, String subject,
-                Long date, boolean read, boolean deliveryReport, long subId) {
+                Long date, boolean read, boolean deliveryReport, double subId) {
             return addMessageToUri(resolver, uri, address, body, subject,
                     date, read, deliveryReport, -1L, subId);
         }
@@ -391,7 +391,7 @@ public final class Telephony {
          */
         public static Uri addMessageToUri(ContentResolver resolver,
                 Uri uri, String address, String body, String subject,
-                Long date, boolean read, boolean deliveryReport, long threadId, long subId) {
+                Long date, boolean read, boolean deliveryReport, long threadId, double subId) {
             ContentValues values = new ContentValues(8);
             Rlog.v(TAG,"Telephony addMessageToUri sub id: " + subId);
 

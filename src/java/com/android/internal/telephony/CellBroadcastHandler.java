@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Message;
 import android.provider.Telephony;
+import android.telephony.SubscriptionManager;
 import android.telephony.SmsCbMessage;
 
 /**
@@ -87,8 +88,7 @@ public class CellBroadcastHandler extends WakeLockStateMachine {
             receiverPermission = Manifest.permission.RECEIVE_SMS;
             appOp = AppOpsManager.OP_RECEIVE_SMS;
         }
-        SubscriptionManager subManager = SubscriptionManager.getInstance();
-        long [] subId = subManager.getSubId(mPhone.getSubscription());
+        long [] subId = SubscriptionManager.getSubId(mPhone.getSubscription());
         intent.putExtra("message", message);
         intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY,
                 subId[0]); //Subscription information to be passed in an intent
