@@ -57,3 +57,11 @@ UUID: 9c348108_8d9484b8
 Bytes: 47
 getPhone(int subscrion)->getPhone(long phoneId)
 
+226
+Fri Mar 07 09:08:46 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 9c348108_8d9484b8
+UUID: bc586570_bad6f114
+Bytes: 157
+we want to change in all the objects repalacing qc subscription with phoneId. Since that requires some effort for n5 evcen if you pass phoneId it works here.
+
