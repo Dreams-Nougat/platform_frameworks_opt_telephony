@@ -18,6 +18,14 @@ UUID: fc4c9db4_a5bfe4dd
 Bytes: 92
 This API should be public long getPhoneId(), since phone id might by sim id, sub id and etc.
 
+1744
+Fri Mar 07 09:09:56 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: fc4c9db4_a5bfe4dd
+UUID: 9c348108_60002720
+Bytes: 67
+yes it should be phoneId and we would change once N5 bring up over.
+
 File: src/java/com/android/internal/telephony/PhoneBase.java
 
 151:18-151:31
