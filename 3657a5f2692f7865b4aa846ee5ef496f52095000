@@ -1,0 +1,11 @@
+Revision: 3657a5f2692f7865b4aa846ee5ef496f52095000
+Patch-set: 18
+File: src/java/android/provider/Telephony.java
+
+2283:34-2283:49
+Fri Mar 07 08:02:17 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: fc4c9db4_45cf00a2
+Bytes: 90
+We add a SUB_ID string for PendingMessages. It's necessary to record which SUB belongs to!
+
