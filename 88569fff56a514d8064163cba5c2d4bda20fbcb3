@@ -1,0 +1,18 @@
+Revision: 88569fff56a514d8064163cba5c2d4bda20fbcb3
+Patch-set: 17
+File: src/java/android/provider/Telephony.java
+
+348:65-348:71
+Fri Mar 07 00:56:33 2014 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 7c398d00_0916b1a4
+Bytes: 15
+change to long.
+
+394
+Fri Mar 07 00:56:33 2014 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dca43989_9bd49632
+Bytes: 14
+Change to long
+
