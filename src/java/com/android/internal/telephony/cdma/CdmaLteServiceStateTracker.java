@@ -46,7 +46,7 @@ import android.util.EventLog;
 
 import com.android.internal.telephony.dataconnection.DcTrackerBase;
 import com.android.internal.telephony.ProxyController;
-import com.android.internal.telephony.SubscriptionManager;
+import android.telephony.SubscriptionManager;
 import com.android.internal.telephony.uicc.UiccCardApplication;
 import com.android.internal.telephony.uicc.UiccController;
 
@@ -595,13 +595,8 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
 
     @Override
     protected UiccCardApplication getUiccCardApplication() {
-        if (TelephonyManager.getDefault().isMultiSimEnabled()) {
-            return  mUiccController.getUiccCardApplication(
-                    SubscriptionManager.getInstance().getSlotId(((CDMALTEPhone)mPhone).
-                    getSubscription()), UiccController.APP_FAM_3GPP2);
-        } else {
-             return  mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP2);
-        }
+            return  mUiccController.getUiccCardApplication(((CDMALTEPhone)mPhone).
+                    getSubscription(), UiccController.APP_FAM_3GPP2);
     }
 
     protected void updateCdmaSubscription() {

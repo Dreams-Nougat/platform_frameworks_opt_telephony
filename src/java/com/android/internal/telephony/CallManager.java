@@ -26,6 +26,7 @@ import android.os.Message;
 import android.os.RegistrantList;
 import android.os.Registrant;
 import android.telephony.PhoneNumberUtils;
+import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
@@ -876,7 +877,7 @@ public final class CallManager {
      */
     public void conference(Call heldCall) throws CallStateException {
         int phoneId  = heldCall.getPhone().getSubscription();
-        long [] subscription = SubscriptionManager.getInstance().getSubId(phoneId);
+        long [] subscription = SubscriptionManager.getSubId(phoneId);
 
         if (VDBG) {
             Rlog.d(LOG_TAG, "conference(" +heldCall + ")");
@@ -913,7 +914,7 @@ public final class CallManager {
     public Connection dial(Phone phone, String dialString) throws CallStateException {
         Phone basePhone = getPhoneBase(phone);
         int phoneId = phone.getSubscription();
-        long [] subscription = SubscriptionManager.getInstance().getSubId(phoneId);
+        long [] subscription = SubscriptionManager.getSubId(phoneId);
         Connection result;
 
         if (VDBG) {
@@ -993,7 +994,7 @@ public final class CallManager {
      * to the provided subscription
      */
     public void clearDisconnected(long subscription) {
-        int phoneId = SubscriptionManager.getInstance().getSimId(subscription);
+        int phoneId = SubscriptionManager.getSimId(subscription);
         for(Phone phone : mPhones) {
             if (phone.getSubscription() == phoneId) {
                 phone.clearDisconnected();
@@ -1013,7 +1014,7 @@ public final class CallManager {
     private boolean canDial(Phone phone) {
         int serviceState = phone.getServiceState().getState();
         int phoneId = phone.getSubscription();
-        long [] subscription = SubscriptionManager.getInstance().getSubId(phoneId);
+        long [] subscription = SubscriptionManager.getSubId(phoneId);
         boolean hasRingingCall = hasActiveRingingCall();
         Call.State fgCallState = getActiveFgCallState(subscription[0]);
 
@@ -1853,7 +1854,7 @@ public final class CallManager {
     // and disconnecting/disconnected calls exist, return the first active call.
     private Call getFirstNonIdleCall(List<Call> calls, long subscription) {
         Call result = null;
-        int phoneId = SubscriptionManager.getInstance().getSimId(subscription);
+        int phoneId = SubscriptionManager.getSimId(subscription);
         for (Call call : calls) {
             if ((call.getPhone().getSubscription() == phoneId) ||
                     (call.getPhone() instanceof SipPhone)) {
@@ -2096,7 +2097,7 @@ public final class CallManager {
      * @return the first active call from a call list
      */
     private  Call getFirstActiveCall(ArrayList<Call> calls, long subscription) {
-        int phoneId = SubscriptionManager.getInstance().getSimId(subscription);
+        int phoneId = SubscriptionManager.getSimId(subscription);
         for (Call call : calls) {
             if ((!call.isIdle()) && ((call.getPhone().getSubscription() == phoneId) ||
                     (call.getPhone() instanceof SipPhone))) {
@@ -2152,7 +2153,7 @@ public final class CallManager {
      */
     private boolean hasMoreThanOneRingingCall(long subscription) {
         int count = 0;
-        int phoneId = SubscriptionManager.getInstance().getSimId(subscription);
+        int phoneId = SubscriptionManager.getSimId(subscription);
         for (Call call : mRingingCalls) {
             if ((call.getState().isRinging()) &&
                 ((call.getPhone().getSubscription() == phoneId) ||
@@ -2172,7 +2173,7 @@ public final class CallManager {
      */
     private boolean hasMoreThanOneHoldingCall(long subscription) {
         int count = 0;
-        int phoneId = SubscriptionManager.getInstance().getSimId(subscription);
+        int phoneId = SubscriptionManager.getSimId(subscription);
         for (Call call : mBackgroundCalls) {
             if ((call.getState() == Call.State.HOLDING) &&
                 ((call.getPhone().getSubscription() == phoneId) ||
@@ -2201,7 +2202,7 @@ public final class CallManager {
                     if (VDBG) Rlog.d(LOG_TAG, " handleMessage (EVENT_NEW_RINGING_CONNECTION)");
                     Connection c = (Connection) ((AsyncResult) msg.obj).result;
                     int phoneId = c.getCall().getPhone().getSubscription();
-                    long [] sub = SubscriptionManager.getInstance().getSubId(phoneId);
+                    long [] sub = SubscriptionManager.getSubId(phoneId);
                     if (getActiveFgCallState(sub[0]).isDialing() || hasMoreThanOneRingingCall()) {
                         try {
                             Rlog.d(LOG_TAG, "silently drop incoming call: " + c.getCall());

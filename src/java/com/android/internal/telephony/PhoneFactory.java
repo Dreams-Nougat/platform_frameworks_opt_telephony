@@ -27,6 +27,7 @@ import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.telephony.Rlog;
 import android.telephony.TelephonyManager;
+import android.telephony.SubscriptionManager;
 
 import com.android.internal.telephony.cdma.CDMALTEPhone;
 import com.android.internal.telephony.cdma.CDMAPhone;
@@ -52,12 +53,13 @@ public class PhoneFactory {
     static private CommandsInterface[] sCommandsInterfaces = null;
 
     static private ProxyController mProxyController;
-    static private CardSubscriptionManager mCardSubscriptionManager;
-    static private SubscriptionManager mSubscriptionManager;
+    //static private CardSubscriptionManager mCardSubscriptionManager;
+   // static private SubscriptionManager mSubscriptionManager;
     static private UiccController mUiccController;
 
     static private Phone sProxyPhone = null;
     static private CommandsInterface sCommandsInterface = null;
+    static private SimInfoUpdater sSimInfoUpdater = null;
 
     static private boolean sMadeDefaults = false;
     static private PhoneNotifier sPhoneNotifier;
@@ -150,11 +152,11 @@ public class PhoneFactory {
                 // call getInstance()
                 mUiccController = UiccController.make(context, sCommandsInterfaces);
 
-                mCardSubscriptionManager = CardSubscriptionManager.getInstance(context,
-                        mUiccController, sCommandsInterfaces);
-                mSubscriptionManager = SubscriptionManager.getInstance(context,
-                        mUiccController, sCommandsInterfaces);
+              //  mCardSubscriptionManager = CardSubscriptionManager.getInstance(context,
+              //          mUiccController, sCommandsInterfaces);
 
+             //   mSubscriptionManager = SubscriptionManager.getInstance(context,
+             //           mUiccController, sCommandsInterfaces);
                 for (int i = 0; i < numPhones; i++) {
                     PhoneBase phone = null;
                     int phoneType = TelephonyManager.getPhoneType(networkModes[i]);
@@ -176,6 +178,8 @@ public class PhoneFactory {
                 sProxyPhone = sProxyPhones[PhoneConstants.DEFAULT_SUBSCRIPTION];
                 sCommandsInterface = sCommandsInterfaces[PhoneConstants.DEFAULT_SUBSCRIPTION];
 
+                Rlog.i(LOG_TAG, "Creating SubscriptionController");
+                SubscriptionController.init(sProxyPhone);
                 // Ensure that we have a default SMS app. Requesting the app with
                 // updateIfNeeded set to true is enough to configure a default SMS app.
                 ComponentName componentName =
@@ -190,6 +194,8 @@ public class PhoneFactory {
                 SmsApplication.initSmsPackageMonitor(context);
 
                 sMadeDefaults = true;
+                Rlog.i(LOG_TAG, "Creating SimInfoUpdater");
+                sSimInfoUpdater = new SimInfoUpdater();
             }
         }
     }
@@ -297,8 +303,7 @@ public class PhoneFactory {
         String defaultMccMnc = TelephonyManager.getDefault().getSimOperator(subscription);
         MccTable.updateMccMncConfiguration(sContext, defaultMccMnc);
 
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        long [] subId = subMgr.getSubId(subscription);
+        long [] subId = SubscriptionManager.getSubId(subscription);
         // Broadcast an Intent for default sub change
         Intent intent = new Intent(TelephonyIntents.ACTION_DEFAULT_SUBSCRIPTION_CHANGED);
         intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
@@ -310,7 +315,7 @@ public class PhoneFactory {
 
     /* Gets the default subscription */
     public static long getDefaultSubscription() {
-        return SubscriptionManager.getInstance().getDefaultSubscription();
+        return SubscriptionManager.getDefaultSubId();
     }
 
     /* Gets User preferred Voice subscription setting*/

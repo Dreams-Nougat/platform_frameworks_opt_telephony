@@ -36,7 +36,7 @@ import com.android.internal.telephony.SmsConstants;
 import com.android.internal.telephony.SmsHeader;
 import com.android.internal.telephony.SmsStorageMonitor;
 import com.android.internal.telephony.SmsUsageMonitor;
-import com.android.internal.telephony.SubscriptionManager;
+import android.telephony.SubscriptionManager;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.uicc.IccRecords;
 import com.android.internal.telephony.uicc.IccUtils;
@@ -266,19 +266,10 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
     }
 
     protected UiccCardApplication getUiccCardApplication() {
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        if (subMgr != null) {
             Rlog.d(TAG, "GsmSMSDispatcher: subId = " + mPhone.getSubscription()
                     + " slotId = " + mPhone.getSubscription());
-            if (TelephonyManager.getDefault().isMultiSimEnabled()) {
-                return  ((UiccController) mUiccController).getUiccCardApplication(
-                        SubscriptionManager.getInstance().getSlotId(mPhone.getSubscription()),
+                return  ((UiccController) mUiccController).getUiccCardApplication(mPhone.getSubscription(),
                         UiccController.APP_FAM_3GPP);
-            } else {
-                 return  mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP);
-            }
-        }
-        return null;
     }
 
     private void onUpdateIccAvailability() {

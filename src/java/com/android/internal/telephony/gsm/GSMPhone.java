@@ -68,7 +68,7 @@ import com.android.internal.telephony.PhoneNotifier;
 import com.android.internal.telephony.PhoneProxy;
 import com.android.internal.telephony.PhoneSubInfo;
 import com.android.internal.telephony.Subscription;
-import com.android.internal.telephony.SubscriptionManager;
+import android.telephony.SubscriptionManager;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.UUSInfo;
 import com.android.internal.telephony.test.SimulatedRadioControl;
@@ -216,12 +216,6 @@ public class GSMPhone extends PhoneBase {
         mVmNumGsmKey = VM_NUMBER + mSubscription;
         mVmImsi = VM_SIM_IMSI + mSubscription;
 
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        subMgr.registerForSubscriptionActivated(mSubscription,
-                this, EVENT_SUBSCRIPTION_ACTIVATED, null);
-        subMgr.registerForSubscriptionDeactivated(mSubscription,
-                this, EVENT_SUBSCRIPTION_DEACTIVATED, null);
-
         setProperties();
     }
 
@@ -254,9 +248,6 @@ public class GSMPhone extends PhoneBase {
             mSimPhoneBookIntManager.dispose();
             mSubInfo.dispose();
 
-            SubscriptionManager subMgr = SubscriptionManager.getInstance();
-            subMgr.unregisterForSubscriptionActivated(mSubscription, this);
-            subMgr.unregisterForSubscriptionDeactivated(mSubscription, this);
         }
     }
 
@@ -278,8 +269,7 @@ public class GSMPhone extends PhoneBase {
 
 
     private void onSubscriptionActivated() {
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        mSubscriptionData = subMgr.getCurrentSubscription(mSubscription);
+        //mSubscriptionData = SubscriptionManager.getCurrentSubscription(mSubscription);
 
         log("SUBSCRIPTION ACTIVATED : slotId : " + mSubscriptionData.slotId
                 + " appid : " + mSubscriptionData.m3gppIndex
@@ -1487,12 +1477,8 @@ public class GSMPhone extends PhoneBase {
     }
 
     protected UiccCardApplication getUiccCardApplication() {
-        if (TelephonyManager.getDefault().isMultiSimEnabled()) {
-            return  ((UiccController) mUiccController).getUiccCardApplication(SubscriptionManager.
-                    getInstance().getSlotId(mSubscription), UiccController.APP_FAM_3GPP);
-        } else {
-             return  mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP);
-        }
+            return  ((UiccController) mUiccController).getUiccCardApplication(mSubscription,
+                    UiccController.APP_FAM_3GPP);
     }
 
     @Override

@@ -38,6 +38,7 @@ import android.provider.Telephony;
 import android.telephony.CellLocation;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.ServiceState;
+import android.telephony.SubscriptionManager;
 import android.telephony.cdma.CdmaCellLocation;
 import android.text.TextUtils;
 import android.telephony.Rlog;
@@ -57,7 +58,6 @@ import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.PhoneNotifier;
 import com.android.internal.telephony.PhoneProxy;
 import com.android.internal.telephony.PhoneSubInfo;
-import com.android.internal.telephony.SubscriptionManager;
 import com.android.internal.telephony.ServiceStateTracker;
 import com.android.internal.telephony.SmsBroadcastUndelivered;
 import com.android.internal.telephony.TelephonyIntents;
@@ -972,8 +972,7 @@ public class CDMAPhone extends PhoneBase {
 
     void sendEmergencyCallbackModeChange(){
         //Send an Intent
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        long [] subId = subMgr.getSubId(mSubscription);
+        long [] subId = SubscriptionManager.getSubId(mSubscription);
         Intent intent = new Intent(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
         intent.putExtra(PhoneConstants.PHONE_IN_ECM_STATE, mIsPhoneInEcmState);
         intent.putExtra(SUBSCRIPTION_KEY, subId[0]);

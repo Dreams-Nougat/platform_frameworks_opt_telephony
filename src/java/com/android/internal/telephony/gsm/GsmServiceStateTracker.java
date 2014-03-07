@@ -65,7 +65,7 @@ import com.android.internal.telephony.PhoneFactory;
 import com.android.internal.telephony.RILConstants;
 import com.android.internal.telephony.RestrictedState;
 import com.android.internal.telephony.ServiceStateTracker;
-import com.android.internal.telephony.SubscriptionManager;
+import android.telephony.SubscriptionManager;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.dataconnection.DcTrackerBase;
@@ -584,8 +584,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                         " showPlmn='%b' plmn='%s' showSpn='%b' spn='%s'",
                         showPlmn, plmn, showSpn, spn));
             }
-            SubscriptionManager subMgr = SubscriptionManager.getInstance();
-            long [] subId = subMgr.getSubId(mPhone.getSubscription());
+            long [] subId = SubscriptionManager.getSubId(mPhone.getSubscription());
             Intent intent = new Intent(TelephonyIntents.SPN_STRINGS_UPDATED_ACTION);
             intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
             intent.putExtra(TelephonyIntents.EXTRA_SHOW_SPN, showSpn);
@@ -1817,13 +1816,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     }
 
     private UiccCardApplication getUiccCardApplication() {
-        if (TelephonyManager.getDefault().isMultiSimEnabled()) {
-            return  mUiccController.getUiccCardApplication(SubscriptionManager.
-                    getInstance().getSlotId(mPhone.getSubscription()),
+            return  mUiccController.getUiccCardApplication(mPhone.getSubscription(),
                     UiccController.APP_FAM_3GPP);
-        } else {
-             return  mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP);
-        }
     }
 
     @Override

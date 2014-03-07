@@ -39,6 +39,7 @@ import android.telephony.Rlog;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
+import android.telephony.SubscriptionManager;
 import android.telephony.cdma.CdmaCellLocation;
 import android.text.TextUtils;
 import android.util.EventLog;
@@ -52,7 +53,6 @@ import com.android.internal.telephony.MccTable;
 import com.android.internal.telephony.PhoneConstants;
 import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.ServiceStateTracker;
-import com.android.internal.telephony.SubscriptionManager;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.dataconnection.DcTrackerBase;
@@ -532,8 +532,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
         // mOperatorAlphaLong contains the ERI text
         String plmn = mSS.getOperatorAlphaLong();
 
-       SubscriptionManager subMgr = SubscriptionManager.getInstance();
-       long [] subId = subMgr.getSubId(mPhone.getSubscription());
+       long [] subId = SubscriptionManager.getSubId(mPhone.getSubscription());
 
         if (!TextUtils.equals(plmn, mCurPlmn)) {
             // Allow A blank plmn, "" to set showPlmn to true. Previously, we
@@ -1729,13 +1728,8 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
     }
 
     protected UiccCardApplication getUiccCardApplication() {
-        if (TelephonyManager.getDefault().isMultiSimEnabled()) {
-            return  mUiccController.getUiccCardApplication(SubscriptionManager.
-                    getInstance().getSlotId(mPhone.getSubscription()),
+            return  mUiccController.getUiccCardApplication(mPhone.getSubscription(),
                     UiccController.APP_FAM_3GPP2);
-        } else {
-             return  mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP2);
-        }
     }
 
     @Override

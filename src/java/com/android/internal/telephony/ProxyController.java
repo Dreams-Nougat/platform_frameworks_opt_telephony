@@ -35,6 +35,7 @@ import android.os.Message;
 
 import android.telephony.Rlog;
 import android.telephony.ServiceState;
+import android.telephony.SubscriptionManager;
 
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.Phone;
@@ -65,9 +66,7 @@ public class ProxyController {
     //UiccSmsController to use proper IccSmsInterfaceManager object
     private UiccSmsController mUiccSmsController;
 
-    private CardSubscriptionManager mCardSubscriptionManager;
-
-    private SubscriptionManager mSubscriptionManager;
+  //  private SubscriptionManager mSubscriptionManager;
 
     //***** Class Methods
     public static ProxyController getInstance(Context context, Phone[] phoneProxy,
@@ -94,8 +93,7 @@ public class ProxyController {
         mUiccPhoneBookController = new UiccPhoneBookController(mProxyPhones);
         mPhoneSubInfoController = new PhoneSubInfoController(mProxyPhones);
         mUiccSmsController = new UiccSmsController(mProxyPhones);
-        mCardSubscriptionManager = CardSubscriptionManager.getInstance(context, uiccController, ci);
-        mSubscriptionManager = SubscriptionManager.getInstance(context, uiccController, ci);
+       // mSubscriptionManager = SubscriptionManager.getInstance(context, uiccController, ci);
 
         logd("Constructor - Exit");
     }

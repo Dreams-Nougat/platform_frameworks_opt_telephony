@@ -20,6 +20,7 @@ package com.android.internal.telephony;
 
 import android.app.PendingIntent;
 import android.os.ServiceManager;
+import android.telephony.SubscriptionManager;
 import android.telephony.Rlog;
 
 import com.android.internal.telephony.ISms;
@@ -264,8 +265,7 @@ public class UiccSmsController extends ISms.Stub {
      * get sms interface manager object based on subscription.
      **/
     private IccSmsInterfaceManager getIccSmsInterfaceManager(long subscription) {
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        long phoneId = subMgr.getSimId(subscription);
+        long phoneId = SubscriptionManager.getSimId(subscription);
         try {
             return (IccSmsInterfaceManager)
                 ((PhoneProxy)mPhone[(int)phoneId]).getIccSmsInterfaceManager();

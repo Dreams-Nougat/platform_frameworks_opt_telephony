@@ -26,6 +26,7 @@ import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.Telephony.Sms.Intents;
+import android.telephony.SubscriptionManager;
 import android.telephony.Rlog;
 
 import com.android.internal.telephony.uicc.IccUtils;
@@ -94,8 +95,7 @@ public class WapPushOverSms implements ServiceConnection {
         int index = 0;
         int transactionId = pdu[index++] & 0xFF;
         int pduType = pdu[index++] & 0xFF;
-        SubscriptionManager subMgr = SubscriptionManager.getInstance();
-        long [] subId = subMgr.getSubId(handler.getPhone().getSubscription());
+        long [] subId = SubscriptionManager.getSubId(handler.getPhone().getSubscription());
 
         if ((pduType != WspTypeDecoder.PDU_TYPE_PUSH) &&
                 (pduType != WspTypeDecoder.PDU_TYPE_CONFIRMED_PUSH)) {
