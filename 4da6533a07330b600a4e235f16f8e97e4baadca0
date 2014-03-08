@@ -1,0 +1,11 @@
+Revision: 4da6533a07330b600a4e235f16f8e97e4baadca0
+Base-for-patch-set: 2
+File: src/java/com/android/internal/telephony/SubscriptionManager.java
+
+71:13-71:31
+Sat Mar 08 15:36:01 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dcf7d997_ce420329
+Bytes: 127
+I don't see any subscription manager/controller files in the new patch set. Are they missing to upload or just working on them?
+
