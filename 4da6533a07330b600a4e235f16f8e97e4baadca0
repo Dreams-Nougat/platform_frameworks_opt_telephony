@@ -9,3 +9,11 @@ UUID: dcf7d997_ce420329
 Bytes: 127
 I don't see any subscription manager/controller files in the new patch set. Are they missing to upload or just working on them?
 
+71
+Sat Mar 08 16:10:26 2014 +0000
+Author: srikanth chintala <1004552@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dcf7d997_ce420329
+UUID: 3cf1d5a2_91fade8c
+Bytes: 58
+SubscriptionManager/Controller files to be added from MTK.
+

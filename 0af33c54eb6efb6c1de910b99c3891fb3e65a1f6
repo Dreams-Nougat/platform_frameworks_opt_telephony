@@ -11,12 +11,34 @@ needs a long due to the number of phone may depending on "Number of subscription
 It needs type that contains this problem. I suggest to pass the long and it should be 
 Phone getCdmaPhone(long phoneId)
 
+203
+Sat Mar 08 16:10:26 2014 +0000
+Author: srikanth chintala <1004552@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: fc4c9db4_71f0fa46
+UUID: dcf7d997_0e0feb01
+Bytes: 386
+getCdmaPhone should be with int id only, it may not be correcte to pass long to get phone object.
+
+Also the array index does not support long integer.
+
+The caller needs to make a call with getCdmaPhone( phone Id), Agree the api parameter here to be changed as PhoneId, we are going to change that.
+
+The PhoneId to be obtained by caller by using SubscriptionManager.getPhoneId(long sub).
+
 212:36-212:53
 Sat Mar 08 15:36:01 2014 +0000
 Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 7c526d52_01f7b0fd
 Bytes: 46
 Rename subscription as phoneId for un-confused
+
+212
+Sat Mar 08 16:10:26 2014 +0000
+Author: srikanth chintala <1004552@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7c526d52_01f7b0fd
+UUID: 3cf1d5a2_510996f8
+Bytes: 105
+We are  working in the background to move to PhoneId, For this api the input parameter would be int only.
 
 232:33-232:49
 Sat Mar 08 15:36:01 2014 +0000
@@ -26,4 +48,12 @@ Bytes: 240
 needs a long due to the number of phone may depending on "Number of subscription(QC design)" or "Number of slot(MTK design)"
 It needs type that contains this problem. I suggest to pass the long and it should be 
 Phone getPhone(long phoneId)
+
+232
+Sat Mar 08 16:10:26 2014 +0000
+Author: srikanth chintala <1004552@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: bc586570_4e6ef38a
+UUID: 9c2ba1c2_0c05372f
+Bytes: 14
+same as above.
 
