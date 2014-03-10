@@ -1,0 +1,11 @@
+Revision: 4da6533a07330b600a4e235f16f8e97e4baadca0
+Patch-set: 19
+File: src/java/android/provider/Telephony.java
+
+2283:8-2283:49
+Mon Mar 10 02:43:42 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dcf7d997_11270c45
+Bytes: 121
+Can we add a String of PendingMessages for applications necessary propose. PendingMessage.SUB_ID  = ”pending_sub_id”.
+
