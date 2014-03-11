@@ -1,5 +1,154 @@
 Revision: 0af33c54eb6efb6c1de910b99c3891fb3e65a1f6
 Patch-set: 2
+File: src/java/com/android/internal/telephony/CallManager.java
+
+110:24-110:34
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dcf7d997_1ef70cfe
+Bytes: 64
+By previous discussion. it is for DSDA
+Please help to remove it.
+
+300:16-300:37
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: fce81dcd_62ebf25f
+Bytes: 64
+By previous discussion. it is for DSDA
+Please help to remove it.
+
+306:16-306:37
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dcf7d997_3e05a82f
+Bytes: 64
+By previous discussion. it is for DSDA
+Please help to remove it.
+
+349:15-349:49
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c2ba1c2_c1447dd9
+Bytes: 140
+Because for specific subscription, we can find the mapping phone, 
+why not just call phone.getServiceState().getState() to do the same thing
+
+393:17-393:49
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c2ba1c2_013fb535
+Bytes: 117
+Because the subscription will mapping one specific Phone, 
+get Phone with specific subscription is meanless interface
+
+481:17-481:46
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c2ba1c2_619f9108
+Bytes: 117
+Because the subscription will mapping one specific Phone, 
+get Phone with specific subscription is meanless interface
+
+496:11-496:46
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dcf7d997_de13c474
+Bytes: 117
+Because the subscription will mapping one specific Phone, 
+get Phone with specific subscription is meanless interface
+
+511:17-511:52
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c2ba1c2_41a40d57
+Bytes: 117
+Because the subscription will mapping one specific Phone, 
+get Phone with specific subscription is meanless interface
+
+854:19-854:65
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: fce81dcd_c2f1264a
+Bytes: 126
+Original inteface has Call object argument, 
+it is no need to pass additional subscription due to active call will be only one
+
+914:22-914:26
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c2ba1c2_a157c993
+Bytes: 271
+for switchHoldingAndActive / acceptCall method, it may cause fail when do the first operation switchHoldingAndActive for one Phone. It will be get worst for multi-Sim case, so we suggest to divide into two step and do the second operation only when the first one is done.
+
+916:7-917:69
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: fce81dcd_c21846d4
+Bytes: 86
+These statement is appear in many interface
+Could you help to introduce that usage
+thx
+
+932:12-937:13
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c2ba1c2_0168554c
+Bytes: 403
+Because dial() in Phone will do the same check for this 
+
+String newDialString = PhoneNumberUtils.stripSeparators(dialString);
+if (handleInCallMmiCommands(newDialString)) {
+ return null;
+}
+
+
+If need to do this action here, we should remove the same code in Phone. Or we can view it dialable in canDial() and then check and do it in Phone. there should not be the same operation in CallManager and Phone.
+
+951:20-951:62
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: fce81dcd_428b56c4
+Bytes: 337
+getActiveFgCall().hangup() will call Call.hangup
+and then call mOwner.hangup()
+and then call tracker.hangup (GsmCall call)
+Because the call is active call, so it will go to the case
+"else if (call == mForegroundCall)" and do hangupForegroundResumeBackground()
+so if the BGcall exist, it will resume and then dail action will cause error.
+
+999:11-999:51
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c2ba1c2_4139ad54
+Bytes: 309
+Could you help to introduce the case more than one phone with the same subscription. it seems not the conclusion MTK know.
+BTW, it the case is possible, we think that the getPhone(subscription) should return a list not a single phone instance, and others interfaces can use the list to do the following action
+
+1064:19-1064:64
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: fce81dcd_02fcee1e
+Bytes: 126
+Original inteface has Call object argument, 
+it is no need to pass additional subscription due to active call will be only one
+
+1720:16-1720:45
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9c2ba1c2_219d9909
+Bytes: 64
+By previous discussion. it is for DSDA
+Please help to remove it.
+
+1724:16-1724:47
+Tue Mar 11 04:48:21 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dcf7d997_5e2b5499
+Bytes: 64
+By previous discussion. it is for DSDA
+Please help to remove it.
+
 File: src/java/com/android/internal/telephony/PhoneFactory.java
 
 203:37-203:53
