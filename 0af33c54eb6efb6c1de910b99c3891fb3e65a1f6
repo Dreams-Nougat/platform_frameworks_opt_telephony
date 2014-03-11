@@ -206,3 +206,12 @@ UUID: 9c2ba1c2_0c05372f
 Bytes: 14
 same as above.
 
+File: src/java/com/android/internal/telephony/uicc/IccCardProxy.java
+
+475:61-475:66
+Tue Mar 11 10:47:05 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dcf7d997_d9775ea5
+Bytes: 95
+Error handling is needed, NOT_READY broadcast might be earlier than subscription manager ready.
+
