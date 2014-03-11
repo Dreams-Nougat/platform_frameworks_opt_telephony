@@ -178,13 +178,11 @@ public final class MccTable
         if (!TextUtils.isEmpty(mccmnc)) {
             int mcc, mnc;
 
-            if (TelephonyManager.getDefault().isMultiSimEnabled()) {
-                String defaultMccMnc = TelephonyManager.getDefault().getSimOperator();
-                //Update mccmnc only for default subscription in case of MultiSim.
-                if (!defaultMccMnc.equals(mccmnc)) {
-                    Slog.d(LOG_TAG, "Not a Default subscription, ignoring mccmnc config update.");
-                    return;
-                }
+            String defaultMccMnc = TelephonyManager.getDefault().getSimOperator();
+            //Update mccmnc only for default subscription in case of MultiSim.
+            if (!defaultMccMnc.equals(mccmnc)) {
+                Slog.d(LOG_TAG, "Not a Default subscription, ignoring mccmnc config update.");
+                return;
             }
 
             try {

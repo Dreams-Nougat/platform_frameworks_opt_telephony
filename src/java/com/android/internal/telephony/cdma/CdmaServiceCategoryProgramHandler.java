@@ -102,7 +102,7 @@ public final class CdmaServiceCategoryProgramHandler extends WakeLockStateMachin
             return false;
         }
 
-        long [] subId = SubscriptionManager.getSubId(mPhone.getSubscription());
+        long [] subId = SubscriptionManager.getSubId(mPhone.getPhoneId());
         Intent intent = new Intent(Intents.SMS_SERVICE_CATEGORY_PROGRAM_DATA_RECEIVED_ACTION);
         intent.putExtra("sender", sms.getOriginatingAddress());
         intent.putParcelableArrayListExtra("program_data", programDataList);

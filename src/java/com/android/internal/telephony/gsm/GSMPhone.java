@@ -179,14 +179,14 @@ public class GSMPhone extends PhoneBase {
     }
 
     public
-    GSMPhone (Context context, CommandsInterface ci, PhoneNotifier notifier, int subscription) {
-        this(context, ci, notifier, false, subscription);
+    GSMPhone (Context context, CommandsInterface ci, PhoneNotifier notifier, int phoneId) {
+        this(context, ci, notifier, false, phoneId);
     }
 
     public
     GSMPhone (Context context, CommandsInterface ci,
-            PhoneNotifier notifier, boolean unitTestMode, int subscription) {
-        super("GSM", notifier, context, ci, unitTestMode, subscription);
+            PhoneNotifier notifier, boolean unitTestMode, int phoneId) {
+        super("GSM", notifier, context, ci, unitTestMode, phoneId);
 
         if (ci instanceof SimulatedRadioControl) {
             mSimulatedRadioControl = (SimulatedRadioControl) ci;
@@ -211,18 +211,17 @@ public class GSMPhone extends PhoneBase {
         mSST.registerForNetworkAttached(this, EVENT_REGISTERED_TO_NETWORK, null);
         setProperties();
 
-        log("GSMPhone: constructor: sub = " + mSubscription);
+        log("GSMPhone: constructor: sub = " + mPhoneId);
 
-        mVmNumGsmKey = VM_NUMBER + mSubscription;
-        mVmImsi = VM_SIM_IMSI + mSubscription;
+        mVmNumGsmKey = VM_NUMBER + mPhoneId;
+        mVmImsi = VM_SIM_IMSI + mPhoneId;
 
         setProperties();
     }
 
     protected void setProperties() {
         TelephonyManager.setTelephonyProperty(TelephonyProperties.CURRENT_ACTIVE_PHONE,
-                mSubscription,
-                new Integer(PhoneConstants.PHONE_TYPE_GSM).toString());
+                mPhoneId, new Integer(PhoneConstants.PHONE_TYPE_GSM).toString());
     }
 
     @Override
@@ -473,7 +472,7 @@ public class GSMPhone extends PhoneBase {
     @Override
     public void
     setSystemProperty(String property, String value) {
-        TelephonyManager.setTelephonyProperty(property, mSubscription, value);
+        TelephonyManager.setTelephonyProperty(property, mPhoneId, value);
     }
 
     @Override
@@ -1011,7 +1010,7 @@ public class GSMPhone extends PhoneBase {
         if(getUnitTestMode()) {
             return null;
         }
-        return TelephonyManager.getTelephonyProperty(property, mSubscription, defValue);
+        return TelephonyManager.getTelephonyProperty(property, mPhoneId, defValue);
     }
 
     private boolean isValidCommandInterfaceCFAction (int commandInterfaceCFAction) {
@@ -1477,7 +1476,7 @@ public class GSMPhone extends PhoneBase {
     }
 
     protected UiccCardApplication getUiccCardApplication() {
-            return  ((UiccController) mUiccController).getUiccCardApplication(mSubscription,
+            return  ((UiccController) mUiccController).getUiccCardApplication(mPhoneId,
                     UiccController.APP_FAM_3GPP);
     }
 
@@ -1528,10 +1527,10 @@ public class GSMPhone extends PhoneBase {
         int currentDds = PhoneFactory.getDataSubscription();
         String operatorNumeric = getOperatorNumeric();
 
-        log("updateCurrentCarrierInProvider: mSubscription = " + getSubscription()
+        log("updateCurrentCarrierInProvider: mSubId = " + getSubId()
                 + " currentDds = " + currentDds + " operatorNumeric = " + operatorNumeric);
 
-        if (!TextUtils.isEmpty(operatorNumeric) && (getSubscription() == currentDds)) {
+        if (!TextUtils.isEmpty(operatorNumeric) && (getSubId() == currentDds)) {
             try {
                 Uri uri = Uri.withAppendedPath(Telephony.Carriers.CONTENT_URI, "current");
                 ContentValues map = new ContentValues();

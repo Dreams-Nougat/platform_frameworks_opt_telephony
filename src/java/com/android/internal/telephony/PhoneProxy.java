@@ -67,7 +67,7 @@ public class PhoneProxy extends Handler implements Phone {
     private static final int EVENT_RIL_CONNECTED = 4;
     private static final int EVENT_UPDATE_PHONE_OBJECT = 5;
 
-    private int mSubscription = 0;
+    private int mPhoneId = 0;
 
     private static final String LOG_TAG = "PhoneProxy";
 
@@ -85,10 +85,10 @@ public class PhoneProxy extends Handler implements Phone {
         mCommandsInterface.registerForOn(this, EVENT_RADIO_ON, null);
         mCommandsInterface.registerForVoiceRadioTechChanged(
                              this, EVENT_VOICE_RADIO_TECH_CHANGED, null);
-        mSubscription = phone.getSubscription();
+        mPhoneId = phone.getPhoneId();
         mIccSmsInterfaceManager =
                 new IccSmsInterfaceManager((PhoneBase)this.mActivePhone);
-        mIccCardProxy = new IccCardProxy(mActivePhone.getContext(), mCommandsInterface, mActivePhone.getSubscription());
+        mIccCardProxy = new IccCardProxy(mActivePhone.getContext(), mCommandsInterface, mActivePhone.getPhoneId());
 
         if (phone.getPhoneType() == PhoneConstants.PHONE_TYPE_GSM) {
             // For the purpose of IccCardProxy we only care about the technology family
@@ -232,7 +232,7 @@ public class PhoneProxy extends Handler implements Phone {
         mIccCardProxy.setVoiceRadioTech(newVoiceRadioTech);
 
         // Send an Intent to the PhoneApp that we had a radio technology change
-        long [] subId = SubscriptionManager.getSubId(mSubscription);
+        long [] subId = SubscriptionManager.getSubId(mPhoneId);
         Intent intent = new Intent(TelephonyIntents.ACTION_RADIO_TECHNOLOGY_CHANGED);
         intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
         intent.putExtra(PhoneConstants.PHONE_NAME_KEY, mActivePhone.getPhoneName());
@@ -1293,8 +1293,12 @@ public class PhoneProxy extends Handler implements Phone {
     }
 
 
-    public int getSubscription() {
-        return mActivePhone.getSubscription();
+    public long getSubId() {
+        return mActivePhone.getSubId();
+    }
+
+    public int getPhoneId() {
+        return mActivePhone.getPhoneId();
     }
 
 }

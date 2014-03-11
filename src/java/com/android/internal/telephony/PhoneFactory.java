@@ -27,7 +27,6 @@ import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.telephony.Rlog;
 import android.telephony.TelephonyManager;
-import android.telephony.SubscriptionManager;
 
 import com.android.internal.telephony.cdma.CDMALTEPhone;
 import com.android.internal.telephony.cdma.CDMAPhone;
@@ -200,19 +199,19 @@ public class PhoneFactory {
         }
     }
 
-    public static Phone getCdmaPhone(int subscription) {
+    public static Phone getCdmaPhone(int phoneId) {
         Phone phone;
         synchronized(PhoneProxy.lockForRadioTechnologyChange) {
-            phone = new CDMALTEPhone(sContext, sCommandsInterfaces[subscription],
-                    sPhoneNotifier, subscription);
+            phone = new CDMALTEPhone(sContext, sCommandsInterfaces[phoneId],
+                    sPhoneNotifier, phoneId);
         }
         return phone;
     }
 
-    public static Phone getGsmPhone(long subscription) {
+    public static Phone getGsmPhone(int phoneId) {
         synchronized(PhoneProxy.lockForRadioTechnologyChange) {
-            Phone phone = new GSMPhone(sContext, sCommandsInterfaces[(int)subscription],
-                    sPhoneNotifier, (int)subscription);
+            Phone phone = new GSMPhone(sContext, sCommandsInterfaces[phoneId],
+                    sPhoneNotifier, phoneId);
             return phone;
         }
     }
@@ -229,17 +228,18 @@ public class PhoneFactory {
        return sProxyPhone;
     }
 
-    public static Phone getPhone(int subscription) {
+    public static Phone getPhone(int phoneId) {
         if (sLooper != Looper.myLooper()) {
             throw new RuntimeException(
                 "PhoneFactory.getPhone must be called from Looper thread");
         }
         if (!sMadeDefaults) {
             throw new IllegalStateException("Default phones haven't been made yet!");
-        } else if (subscription == PhoneConstants.DEFAULT_SUBSCRIPTION) {
+        // CAF_MSIM FIXME need to introduce default phone id ?
+        } else if (phoneId == PhoneConstants.DEFAULT_SUBSCRIPTION) {
             return sProxyPhone;
         }
-        return sProxyPhones[subscription];
+        return sProxyPhones[phoneId];
     }
 
     public static Phone [] getPhones() {
@@ -273,7 +273,8 @@ public class PhoneFactory {
     }
 
     public static Phone getGsmPhone() {
-        return getGsmPhone(getDefaultSubscription());
+        int phoneId = SubscriptionController.getSimId(getDefaultSubscription());
+        return getGsmPhone(phoneId);
     }
 
     /**
@@ -289,57 +290,58 @@ public class PhoneFactory {
      * subscription is set as default subscription. If both phone instances
      * are active the first instance "0" is set as default subscription
      */
-    public static void setDefaultSubscription(int subscription) {
-        SystemProperties.set(PROPERTY_DEFAULT_SUBSCRIPTION, Integer.toString(subscription));
+    public static void setDefaultSubscription(int subId) {
+        SystemProperties.set(PROPERTY_DEFAULT_SUBSCRIPTION, Integer.toString(subId));
+        int phoneId = SubscriptionController.getSimId(subId);
 
         // Set the default phone in base class
-        if (subscription >= 0 && subscription < sProxyPhones.length) {
-            sProxyPhone = sProxyPhones[subscription];
-            sCommandsInterface = sCommandsInterfaces[subscription];
+        if (phoneId >= 0 && phoneId < sProxyPhones.length) {
+            sProxyPhone = sProxyPhones[phoneId];
+            sCommandsInterface = sCommandsInterfaces[phoneId];
             sMadeDefaults = true;
         }
 
         // Update MCC MNC device configuration information
-        String defaultMccMnc = TelephonyManager.getDefault().getSimOperator(subscription);
+        String defaultMccMnc = TelephonyManager.getDefault().getSimOperator(phoneId);
         MccTable.updateMccMncConfiguration(sContext, defaultMccMnc);
 
-        long [] subId = SubscriptionManager.getSubId(subscription);
         // Broadcast an Intent for default sub change
         Intent intent = new Intent(TelephonyIntents.ACTION_DEFAULT_SUBSCRIPTION_CHANGED);
         intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
-        intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY, subId[0]);
-        Rlog.d(LOG_TAG, "setDefaultSubscription : " + subscription
+        intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY, subId);
+        Rlog.d(LOG_TAG, "setDefaultSubscription : " + subId
                 + " Broadcasting Default Subscription Changed...");
         sContext.sendStickyBroadcastAsUser(intent, UserHandle.ALL);
     }
 
     /* Gets the default subscription */
     public static long getDefaultSubscription() {
-        return SubscriptionManager.getDefaultSubId();
+        return SubscriptionController.getDefaultSubId();
     }
 
     /* Gets User preferred Voice subscription setting*/
     public static int getVoiceSubscription() {
-        int subscription = 0;
+        int subId = 0;
 
         try {
-            subscription = Settings.Global.getInt(sContext.getContentResolver(),
+            subId = Settings.Global.getInt(sContext.getContentResolver(),
                     Settings.Global.MULTI_SIM_VOICE_CALL_SUBSCRIPTION);
         } catch (SettingNotFoundException snfe) {
             Rlog.e(LOG_TAG, "Settings Exception Reading Dual Sim Voice Call Values");
         }
 
+        int phoneId = SubscriptionManager.getSimId(subId);
         // Set subscription to 0 if current subscription is invalid.
         // Ex: multisim.config property is TSTS and subscription is 2.
         // If user is trying to set multisim.config to DSDS and reboots
         // in this case index 2 is invalid so need to set to 0.
-        if (subscription < 0 || subscription >= TelephonyManager.getDefault().getPhoneCount()) {
-            Rlog.i(LOG_TAG, "Subscription is invalid..." + subscription + " Set to 0");
-            subscription = 0;
-            setVoiceSubscription(subscription);
+        if (phoneId < 0 || phoneId >= TelephonyManager.getDefault().getPhoneCount()) {
+            Rlog.i(LOG_TAG, "Subscription is invalid..." + subId + " Set to 0");
+            subId = 0;
+            setVoiceSubscription(subId);
         }
 
-        return subscription;
+        return subId;
     }
 
     /* Returns User Prompt property,  enabed or not */
@@ -392,41 +394,43 @@ public class PhoneFactory {
 
     /* Gets User preferred Data subscription setting*/
     public static int getDataSubscription() {
-        int subscription = 0;
+        int subId = 0;
 
         try {
-            subscription = Settings.Global.getInt(sContext.getContentResolver(),
+            subId = Settings.Global.getInt(sContext.getContentResolver(),
                     Settings.Global.MULTI_SIM_DATA_CALL_SUBSCRIPTION);
         } catch (SettingNotFoundException snfe) {
             Rlog.e(LOG_TAG, "Settings Exception Reading Dual Sim Data Call Values");
         }
 
-        if (subscription < 0 || subscription >= TelephonyManager.getDefault().getPhoneCount()) {
-            Rlog.i(LOG_TAG, "Subscription is invalid..." + subscription + " Set to 0");
-            subscription = 0;
-            setDataSubscription(subscription);
+        int phoneId = SubscriptionController.getSimId(subId);
+        if (phoneId < 0 || phoneId >= TelephonyManager.getDefault().getPhoneCount()) {
+            Rlog.i(LOG_TAG, "Subscription is invalid..." + subId + " Set to 0");
+            subId = 0;
+            setDataSubscription(subId);
         }
 
-        return subscription;
+        return subId;
     }
 
     /* Gets User preferred SMS subscription setting*/
     public static int getSMSSubscription() {
-        int subscription = 0;
+        int subId = 0;
         try {
-            subscription = Settings.Global.getInt(sContext.getContentResolver(),
+            subId = Settings.Global.getInt(sContext.getContentResolver(),
                     Settings.Global.MULTI_SIM_SMS_SUBSCRIPTION);
         } catch (SettingNotFoundException snfe) {
             Rlog.e(LOG_TAG, "Settings Exception Reading Dual Sim SMS Values");
         }
 
-        if (subscription < 0 || subscription >= TelephonyManager.getDefault().getPhoneCount()) {
-            Rlog.i(LOG_TAG, "Subscription is invalid..." + subscription + " Set to 0");
-            subscription = 0;
-            setSMSSubscription(subscription);
+        int phoneId = SubscriptionController.getSimId(subId);
+        if (phoneId < 0 || phoneId >= TelephonyManager.getDefault().getPhoneCount()) {
+            Rlog.i(LOG_TAG, "Subscription is invalid..." + subId + " Set to 0");
+            subId = 0;
+            setSMSSubscription(subId);
         }
 
-        return subscription;
+        return subId;
     }
 
     static public void setVoiceSubscription(int subscription) {

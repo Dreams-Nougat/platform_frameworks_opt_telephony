@@ -89,11 +89,14 @@ public class UiccController extends Handler {
     private static UiccController mInstance;
 
     private Context mContext;
+/*
     private CommandsInterface mCi;
     private UiccCard mUiccCard;
+*/
 
     protected RegistrantList mIccChangedRegistrants = new RegistrantList();
 
+/*
     public static UiccController make(Context c, CommandsInterface ci) {
         synchronized (mLock) {
             if (mInstance != null) {
@@ -103,6 +106,7 @@ public class UiccController extends Handler {
             return mInstance;
         }
     }
+*/
 
     public static UiccController make(Context c, CommandsInterface[] ci) {
         synchronized (mLock) {
@@ -136,11 +140,13 @@ public class UiccController extends Handler {
         }
     }
 
+/*
     public UiccCard getUiccCard() {
         synchronized (mLock) {
             return mUiccCard;
         }
     }
+*/
 
     public UiccCard getUiccCard(int slotId) {
         synchronized (mLock) {
@@ -159,6 +165,7 @@ public class UiccController extends Handler {
         }
     }
 
+/*
     // Easy to use API
     public UiccCardApplication getUiccCardApplication(int family) {
         synchronized (mLock) {
@@ -181,6 +188,7 @@ public class UiccController extends Handler {
             return null;
         }
     }
+*/
 
     // Easy to use API
     public IccRecords getIccRecords(int slotId, int family) {
@@ -193,6 +201,7 @@ public class UiccController extends Handler {
         }
     }
 
+/*
     // Easy to use API
     public IccFileHandler getIccFileHandler(int family) {
         synchronized (mLock) {
@@ -205,6 +214,7 @@ public class UiccController extends Handler {
             return null;
         }
     }
+*/
 
     // Easy to use API
     public IccFileHandler getIccFileHandler(int slotId, int family) {
@@ -283,6 +293,7 @@ public class UiccController extends Handler {
         return index;
     }
 
+/*
     private UiccController(Context c, CommandsInterface ci) {
         if (DBG) log("Creating UiccController");
         mContext = c;
@@ -291,6 +302,7 @@ public class UiccController extends Handler {
         // TODO remove this once modem correctly notifies the unsols
         mCi.registerForOn(this, EVENT_ICC_STATUS_CHANGED, null);
     }
+*/
 
     // Easy to use API
     public UiccCardApplication getUiccCardApplication(int slotId, int family) {
@@ -323,11 +335,13 @@ public class UiccController extends Handler {
             //Create new card
             mUiccCards[index] = new UiccCard(mContext, mCis[index], status, index);
 
+/*
             // Update the UiccCard in base class, so that if someone calls
             // UiccManager.getUiccCard(), it will return the default card.
             if (index == PhoneConstants.DEFAULT_CARD_INDEX) {
                 mUiccCard = mUiccCards[index];
             }
+*/
         } else {
             //Update already existing card
             mUiccCards[index].update(mContext, mCis[index] , status);
@@ -351,8 +365,8 @@ public class UiccController extends Handler {
         pw.println("UiccController: " + this);
         pw.println(" mContext=" + mContext);
         pw.println(" mInstance=" + mInstance);
-        pw.println(" mCi=" + mCi);
-        pw.println(" mUiccCard=" + mUiccCard);
+//        pw.println(" mCi=" + mCi);
+//        pw.println(" mUiccCard=" + mUiccCard);
         pw.println(" mIccChangedRegistrants: size=" + mIccChangedRegistrants.size());
         for (int i = 0; i < mIccChangedRegistrants.size(); i++) {
             pw.println("  mIccChangedRegistrants[" + i + "]="
@@ -360,8 +374,8 @@ public class UiccController extends Handler {
         }
         pw.println();
         pw.flush();
-        if (mUiccCard != null) {
-            mUiccCard.dump(fd, pw, args);
-        }
+  //      if (mUiccCard != null) {
+  //          mUiccCard.dump(fd, pw, args);
+  //      }
     }
 }
