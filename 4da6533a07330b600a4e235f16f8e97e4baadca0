@@ -9,3 +9,21 @@ UUID: dcf7d997_11270c45
 Bytes: 121
 Can we add a String of PendingMessages for applications necessary propose. PendingMessage.SUB_ID  = ”pending_sub_id”.
 
+File: src/java/com/android/internal/telephony/cat/CatService.java
+
+626:8-626:29
+Tue Mar 11 19:02:16 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dc10b997_090fed01
+Bytes: 71
+This should be registered somewhere otherwise this case will not happen
+
+File: src/java/com/android/internal/telephony/uicc/UiccCard.java
+
+171:12-172:45
+Tue Mar 11 19:02:16 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dcf7d997_037a14ff
+Bytes: 75
+It will always create a new CatService instance here! It should be deleted.
+
