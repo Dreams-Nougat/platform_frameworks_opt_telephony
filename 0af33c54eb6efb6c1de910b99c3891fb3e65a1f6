@@ -215,3 +215,11 @@ UUID: dcf7d997_d9775ea5
 Bytes: 95
 Error handling is needed, NOT_READY broadcast might be earlier than subscription manager ready.
 
+475:61-475:66
+Tue Mar 11 11:25:11 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dcf7d997_d9775ea5
+UUID: fce81dcd_f0f6e8ff
+Bytes: 104
+That is, subId might get null and cause null point exception when using subId[0] without error handling.
+
