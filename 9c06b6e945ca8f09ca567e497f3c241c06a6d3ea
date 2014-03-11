@@ -1,0 +1,25 @@
+Revision: 9c06b6e945ca8f09ca567e497f3c241c06a6d3ea
+Patch-set: 1
+File: src/java/com/android/internal/telephony/cat/CatService.java
+
+351
+Tue Mar 11 12:01:13 2014 +0000
+Author: Rakesh Pallerla <1021169@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: dcf7d997_f92b3a60
+Bytes: 1120
+---> "Starting from API 16" all intents are by default sent on Background priority state
+
+-  In this case, when we are ready to process the next receiver for the current broadcast, but are on a queue that would like to wait for services to finish before moving on. If there are background services currently starting, then we will go into a special state where we hold off on continuing this broadcast until they are done.
+
+- reference for same @ http://androidxref.com/4.4.2_r1/xref/frameworks/base/services/java/com/android/server/am/BroadcastQueue.java#366
+
+-  In this case we would wait for 60 secs for each intent before sending it (allowing time for BG Services completion), after 60 secs we timeout and send intent anyways.
+
+-  if above flag is set we will not wait for services to finish.
+
+---> "Earlier to API 16" by default all intents are sent without waiting for services to finish.
+
+So by adding this flag we make behavior similar to that of earlier to API 16 which should be acceptable.
+
+On similar lines i observe that in KK all system/framework level intents like ANR, Alarm etc. are sent with this flag.
+
