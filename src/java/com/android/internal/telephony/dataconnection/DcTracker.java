@@ -82,7 +82,7 @@ public class DcTracker extends DcTrackerBase {
     protected final String LOG_TAG = "DCT";
 
     /** Subscription id */
-    private int mSubscription;
+    private long mSubId;
 
     /**
      * List of messages that are waiting to be posted, when data call disconnect
@@ -156,7 +156,7 @@ public class DcTracker extends DcTrackerBase {
         }
         supplyMessenger();
 
-        mSubscription = mPhone.getSubscription();
+        mSubId = mPhone.getSubId();
 	mInternalDataEnabled = isActiveDataSubscription();
         log("mInternalDataEnabled (is data sub?) = " + mInternalDataEnabled);
     }
@@ -2353,11 +2353,7 @@ public class DcTracker extends DcTrackerBase {
     }
 
     private IccRecords getUiccRecords(int appFamily) {
-        if (TelephonyManager.getDefault().isMultiSimEnabled()) {
-            return mUiccController.getIccRecords(mPhone.getSubscription(), appFamily);
-        } else {
-            return mUiccController.getIccRecords(appFamily);
-        }
+        return mUiccController.getIccRecords(mPhone.getPhoneId(), appFamily);
     }
 
 
@@ -2387,7 +2383,7 @@ public class DcTracker extends DcTrackerBase {
 
     // setAsCurrentDataConnectionTracker
     public void update() {
-        log("update sub = " + mSubscription);
+        log("update sub = " + mSubId);
         if (isActiveDataSubscription()) {
             log("update(): Active DDS, register for all events now!");
             registerForAllEvents();
@@ -2517,7 +2513,7 @@ public class DcTracker extends DcTrackerBase {
 
     /** Returns true if this is current DDS. */
     protected boolean isActiveDataSubscription() {
-        return (mSubscription == PhoneFactory.getDataSubscription());
+        return (mSubId == PhoneFactory.getDataSubscription());
     }
 
     @Override

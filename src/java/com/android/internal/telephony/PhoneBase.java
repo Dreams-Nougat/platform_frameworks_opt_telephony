@@ -148,7 +148,7 @@ public abstract class PhoneBase extends Handler implements Phone {
 
     // Holds the subscription information
     protected Subscription mSubscriptionData = null;
-    protected int mSubscription = DEFAULT_SUBSCRIPTION;
+    protected int mPhoneId = DEFAULT_SUBSCRIPTION;
 
     @Override
     public String getPhoneName() {
@@ -273,8 +273,8 @@ public abstract class PhoneBase extends Handler implements Phone {
      * @param subscription is current phone subscription
      */
     protected PhoneBase(String name, PhoneNotifier notifier, Context context, CommandsInterface ci,
-            boolean unitTestMode, int subscription) {
-        mSubscription = subscription;
+            boolean unitTestMode, int phoneId) {
+        mPhoneId = phoneId;
         mName = name;
         mNotifier = notifier;
         mContext = context;
@@ -1488,11 +1488,19 @@ public abstract class PhoneBase extends Handler implements Phone {
 
     /**
      * Returns the subscription id.
-     * Always returns default subscription(ie., 0).
      */
-    public int getSubscription() {
-        return mSubscription;
+    public long getSubId() {
+        long [] subId = SubscriptionController.getInstance().getSubId(mPhoneId);
+        return subId[0];
     }
+
+    /**
+     * Returns the phone id.
+     */
+    public int getPhoneId() {
+        return mPhoneId;
+    }
+
     //Gets Subscription information in the Phone Object
     public Subscription getSubscriptionInfo() {
         return mSubscriptionData;

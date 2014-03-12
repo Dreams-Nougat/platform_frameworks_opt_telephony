@@ -709,7 +709,7 @@ public abstract class InboundSmsHandler extends StateMachine {
     protected void dispatchIntent(Intent intent, String permission, int appOp,
             BroadcastReceiver resultReceiver) {
 
-        long [] subId = SubscriptionManager.getSubId(mPhone.getSubscription());
+        long [] subId = SubscriptionManager.getSubId(mPhone.getPhoneId());
         intent.addFlags(Intent.FLAG_RECEIVER_NO_ABORT);
         intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY,
                 subId[0]);//Subscription information to be passed in an intent

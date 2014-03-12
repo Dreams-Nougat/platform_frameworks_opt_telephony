@@ -1741,5 +1741,10 @@ public interface Phone {
     /*
      * Returns the subscription id.
      */
-    public int getSubscription();
+    public long getSubId();
+
+    /*
+     * Returns the phone id.
+     */
+    public int getPhoneId();
 }

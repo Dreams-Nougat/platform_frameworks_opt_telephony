@@ -266,9 +266,9 @@ public final class GsmSMSDispatcher extends SMSDispatcher {
     }
 
     protected UiccCardApplication getUiccCardApplication() {
-            Rlog.d(TAG, "GsmSMSDispatcher: subId = " + mPhone.getSubscription()
-                    + " slotId = " + mPhone.getSubscription());
-                return  ((UiccController) mUiccController).getUiccCardApplication(mPhone.getSubscription(),
+            Rlog.d(TAG, "GsmSMSDispatcher: subId = " + mPhone.getSubId()
+                    + " slotId = " + mPhone.getPhoneId());
+                return mUiccController.getUiccCardApplication(mPhone.getPhoneId(),
                         UiccController.APP_FAM_3GPP);
     }
 

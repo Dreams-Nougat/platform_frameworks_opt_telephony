@@ -95,7 +95,7 @@ public class WapPushOverSms implements ServiceConnection {
         int index = 0;
         int transactionId = pdu[index++] & 0xFF;
         int pduType = pdu[index++] & 0xFF;
-        long [] subId = SubscriptionManager.getSubId(handler.getPhone().getSubscription());
+        long [] subId = SubscriptionManager.getSubId(handler.getPhone().getPhoneId());
 
         if ((pduType != WspTypeDecoder.PDU_TYPE_PUSH) &&
                 (pduType != WspTypeDecoder.PDU_TYPE_CONFIRMED_PUSH)) {
