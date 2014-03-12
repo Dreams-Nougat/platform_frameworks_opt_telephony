@@ -1,0 +1,11 @@
+Revision: 78f0bade128df0e7c1a99074809d95f61dac5f89
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/UiccCard.java
+
+243:23-243:24
+Wed Mar 12 22:27:40 2014 +0000
+Author: derektan <1038949@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5cda0934_3300601f
+Bytes: 42
+In this case, this comment can be removed.
+
