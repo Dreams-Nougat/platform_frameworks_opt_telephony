@@ -22,6 +22,7 @@ import android.os.ServiceManager;
 
 import android.telephony.SubscriptionManager;
 import android.telephony.Rlog;
+import android.telephony.TelephonyManager;
 import java.lang.NullPointerException;
 import java.lang.ArrayIndexOutOfBoundsException;
 
@@ -194,7 +195,10 @@ public class PhoneSubInfoController extends IPhoneSubInfo.Stub {
      **/
     private PhoneSubInfoProxy getPhoneSubInfoProxy(long subscription) {
 
-        long phoneId = SubscriptionManager.getSimId(subscription);
+        long phoneId = SubscriptionManager.getPhoneId(subscription);
+        if (phoneId < 0 || phoneId >= TelephonyManager.getDefault().getPhoneCount()) {
+            phoneId = 0;
+        }
 
         try {
             return ((PhoneProxy)mPhone[(int)phoneId]).getPhoneSubInfoProxy();

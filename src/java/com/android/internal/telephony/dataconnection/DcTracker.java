@@ -81,9 +81,6 @@ import java.util.HashMap;
 public class DcTracker extends DcTrackerBase {
     protected final String LOG_TAG = "DCT";
 
-    /** Subscription id */
-    private int mSubscription;
-
     /**
      * List of messages that are waiting to be posted, when data call disconnect
      * is complete
@@ -138,9 +135,7 @@ public class DcTracker extends DcTrackerBase {
         if (DBG) log("GsmDCT.constructor");
 
         mDataConnectionTracker = this;
-        if (!TelephonyManager.getDefault().isMultiSimEnabled()) {
-                update();
-        }
+        update();
         mApnObserver = new ApnChangeObserver();
         p.getContext().getContentResolver().registerContentObserver(
                 Telephony.Carriers.CONTENT_URI, true, mApnObserver);
@@ -156,8 +151,7 @@ public class DcTracker extends DcTrackerBase {
         }
         supplyMessenger();
 
-        mSubscription = mPhone.getSubscription();
-	mInternalDataEnabled = isActiveDataSubscription();
+        mInternalDataEnabled = isActiveDataSubscription();
         log("mInternalDataEnabled (is data sub?) = " + mInternalDataEnabled);
     }
 
@@ -2353,11 +2347,7 @@ public class DcTracker extends DcTrackerBase {
     }
 
     private IccRecords getUiccRecords(int appFamily) {
-        if (TelephonyManager.getDefault().isMultiSimEnabled()) {
-            return mUiccController.getIccRecords(mPhone.getSubscription(), appFamily);
-        } else {
-            return mUiccController.getIccRecords(appFamily);
-        }
+        return mUiccController.getIccRecords(mPhone.getPhoneId(), appFamily);
     }
 
 
@@ -2387,7 +2377,7 @@ public class DcTracker extends DcTrackerBase {
 
     // setAsCurrentDataConnectionTracker
     public void update() {
-        log("update sub = " + mSubscription);
+        log("update sub = " + mPhone.getSubId());
         if (isActiveDataSubscription()) {
             log("update(): Active DDS, register for all events now!");
             registerForAllEvents();
@@ -2517,7 +2507,13 @@ public class DcTracker extends DcTrackerBase {
 
     /** Returns true if this is current DDS. */
     protected boolean isActiveDataSubscription() {
-        return (mSubscription == PhoneFactory.getDataSubscription());
+        return true;
+/*
+        if (mPhone.getPhoneId() == 0) {
+            return true;
+        }
+        return (mPhone.getSubId() == PhoneFactory.getDataSubscription());
+*/
     }
 
     @Override

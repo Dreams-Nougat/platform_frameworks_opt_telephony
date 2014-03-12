@@ -150,8 +150,8 @@ public class CDMAPhone extends PhoneBase {
     }
 
     public CDMAPhone(Context context, CommandsInterface ci, PhoneNotifier notifier,
-            int subscription) {
-        super("CDMA", notifier, context, ci, false, subscription);
+            int phoneId) {
+        super("CDMA", notifier, context, ci, false, phoneId);
         initSstIcc();
         init(context, notifier);
     }
@@ -211,7 +211,7 @@ public class CDMAPhone extends PhoneBase {
         String operatorNumeric = SystemProperties.get(PROPERTY_CDMA_HOME_OPERATOR_NUMERIC);
         log("init: operatorAlpha='" + operatorAlpha
                 + "' operatorNumeric='" + operatorNumeric + "'");
-        if (mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP) == null) {
+        if (mUiccController.getUiccCardApplication(mPhoneId, UiccController.APP_FAM_3GPP) == null) {
             log("init: APP_FAM_3GPP == NULL");
             if (!TextUtils.isEmpty(operatorAlpha)) {
                 log("init: set 'gsm.sim.operator.alpha' to operator='" + operatorAlpha + "'");
@@ -464,7 +464,7 @@ public class CDMAPhone extends PhoneBase {
         IccRecords r = mIccRecords.get();
         if (r == null) {
             // to get ICCID form SIMRecords because it is on MF.
-            r = mUiccController.getIccRecords(UiccController.APP_FAM_3GPP);
+            r = mUiccController.getIccRecords(mPhoneId, UiccController.APP_FAM_3GPP);
         }
         return (r != null) ? r.getIccId() : null;
     }
@@ -842,9 +842,9 @@ public class CDMAPhone extends PhoneBase {
         // Read platform settings for dynamic voicemail number
         if (getContext().getResources().getBoolean(com.android.internal
                 .R.bool.config_telephony_use_own_number_for_voicemail)) {
-            number = sp.getString(VM_NUMBER_CDMA + mSubscription, getLine1Number());
+            number = sp.getString(VM_NUMBER_CDMA + getSubId(), getLine1Number());
         } else {
-            number = sp.getString(VM_NUMBER_CDMA + mSubscription, "*86");
+            number = sp.getString(VM_NUMBER_CDMA + getSubId(), "*86");
         }
         return number;
     }
@@ -972,10 +972,9 @@ public class CDMAPhone extends PhoneBase {
 
     void sendEmergencyCallbackModeChange(){
         //Send an Intent
-        long [] subId = SubscriptionManager.getSubId(mSubscription);
         Intent intent = new Intent(TelephonyIntents.ACTION_EMERGENCY_CALLBACK_MODE_CHANGED);
         intent.putExtra(PhoneConstants.PHONE_IN_ECM_STATE, mIsPhoneInEcmState);
-        intent.putExtra(SUBSCRIPTION_KEY, subId[0]);
+        intent.putExtra(SUBSCRIPTION_KEY, getSubId());
         ActivityManagerNative.broadcastStickyIntent(intent,null,UserHandle.USER_ALL);
         if (DBG) Rlog.d(LOG_TAG, "sendEmergencyCallbackModeChange");
     }
@@ -1193,7 +1192,7 @@ public class CDMAPhone extends PhoneBase {
     }
 
     protected UiccCardApplication getUiccCardApplication() {
-        return  mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP2);
+        return  mUiccController.getUiccCardApplication(mPhoneId, UiccController.APP_FAM_3GPP2);
     }
 
     @Override
@@ -1206,8 +1205,8 @@ public class CDMAPhone extends PhoneBase {
 
         if (newUiccApplication == null) {
             log("can't find 3GPP2 application; trying APP_FAM_3GPP");
-            newUiccApplication = mUiccController
-                    .getUiccCardApplication(UiccController.APP_FAM_3GPP);
+            newUiccApplication =
+                    mUiccController.getUiccCardApplication(mPhoneId, UiccController.APP_FAM_3GPP);
         }
 
         UiccCardApplication app = mUiccApplication.get();
@@ -1551,7 +1550,7 @@ public class CDMAPhone extends PhoneBase {
         // Update the preference value of voicemail number
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         SharedPreferences.Editor editor = sp.edit();
-        editor.putString(VM_NUMBER_CDMA + mSubscription, number);
+        editor.putString(VM_NUMBER_CDMA + getSubId(), number);
         editor.apply();
     }
 

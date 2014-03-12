@@ -109,7 +109,7 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
             pollState();
             break;
         case EVENT_ALL_DATA_DISCONNECTED:
-            int dds = PhoneFactory.getDataSubscription();
+            long dds = PhoneFactory.getDataSubscription();
             ProxyController.getInstance().unregisterForAllDataDisconnected(dds, this);
             synchronized(this) {
                 if (mPendingRadioPowerOffAfterDataOff) {
@@ -596,7 +596,7 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
     @Override
     protected UiccCardApplication getUiccCardApplication() {
             return  mUiccController.getUiccCardApplication(((CDMALTEPhone)mPhone).
-                    getSubscription(), UiccController.APP_FAM_3GPP2);
+                    getPhoneId(), UiccController.APP_FAM_3GPP2);
     }
 
     protected void updateCdmaSubscription() {
@@ -612,12 +612,12 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
     public void powerOffRadioSafely(DcTrackerBase dcTracker) {
         synchronized (this) {
             if (!mPendingRadioPowerOffAfterDataOff) {
-                int dds = PhoneFactory.getDataSubscription();
+                long dds = PhoneFactory.getDataSubscription();
                 // To minimize race conditions we call cleanUpAllConnections on
                 // both if else paths instead of before this isDisconnected test.
                 if (dcTracker.isDisconnected()
-                        && (dds == mPhone.getSubscription()
-                            || (dds != mPhone.getSubscription()
+                        && (dds == mPhone.getSubId()
+                            || (dds != mPhone.getSubId()
                                 && ProxyController.getInstance().isDataDisconnected(dds)))) {
                     // To minimize race conditions we do this after isDisconnected
                     dcTracker.cleanUpAllConnections(Phone.REASON_RADIO_TURNED_OFF);
@@ -625,7 +625,7 @@ public class CdmaLteServiceStateTracker extends CdmaServiceStateTracker {
                     hangupAndPowerOff();
                 } else {
                     dcTracker.cleanUpAllConnections(Phone.REASON_RADIO_TURNED_OFF);
-                    if (dds != mPhone.getSubscription()
+                    if (dds != mPhone.getSubId()
                             && !ProxyController.getInstance().isDataDisconnected(dds)) {
                         if (DBG) log("Data is active on DDS.  Wait for all data disconnect");
                         // Data is not disconnected on DDS. Wait for the data disconnect complete

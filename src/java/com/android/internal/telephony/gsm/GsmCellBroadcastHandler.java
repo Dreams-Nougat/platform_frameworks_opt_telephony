@@ -268,7 +268,7 @@ public class GsmCellBroadcastHandler extends CellBroadcastHandler {
             receiverPermission = Manifest.permission.RECEIVE_SMS;
             appOp = AppOpsManager.OP_RECEIVE_SMS;
         }
-        long [] subId = SubscriptionManager.getSubId(mPhone.getSubscription());
+        long [] subId = SubscriptionManager.getSubId(mPhone.getPhoneId());
         intent.putExtra("message", message);
         intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY,
                 subId[0]); //Subscription information to be passed in an intent

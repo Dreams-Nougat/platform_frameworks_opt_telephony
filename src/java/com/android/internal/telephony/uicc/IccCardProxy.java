@@ -334,7 +334,7 @@ public class IccCardProxy extends Handler implements IccCard {
 
     private void updateIccAvailability() {
         synchronized (mLock) {
-            UiccCard newCard = ((UiccController) mUiccController).getUiccCard(mCardIndex);
+            UiccCard newCard = mUiccController.getUiccCard(mCardIndex);
             CardState state = CardState.CARDSTATE_ABSENT;
             UiccCardApplication newApp = null;
             IccRecords newRecords = null;
@@ -473,7 +473,7 @@ public class IccCardProxy extends Handler implements IccCard {
 
 
             intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY, subId[0]);
-            intent.putExtra(PhoneConstants.SIM_ID_KEY, mCardIndex);
+            intent.putExtra(PhoneConstants.SLOT_KEY, mCardIndex);
             log("Broadcasting intent ACTION_SIM_STATE_CHANGED " +  value
                 + " reason " + reason + " for subscription : " + subId);
             ActivityManagerNative.broadcastStickyIntent(intent, READ_PHONE_STATE,

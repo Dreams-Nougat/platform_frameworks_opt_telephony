@@ -94,15 +94,15 @@ public class CDMALTEPhone extends CDMAPhone {
 
     // Constructors
     public CDMALTEPhone(Context context, CommandsInterface ci, PhoneNotifier notifier,
-            int subscription) {
-        this(context, ci, notifier, false, subscription);
+            int phoneId) {
+        this(context, ci, notifier, false, phoneId);
     }
 
     public CDMALTEPhone(Context context, CommandsInterface ci, PhoneNotifier notifier,
-            boolean unitTestMode, int subscription) {
-        super(context, ci, notifier, subscription);
+            boolean unitTestMode, int phoneId) {
+        super(context, ci, notifier, phoneId);
 
-        Rlog.d(LOG_TAG, "CDMALTEPhone: constructor: sub = " + mSubscription);
+        Rlog.d(LOG_TAG, "CDMALTEPhone: constructor: sub = " + mPhoneId);
 
         mDcTracker = new DcTracker(this);
 
@@ -254,7 +254,7 @@ public class CDMALTEPhone extends CDMAPhone {
     @Override
     boolean updateCurrentCarrierInProvider(String operatorNumeric) {
         boolean retVal;
-        if (mUiccController.getUiccCardApplication(UiccController.APP_FAM_3GPP) == null) {
+        if (mUiccController.getUiccCardApplication(mPhoneId, UiccController.APP_FAM_3GPP) == null) {
             if (DBG) log("updateCurrentCarrierInProvider APP_FAM_3GPP == null");
             retVal = super.updateCurrentCarrierInProvider(operatorNumeric);
         } else {
@@ -267,13 +267,13 @@ public class CDMALTEPhone extends CDMAPhone {
 
     @Override
     public boolean updateCurrentCarrierInProvider() {
-        int currentDds = PhoneFactory.getDataSubscription();
+        long currentDds = PhoneFactory.getDataSubscription();
         String operatorNumeric = getOperatorNumeric();
 
-        Rlog.d(LOG_TAG, "updateCurrentCarrierInProvider: mSubscription = " + getSubscription()
+        Rlog.d(LOG_TAG, "updateCurrentCarrierInProvider: mSubscription = " + getSubId()
                 + " currentDds = " + currentDds + " operatorNumeric = " + operatorNumeric);
 
-        if (!TextUtils.isEmpty(operatorNumeric) && (getSubscription() == currentDds)) {
+        if (!TextUtils.isEmpty(operatorNumeric) && (getSubId() == currentDds)) {
             try {
                 Uri uri = Uri.withAppendedPath(Telephony.Carriers.CONTENT_URI, "current");
                 ContentValues map = new ContentValues();
@@ -443,8 +443,7 @@ public class CDMALTEPhone extends CDMAPhone {
 
     @Override
     protected UiccCardApplication getUiccCardApplication() {
-            return  ((UiccController) mUiccController).getUiccCardApplication(mSubscription,
-                    UiccController.APP_FAM_3GPP2);
+            return  mUiccController.getUiccCardApplication(mPhoneId, UiccController.APP_FAM_3GPP2);
     }
 
     @Override
@@ -452,14 +451,14 @@ public class CDMALTEPhone extends CDMAPhone {
         if(getUnitTestMode()) {
             return;
         }
-        TelephonyManager.setTelephonyProperty(property, mSubscription, value);
+        TelephonyManager.setTelephonyProperty(property, mPhoneId, value);
     }
 
     public String getSystemProperty(String property, String defValue) {
         if(getUnitTestMode()) {
             return null;
         }
-        return TelephonyManager.getTelephonyProperty(property, mSubscription, defValue);
+        return TelephonyManager.getTelephonyProperty(property, mPhoneId, defValue);
     }
 
     public void updateDataConnectionTracker() {

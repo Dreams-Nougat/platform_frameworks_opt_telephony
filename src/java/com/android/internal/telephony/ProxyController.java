@@ -36,6 +36,7 @@ import android.os.Message;
 import android.telephony.Rlog;
 import android.telephony.ServiceState;
 import android.telephony.SubscriptionManager;
+import android.telephony.TelephonyManager;
 
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.Phone;
@@ -141,17 +142,31 @@ public class ProxyController {
         }
     }
 
-    public void registerForAllDataDisconnected(int sub, Handler h, int what, Object obj) {
-        ((PhoneProxy) mProxyPhones[sub]).registerForAllDataDisconnected(h, what, obj);
+    public void registerForAllDataDisconnected(long subId, Handler h, int what, Object obj) {
+        int phoneId = SubscriptionController.getInstance().getPhoneId(subId);
+
+        if (phoneId > 0 && phoneId < TelephonyManager.getDefault().getPhoneCount()) {
+            ((PhoneProxy) mProxyPhones[phoneId]).registerForAllDataDisconnected(h, what, obj);
+        }
     }
 
-    public void unregisterForAllDataDisconnected(int sub, Handler h) {
-        ((PhoneProxy) mProxyPhones[sub]).unregisterForAllDataDisconnected(h);
+    public void unregisterForAllDataDisconnected(long subId, Handler h) {
+        int phoneId = SubscriptionController.getInstance().getPhoneId(subId);
+
+        if (phoneId > 0 && phoneId < TelephonyManager.getDefault().getPhoneCount()) {
+            ((PhoneProxy) mProxyPhones[phoneId]).unregisterForAllDataDisconnected(h);
+        }
     }
 
-    public boolean isDataDisconnected(int sub) {
-        Phone activePhone = ((PhoneProxy) mProxyPhones[sub]).getActivePhone();
-        return ((PhoneBase) activePhone).mDcTracker.isDisconnected();
+    public boolean isDataDisconnected(long subId) {
+        int phoneId = SubscriptionController.getInstance().getPhoneId(subId);
+
+        if (phoneId > 0 && phoneId < TelephonyManager.getDefault().getPhoneCount()) {
+            Phone activePhone = ((PhoneProxy) mProxyPhones[phoneId]).getActivePhone();
+            return ((PhoneBase) activePhone).mDcTracker.isDisconnected();
+        } else {
+            return false;
+        }
     }
 
     private void logd(String string) {
