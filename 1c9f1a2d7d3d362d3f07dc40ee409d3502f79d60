@@ -38,3 +38,22 @@ UUID: fce81dcd_4e1375b3
 Bytes: 81
 All function are static and no need to provide the getInstance at all. Should we?
 
+173
+Wed Mar 12 18:11:55 2014 +0000
+Author: Srikanth Chintala <1025864@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: fce81dcd_4e1375b3
+UUID: 9c2ba1c2_942bd798
+Bytes: 781
+Here I see functions in SubscriptionController are non-static, 
+
+I think In SubscriptionManager.java we need to have getInstance() definitely.
+Even if all functions are static, it would be good to provide getInstance() function, this helps in handling class members if at all any.
+
+At this point there are any class members so things work, when you had to introudce certain class member it would be aproblem, static methods can't access that.
+
+SubscriptionController having getInstance() is arguable one.
+
+framework can use  ISub.asInterface()/subscriptionManager  to access the functions.
+
+If at all if we want to expose getInstance() I think we need to have looper checks inside SubscriptionContoller so that it is accessed from phone process only. (similar to PhoneFactory.java)
+
