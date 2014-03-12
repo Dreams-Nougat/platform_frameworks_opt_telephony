@@ -334,7 +334,7 @@ public class IccCardProxy extends Handler implements IccCard {
 
     private void updateIccAvailability() {
         synchronized (mLock) {
-            UiccCard newCard = ((UiccController) mUiccController).getUiccCard(mCardIndex);
+            UiccCard newCard = mUiccController.getUiccCard(mCardIndex);
             CardState state = CardState.CARDSTATE_ABSENT;
             UiccCardApplication newApp = null;
             IccRecords newRecords = null;

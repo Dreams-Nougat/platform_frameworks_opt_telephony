@@ -584,14 +584,14 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                         " showPlmn='%b' plmn='%s' showSpn='%b' spn='%s'",
                         showPlmn, plmn, showSpn, spn));
             }
-            long [] subId = SubscriptionManager.getSubId(mPhone.getSubscription());
+            long subId = mPhone.getSubId();
             Intent intent = new Intent(TelephonyIntents.SPN_STRINGS_UPDATED_ACTION);
             intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
             intent.putExtra(TelephonyIntents.EXTRA_SHOW_SPN, showSpn);
             intent.putExtra(TelephonyIntents.EXTRA_SPN, spn);
             intent.putExtra(TelephonyIntents.EXTRA_SHOW_PLMN, showPlmn);
             intent.putExtra(TelephonyIntents.EXTRA_PLMN, plmn);
-            intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY,subId[0]);
+            intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY,subId);
             mPhone.getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
         }
 
@@ -1816,7 +1816,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     }
 
     private UiccCardApplication getUiccCardApplication() {
-            return  mUiccController.getUiccCardApplication(mPhone.getSubscription(),
+            return  mUiccController.getUiccCardApplication(mPhone.getPhoneId(),
                     UiccController.APP_FAM_3GPP);
     }
 
@@ -1909,8 +1909,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 // To minimize race conditions we call cleanUpAllConnections on
                 // both if else paths instead of before this isDisconnected test.
                 if (dcTracker.isDisconnected()
-                        && (dds == mPhone.getSubscription()
-                            || (dds != mPhone.getSubscription()
+                        && (dds == mPhone.getPhoneId()
+                            || (dds != mPhone.getPhoneId()
                                 && ProxyController.getInstance().isDataDisconnected(dds)))) {
                     // To minimize race conditions we do this after isDisconnected
                     dcTracker.cleanUpAllConnections(Phone.REASON_RADIO_TURNED_OFF);
@@ -1918,7 +1918,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                     hangupAndPowerOff();
                 } else {
                     dcTracker.cleanUpAllConnections(Phone.REASON_RADIO_TURNED_OFF);
-                    if (dds != mPhone.getSubscription()
+                    if (dds != mPhone.getPhoneId()
                             && !ProxyController.getInstance().isDataDisconnected(dds)) {
                         if (DBG) log("Data is active on DDS.  Wait for all data disconnect");
                         // Data is not disconnected on DDS. Wait for the data disconnect complete

@@ -20,7 +20,6 @@ package com.android.internal.telephony;
 
 import android.app.PendingIntent;
 import android.os.ServiceManager;
-import android.telephony.SubscriptionManager;
 import android.telephony.Rlog;
 
 import com.android.internal.telephony.ISms;
@@ -52,14 +51,14 @@ public class UiccSmsController extends ISms.Stub {
         return  updateMessageOnIccEfUsingSub(getPreferredSmsSubscription(), callingPackage, index, status, pdu);
     }
     public boolean
-    updateMessageOnIccEfUsingSub(long subscription, String callingPackage, int index, int status, byte[] pdu)
+    updateMessageOnIccEfUsingSub(long subId, String callingPackage, int index, int status, byte[] pdu)
                 throws android.os.RemoteException {
-        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subscription);
+        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subId);
         if (iccSmsIntMgr != null) {
             return iccSmsIntMgr.updateMessageOnIccEf(callingPackage, index, status, pdu);
         } else {
             Rlog.e(LOG_TAG,"updateMessageOnIccEf iccSmsIntMgr is null" +
-                          " for Subscription:"+subscription);
+                          " for Subscription: " + subId);
             return false;
         }
     }
@@ -69,14 +68,14 @@ public class UiccSmsController extends ISms.Stub {
             smsc);
     }
 
-    public boolean copyMessageToIccEfUsingSub(long subscription, String callingPackage, int status, byte[] pdu,
+    public boolean copyMessageToIccEfUsingSub(long subId, String callingPackage, int status, byte[] pdu,
             byte[] smsc) throws android.os.RemoteException {
-        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subscription);
+        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subId);
         if (iccSmsIntMgr != null) {
             return iccSmsIntMgr.copyMessageToIccEf(callingPackage, status, pdu, smsc);
         } else {
             Rlog.e(LOG_TAG,"copyMessageToIccEf iccSmsIntMgr is null" +
-                          " for Subscription:"+subscription);
+                          " for Subscription: " + subId);
             return false;
         }
     }
@@ -84,14 +83,14 @@ public class UiccSmsController extends ISms.Stub {
     public List<SmsRawData> getAllMessagesFromIccEf(String callingPackage) throws android.os.RemoteException {
         return getAllMessagesFromIccEfUsingSub(getPreferredSmsSubscription(), callingPackage);
     }
-    public List<SmsRawData> getAllMessagesFromIccEfUsingSub(long subscription, String callingPackage)
+    public List<SmsRawData> getAllMessagesFromIccEfUsingSub(long subId, String callingPackage)
                 throws android.os.RemoteException {
-        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subscription);
+        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subId);
         if (iccSmsIntMgr != null) {
             return iccSmsIntMgr.getAllMessagesFromIccEf(callingPackage);
         } else {
             Rlog.e(LOG_TAG,"getAllMessagesFromIccEf iccSmsIntMgr is" +
-                          " null for Subscription:"+subscription);
+                          " null for Subscription: " + subId);
             return null;
         }
     }
@@ -102,15 +101,15 @@ public class UiccSmsController extends ISms.Stub {
             data, sentIntent, deliveryIntent);
     }
 
-    public void sendDataUsingSub(long subscription, String callingPackage, String destAddr, String scAddr, int destPort,
+    public void sendDataUsingSub(long subId, String callingPackage, String destAddr, String scAddr, int destPort,
             byte[] data, PendingIntent sentIntent, PendingIntent deliveryIntent) {
-        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subscription);
+        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subId);
         if (iccSmsIntMgr != null) {
             iccSmsIntMgr.sendData(callingPackage, destAddr, scAddr, destPort, data,
                     sentIntent, deliveryIntent);
         } else {
             Rlog.e(LOG_TAG,"sendText iccSmsIntMgr is null for" +
-                          " Subscription:"+subscription);
+                          " Subscription: " + subId);
         }
     }
     public void sendText(String callingPackage, String destAddr, String scAddr,
@@ -119,15 +118,15 @@ public class UiccSmsController extends ISms.Stub {
             text, sentIntent, deliveryIntent);
     }
 
-    public void sendTextUsingSub(long subscription, String callingPackage, String destAddr, String scAddr,
+    public void sendTextUsingSub(long subId, String callingPackage, String destAddr, String scAddr,
             String text, PendingIntent sentIntent, PendingIntent deliveryIntent) {
-        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subscription);
+        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subId);
         if (iccSmsIntMgr != null) {
             iccSmsIntMgr.sendText(callingPackage, destAddr, scAddr, text, sentIntent,
                     deliveryIntent);
         } else {
             Rlog.e(LOG_TAG,"sendText iccSmsIntMgr is null for" +
-                          " Subscription:"+subscription);
+                          " Subscription: " + subId);
         }
     }
 
@@ -138,40 +137,40 @@ public class UiccSmsController extends ISms.Stub {
             parts, sentIntents, deliveryIntents);
     }
 
-    public void sendMultipartTextUsingSub(long subscription, String callingPackage, String destAddr, String scAddr,
+    public void sendMultipartTextUsingSub(long subId, String callingPackage, String destAddr, String scAddr,
             List<String> parts, List<PendingIntent> sentIntents,
             List<PendingIntent> deliveryIntents)
             throws android.os.RemoteException {
-        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subscription);
+        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subId);
         if (iccSmsIntMgr != null ) {
             iccSmsIntMgr.sendMultipartText(callingPackage, destAddr, scAddr, parts, sentIntents,
                     deliveryIntents);
         } else {
             Rlog.e(LOG_TAG,"sendMultipartText iccSmsIntMgr is null for" +
-                          " Subscription:"+subscription);
+                          " Subscription: " + subId);
         }
     }
     public boolean enableCellBroadcast(int messageIdentifier) throws android.os.RemoteException {
         return enableCellBroadcastUsingSub(getPreferredSmsSubscription(), messageIdentifier);
     }
 
-    public boolean enableCellBroadcastUsingSub(long subscription, int messageIdentifier)
+    public boolean enableCellBroadcastUsingSub(long subId, int messageIdentifier)
                 throws android.os.RemoteException {
-        return enableCellBroadcastRangeUsingSub(subscription, messageIdentifier, messageIdentifier);
+        return enableCellBroadcastRangeUsingSub(subId, messageIdentifier, messageIdentifier);
     }
 
     public boolean enableCellBroadcastRange(int startMessageId, int endMessageId) throws android.os.RemoteException {
         return enableCellBroadcastRangeUsingSub(getPreferredSmsSubscription(), startMessageId, endMessageId);
     }
 
-    public boolean enableCellBroadcastRangeUsingSub(long subscription, int startMessageId, int endMessageId)
+    public boolean enableCellBroadcastRangeUsingSub(long subId, int startMessageId, int endMessageId)
                 throws android.os.RemoteException {
-        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subscription);
+        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subId);
         if (iccSmsIntMgr != null ) {
             return iccSmsIntMgr.enableCellBroadcastRange(startMessageId, endMessageId);
         } else {
             Rlog.e(LOG_TAG,"enableCellBroadcast iccSmsIntMgr is null for" +
-                          " Subscription:"+subscription);
+                          " Subscription: " + subId);
         }
         return false;
     }
@@ -180,23 +179,23 @@ public class UiccSmsController extends ISms.Stub {
         return disableCellBroadcastUsingSub(getPreferredSmsSubscription(), messageIdentifier);
     }
 
-    public boolean disableCellBroadcastUsingSub(long subscription, int messageIdentifier)
+    public boolean disableCellBroadcastUsingSub(long subId, int messageIdentifier)
                 throws android.os.RemoteException {
-        return disableCellBroadcastRangeUsingSub(subscription, messageIdentifier, messageIdentifier);
+        return disableCellBroadcastRangeUsingSub(subId, messageIdentifier, messageIdentifier);
     }
 
     public boolean disableCellBroadcastRange(int startMessageId, int endMessageId) throws android.os.RemoteException {
         return disableCellBroadcastRangeUsingSub(getPreferredSmsSubscription(), startMessageId, endMessageId);
     }
 
-    public boolean disableCellBroadcastRangeUsingSub(long subscription, int startMessageId, int endMessageId)
+    public boolean disableCellBroadcastRangeUsingSub(long subId, int startMessageId, int endMessageId)
                 throws android.os.RemoteException {
-        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subscription);
+        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subId);
         if (iccSmsIntMgr != null ) {
             return iccSmsIntMgr.disableCellBroadcastRange(startMessageId, endMessageId);
         } else {
             Rlog.e(LOG_TAG,"disableCellBroadcast iccSmsIntMgr is null for" +
-                          " Subscription:"+subscription);
+                          " Subscription:"+subId);
         }
        return false;
     }
@@ -206,8 +205,8 @@ public class UiccSmsController extends ISms.Stub {
     }
 
     @Override
-    public int getPremiumSmsPermissionUsingSub(long subscription, String packageName) {
-        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subscription);
+    public int getPremiumSmsPermissionUsingSub(long subId, String packageName) {
+        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subId);
         if (iccSmsIntMgr != null ) {
             return iccSmsIntMgr.getPremiumSmsPermission(packageName);
         } else {
@@ -222,8 +221,8 @@ public class UiccSmsController extends ISms.Stub {
     }
 
     @Override
-    public void setPremiumSmsPermissionUsingSub(long subscription, String packageName, int permission) {
-        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subscription);
+    public void setPremiumSmsPermissionUsingSub(long subId, String packageName, int permission) {
+        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subId);
         if (iccSmsIntMgr != null ) {
             iccSmsIntMgr.setPremiumSmsPermission(packageName, permission);
         } else {
@@ -236,8 +235,8 @@ public class UiccSmsController extends ISms.Stub {
     }
 
     @Override
-    public boolean isImsSmsSupportedUsingSub(long subscription) {
-        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subscription);
+    public boolean isImsSmsSupportedUsingSub(long subId) {
+        IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subId);
         if (iccSmsIntMgr != null ) {
             return iccSmsIntMgr.isImsSmsSupported();
         } else {
@@ -251,8 +250,8 @@ public class UiccSmsController extends ISms.Stub {
     }
 
     @Override
-    public String getImsSmsFormatUsingSub(long subscription) {
-       IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subscription);
+    public String getImsSmsFormatUsingSub(long subId) {
+       IccSmsInterfaceManager iccSmsIntMgr = getIccSmsInterfaceManager(subId);
         if (iccSmsIntMgr != null ) {
             return iccSmsIntMgr.getImsSmsFormat();
         } else {
@@ -264,17 +263,17 @@ public class UiccSmsController extends ISms.Stub {
     /**
      * get sms interface manager object based on subscription.
      **/
-    private IccSmsInterfaceManager getIccSmsInterfaceManager(long subscription) {
-        long phoneId = SubscriptionManager.getSimId(subscription);
+    private IccSmsInterfaceManager getIccSmsInterfaceManager(long subId) {
+        long phoneId = subScriptionController.getSimId(subId);
         try {
             return (IccSmsInterfaceManager)
                 ((PhoneProxy)mPhone[(int)phoneId]).getIccSmsInterfaceManager();
         } catch (NullPointerException e) {
-            Rlog.e(LOG_TAG, "Exception is :"+e.toString()+" For subscription :"+subscription );
+            Rlog.e(LOG_TAG, "Exception is :"+e.toString()+" For subscription :"+subId );
             e.printStackTrace(); //This will print stact trace
             return null;
         } catch (ArrayIndexOutOfBoundsException e) {
-            Rlog.e(LOG_TAG, "Exception is :"+e.toString()+" For subscription :"+subscription );
+            Rlog.e(LOG_TAG, "Exception is :"+e.toString()+" For subscription :"+subId );
             e.printStackTrace(); //This will print stack trace
             return null;
         }

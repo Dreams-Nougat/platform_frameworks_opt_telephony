@@ -532,7 +532,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
         // mOperatorAlphaLong contains the ERI text
         String plmn = mSS.getOperatorAlphaLong();
 
-       long [] subId = SubscriptionManager.getSubId(mPhone.getSubscription());
+       long subId = mPhone.getSubId();
 
         if (!TextUtils.equals(plmn, mCurPlmn)) {
             // Allow A blank plmn, "" to set showPlmn to true. Previously, we
@@ -550,7 +550,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
             intent.putExtra(TelephonyIntents.EXTRA_SPN, "");
             intent.putExtra(TelephonyIntents.EXTRA_SHOW_PLMN, showPlmn);
             intent.putExtra(TelephonyIntents.EXTRA_PLMN, plmn);
-            intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY, subId[0]);
+            intent.putExtra(PhoneConstants.SUBSCRIPTION_KEY, subId);
             mPhone.getContext().sendStickyBroadcastAsUser(intent, UserHandle.ALL);
         }
 
@@ -1728,7 +1728,7 @@ public class CdmaServiceStateTracker extends ServiceStateTracker {
     }
 
     protected UiccCardApplication getUiccCardApplication() {
-            return  mUiccController.getUiccCardApplication(mPhone.getSubscription(),
+            return  mUiccController.getUiccCardApplication(mPhone.getPhoneId(),
                     UiccController.APP_FAM_3GPP2);
     }
 
