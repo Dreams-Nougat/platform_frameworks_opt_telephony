@@ -206,6 +206,16 @@ UUID: 9c2ba1c2_0c05372f
 Bytes: 14
 same as above.
 
+File: src/java/com/android/internal/telephony/PhoneSubInfoController.java
+
+197:43-197:51
+Thu Mar 13 07:44:19 2014 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9cb9e1da_0461456b
+Bytes: 97
+1.getSimId(subscription) should be getPhoneId(subscription)?
+2.long phoneId should be in phoneId?
+
 File: src/java/com/android/internal/telephony/uicc/IccCardProxy.java
 
 475:61-475:66
