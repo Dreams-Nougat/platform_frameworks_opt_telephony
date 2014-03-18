@@ -23,3 +23,16 @@ So by adding this flag we make behavior similar to that of earlier to API 16 whi
 
 On similar lines i observe that in KK all system/framework level intents like ANR, Alarm etc. are sent with this flag.
 
+351
+Tue Mar 18 01:41:15 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dcf7d997_f92b3a60
+UUID: dcdfd954_97b047d7
+Bytes: 480
+Lets rename this command to CAT_CMD_FOREGROUND_ACTION document that its the commands must be completed in milliseconds and add the FLAG_RECEIVER_FOREGROUND as you've done here.
+
+So we also need to check that commands are process "immediately" and none are blocking. Its internal and used for communication only between CatService and the Application so renaming is "legal" although are you aware of anyone replacing just the StkApp?
+
+
+Another option would be to use startActivity.
+
