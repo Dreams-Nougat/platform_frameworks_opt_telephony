@@ -36,3 +36,15 @@ So we also need to check that commands are process "immediately" and none are bl
 
 Another option would be to use startActivity.
 
+351
+Tue Mar 18 04:16:04 2014 +0000
+Author: Rakesh Pallerla <1021169@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dcdfd954_97b047d7
+UUID: dcb1990e_c214d25f
+Bytes: 227
+Once StkApp receives the commands it sends msg to its handler for further handling. So none are blocking.
+
+I'm not aware of any once replacing just StkApp, but not sure.
+
+Is it not fine if we just add document without renaming?
+
