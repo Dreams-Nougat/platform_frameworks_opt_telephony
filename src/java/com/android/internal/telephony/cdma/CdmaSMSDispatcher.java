@@ -115,7 +115,7 @@ public class CdmaSMSDispatcher extends SMSDispatcher {
             PendingIntent sentIntent, PendingIntent deliveryIntent) {
         SmsMessage.SubmitPdu pdu = SmsMessage.getSubmitPdu(
                 scAddr, destAddr, text, (deliveryIntent != null), null);
-        HashMap map = getSmsTrackerMap(destAddr, scAddr, text, pdu);
+        HashMap map = getSmsTrackerMap(destAddr, scAddr, text, pdu, text, true);
         SmsTracker tracker = getSmsTracker(map, sentIntent,
                 deliveryIntent, getFormat());
         sendSubmitPdu(tracker);
@@ -132,7 +132,8 @@ public class CdmaSMSDispatcher extends SMSDispatcher {
     @Override
     protected void sendNewSubmitPdu(String destinationAddress, String scAddress,
             String message, SmsHeader smsHeader, int encoding,
-            PendingIntent sentIntent, PendingIntent deliveryIntent, boolean lastPart) {
+            PendingIntent sentIntent, PendingIntent deliveryIntent,
+            String fullMessage, boolean lastPart) {
         UserData uData = new UserData();
         uData.payloadStr = message;
         uData.userDataHeader = smsHeader;
@@ -151,7 +152,7 @@ public class CdmaSMSDispatcher extends SMSDispatcher {
                 uData, (deliveryIntent != null) && lastPart);
 
         HashMap map = getSmsTrackerMap(destinationAddress, scAddress,
-                message, submitPdu);
+                message, submitPdu, fullMessage, lastPart);
         SmsTracker tracker = getSmsTracker(map, sentIntent,
                 deliveryIntent, getFormat());
         sendSubmitPdu(tracker);

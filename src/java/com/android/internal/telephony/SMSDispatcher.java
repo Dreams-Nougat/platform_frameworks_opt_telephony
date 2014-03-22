@@ -555,6 +555,9 @@ public abstract class SMSDispatcher extends Handler {
         int msgCount = parts.size();
         int encoding = SmsConstants.ENCODING_UNKNOWN;
 
+        StringBuilder fullMessageBuilder = new StringBuilder();
+        String fullMessage;
+
         mRemainingMessages = msgCount;
 
         TextEncodingDetails[] encodingForParts = new TextEncodingDetails[msgCount];
@@ -566,7 +569,11 @@ public abstract class SMSDispatcher extends Handler {
                 encoding = details.codeUnitSize;
             }
             encodingForParts[i] = details;
+
+            fullMessageBuilder.append(parts.get(i));
         }
+
+        fullMessage = fullMessageBuilder.toString();
 
         for (int i = 0; i < msgCount; i++) {
             SmsHeader.ConcatRef concatRef = new SmsHeader.ConcatRef();
@@ -600,7 +607,7 @@ public abstract class SMSDispatcher extends Handler {
             }
 
             sendNewSubmitPdu(destAddr, scAddr, parts.get(i), smsHeader, encoding,
-                    sentIntent, deliveryIntent, (i == (msgCount - 1)));
+                    sentIntent, deliveryIntent, fullMessage, (i == (msgCount - 1)));
         }
 
     }
@@ -610,7 +617,8 @@ public abstract class SMSDispatcher extends Handler {
      */
     protected abstract void sendNewSubmitPdu(String destinationAddress, String scAddress,
             String message, SmsHeader smsHeader, int encoding,
-            PendingIntent sentIntent, PendingIntent deliveryIntent, boolean lastPart);
+            PendingIntent sentIntent, PendingIntent deliveryIntent,
+            String fullMessage, boolean lastPart);
 
     /**
      * Send a SMS
@@ -1037,20 +1045,28 @@ public abstract class SMSDispatcher extends Handler {
          * Persist this as a sent message
          */
         void writeSentMessage(Context context) {
-            String text = (String)mData.get("text");
-            if (text != null) {
-                boolean deliveryReport = (mDeliveryIntent != null);
-                // Using invalid threadId 0 here. When the message is inserted into the db, the
-                // provider looks up the threadId based on the recipient(s).
-                mSentMessageUri = Sms.addMessageToUri(context.getContentResolver(),
-                        Telephony.Sms.Sent.CONTENT_URI,
-                        mDestAddress,
-                        text /*body*/,
-                        null /*subject*/,
-                        mTimestamp /*date*/,
-                        true /*read*/,
-                        deliveryReport /*deliveryReport*/,
-                        0 /*threadId*/);
+            boolean lastPart = false;
+            if (mData.containsKey("lastPart"))
+                lastPart = (Boolean)mData.get("lastPart");
+            if (lastPart) {
+                // lastPart is true for the last message of a multipart message or for
+                // singlepart messages. We write the message to the log for the last part
+                // and for single messages only.
+                String text = (String)mData.get("fullText");
+                if (text != null) {
+                    boolean deliveryReport = (mDeliveryIntent != null);
+                    // Using invalid threadId 0 here. When the message is inserted into the db, the
+                    // provider looks up the threadId based on the recipient(s).
+                    mSentMessageUri = Sms.addMessageToUri(context.getContentResolver(),
+                            Telephony.Sms.Sent.CONTENT_URI,
+                            mDestAddress,
+                            text /*body*/,
+                            null /*subject*/,
+                            mTimestamp /*date*/,
+                            true /*read*/,
+                            deliveryReport /*deliveryReport*/,
+                            0 /*threadId*/);
+                }
             }
         }
 
@@ -1091,13 +1107,16 @@ public abstract class SMSDispatcher extends Handler {
     }
 
     protected HashMap<String, Object> getSmsTrackerMap(String destAddr, String scAddr,
-            String text, SmsMessageBase.SubmitPduBase pdu) {
+            String text, SmsMessageBase.SubmitPduBase pdu,
+            String fullText, boolean lastPart) {
         HashMap<String, Object> map = new HashMap<String, Object>();
         map.put("destAddr", destAddr);
         map.put("scAddr", scAddr);
         map.put("text", text);
         map.put("smsc", pdu.encodedScAddress);
         map.put("pdu", pdu.encodedMessage);
+        map.put("fullText", fullText);
+        map.put("lastPart", lastPart);
         return map;
     }
 
