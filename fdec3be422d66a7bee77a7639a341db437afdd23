@@ -1,0 +1,11 @@
+Revision: fdec3be422d66a7bee77a7639a341db437afdd23
+Patch-set: 5
+File: src/java/com/android/internal/telephony/uicc/UiccCardApplication.java
+
+195
+Tue Mar 25 23:46:14 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 1c23318f_0e1cafc5
+Bytes: 51
+I think we can get by with package here not public.
+
