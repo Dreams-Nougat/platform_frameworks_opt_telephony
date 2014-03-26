@@ -9,6 +9,14 @@ UUID: 0ad591ff_0f697169
 Bytes: 21
 missing " " before {.
 
+136
+Wed Mar 26 05:51:11 2014 +0000
+Author: David Pursehouse <1015668@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0ad591ff_0f697169
+UUID: fc1f3d43_9e10cd37
+Bytes: 4
+Done
+
 File: tests/telephonymockcmdtests/src/com/android/internal/telephony/FSubmitDeliverTest.java
 
 173
@@ -18,12 +26,28 @@ UUID: 0ad591ff_2f99d562
 Bytes: 47
 comment should be "waiting for a special state"
 
+173
+Wed Mar 26 05:51:11 2014 +0000
+Author: David Pursehouse <1015668@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0ad591ff_2f99d562
+UUID: 1c23318f_7ff6af70
+Bytes: 4
+Done
+
 186
 Thu Jun 20 15:51:13 2013 +0000
 Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 0ad591ff_4f9e194c
 Bytes: 54
 comment should be "waiting for a RIL API to be called"
+
+186
+Wed Mar 26 05:51:11 2014 +0000
+Author: David Pursehouse <1015668@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0ad591ff_4f9e194c
+UUID: dc1c3954_ddb24bc8
+Bytes: 4
+Done
 
 File: tests/telephonymockcmdtests/src/com/android/internal/telephony/cdma/FCdmaPhoneCallTest.java
 
@@ -34,12 +58,28 @@ UUID: 0ad591ff_cfa9496d
 Bytes: 29
 "waiting for a special state"
 
+84
+Wed Mar 26 05:51:11 2014 +0000
+Author: David Pursehouse <1015668@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0ad591ff_cfa9496d
+UUID: 1c23318f_1f169bd6
+Bytes: 4
+Done
+
 97
 Thu Jun 20 15:51:13 2013 +0000
 Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 0ad591ff_efb60dc8
 Bytes: 30
 "waiting for the message only"
+
+97
+Wed Mar 26 05:51:11 2014 +0000
+Author: David Pursehouse <1015668@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0ad591ff_efb60dc8
+UUID: fc1f3d43_7e2cf179
+Bytes: 4
+Done
 
 110
 Thu Jun 20 15:51:13 2013 +0000
@@ -48,12 +88,32 @@ UUID: 0ad591ff_0fb411be
 Bytes: 32
 "Wait for the current thread..."
 
+110
+Wed Mar 26 05:51:11 2014 +0000
+Author: David Pursehouse <1015668@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0ad591ff_0fb411be
+UUID: fc1f3d43_1e25bd8f
+Bytes: 90
+"Wait for the current thread..." doesn't make sense either.
+
+Removed "the current thread".
+
 121
 Thu Jun 20 15:51:13 2013 +0000
 Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 0ad591ff_4fc53936
 Bytes: 32
 "Wait for the current thread..."
+
+121
+Wed Mar 26 05:51:11 2014 +0000
+Author: David Pursehouse <1015668@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0ad591ff_4fc53936
+UUID: fc1f3d43_3e227988
+Bytes: 90
+"Wait for the current thread..." doesn't make sense either.
+
+Removed "the current thread".
 
 File: tests/telephonymockcmdtests/src/com/android/internal/telephony/test/MockCommands.java
 
@@ -64,6 +124,14 @@ UUID: 0ad591ff_8fbf4198
 Bytes: 102
 "don't care which order" or "don't care about the order" would sound a little more natural in English.
 
+1006
+Wed Mar 26 05:51:11 2014 +0000
+Author: David Pursehouse <1015668@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0ad591ff_8fbf4198
+UUID: fc1f3d43_9e37edc1
+Bytes: 4
+Done
+
 File: tests/telephonymockcmdtests/src/com/android/internal/telephony/test/SimulatedCdmaCallState.java
 
 48
@@ -73,6 +141,14 @@ UUID: 0ad591ff_afd325fd
 Bytes: 19
 extra " " before (.
 
+48
+Wed Mar 26 05:51:11 2014 +0000
+Author: David Pursehouse <1015668@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0ad591ff_afd325fd
+UUID: 1c23318f_5f1013d8
+Bytes: 4
+Done
+
 File: tests/telephonymockcmdtests/src/com/android/internal/telephony/test/TelephonyTestExecutor.java
 
 43
@@ -81,4 +157,12 @@ Author: Jake Hamby <1003544@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 0ad591ff_cfd069f3
 Bytes: 345
 Should be either "Create and hold" or "Creates and holds". The first form is a command (the subject "you" is implied) and the second is a statement about a third person ("this thread" is implied). Either form describes the same behavior, but the important thing to be grammatically correct is to use the same form for both verbs in the sentence.
+
+43
+Wed Mar 26 05:51:11 2014 +0000
+Author: David Pursehouse <1015668@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0ad591ff_cfd069f3
+UUID: dc1c3954_9dcff348
+Bytes: 4
+Done
 
