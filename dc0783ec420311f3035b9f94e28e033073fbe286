@@ -1,0 +1,18 @@
+Revision: dc0783ec420311f3035b9f94e28e033073fbe286
+Patch-set: 2
+File: /COMMIT_MSG
+
+7
+Fri Apr 04 15:28:59 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 19c5035d_a4ceecf6
+Bytes: 57
+When Data RAT changes the new RAT retry connectable APN's
+
+9
+Fri Apr 04 15:28:59 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 39c80775_b0ed48a2
+Bytes: 42
+Please, change comment to be < 80 columns.
+
