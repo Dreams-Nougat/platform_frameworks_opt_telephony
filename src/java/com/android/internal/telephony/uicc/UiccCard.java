@@ -347,6 +347,13 @@ public class UiccCard {
         }
     }
 
+    /**
+     * Exposes {@link CommandsInterface.sendEnvelopeWithStatus}
+     */
+    public void sendEnvelopeWithStatus(String contents, Message response) {
+        mCi.sendEnvelopeWithStatus(contents, response);
+    }
+
     private void log(String msg) {
         Rlog.d(LOG_TAG, msg);
     }
