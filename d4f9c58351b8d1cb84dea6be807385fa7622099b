@@ -1,0 +1,11 @@
+Revision: d4f9c58351b8d1cb84dea6be807385fa7622099b
+Base-for-patch-set: 1
+File: src/java/com/android/internal/telephony/IccProvider.java
+
+227
+Tue Apr 08 21:19:08 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 39d4872d_10533c35
+Bytes: 85
+So what if number is empty what is deleteIccRecordFromEf going to do, will it delete?
+
