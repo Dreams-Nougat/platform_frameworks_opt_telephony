@@ -1,0 +1,11 @@
+Revision: ace63f55685147ff56cd2a7554dc53845c89dadc
+Patch-set: 1
+File: src/java/com/android/internal/telephony/sip/SipPhone.java
+
+334
+Tue Apr 08 21:14:19 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 590dbbba_908a9a54
+Bytes: 39
+Should we do everything this TODO says?
+
