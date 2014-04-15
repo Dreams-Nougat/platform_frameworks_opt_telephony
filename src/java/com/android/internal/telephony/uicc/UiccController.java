@@ -79,6 +79,7 @@ public class UiccController extends Handler {
 
     private static final int EVENT_ICC_STATUS_CHANGED = 1;
     private static final int EVENT_GET_ICC_STATUS_DONE = 2;
+    private static final int EVENT_RADIO_AVAILABLE = 3;
 
     private static final Object mLock = new Object();
     private static UiccController mInstance;
@@ -86,6 +87,7 @@ public class UiccController extends Handler {
     private Context mContext;
     private CommandsInterface mCi;
     private UiccCard mUiccCard;
+    private static boolean mBootedAndFirstRadioAvailableReceived = false;
 
     private RegistrantList mIccChangedRegistrants = new RegistrantList();
 
@@ -181,6 +183,13 @@ public class UiccController extends Handler {
                     AsyncResult ar = (AsyncResult)msg.obj;
                     onGetIccCardStatusDone(ar);
                     break;
+                case EVENT_RADIO_AVAILABLE:
+                    if (DBG) log("Received EVENT_RADIO_AVAILABLE, calling getIccCardStatus");
+                    if (mBootedAndFirstRadioAvailableReceived == false) {
+                        mCi.getIccCardStatus(obtainMessage(EVENT_GET_ICC_STATUS_DONE));
+                        mBootedAndFirstRadioAvailableReceived = true;
+                    }
+                    break;
                 default:
                     Rlog.e(LOG_TAG, " Unknown Event " + msg.what);
             }
@@ -193,7 +202,7 @@ public class UiccController extends Handler {
         mCi = ci;
         mCi.registerForIccStatusChanged(this, EVENT_ICC_STATUS_CHANGED, null);
         // This is needed so that we query for sim status in the case when we boot in APM
-        mCi.registerForAvailable(this, EVENT_ICC_STATUS_CHANGED, null);
+        mCi.registerForAvailable(this, EVENT_RADIO_AVAILABLE, null);
     }
 
     private synchronized void onGetIccCardStatusDone(AsyncResult ar) {
