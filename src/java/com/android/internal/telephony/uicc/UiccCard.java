@@ -72,6 +72,7 @@ public class UiccCard {
     private CatService mCatService;
     private boolean mDestroyed = false; //set to true once this card is commanded to be disposed of.
     private RadioState mLastRadioState =  RadioState.RADIO_UNAVAILABLE;
+    private AlertDialog mDialog = null;
 
     private RegistrantList mAbsentRegistrants = new RegistrantList();
 
@@ -228,6 +229,14 @@ public class UiccCard {
     }
 
     private void onIccSwap(boolean isAdded) {
+        Resources r = Resources.getSystem();
+        boolean isSwapSupported = r.getBoolean(R.bool.config_sim_hotswap_supported);
+
+        if (isAdded && isSwapSupported) {
+            if (mDialog != null) mDialog.dismiss();
+            return;
+        }
+
         synchronized (mLock) {
             // TODO: Here we assume the device can't handle SIM hot-swap
             //      and has to reboot. We may want to add a property,
@@ -239,36 +248,38 @@ public class UiccCard {
             // TODO: SimRecords is not reset while SIM ABSENT (only reset while
             //       Radio_off_or_not_available). Have to reset in both both
             //       added or removed situation.
-            listener = new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    synchronized (mLock) {
-                        if (which == DialogInterface.BUTTON_POSITIVE) {
-                            if (DBG) log("Reboot due to SIM swap");
-                            PowerManager pm = (PowerManager) mContext
+            if (isSwapSupported == false) {
+                listener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        synchronized (mLock) {
+                            if (which == DialogInterface.BUTTON_POSITIVE) {
+                                if (DBG) log("Reboot due to SIM swap");
+                                PowerManager pm = (PowerManager) mContext
                                     .getSystemService(Context.POWER_SERVICE);
-                            pm.reboot("SIM is added.");
+                                pm.reboot("SIM is added.");
+                            }
                         }
                     }
-                }
+                };
+            }
 
-            };
-
-            Resources r = Resources.getSystem();
 
             String title = (isAdded) ? r.getString(R.string.sim_added_title) :
                 r.getString(R.string.sim_removed_title);
             String message = (isAdded) ? r.getString(R.string.sim_added_message) :
+                (isSwapSupported) ? r.getString(R.string.sim_removed_message_hotswap) :
                 r.getString(R.string.sim_removed_message);
-            String buttonTxt = r.getString(R.string.sim_restart_button);
+            String buttonTxt = (isSwapSupported) ? r.getString(R.string.ok):
+                r.getString(R.string.sim_restart_button);
 
-            AlertDialog dialog = new AlertDialog.Builder(mContext)
+             mDialog = new AlertDialog.Builder(mContext)
             .setTitle(title)
             .setMessage(message)
             .setPositiveButton(buttonTxt, listener)
             .create();
-            dialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
-            dialog.show();
+            mDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
+            mDialog.show();
         }
     }
 
