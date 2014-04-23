@@ -19,3 +19,11 @@ We can take off the argument and leave the rest of the TODO.
 
 Since this was your original comment, can you pls complete it accordingly (since it has audio changes and we dont have all the audio tests in our group)?
 
+334
+Wed Apr 23 23:10:25 2014 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 856c27f2_14ccec68
+UUID: 85cb4765_62c5b63f
+Bytes: 155
+It looks we shouldn't rename as this now is more obviously echo suppression. So if we remove the conditional I think we can remove this TODO, do you agree?
+
