@@ -1,0 +1,11 @@
+Revision: 63b5116fa18bf4abfbae6cade5eea0e9df7266f8
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/SIMRecords.java
+
+233:15-233:19
+Fri Apr 25 07:23:35 2014 +0000
+Author: Arun Ravindran <1012468@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 65c57378_19200bb6
+Bytes: 140
+There was a suggestion from wink to try a different method by resetting the mSpn in the dispose() of IccRecords. We will upload a new patch.
+
