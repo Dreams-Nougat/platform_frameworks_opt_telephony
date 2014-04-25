@@ -13,6 +13,31 @@ In AOSP, on radio available, we query sim status. This could be a redundant quer
 
 Am I missing something?
 
+0
+Fri Apr 25 22:25:38 2014 +0000
+Author: Abhishek Adappa <1023068@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: a593eb68_45f28ec0
+UUID: c5fb7fcc_a40d620a
+Bytes: 783
+I looked at the logs (bugreport-2014-04-17-20-45-11) associated with the bug and I see that the modem is frequently reporting the card state from absent to error to absent.
+
+We should probably investigate the cause for why the modem is doing that. 
+
+Even if the modem does that, I think we could fix the problem of the annoying prompts by fixing the condition in UiccCard.java.
+
+Currently it checks for the following:
+ if (oldState != CardState.CARDSTATE_ABSENT &&
+          mCardState == CardState.CARDSTATE_ABSENT) {
+    // prompt card removed
+ 
+  } else if (oldState == CardState.CARDSTATE_ABSENT &&
+          mCardState != CardState.CARDSTATE_ABSENT) {
+     // prompt card inserted
+  }
+
+
+Instead we could use the transition from ABSENT to PRESENT to mean inserted and vice versa.
+
 178:21-178:45
 Fri Apr 25 15:54:10 2014 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
