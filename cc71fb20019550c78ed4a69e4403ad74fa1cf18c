@@ -38,10 +38,50 @@ Currently it checks for the following:
 
 Instead we could use the transition from ABSENT to PRESENT to mean inserted and vice versa.
 
+0
+Mon Apr 28 00:06:22 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: c5fb7fcc_a40d620a
+UUID: 4516afdd_3bd643fa
+Bytes: 2291
+I expect to reduce the annoying "SIM card added" message when the modem crash occurred.
+The modem will return the actual card state, but it's so fast when the mode is restarting.
+When the device powering up, it takes enough time to recognize the card because the android system takes time to initialize. However, the modem restarting time, it is not enough to recognize the SIM card or update the actual SIM state to the RIL layer. See below a snippet of "SIM card added" bugreports.
+
+  <6>[27567.073126] subsys-restart: subsystem_shutdown(): [e26ed000]: Shutting down modem
+  <6>[27567.206304] PM: suspend exit 2014-04-25 17:19:19.239031784 UTC
+  04-25 19:19:24.245  1268  1380 D RILJ    : [UNSL]< UNSOL_RESPONSE_RADIO_STATE_CHANGED RADIO_OFF
+  04-25 19:19:24.245  1268  1268 D RILJ    : [6606]> GET_SIM_STATUS
+  04-25 19:19:24.255  1268  1380 D RILJ    : [6606]< GET_SIM_STATUS IccCardState {CARDSTATE_ABSENT,PINSTATE_UNKNOWN,num_apps=0,gsm_id=-1,cdma_id=-1,ims_id=-1}
+  04-25 19:19:24.285  1268  1268 D UiccCard: update: radioState=RADIO_OFF mLastRadioState=RADIO_ON
+  04-25 19:19:25.705  1268  1380 D RILJ    : [UNSL]< UNSOL_RESPONSE_RADIO_STATE_CHANGED RADIO_ON
+  04-25 19:19:25.725  1268  1268 D RILJ    : [6615]> GET_SIM_STATUS
+  04-25 19:19:25.745  1268  1380 D RILJ    : [6615]< GET_SIM_STATUS IccCardState {CARDSTATE_ABSENT,PINSTATE_UNKNOWN,num_apps=0,gsm_id=-1,cdma_id=-1,ims_id=-1}
+  04-25 19:19:25.765  1268  1268 D UiccCard: update: radioState=RADIO_ON mLastRadioState=RADIO_OFF
+  04-25 19:19:25.835  1268  1380 D RILJ    : [UNSL]< UNSOL_RESPONSE_SIM_STATUS_CHANGED
+  04-25 19:19:25.835  1268  1268 D RILJ    : [6624]> GET_SIM_STATUS
+  04-25 19:19:25.835  1268  1380 D RILJ    : [6624]< GET_SIM_STATUS IccCardState {CARDSTATE_PRESENT,PINSTATE_UNKNOWN,num_apps=1,gsm_id=0{APPTYPE_USIM,APPSTATE_SUBSCRIPTION_PERSO,PERSOSUBSTATE_UNKNOWN,pin1=PINSTATE_ENABLED_VERIFIED,pin2=PINSTATE_ENABLED_NOT_VERIFIED},cdma_id=-1,ims_id=-1}
+  04-25 19:19:25.835  1268  1268 D UiccCard: update: radioState=RADIO_ON mLastRadioState=RADIO_ON
+  04-25 19:19:25.835  1268  1268 D UiccCard: update: notify card added
+
+The second "GET_SIM_STATUS" called by unsolicited radio event, RADIO_ON.
+We could find that the card state is absent.
+After about 100 miliseconds, the modem reported something changed.
+
 178:21-178:45
 Fri Apr 25 15:54:10 2014 +0000
 Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 05767712_8633aa2f
 Bytes: 69
 Should we ignore this event if mFirstRadioAvailabeReceived == false ?
+
+178:21-178:45
+Mon Apr 28 00:06:22 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 05767712_8633aa2f
+UUID: 4516afdd_7b059bdb
+Bytes: 184
+No. this event should not be ignored.
+This event is issued by modem changing.
+I expect that forced updating does not occur after the radio state changing. We should process this event.
 
