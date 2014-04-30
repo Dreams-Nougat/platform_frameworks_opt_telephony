@@ -283,10 +283,16 @@ public class UiccCard {
 
             switch (msg.what) {
                 case EVENT_CARD_REMOVED:
-                    onIccSwap(false);
+                    if (!mContext.getResources().getBoolean(
+                            com.android.internal.R.bool.config_simhotswap)) {
+                        onIccSwap(false);
+                    }
                     break;
                 case EVENT_CARD_ADDED:
-                    onIccSwap(true);
+                    if (!mContext.getResources().getBoolean(
+                            com.android.internal.R.bool.config_simhotswap)) {
+                        onIccSwap(true);
+                    }
                     break;
                 default:
                     loge("Unknown Event " + msg.what);
