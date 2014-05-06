@@ -194,6 +194,31 @@ class LanguageResponseData extends ResponseData {
     }
 }
 
+/* For "PROVIDE LOCAL INFORMATION"
+ * current Network Search Mode command.
+ * See TS 31.111 section 6.4.15/ETSI TS 102 223
+ * TS 31.124 section 27.22.4.15 for test spec
+ */
+class NetworkSearchModeResponseData extends ResponseData {
+     // members
+     private int mode;
+
+     public NetworkSearchModeResponseData(int mode) {
+         super();
+         this.mode = mode;
+     }
+
+     @Override
+     public void format(ByteArrayOutputStream buf) {
+         // Network search object
+         int tag = ComprehensionTlvTag.NETWORK_SEARCH_MODE.value();
+         buf.write(tag); // tag
+         buf.write(1); // length
+         // Current network search mode value. (01=auto, 00=manual)
+         buf.write(mode);
+     }
+}
+
 // For "PROVIDE LOCAL INFORMATION" command.
 // See TS 31.111 section 6.4.15/ETSI TS 102 223
 // TS 31.124 section 27.22.4.15 for test spec
