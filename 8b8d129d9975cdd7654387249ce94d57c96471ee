@@ -1,0 +1,12 @@
+Revision: 8b8d129d9975cdd7654387249ce94d57c96471ee
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/RuimRecords.java
+
+265:8-265:77
+Wed May 07 12:47:09 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6a346007_9195b1ee
+Bytes: 107
+The mImsi from decodeImsi() does not support 3rd digit of MNC, doesn't it?
+So, we need to change this code.
+
