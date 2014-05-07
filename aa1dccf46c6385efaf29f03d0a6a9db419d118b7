@@ -17,3 +17,12 @@ UUID: 61e71d95_2209ceb1
 Bytes: 21
 Yes that can be done.
 
+214
+Wed May 07 12:58:14 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 61e71d95_2209ceb1
+UUID: 6a346007_518b29c7
+Bytes: 143
+Seen from my experience, we could not 3rd digit of MNC from CSIM.
+we need to check that it works properly before renaming getOperatorNumeric().
+
