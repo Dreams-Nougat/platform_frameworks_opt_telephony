@@ -19,6 +19,7 @@ package com.android.internal.telephony.gsm;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.database.SQLException;
 import android.net.Uri;
 import android.os.AsyncResult;
@@ -1311,6 +1312,7 @@ public class GSMPhone extends PhoneBase {
                     storeVoiceMailNumber(mVmNumber);
                     ar.exception = null;
                 }
+
                 onComplete = (Message) ar.userObj;
                 if (onComplete != null) {
                     AsyncResult.forMessage(onComplete, ar.result, ar.exception);
