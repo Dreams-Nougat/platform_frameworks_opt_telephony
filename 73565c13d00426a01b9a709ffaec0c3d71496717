@@ -10,3 +10,14 @@ Bytes: 247
 SIM is related to choose proper resource. See alternative resource which contains mcc/mnc identifier. Therefore I think we need to send onConfigurationChange at Hot SIM swap.
 I searched this related by the change-ID but I couldn't. Do you have it?
 
+265
+Wed May 07 11:20:56 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 6a346007_7bb1ece5
+UUID: 6a346007_11b7e1c5
+Bytes: 350
+I think that it is not easy to decide whether we should add it or not.
+I don't want to be changed my configuration when I insert my family's SIM or pre-paid local SIM. ;) Of course, there will be something to be changed. But, we need to check whether those have already been performed or not when SIM is loading.
+
+Could you explain what I am missing?
+
