@@ -21,3 +21,38 @@ I don't want to be changed my configuration when I insert my family's SIM or pre
 
 Could you explain what I am missing?
 
+265
+Thu May 08 07:56:34 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 6a346007_11b7e1c5
+UUID: 8afd1475_86f61ab2
+Bytes: 2209
+In my hotswap supported device, the some configuration is changing according the SIM card. 
+
+
+  05-07 21:40:18.440 D/MccTable( 1013): updateMccMncConfiguration: mcc=310, mnc=120
+  05-07 21:40:18.440 D/MccTable( 1013): getLocaleFromMcc to en_us mcc=310
+  05-07 21:40:18.440 D/MccTable( 1013): getLocaleForLanguageCountry: skipping already persisted
+  05-07 21:40:18.440 D/MccTable( 1013): getLocaleForLanguageCountry: X locale=null
+  05-07 21:40:18.440 D/MccTable( 1013): updateMccMncConfiguration updateConfig config={1.0 310mcc120mnc ?locale ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/?}
+  
+  05-07 21:40:43.140 D/RILJ    ( 1013): [UNSL]< UNSOL_RESPONSE_SIM_STATUS_CHANGED
+  05-07 21:40:43.140 D/RILJ    ( 1013): [3758]> GET_SIM_STATUS
+  05-07 21:40:43.140 D/RILJ    ( 1013): [3758]< GET_SIM_STATUS IccCardState {CARDSTATE_ABSENT,PINSTATE_UNKNOWN,num_apps=0,gsm_id=-1,cdma_id=-1,ims_id=-1}
+  
+  05-07 21:40:57.949 D/RILJ    ( 1013): [UNSL]< UNSOL_RESPONSE_SIM_STATUS_CHANGED
+  05-07 21:40:57.979 D/RILJ    ( 1013): [3803]> GET_SIM_STATUS
+  05-07 21:40:57.989 D/RILJ    ( 1013): [3803]< GET_SIM_STATUS IccCardState {CARDSTATE_PRESENT,PINSTATE_UNKNOWN,num_apps=2,gsm_id=0{APPTYPE_USIM,APPSTATE_DETECTED,pin1=PINSTATE_UNKNOWN,pin2=PINSTATE_UNKNOWN},cdma_id=-1,ims_id=-1}
+  05-07 21:41:01.949 D/SIMRecords( 1013): [SIMRecords] fetchSimRecords 0
+  05-07 21:41:01.949 D/RILJ    ( 1013): [3842]> getIMSI: GET_IMSI aid: a0000000871002ffffffff8903020000
+  05-07 21:41:02.009 D/SIMRecords( 1013): [SIMRecords] IMSI: xxxxxxx
+  
+  05-07 21:41:02.939 D/MccTable( 1013): updateMccMncConfiguration: mcc=310, mnc=410
+  05-07 21:41:02.949 D/MccTable( 1013): getLocaleFromMcc to en_us mcc=310
+  05-07 21:41:02.949 D/MccTable( 1013): getLocaleForLanguageCountry: skipping already persisted
+  05-07 21:41:02.949 D/MccTable( 1013): getLocaleForLanguageCountry: X locale=null
+  05-07 21:41:02.949 D/MccTable( 1013): updateMccMncConfiguration updateConfig config={1.0 310mcc410mnc ?locale ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/?}
+  
+
+In my opinion, if we need to add something at this time, it should be explained more detail.
+
