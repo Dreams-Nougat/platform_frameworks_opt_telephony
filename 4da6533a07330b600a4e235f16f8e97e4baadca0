@@ -9,6 +9,23 @@ UUID: dcf7d997_11270c45
 Bytes: 121
 Can we add a String of PendingMessages for applications necessary propose. PendingMessage.SUB_ID  = ”pending_sub_id”.
 
+File: src/java/com/android/internal/telephony/CardSubscriptionManager.java
+
+298
+Fri May 09 07:33:31 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8a999485_06008aca
+Bytes: 104
+We should consider the Airplane mode. Some carrier want not to deactivate the SIM card on Airplane mode.
+
+643
+Fri May 09 07:33:31 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2aa8a88f_a30892f6
+Bytes: 125
+We should consider the Airplane mode.
+mRadioOn should change as mRadioUnavailable because we need to access on Airplane mode.
+
 File: src/java/com/android/internal/telephony/cat/CatService.java
 
 626:8-626:29
