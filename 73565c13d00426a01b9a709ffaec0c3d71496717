@@ -56,3 +56,13 @@ In my hotswap supported device, the some configuration is changing according the
 
 In my opinion, if we need to add something at this time, it should be explained more detail.
 
+265
+Mon May 12 04:46:11 2014 +0000
+Author: Hidenori Yamaji <1004248@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8afd1475_86f61ab2
+UUID: aa4d7811_3eb70574
+Bytes: 260
+We need to confirm not only the case to insert but also the case to eject.
+
+When SIM is ejected, onConfigurationChange is needed to invoke. And Mcc/Mnc=0 is expected according to http://developer.android.com/reference/android/content/res/Configuration.html#mcc
+
