@@ -32,6 +32,7 @@ import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.MccTable;
 import com.android.internal.telephony.SmsConstants;
 import com.android.internal.telephony.gsm.SimTlv;
+import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppState;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -158,7 +159,7 @@ public class SIMRecords extends IccRecords {
     private static final int EVENT_GET_CFIS_DONE = 32;
     private static final int EVENT_GET_CSP_CPHS_DONE = 33;
     private static final int EVENT_GET_GID1_DONE = 34;
-
+    private static final int EVENT_ICC_LOCKED = 35;
     // Lookup table for carriers known to produce SIMs which incorrectly indicate MNC length.
 
     private static final String[] MCCMNC_CODES_HAVING_3DIGITS_MNC = {
@@ -202,6 +203,7 @@ public class SIMRecords extends IccRecords {
         // Start off by setting empty state
         resetRecords();
         mParentApp.registerForReady(this, EVENT_APP_READY, null);
+        mParentApp.registerForLocked(this, EVENT_ICC_LOCKED, null);
         if (DBG) log("SIMRecords X ctor this=" + this);
     }
 
@@ -212,6 +214,7 @@ public class SIMRecords extends IccRecords {
         mCi.unregisterForIccRefresh(this);
         mCi.unSetOnSmsOnSim(this);
         mParentApp.unregisterForReady(this);
+        mParentApp.unregisterForLocked(this);
         resetRecords();
         super.dispose();
     }
@@ -576,6 +579,17 @@ public class SIMRecords extends IccRecords {
         try { switch (msg.what) {
             case EVENT_APP_READY:
                 onReady();
+                break;
+
+            case EVENT_ICC_LOCKED:
+                // resetRecords essentially for setting mRecordsRequested to false. This
+                // will prevent sending the recordsloaded event. Records will be requested
+                // again on app ready.
+                AppState currAppState = mParentApp.getState();
+                AppState previousAppState = mParentApp.getPreviousState();
+                if (previousAppState.isAppReady() && currAppState.isPukRequired()) {
+                    resetRecords();
+                }
                 break;
 
             /* IO events */
