@@ -17,3 +17,17 @@ This change concatenates the records so the results are correct when there are m
 
 Should check if the number of records match the "reference/master" files?
 
+9:0-19:5
+Tue May 13 10:57:43 2014 +0000
+Author: Jeevaka Prabu Badrappan <1010938@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: aa4d7811_24f2987c
+UUID: aa26584d_597c633f
+Bytes: 662
+As per 3GPP TS 31.102 section 4.4.2.1	EFPBR (Phone Book Reference file), 
+Type 1 files: Files that contain as many records as the reference/master file (EFADN, EFADN1) and are linked on record number bases (Rec1 -> Rec1). The master file record number is the reference.
+Type 2 files:	Files that contain less entries than the master file and are linked via pointers in the index administration file (EFIAP).
+
+EFiap is a Type 1 file. EFemail can be a Type 1 or Type 2 file. With this patch, all EFiap and EFemail records are added to the list instead of only 1.
+
+No need to check as the error cases had been already taken care by catching IndexOutOfBoundsException
+
