@@ -31,3 +31,14 @@ EFiap is a Type 1 file. EFemail can be a Type 1 or Type 2 file. With this patch,
 
 No need to check as the error cases had been already taken care by catching IndexOutOfBoundsException
 
+9:0-19:5
+Wed May 14 07:38:50 2014 +0000
+Author: Jeevaka Prabu Badrappan <1010938@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: aa26584d_597c633f
+UUID: 8a08b4da_da324516
+Bytes: 305
+eg:
+If there are 2 EFadn files with 250records in each file, then there will be 2EFiap files with 250records in each file. With out the changes in this patch, 2nd files records will override the 1st files records stored in mIapFileRecord.
+
+Same applies to mEmailFileRecord if the EFemail is a Type 1 file.
+
