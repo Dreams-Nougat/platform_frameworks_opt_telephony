@@ -66,3 +66,13 @@ We need to confirm not only the case to insert but also the case to eject.
 
 When SIM is ejected, onConfigurationChange is needed to invoke. And Mcc/Mnc=0 is expected according to http://developer.android.com/reference/android/content/res/Configuration.html#mcc
 
+265
+Wed May 14 12:51:55 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: aa4d7811_3eb70574
+UUID: ea9db0d4_1c15e157
+Bytes: 785
+You mean that mcc/mnc should be reset when the card is removed? If it makes some problem, it  seems to be a problem regardless  supporting hot swap. Is there any reason that it is only happend when hot-swap supporting?
+
+Also, I think that the point of the SIM hot swap is the processing the change of the SIM, not a removing. I don't think that they remove the card to reset the configuration or to protect their private information. They will remove the card to insert another card or to use it on other device. There are some settings which should be kept regardless the card removed. For example, the volume limitation in EU and the camera shutter sound in Korea. So, we should change it at the card insertion time if some configuration should be changed according to inserted card.
+
