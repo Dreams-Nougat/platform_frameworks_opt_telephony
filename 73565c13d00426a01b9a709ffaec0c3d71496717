@@ -136,3 +136,15 @@ Please note that system will restart when SIM is ejected in case of no-hot-swap-
 
 What do you think?
 
+265
+Thu May 15 10:36:21 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 6a3700c4_a9f0fdb8
+UUID: 0a78446e_50e0f4a9
+Bytes: 427
+Thanks for your explain. I have a question.
+As you mentioned, when customer ejects SIM, onConfigurationChanged is not called.
+It means that the configuration_changed event is not occurred.
+So, how can the Activity know that user ejects SIM and restart the activity?
+If the customer ejects SIM and  he/she does not insert the card anymore until power off, is some activity killed and can not be restarted on non-hot-swap device?
+
