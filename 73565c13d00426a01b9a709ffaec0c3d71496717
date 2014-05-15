@@ -103,3 +103,12 @@ So it's different topic of this.
 
 Again, we need to keep behavior for application, I think.
 
+265
+Thu May 15 02:40:33 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ca71cc8d_dd9c1f60
+UUID: 0a78446e_6a697fc3
+Bytes: 186
+I'm little confused.
+We need to keep behavior for application, so, we don't need to reset mcc/mnc when the card removed. So, I don't understand why we need to call onConfigurationChaned.
+
