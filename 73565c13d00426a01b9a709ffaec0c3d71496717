@@ -112,3 +112,27 @@ Bytes: 186
 I'm little confused.
 We need to keep behavior for application, so, we don't need to reset mcc/mnc when the card removed. So, I don't understand why we need to call onConfigurationChaned.
 
+265
+Thu May 15 02:52:39 2014 +0000
+Author: Hidenori Yamaji <1004248@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0a78446e_6a697fc3
+UUID: 6a3700c4_a9f0fdb8
+Bytes: 1233
+The onConfigurationChanged is general mechanism to notice condition change to application.
+
+And as you explain in this thread, when customer inserts SIM, onConfiguratiunChanged will be called. But when customer ejects SIM, it is not called.
+
+That's problem.
+
+Handling onConfigurationChanged by application is used by application to avoid killing application.
+
+As you may know, without handler of onConfigurationChanged, Android will kill the application and restart the activity with the resource choosing mechanism by the device condition.
+
+And with handler of onConfigurationChanged, application has responsibility to load proper resource, instead of restarting the activity to execute with proper resource.
+
+Getting back to the topic, if onConfigurationChanged with mnc/mcc=0 is not invoked when SIM is ejected, application cannot load proper resource for no SIM condition. That's why I suggest to add some modification for your identified issue.
+
+Please note that system will restart when SIM is ejected in case of no-hot-swap-device. And then there is no issue not to invoke onConfigurationChanged in current vanilla code. But this commit will introduce hot swap functionality, then we need to solve the gap.
+
+What do you think?
+
