@@ -76,3 +76,30 @@ You mean that mcc/mnc should be reset when the card is removed? If it makes some
 
 Also, I think that the point of the SIM hot swap is the processing the change of the SIM, not a removing. I don't think that they remove the card to reset the configuration or to protect their private information. They will remove the card to insert another card or to use it on other device. There are some settings which should be kept regardless the card removed. For example, the volume limitation in EU and the camera shutter sound in Korea. So, we should change it at the card insertion time if some configuration should be changed according to inserted card.
 
+265
+Thu May 15 02:05:53 2014 +0000
+Author: Hidenori Yamaji <1004248@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ea9db0d4_1c15e157
+UUID: ca71cc8d_dd9c1f60
+Bytes: 942
+As you know, Android has a mechanism to choose proper resource for application. And the mechanism uses various device condition. And one of device condition is mcc/mnc.
+
+Therefore if the mnc/mcc is not reset when customer ejects sim, application is working in the previous condition.
+
+And mcc/mnc is decided to each operator.
+Some of application uses the mnc/mcc identifier to work for the condition.
+
+Therefore we need to keep system behavior in case of hot swap supported device.
+
+What do you think?
+
+
+Regarding example of camera shutter sound, basically it is better not to depend on mcc/mnc. Although AOSP vanilla code to use mnc/mcc to switch shutter sound, we should use hardcode if the requirement is strict.
+
+Because after inserting another SIM, the device may not play shutter sound.
+
+And it is same on WiFi only device; such as WiFi Tablet.
+So it's different topic of this.
+
+Again, we need to keep behavior for application, I think.
+
