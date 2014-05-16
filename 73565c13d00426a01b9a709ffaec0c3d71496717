@@ -190,3 +190,16 @@ Bytes: 446
 For calling onConfigurationChanged, configuration_chaned should be issued. If we change it, system will kill the activity for changing configuration. Why we should change to issue configuration_change for killing the activity and then we also should add another code to avoid the killing the activity?
 Already there is not issued configuration_chaned and the activity does not know the card ejection. Also, the activity is keeping their behavior.
 
+265
+Fri May 16 04:23:34 2014 +0000
+Author: Hidenori Yamaji <1004248@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ca71cc8d_a9f47bf7
+UUID: 6a4e2058_08f3a955
+Bytes: 411
+You may misunderstand...
+
+From application perspective, killing it without handling onConfigurationChanged is natural. And expectation of case to handle onConfigurationChanged is invoking onConfigurationChanged.
+
+That's system's behavior to application.
+What you should do is NOT to invoke onConfigurationChanged directly. You need to add implementation to notice configuration change to system after mnc/mcc=0.
+
