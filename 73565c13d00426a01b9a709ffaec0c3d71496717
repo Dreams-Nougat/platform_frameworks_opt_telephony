@@ -203,3 +203,46 @@ From application perspective, killing it without handling onConfigurationChanged
 That's system's behavior to application.
 What you should do is NOT to invoke onConfigurationChanged directly. You need to add implementation to notice configuration change to system after mnc/mcc=0.
 
+265
+Fri May 16 07:30:48 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 6a4e2058_08f3a955
+UUID: 6a4e2058_ced52956
+Bytes: 1412
+In my understand...
+
+you requested the application should know the MCC/MNC is changed caused of the card rejection.
+
+So, I asked why it is needed to change because the application should be keeping their behaviour.
+
+You answered that the activity will be killed for changing proper resource(mcc 0 mnc 0) without handling onConfigurationChanged.
+
+I explained that the system will not restart and that the mcc/mnc change is not notified.
+
+It means that the resource is not changed. So, I think there is no problem regardless supporting hot-swap.
+
+However, you want that the mcc/mnc change is notified for the application to handle it and to keep their behavior.
+
+ 
+Is there what I misunderstand or missing?
+ 
+
+It is better that the change of the card status is notified to applications for handling their own onConfigurationChanged.
+
+It is good perspective.
+
+But, I don't agree with you that we should change it.
+
+Because the behavior of the card rejection is not changed regardless supporting hot-swap.
+
+The applications are keeping their behavior without the change for the card rejection on non-hot-swap devices.
+
+On hot-swap supported device, it will be working properly without change.
+
+On the other hand, if we add the notification of the card rejection, the application will be able to need other action for supporting it.
+
+
+ @Wink,
+
+Could we get a third opnion from other vendors what are they think about?
+
