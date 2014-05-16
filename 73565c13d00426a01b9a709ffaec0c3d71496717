@@ -246,3 +246,19 @@ On the other hand, if we add the notification of the card rejection, the applica
 
 Could we get a third opnion from other vendors what are they think about?
 
+265
+Fri May 16 07:42:15 2014 +0000
+Author: Hidenori Yamaji <1004248@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 6a4e2058_ced52956
+UUID: 6a4e2058_6e3efdd8
+Bytes: 530
+No, No, you misunderstand what I explained.
+
+What I explained is expected behavior regarding hotswap supported environment.
+
+Behavior of restarting system is non-hotswap environment.
+On hot swap environment by your commit, system will not restart.
+Then you must implement lack of piece which I explained to you. Otherwise, you must not enable hotswap functionality because your commit will violate Application's expectation.
+
+And I think you need to ask to Dianne Hackborn to understand expectation between application and system.
+
