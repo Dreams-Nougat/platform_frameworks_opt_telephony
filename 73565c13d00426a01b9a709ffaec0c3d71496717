@@ -181,3 +181,12 @@ Yes, after supporting hotswap, keeping working without restart is expected behav
 
 Therefore onCofigurationChanged with mcc/mnc=0 is needed to keep consistency.
 
+265
+Fri May 16 04:11:36 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 6a4e2058_88b15922
+UUID: ca71cc8d_a9f47bf7
+Bytes: 446
+For calling onConfigurationChanged, configuration_chaned should be issued. If we change it, system will kill the activity for changing configuration. Why we should change to issue configuration_change for killing the activity and then we also should add another code to avoid the killing the activity?
+Already there is not issued configuration_chaned and the activity does not know the card ejection. Also, the activity is keeping their behavior.
+
