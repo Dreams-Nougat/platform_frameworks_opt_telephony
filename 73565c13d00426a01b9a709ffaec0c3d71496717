@@ -159,3 +159,15 @@ And when SIM is ejected, system will restart.
 Then it's lack of implementation to support HotSwap.
 Hence onConfigurationChanged with mcc/mnc is called by inserting SIM, onConfigurationChanged with mcc/mnc=0 is needed to invoke on hotswap supported device to keep consistency for application.
 
+265
+Fri May 16 02:16:24 2014 +0000
+Author: Duho Ro <1021635@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 3ff1cc50_941e94f6
+UUID: ca71cc8d_c6e7e4f6
+Bytes: 389
+I assume that system will not be restarted.
+Hot-swap supported device will just restart the card or the radio subsystem, not whole system.
+Hot-swap means that something can be replacing without shutting down the system.
+I think that SIM hot-swap should be working like SIM Refresh caused by IMSI switching.
+So, I added above condition for dismissing the dialog without calling pm.reboot().
+
