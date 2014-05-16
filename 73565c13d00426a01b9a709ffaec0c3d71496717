@@ -171,3 +171,13 @@ Hot-swap means that something can be replacing without shutting down the system.
 I think that SIM hot-swap should be working like SIM Refresh caused by IMSI switching.
 So, I added above condition for dismissing the dialog without calling pm.reboot().
 
+265
+Fri May 16 02:52:05 2014 +0000
+Author: Hidenori Yamaji <1004248@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ca71cc8d_c6e7e4f6
+UUID: 6a4e2058_88b15922
+Bytes: 163
+Yes, after supporting hotswap, keeping working without restart is expected behavior.
+
+Therefore onCofigurationChanged with mcc/mnc=0 is needed to keep consistency.
+
