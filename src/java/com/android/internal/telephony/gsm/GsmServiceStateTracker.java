@@ -958,9 +958,11 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
             } else {
                 String iso = "";
                 String mcc = "";
+                mGotCountryCode = false;
                 try{
                     mcc = operatorNumeric.substring(0, 3);
                     iso = MccTable.countryCodeForMcc(Integer.parseInt(mcc));
+                    mGotCountryCode = true;
                 } catch ( NumberFormatException ex){
                     loge("pollStateDone: countryCodeForMcc error" + ex);
                 } catch ( StringIndexOutOfBoundsException ex) {
@@ -968,7 +970,6 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 }
 
                 mPhone.setSystemProperty(TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY, iso);
-                mGotCountryCode = true;
 
                 TimeZone zone = null;
 
