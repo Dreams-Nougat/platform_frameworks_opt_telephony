@@ -81,6 +81,7 @@ public class CellBroadcastHandler extends WakeLockStateMachine {
             intent = new Intent(Telephony.Sms.Intents.SMS_EMERGENCY_CB_RECEIVED_ACTION);
             receiverPermission = Manifest.permission.RECEIVE_EMERGENCY_BROADCAST;
             appOp = AppOpsManager.OP_RECEIVE_EMERGECY_SMS;
+            intent.addFlags(Intent.FLAG_RECEIVER_FOREGROUND);
         } else {
             log("Dispatching SMS CB");
             intent = new Intent(Telephony.Sms.Intents.SMS_CB_RECEIVED_ACTION);
