@@ -9,3 +9,14 @@ UUID: 763a93c6_babf3596
 Bytes: 124
 What exception is passed back on failure?  Can we map it to IccVmNotSupportedException, and let it flow through block above?
 
+1318
+Mon Aug 04 00:20:14 2014 +0000
+Author: SEO GI SEOK <1046174@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 763a93c6_babf3596
+UUID: b676cbc3_53cb6432
+Bytes: 112
+the error message is "get EF record size failed" 
+means, not support EF field. 
+
+so can not include above block.
+
