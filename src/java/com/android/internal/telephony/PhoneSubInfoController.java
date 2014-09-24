@@ -24,6 +24,8 @@ import android.telephony.SubscriptionManager;
 import android.telephony.Rlog;
 import android.telephony.TelephonyManager;
 
+import java.io.FileDescriptor;
+import java.io.PrintWriter;
 import java.lang.NullPointerException;
 import java.lang.ArrayIndexOutOfBoundsException;
 
@@ -294,4 +296,13 @@ public class PhoneSubInfoController extends IPhoneSubInfo.Stub {
              return null;
          }
      }
+
+    protected void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
+        PhoneSubInfoProxy phoneSubInfoProxy = getPhoneSubInfoProxy(getDefaultSubscription());
+        if (phoneSubInfoProxy != null) {
+            phoneSubInfoProxy.dump(fd, pw, args);
+        } else {
+            Rlog.e(TAG, "dump phoneSubInfoProxy is null");
+        }
+    }
 }
