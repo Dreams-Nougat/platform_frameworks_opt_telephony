@@ -1,0 +1,11 @@
+Revision: f0c2ca55055d84cd707009e1d63efcb8804d467f
+Patch-set: 3
+File: src/java/com/android/internal/telephony/RIL.java
+
+1218:36-1218:56
+Wed Oct 01 23:11:22 2014 +0000
+Author: John Huang <1000718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: f02f6cb3_a207de84
+Bytes: 51
+Shouldn't this be RIL_REQUEST_SEND_SMS_EXPECT_MORE?
+
