@@ -1,0 +1,11 @@
+Revision: a94bb944b5a8ae004c6a9679644bbb4cd8e5afdc
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/SmsCbConstants.java
+
+100:77-100:78
+Tue Oct 07 17:09:50 2014 +0000
+Author: John Huang <1000718@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: d0b988d9_c23e78b0
+Bytes: 25
+Minor nit: Don't use tab.
+
