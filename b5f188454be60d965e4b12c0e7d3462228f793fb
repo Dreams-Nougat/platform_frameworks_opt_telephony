@@ -1,0 +1,11 @@
+Revision: b5f188454be60d965e4b12c0e7d3462228f793fb
+Patch-set: 1
+File: src/java/com/android/internal/telephony/cdma/SmsMessage.java
+
+1054
+Wed Jan 07 17:39:53 2015 +0000
+Author: Wink Saville <1001401@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2efb6987_6ca03baa
+Bytes: 71
+fix white space, use only spaces (no tabs) and no trailing white space.
+
