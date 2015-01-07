@@ -869,6 +869,8 @@ public class SmsMessage extends SmsMessageBase {
                 PhoneNumberUtils.cdmaCheckAndProcessPlusCodeForSms(destAddrStr));
         if (destAddr == null) return null;
 
+        destAddr = cdmaNANPcheckprocess(destAddr);
+
         BearerData bearerData = new BearerData();
         bearerData.messageType = BearerData.MESSAGE_TYPE_SUBMIT;
 
@@ -1049,4 +1051,20 @@ public class SmsMessage extends SmsMessageBase {
     public ArrayList<CdmaSmsCbProgramData> getSmsCbProgramData() {
         return mBearerData.serviceCategoryProgramData;
     }
+
+   public static CdmaSmsAddress cdmaNANPcheckprocess(CdmaSmsAddress destAddr) { 	   
+	String defaultIso = SystemProperties.get(TelephonyProperties.PROPERTY_ICC_OPERATOR_ISO_COUNTRY, ""); 	   
+	String currIso = SystemProperties.get(TelephonyProperties.PROPERTY_OPERATOR_ISO_COUNTRY, "");		
+	String NANP_IDP_STRINT = "011"; 	   
+	String NANPdestAddr = destAddr.address;		  
+	String IDP_str = SystemProperties.get(TelephonyProperties.PROPERTY_OPERATOR_IDP_STRING, "");	
+		
+	if (defaultIso.equals("us") && (!currIso.equals(defaultIso))) { 						
+		if (destAddr.address.startsWith(IDP_str))  {						
+			NANPdestAddr= NANP_IDP_STRINT + destAddr.address.substring(IDP_str.length());			
+			destAddr = CdmaSmsAddress.parse(NANPdestAddr);						
+		}					  
+	}	
+	return destAddr;	
+    } 
 }
