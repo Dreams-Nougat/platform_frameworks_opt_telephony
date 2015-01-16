@@ -9,3 +9,11 @@ UUID: 4bab2f57_885217a8
 Bytes: 65
 How is the getDefault locale different than the persisted locale?
 
+580:35-580:45
+Fri Jan 16 19:47:12 2015 +0000
+Author: Narayan Kamath <1014443@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 4bab2f57_885217a8
+UUID: cbd63fdb_f40a9642
+Bytes: 113
+there's no difference, unless you're running very early on in the boot flow on the first ever boot of the device.
+
