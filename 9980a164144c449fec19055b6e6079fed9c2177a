@@ -17,3 +17,11 @@ UUID: cbd63fdb_f40a9642
 Bytes: 113
 there's no difference, unless you're running very early on in the boot flow on the first ever boot of the device.
 
+580:35-580:45
+Fri Jan 16 22:53:45 2015 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: cbd63fdb_f40a9642
+UUID: 0ba5b782_2cc77728
+Bytes: 180
+I misunderstood the purpose of this line's change.  It is more readable/understandable as getDefault, but I thought you were making a "real" change here..  thanks for the response.
+
