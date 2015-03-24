@@ -205,6 +205,7 @@ public class ImsPhone extends ImsPhoneBase {
         }
         mDefaultPhone = parentPhone;
         mPhoneId = mDefaultPhone.getPhoneId();
+
         if (mDefaultPhone.getServiceStateTracker() != null) {
             mDefaultPhone.getServiceStateTracker()
                     .registerForDataRegStateOrRatChanged(this,

@@ -1053,7 +1053,11 @@ public final class ImsPhoneCallTracker extends CallTracker {
             ImsPhoneConnection conn = findConnection(imsCall);
             if (conn != null) {
                 processCallStateChange(imsCall, conn.getCall().mState,
+<<<<<<< HEAD
                         DisconnectCause.NOT_DISCONNECTED, true /*ignore state update*/);
+=======
+                        DisconnectCause.NOT_DISCONNECTED);
+>>>>>>> 288268d... IMS-VT: Propagate video capability of phone to telecomm.
             }
         }
 
@@ -1279,6 +1283,7 @@ public final class ImsPhoneCallTracker extends CallTracker {
                 processCallStateChange(mBackgroundCall.getImsCall(), ImsPhoneCall.State.HOLDING,
                     DisconnectCause.NOT_DISCONNECTED);
             }
+<<<<<<< HEAD
 
             // Check if the merge was requested by an existing conference call. In that
             // case, no further action is required.
@@ -1291,6 +1296,29 @@ public final class ImsPhoneCallTracker extends CallTracker {
                 call.resetIsMergeRequestedByConf(false);
             }
             logState();
+=======
+            // TODO Temporary code. Remove the try-catch block from the runnable once thread
+            // synchronization is fixed.
+            Runnable r = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        final ImsPhoneConnection conn = findConnection(call);
+                        log("onCallMerged: ImsPhoneConnection=" + conn);
+                        log("onCallMerged: CurrentVideoProvider=" + conn.getVideoProvider());
+                        setVideoCallProvider(conn, call);
+                        log("onCallMerged: CurrentVideoProvider=" + conn.getVideoProvider());
+                    } catch (Exception e) {
+                        loge("onCallMerged: exception " + e);
+                    }
+                }
+            };
+
+            ImsPhoneCallTracker.this.post(r);
+
+            updatePhoneState();
+            mPhone.notifyPreciseCallStateChanged();
+>>>>>>> 288268d... IMS-VT: Propagate video capability of phone to telecomm.
         }
 
         @Override

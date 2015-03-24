@@ -54,6 +54,7 @@ import com.android.internal.R;
 import com.android.internal.telephony.dataconnection.DcTrackerBase;
 import com.android.internal.telephony.imsphone.ImsPhone;
 import com.android.internal.telephony.imsphone.ImsPhoneConnection;
+import com.android.internal.telephony.RadioCapability;
 import com.android.internal.telephony.test.SimulatedRadioControl;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus.AppType;
 import com.android.internal.telephony.uicc.IccFileHandler;
@@ -337,7 +338,6 @@ public abstract class PhoneBase extends Handler implements Phone {
 
     protected final RegistrantList mEmergencyCallToggledRegistrants
             = new RegistrantList();
-
 
     protected Looper mLooper; /* to insure registrants are in correct thread*/
 
@@ -1581,7 +1581,7 @@ public abstract class PhoneBase extends Handler implements Phone {
     }
 
     private static int getVideoState(Call call) {
-        int videoState = VideoProfile.STATE_AUDIO_ONLY;
+        int videoState = VideoProfile.VideoState.AUDIO_ONLY;
         ImsPhoneConnection conn = (ImsPhoneConnection) call.getEarliestConnection();
         if (conn != null) {
             videoState = conn.getVideoState();
@@ -1591,7 +1591,7 @@ public abstract class PhoneBase extends Handler implements Phone {
 
     private boolean isVideoCall(Call call) {
         int videoState = getVideoState(call);
-        return (VideoProfile.isVideo(videoState));
+        return (VideoProfile.VideoState.isVideo(videoState));
     }
 
     @Override
