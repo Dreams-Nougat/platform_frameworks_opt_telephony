@@ -1,0 +1,11 @@
+Revision: 00168a1cc69e6be3bdc553040a98cb4539888a7f
+Patch-set: 1
+File: src/java/com/android/internal/telephony/PhoneSubInfoController.java
+
+303:29-303:30
+Wed Apr 08 14:21:55 2015 +0000
+Author: John Eckerdal <1037953@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: c3f39619_21a7c887
+Bytes: 62
+The PhoneSubInfoProxy instance will check for dump permission.
+
