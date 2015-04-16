@@ -1737,18 +1737,26 @@ public class SIMRecords extends IccRecords {
                     setServiceProviderName(IccUtils.adnStringFieldToString(
                             data, 1, data.length - 1));
 
-                    if (DBG) log("Load EF_SPN: " + getServiceProviderName()
+                    final String spn = getServiceProviderName();
+                    if (spn == null || spn.length() == 0) {
+                        mSpnState = GetSpnFsmState.READ_SPN_CPHS;
+                    } else {
+                        if (DBG) log("Load EF_SPN: " + spn
                             + " spnDisplayCondition: " + mSpnDisplayCondition);
-                    mTelephonyManager.setSimOperatorNameForPhone(
-                            mParentApp.getPhoneId(), getServiceProviderName());
 
-                    mSpnState = GetSpnFsmState.IDLE;
+                        mTelephonyManager.setSimOperatorNameForPhone(
+                            mParentApp.getPhoneId(), spn);
+
+                        mSpnState = GetSpnFsmState.IDLE;
+                    }
                 } else {
+                    mSpnState = GetSpnFsmState.READ_SPN_CPHS;
+                }
+
+                if (mSpnState == GetSpnFsmState.READ_SPN_CPHS) {
                     mFh.loadEFTransparent( EF_SPN_CPHS,
                             obtainMessage(EVENT_GET_SPN_DONE));
                     mRecordsToLoad++;
-
-                    mSpnState = GetSpnFsmState.READ_SPN_CPHS;
 
                     // See TS 51.011 10.3.11.  Basically, default to
                     // show PLMN always, and SPN also if roaming.
@@ -1759,33 +1767,49 @@ public class SIMRecords extends IccRecords {
                 if (ar != null && ar.exception == null) {
                     data = (byte[]) ar.result;
                     setServiceProviderName(IccUtils.adnStringFieldToString(data, 0, data.length));
-                    // Display CPHS Operator Name only when not roaming
-                    mSpnDisplayCondition = 2;
+                    final String spn = getServiceProviderName();
+                    if (spn == null || spn.length() == 0) {
+                        mSpnState = GetSpnFsmState.READ_SPN_SHORT_CPHS;
+                    } else {
+                        // Display CPHS Operator Name only when not roaming
+                        mSpnDisplayCondition = 2;
 
-                    if (DBG) log("Load EF_SPN_CPHS: " + getServiceProviderName());
-                    mTelephonyManager.setSimOperatorNameForPhone(
-                            mParentApp.getPhoneId(), getServiceProviderName());
+                        if (DBG) log("Load EF_SPN_CPHS: " + spn);
+                        mTelephonyManager.setSimOperatorNameForPhone(
+                                mParentApp.getPhoneId(), spn);
 
-                    mSpnState = GetSpnFsmState.IDLE;
+                        mSpnState = GetSpnFsmState.IDLE;
+                    }
                 } else {
+                    mSpnState = GetSpnFsmState.READ_SPN_SHORT_CPHS;
+                }
+
+                if (mSpnState == GetSpnFsmState.READ_SPN_SHORT_CPHS) {
                     mFh.loadEFTransparent(
                             EF_SPN_SHORT_CPHS, obtainMessage(EVENT_GET_SPN_DONE));
                     mRecordsToLoad++;
-
-                    mSpnState = GetSpnFsmState.READ_SPN_SHORT_CPHS;
                 }
                 break;
             case READ_SPN_SHORT_CPHS:
                 if (ar != null && ar.exception == null) {
                     data = (byte[]) ar.result;
                     setServiceProviderName(IccUtils.adnStringFieldToString(data, 0, data.length));
-                    // Display CPHS Operator Name only when not roaming
-                    mSpnDisplayCondition = 2;
 
-                    if (DBG) log("Load EF_SPN_SHORT_CPHS: " + getServiceProviderName());
-                    mTelephonyManager.setSimOperatorNameForPhone(
-                            mParentApp.getPhoneId(), getServiceProviderName());
-                }else {
+                    final String spn = getServiceProviderName();
+                    if (spn != null && spn.length() == 0) {
+                        setServiceProviderName(null);
+                    }
+                    if (spn != null) {
+                        // Display CPHS Operator Name only when not roaming
+                        mSpnDisplayCondition = 2;
+
+                        if (DBG) log("Load EF_SPN_SHORT_CPHS: " + spn);
+                        mTelephonyManager.setSimOperatorNameForPhone(
+                                mParentApp.getPhoneId(), spn);
+                    }
+                }
+
+                if (getServiceProviderName() == null) {
                     if (DBG) log("No SPN loaded in either CHPS or 3GPP");
                 }
 
