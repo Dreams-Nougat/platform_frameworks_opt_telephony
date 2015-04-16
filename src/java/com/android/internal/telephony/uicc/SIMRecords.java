@@ -1762,6 +1762,8 @@ public class SIMRecords extends IccRecords {
                 if (ar != null && ar.exception == null) {
                     data = (byte[]) ar.result;
                     setServiceProviderName(IccUtils.adnStringFieldToString(data, 0, data.length));
+                    // Display CPHS Operator Name only when not roaming
+                    mSpnDisplayCondition = 2;
 
                     if (DBG) log("Load EF_SPN_CPHS: " + getServiceProviderName());
                     mTelephonyManager.setSimOperatorNameForPhone(
@@ -1780,6 +1782,8 @@ public class SIMRecords extends IccRecords {
                 if (ar != null && ar.exception == null) {
                     data = (byte[]) ar.result;
                     setServiceProviderName(IccUtils.adnStringFieldToString(data, 0, data.length));
+                    // Display CPHS Operator Name only when not roaming
+                    mSpnDisplayCondition = 2;
 
                     if (DBG) log("Load EF_SPN_SHORT_CPHS: " + getServiceProviderName());
                     mTelephonyManager.setSimOperatorNameForPhone(
