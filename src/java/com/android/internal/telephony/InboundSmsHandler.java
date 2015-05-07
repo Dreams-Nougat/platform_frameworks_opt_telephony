@@ -909,7 +909,8 @@ public abstract class InboundSmsHandler extends StateMachine {
             intent.setData(uri);
             intent.setComponent(null);
         }
-
+        // In case there are too many ordered broadcasts in the BroadcastQueue, raise the priority to avoid SMS intent delay. 
+        intent.setFlags(Intent.FLAG_RECEIVER_FOREGROUND);
         dispatchIntent(intent, android.Manifest.permission.RECEIVE_SMS,
                 AppOpsManager.OP_RECEIVE_SMS, resultReceiver, UserHandle.OWNER);
     }
