@@ -1,0 +1,11 @@
+Revision: ea5d0e4c2aedaf0e1ef0872e7a33c60ccee31ec4
+Patch-set: 1
+File: /COMMIT_MSG
+
+12
+Tue May 19 17:04:53 2015 +0000
+Author: Narayan Kamath <1014443@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0d179dd9_dbbdc74a
+Bytes: 160
+please use git cherry-pick -X so that you get a (cherry-picked from ....) line in your commit message. Also, please make sure that appears before the Change-Id.
+
