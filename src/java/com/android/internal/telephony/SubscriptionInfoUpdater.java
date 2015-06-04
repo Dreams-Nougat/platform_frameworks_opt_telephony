@@ -269,12 +269,15 @@ public class SubscriptionInfoUpdater extends Handler {
                 fileHandler.loadEFTransparent(IccConstants.EF_ICCID,
                         obtainMessage(EVENT_SIM_LOCKED_QUERY_ICCID_DONE,
                                 new QueryIccIdUserObj(reason, slotId)));
+                return;
             } else {
                 logd("NOT Querying IccId its already set sIccid[" + slotId + "]=" + iccId);
             }
         } else {
             logd("sFh[" + slotId + "] is null, ignore");
         }
+
+        broadcastSimStateChanged(slotId, IccCardConstants.INTENT_VALUE_ICC_LOCKED, reason);
     }
 
     private void handleSimLoaded(int slotId) {
