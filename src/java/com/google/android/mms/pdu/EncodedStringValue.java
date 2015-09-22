@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
+import libcore.io.IoUtils;
+
 /**
  * Encoded-string-value = Text-string | Value-length Char-set Text-string
  */
@@ -145,7 +147,7 @@ public class EncodedStringValue implements Cloneable {
             	}
             	try {
                     return new String(mData, CharacterSets.MIMENAME_ISO_8859_1);
-                } catch (UnsupportedEncodingException _) {
+                } catch (UnsupportedEncodingException uee) {
                     return new String(mData); // system default encoding.
                 }
             }
@@ -172,13 +174,14 @@ public class EncodedStringValue implements Cloneable {
             try {
                 newTextString.write(mData);
                 newTextString.write(textString);
+                mData = newTextString.toByteArray();
             } catch (IOException e) {
                 e.printStackTrace();
                 throw new NullPointerException(
                         "appendTextString: failed when write a new Text-string");
+            } finally {
+                IoUtils.closeQuietly(newTextString);
             }
-
-            mData = newTextString.toByteArray();
         }
     }
 
@@ -216,7 +219,7 @@ public class EncodedStringValue implements Cloneable {
             try {
                 ret[i] = new EncodedStringValue(mCharacterSet,
                         temp[i].getBytes());
-            } catch (NullPointerException _) {
+            } catch (NullPointerException npe) {
                 // Can't arrive here
                 return null;
             }
