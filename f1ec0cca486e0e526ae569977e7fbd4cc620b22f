@@ -1,0 +1,11 @@
+Revision: f1ec0cca486e0e526ae569977e7fbd4cc620b22f
+Patch-set: 1
+File: src/java/com/android/internal/telephony/gsm/GsmServiceStateTracker.java
+
+1563:0-1563:105
+Wed Nov 11 20:02:17 2015 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 16ac2a06_16549904
+Bytes: 74
+lines are now too long.  I think you can drop the null check of onsl/onss.
+
