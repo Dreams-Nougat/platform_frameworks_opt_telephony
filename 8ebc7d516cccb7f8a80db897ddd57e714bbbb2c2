@@ -2,6 +2,24 @@ Revision: 8ebc7d516cccb7f8a80db897ddd57e714bbbb2c2
 Patch-set: 2
 File: src/java/com/android/internal/telephony/uicc/SIMRecords.java
 
+1740:39-1740:61
+Thu Nov 12 19:27:30 2015 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: b6da7ea7_9cb8ac04
+Bytes: 376
+how about
+final String spn = IccUtils.adnStringFieldToString(...);
+if (spn == null || spn.length() == 0) {
+    mSpnState = READ_SPN_CPHS;
+} else {
+    setServiceProviderName(spn);
+    ...
+}
+
+It seems silly to evaluate the string one, call the setter and then call a getter to fetch something we already had in scope..
+
+Also don't need to call the setter if we know it's empty.
+
 1812:16-1812:55
 Thu Nov 12 19:25:09 2015 +0000
 Author: Jack Yu <1081638@85c56323-6fa9-3386-8a01-6480fb634889>
