@@ -9,3 +9,11 @@ UUID: 16ac2a06_16549904
 Bytes: 74
 lines are now too long.  I think you can drop the null check of onsl/onss.
 
+1563:0-1563:105
+Thu Nov 12 12:53:35 2015 +0000
+Author: Zoran Jovanovic <1010077@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 16ac2a06_16549904
+UUID: db11db43_5d3f0f08
+Bytes: 73
+Actually onsl/onss might be null in the ServiceState. Fixing line length.
+
