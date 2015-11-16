@@ -1,0 +1,31 @@
+Revision: cc15dc63c6bc6958a62a4b34536e0fe40f42c5e6
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/IccFileHandler.java
+
+90:32-90:57
+Mon Nov 16 19:25:28 2015 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5b2a4b7b_49fe425b
+Bytes: 150
+Given that we have EFT_TYPE_LINEAR_FIXED defined above from TS 11.11 9.3, I think we need to probably have some class hierarchy to make sense of this.
+
+File: src/java/com/android/internal/telephony/uicc/IccIoResult.java
+
+52:52-52:56
+Mon Nov 16 19:25:28 2015 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5b532b27_5ba3a7c2
+Bytes: 349
+I'm confused by the 92 response.  GSM 11.11 9.4.3 says either successful after many internal update retry routines or a memory problem.  ETSI TS 102 does say it's normal.
+
+I thought these specs only moved forward without incompatibility..  Do you know what the story is?
+
+If this code should track TS102, we should probably remove the 11.11 comment.
+
+75:31-75:46
+Mon Nov 16 19:25:28 2015 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: b6da7ea7_36d27352
+Bytes: 213
+This doesn't seem appropriate to "Security status not satisfied" and "Authentication/PIN method blocked".  If there isn't a better specific IccException class I'd rather keep giving the generic IccException below.
+
