@@ -20,10 +20,26 @@ It seems silly to evaluate the string one, call the setter and then call a gette
 
 Also don't need to call the setter if we know it's empty.
 
+1740:39-1740:61
+Tue Nov 17 16:25:31 2015 +0000
+Author: Zoran Jovanovic <1010077@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: b6da7ea7_9cb8ac04
+UUID: 569062ca_6702a04e
+Bytes: 4
+Done
+
 1812:16-1812:55
 Thu Nov 12 19:25:09 2015 +0000
 Author: Jack Yu <1081638@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 1b3453db_6fab4db3
 Bytes: 266
 This will only be true if we hit #1800. Shouldn't we also need to SetServiceProviderName(null) in #1772, #1742 as well? BTW, this only affect the debug message. You might want to add two 'else' block for debug messages after #1809 and #1810 instead of doing it here.
+
+1812:16-1812:55
+Tue Nov 17 16:25:31 2015 +0000
+Author: Zoran Jovanovic <1010077@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 1b3453db_6fab4db3
+UUID: 9b8e83ee_66a4aa7b
+Bytes: 4
+Done
 
