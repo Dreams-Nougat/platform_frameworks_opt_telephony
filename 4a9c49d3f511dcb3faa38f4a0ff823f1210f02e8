@@ -1,0 +1,11 @@
+Revision: 4a9c49d3f511dcb3faa38f4a0ff823f1210f02e8
+Patch-set: 3
+File: src/java/com/android/internal/telephony/uicc/SIMRecords.java
+
+1811:20-1811:38
+Wed Nov 18 18:07:13 2015 +0000
+Author: Jack Yu <1081638@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: db847bce_93c24382
+Bytes: 23
+this should be 'else {'
+
