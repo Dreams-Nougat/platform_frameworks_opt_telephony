@@ -1,0 +1,18 @@
+Revision: 5fe8c6cd2745e1ccdf78dedfc6d29a0b5c35ec51
+Patch-set: 4
+File: src/java/com/android/internal/telephony/uicc/SIMRecords.java
+
+1758
+Fri Nov 20 15:33:43 2015 +0000
+Author: Zoran Jovanovic <1010077@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9b8e83ee_f44dc0be
+Bytes: 106
+Removed, since it is an overhead cause we are doing the setting anyway when we get to READ_SPN_CPHS state.
+
+1795
+Fri Nov 20 15:33:43 2015 +0000
+Author: Zoran Jovanovic <1010077@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 169a6aee_10bf541f
+Bytes: 112
+Removed, since it is an overhead cause we are doing the setting anyway when we get to READ_SPN_SHORT_CPHS state.
+
