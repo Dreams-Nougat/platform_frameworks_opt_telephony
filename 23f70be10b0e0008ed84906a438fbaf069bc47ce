@@ -1,0 +1,11 @@
+Revision: 23f70be10b0e0008ed84906a438fbaf069bc47ce
+Patch-set: 1
+File: src/java/com/google/android/mms/pdu/EncodedStringValue.java
+
+183:16-183:52
+Tue Dec 08 11:39:08 2015 +0000
+Author: Narayan Kamath <1014443@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: a0d6b40a_201e4af0
+Bytes: 40
+Why not use try-with-resources instead ?
+
