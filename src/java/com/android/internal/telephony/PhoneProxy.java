@@ -175,6 +175,25 @@ public class PhoneProxy extends Handler implements Phone {
             }
             // Force update IMS service
             ImsManager.updateImsServiceConfig(mContext, mPhoneId, true);
+
+            CarrierConfigManager configMgr = (CarrierConfigManager)
+                    mActivePhone.getContext().getSystemService(Context.CARRIER_CONFIG_SERVICE);
+            PersistableBundle b = configMgr.getConfigForSubId(getSubId());
+            if (b != null) {
+                // If hide preferred network type is true and home network,
+                // it assumes preferred network type is default.
+                boolean forceDefaultNetworkType = b.getBoolean(
+                        CarrierConfigManager.KEY_HIDE_PREFERRED_NETWORK_TYPE_BOOL);
+                if (forceDefaultNetworkType &&
+                        !mActivePhone.getServiceState().getDataRoaming()) {
+                    android.provider.Settings.Global.putInt(mContext.getContentResolver(),
+                            android.provider.Settings.Global.PREFERRED_NETWORK_MODE + getSubId(),
+                            RILConstants.PREFERRED_NETWORK_MODE);
+                    setPreferredNetworkType(RILConstants.PREFERRED_NETWORK_MODE, null);
+                }
+            } else {
+                loge("didn't get configuration from carrier config");
+            }
             break;
 
         default:
@@ -202,7 +221,7 @@ public class PhoneProxy extends Handler implements Phone {
                     || (newVoiceRadioTech == ServiceState.RIL_RADIO_TECHNOLOGY_UNKNOWN)) {
                 CarrierConfigManager configMgr = (CarrierConfigManager)
                         mActivePhone.getContext().getSystemService(Context.CARRIER_CONFIG_SERVICE);
-                PersistableBundle b = configMgr.getConfigForSubId(mActivePhone.getSubId());
+                PersistableBundle b = configMgr.getConfigForSubId(getSubId());
                 if (b != null) {
                     int volteReplacementRat =
                             b.getInt(CarrierConfigManager.KEY_VOLTE_REPLACEMENT_RAT_INT);
