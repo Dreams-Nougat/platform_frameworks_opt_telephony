@@ -41,13 +41,16 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PersistableBundle;
 import android.os.RegistrantList;
+import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.Settings;
 import android.provider.Telephony;
+import android.telephony.CarrierConfigManager;
 import android.telephony.CellLocation;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
@@ -66,6 +69,7 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.DctConstants;
 import com.android.internal.telephony.EventLogTags;
+import com.android.internal.telephony.ICarrierConfigLoader;
 import com.android.internal.telephony.ITelephony;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.gsm.GSMPhone;
@@ -742,6 +746,20 @@ public final class DcTracker extends DcTrackerBase {
         if (mPhone.getCallTracker() != null) {
             state = mPhone.getCallTracker().getState();
         }
+
+        boolean mmsOnRoamingAllowedWithRoamingSettingOff = false;
+        ICarrierConfigLoader configLoader =
+            (ICarrierConfigLoader) ServiceManager.getService(Context.CARRIER_CONFIG_SERVICE);
+        if(configLoader != null){
+            try{
+                PersistableBundle b = configLoader.getConfigForSubId(mPhone.getSubId());
+                mmsOnRoamingAllowedWithRoamingSettingOff = b.getBoolean(
+                    CarrierConfigManager.KEY_MMS_ALLOW_WITH_ROAMING_SETTING_OFF_BOOL);
+            } catch (RemoteException e) {
+                loge("isDataAllowed: unable to access carrier config service");
+            }
+        }
+
         boolean allowed =
                     (attachedState || mAutoAttachOnCreation.get()) &&
                     recordsLoaded &&
@@ -749,7 +767,8 @@ public final class DcTracker extends DcTrackerBase {
                      mPhone.getServiceStateTracker().isConcurrentVoiceAndDataAllowed()) &&
                     internalDataEnabled &&
                     defaultDataSelected &&
-                    (!mPhone.getServiceState().getDataRoaming() || getDataOnRoamingEnabled()) &&
+                    (!mPhone.getServiceState().getDataRoaming() || getDataOnRoamingEnabled() ||
+                    mmsOnRoamingAllowedWithRoamingSettingOff) &&
                     //!mIsPsRestricted &&
                     !psRestricted &&
                     desiredPowerState;
