@@ -923,7 +923,17 @@ public final class DataConnection extends StateMachine {
             for (String type : mApnSetting.types) {
                 switch (type) {
                     case PhoneConstants.APN_TYPE_ALL: {
-                        result.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                        // If dataconnection was set up for mms under the following conditions:
+                        // (1) Device is on romaing
+                        // (2) Roaming setting is off
+                        // (3) CarrierConfigManager#KEY_MMS_ALLOW_WITH_ROAMING_SETTING_OFF_BOOL
+                        //     is true
+                        // (4) ApnSetting used for connection contains type 'default'
+                        // Internet capability must not be added.
+                        // Otherwise, device can reach internet unintentionally
+                        if (mDct.isDataRoamingAllowed(null)) {
+                            result.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                        }
                         result.addCapability(NetworkCapabilities.NET_CAPABILITY_MMS);
                         result.addCapability(NetworkCapabilities.NET_CAPABILITY_SUPL);
                         result.addCapability(NetworkCapabilities.NET_CAPABILITY_FOTA);
@@ -933,7 +943,10 @@ public final class DataConnection extends StateMachine {
                         break;
                     }
                     case PhoneConstants.APN_TYPE_DEFAULT: {
-                        result.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                        // Same as above, we must skip capability internet
+                        if (mDct.isDataRoamingAllowed(null)) {
+                            result.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+                        }
                         break;
                     }
                     case PhoneConstants.APN_TYPE_MMS: {
