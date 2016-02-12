@@ -867,6 +867,7 @@ public abstract class DcTrackerBase extends Handler {
     protected abstract void log(String s);
     protected abstract void loge(String s);
     protected abstract boolean isDataAllowed();
+    protected abstract boolean isDataRoamingAllowed(ApnContext apnContext);
     protected abstract boolean isApnTypeAvailable(String type);
     public    abstract DctConstants.State getState(String apnType);
     protected abstract boolean isProvisioningApn(String apnType);

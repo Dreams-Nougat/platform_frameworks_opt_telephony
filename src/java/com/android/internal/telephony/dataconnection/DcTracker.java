@@ -41,13 +41,16 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PersistableBundle;
 import android.os.RegistrantList;
+import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UserHandle;
 import android.provider.Settings;
 import android.provider.Telephony;
+import android.telephony.CarrierConfigManager;
 import android.telephony.CellLocation;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
@@ -66,6 +69,7 @@ import com.android.internal.telephony.Phone;
 import com.android.internal.telephony.PhoneBase;
 import com.android.internal.telephony.DctConstants;
 import com.android.internal.telephony.EventLogTags;
+import com.android.internal.telephony.ICarrierConfigLoader;
 import com.android.internal.telephony.ITelephony;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.gsm.GSMPhone;
@@ -376,7 +380,8 @@ public final class DcTracker extends DcTrackerBase {
         boolean isEmergencyApn = apnContext.getApnType().equals(PhoneConstants.APN_TYPE_EMERGENCY);
         // Set the emergency APN availability status as TRUE irrespective of conditions checked in
         // isDataAllowed() like IN_SERVICE, MOBILE DATA status etc.
-        boolean dataAllowed = isEmergencyApn || isDataAllowed();
+        boolean dataAllowed = isEmergencyApn
+                || (isDataAllowed() && isDataRoamingAllowed(apnContext));
         boolean possible = dataAllowed && apnTypePossible;
 
         if ((apnContext.getApnType().equals(PhoneConstants.APN_TYPE_DEFAULT)
@@ -662,8 +667,48 @@ public final class DcTracker extends DcTrackerBase {
             log("Default data call activation not allowed in iwlan.");
             return false;
         } else {
-            return apnContext.isReady() && isDataAllowed();
+            return apnContext.isReady() && isDataAllowed() && isDataRoamingAllowed(apnContext);
         }
+    }
+    /**
+     * Check if data roaming is allowed or not.
+     *
+     * Currently, if APN type in 'apnContext' is MMS and
+     * CarrierConfigManager.KEY_MMS_ALLOW_WITH_ROAMING_SETTING_OFF_BOOL is true,
+     * allow data roaming even if data roaming setting is off.
+     *
+     * @param apnContext used for additional logic to allow data roaming
+     * @return true if in home network or data roaming is allowed.
+     */
+    @Override
+    protected boolean isDataRoamingAllowed(ApnContext apnContext) {
+        boolean allowDataRoaming = !mPhone.getServiceState().getDataRoaming()
+                || getDataOnRoamingEnabled();
+        boolean isMmsApn = apnContext != null
+                && apnContext.getApnType().equals(PhoneConstants.APN_TYPE_MMS);
+        if (isMmsApn && !allowDataRoaming) {
+            boolean mmsOnRoamingAllowedWithRoamingSettingOff = false;
+            ICarrierConfigLoader configLoader = (ICarrierConfigLoader) ServiceManager.getService(
+                    Context.CARRIER_CONFIG_SERVICE);
+            if (configLoader != null) {
+                try{
+                    PersistableBundle b = configLoader.getConfigForSubId(mPhone.getSubId());
+                    if (b != null) {
+                        mmsOnRoamingAllowedWithRoamingSettingOff = b.getBoolean(
+                                CarrierConfigManager.KEY_MMS_ALLOW_WITH_ROAMING_SETTING_OFF_BOOL);
+                    }
+                } catch (RemoteException e) {
+                    loge("isDataRoamingAllowed: unable to access carrier config service");
+                }
+            }
+            allowDataRoaming |= mmsOnRoamingAllowedWithRoamingSettingOff;
+        }
+        if (!allowDataRoaming && DBG) {
+            String reason = " - Roaming and data roaming not enabled"
+                    + (isMmsApn ? ", and mms data is disallowed during roaming" : "");
+            log("isDataRoamingAllowed: not allowed due to" + reason);
+        }
+        return allowDataRoaming;
     }
 
     //****** Called from ServiceStateTracker
@@ -749,7 +794,6 @@ public final class DcTracker extends DcTrackerBase {
                      mPhone.getServiceStateTracker().isConcurrentVoiceAndDataAllowed()) &&
                     internalDataEnabled &&
                     defaultDataSelected &&
-                    (!mPhone.getServiceState().getDataRoaming() || getDataOnRoamingEnabled()) &&
                     //!mIsPsRestricted &&
                     !psRestricted &&
                     desiredPowerState;
@@ -766,9 +810,6 @@ public final class DcTracker extends DcTrackerBase {
             }
             if (!internalDataEnabled) reason += " - mInternalDataEnabled= false";
             if (!defaultDataSelected) reason += " - defaultDataSelected= false";
-            if (mPhone.getServiceState().getDataRoaming() && !getDataOnRoamingEnabled()) {
-                reason += " - Roaming and data roaming not enabled";
-            }
             if (mIsPsRestricted) reason += " - mIsPsRestricted= true";
             if (!desiredPowerState) reason += " - desiredPowerState= false";
             if (DBG) log("isDataAllowed: not allowed due to" + reason);

@@ -920,7 +920,23 @@ public final class DataConnection extends StateMachine {
         result.addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR);
 
         if (mApnSetting != null) {
-            for (String type : mApnSetting.types) {
+            // If data connection was set up for MMS under the following conditions:
+            //  (1) Device is on romaing
+            //  (2) Roaming setting is off
+            //  (3) CarrierConfigManager#KEY_MMS_ALLOW_WITH_ROAMING_SETTING_OFF_BOOL is true
+            // We must allow only MMS capability. Otherwise, device can reach other network such as
+            // internet unintentionally.
+            String[] types = mApnSetting.types;
+            if (mConnectionParams != null && mConnectionParams.mApnContext != null) {
+                if (mConnectionParams.mApnContext.getApnType().equals(PhoneConstants.APN_TYPE_MMS)
+                        && mDct.isDataRoamingAllowed(mConnectionParams.mApnContext)
+                        && !mDct.isDataRoamingAllowed(null)) {
+                    if (DBG) log("makeNetworkCapabilities: replace to mms only");
+                    types = new String[]{PhoneConstants.APN_TYPE_MMS};
+                }
+            }
+
+            for (String type : types) {
                 switch (type) {
                     case PhoneConstants.APN_TYPE_ALL: {
                         result.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);

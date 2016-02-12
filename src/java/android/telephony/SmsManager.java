@@ -245,6 +245,13 @@ public final class SmsManager {
      */
     public static final String MMS_CONFIG_SUPPORT_HTTP_CHARSET_HEADER =
             CarrierConfigManager.KEY_MMS_SUPPORT_HTTP_CHARSET_HEADER_BOOL;
+
+    /**
+     * If true, allow MMS during roaming even if data roaming setting is turned off.
+     */
+    public static final String MMS_CONFIG_ALLOW_WITH_ROAMING_SETTING_OFF_BOOL =
+            CarrierConfigManager.KEY_MMS_ALLOW_WITH_ROAMING_SETTING_OFF_BOOL;
+
     /*
      * Forwarded constants from SimDialogActivity.
      */
@@ -1643,6 +1650,8 @@ public final class SmsManager {
                 config.getBoolean(MMS_CONFIG_SHOW_CELL_BROADCAST_APP_LINKS));
         filtered.putBoolean(MMS_CONFIG_SUPPORT_HTTP_CHARSET_HEADER,
                 config.getBoolean(MMS_CONFIG_SUPPORT_HTTP_CHARSET_HEADER));
+        filtered.putBoolean(MMS_CONFIG_ALLOW_WITH_ROAMING_SETTING_OFF_BOOL,
+                config.getBoolean(MMS_CONFIG_ALLOW_WITH_ROAMING_SETTING_OFF_BOOL));
         return filtered;
     }
 
