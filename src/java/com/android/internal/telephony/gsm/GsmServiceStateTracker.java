@@ -168,6 +168,9 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     static final int PS_NOTIFICATION = 888;  // Id to update and cancel PS restricted
     static final int CS_NOTIFICATION = 999;  // Id to update and cancel CS restricted
 
+    /** To identify whether EVENT_SIM_READY is received or not */
+    private boolean mIsSimReady = false;
+
     private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -267,7 +270,10 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         mCi.unregisterForAvailable(this);
         mCi.unregisterForRadioStateChanged(this);
         mCi.unregisterForVoiceNetworkStateChanged(this);
-        if (mUiccApplcation != null) {mUiccApplcation.unregisterForReady(this);}
+        if (mUiccApplcation != null) {
+            mUiccApplcation.unregisterForReady(this);
+            mUiccApplcation.unregisterForLocked(this);
+        }
         if (mIccRecords != null) {mIccRecords.unregisterForRecordsLoaded(this);}
         mCi.unSetOnRestrictedStateChanged(this);
         mCi.unSetOnNITZTime(this);
@@ -309,9 +315,19 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 // Reset the mPreviousSubId so we treat a SIM power bounce
                 // as a first boot.  See b/19194287
                 mOnSubscriptionsChangedListener.mPreviousSubId.set(-1);
+                mIsSimReady = true;
                 pollState();
                 // Signal strength polling stops when radio is off
                 queueNextSignalStrengthPoll();
+                break;
+
+            case EVENT_SIM_LOCKED:
+                if (mUiccApplcation != null &&
+                    mUiccApplcation.getState() != AppState.APPSTATE_READY) {
+                    log("EVENT_SIM_LOCKED received");
+                    mIsSimReady = false;
+                    updateSpnDisplay();
+                }
                 break;
 
             case EVENT_RADIO_STATE_CHANGED:
@@ -598,7 +614,15 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         if (mSS.getVoiceRegState() == ServiceState.STATE_OUT_OF_SERVICE
                 || mSS.getVoiceRegState() == ServiceState.STATE_EMERGENCY_ONLY) {
             showPlmn = true;
-            if (mEmergencyOnly) {
+
+            // Check if displaying emergency only is allowed in current condition by config.
+            final boolean forbidEcallOnly = mPhone.getContext().getResources()
+                    .getBoolean(com.android.internal.R.bool.config_forbid_ecall_only);
+            final boolean checkSim = mPhone.getContext().getResources()
+                    .getBoolean(com.android.internal.R.bool.config_forbid_ecall_only_when_sim_lock);
+            final boolean allowEcallOnly = !forbidEcallOnly || (checkSim && mIsSimReady);
+
+            if (mEmergencyOnly && allowEcallOnly) {
                 // No service but emergency call allowed
                 plmn = Resources.getSystem().
                         getText(com.android.internal.R.string.emergency_calls_only).toString();
@@ -2067,6 +2091,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
             if (mUiccApplcation != null) {
                 log("Removing stale icc objects.");
                 mUiccApplcation.unregisterForReady(this);
+                mUiccApplcation.unregisterForLocked(this);
                 if (mIccRecords != null) {
                     mIccRecords.unregisterForRecordsLoaded(this);
                 }
@@ -2078,6 +2103,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                 mUiccApplcation = newUiccApplication;
                 mIccRecords = mUiccApplcation.getIccRecords();
                 mUiccApplcation.registerForReady(this, EVENT_SIM_READY, null);
+                mUiccApplcation.registerForLocked(this, EVENT_SIM_LOCKED, null);
                 if (mIccRecords != null) {
                     mIccRecords.registerForRecordsLoaded(this, EVENT_SIM_RECORDS_LOADED, null);
                 }
