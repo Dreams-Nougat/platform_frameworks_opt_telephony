@@ -2257,6 +2257,15 @@ public final class RIL extends BaseCommands implements CommandsInterface {
      */
     private void updateScreenState() {
         final int oldState = mRadioScreenState;
+        //When mDefaultDisplayState == Display.STATE_UNKNOWN and
+        //mIsDevicePlugged == false, do not set mRadioScreenState
+        //to RADIO_SCREEN_OFF. This may stop signal strength reporting.
+        if (mDefaultDisplayState == Display.STATE_UNKNOWN) {
+            if (RILJ_LOGV) {
+                riljLog("Do not update ScreenState, because mDefaultDisplayState == Display.STATE_UNKNOWN.");
+            }
+            return ;
+        }
         mRadioScreenState = (mDefaultDisplayState == Display.STATE_ON || mIsDevicePlugged)
                 ? RADIO_SCREEN_ON : RADIO_SCREEN_OFF;
         if (mRadioScreenState != oldState) {
