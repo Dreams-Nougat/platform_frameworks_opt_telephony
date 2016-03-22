@@ -2103,4 +2103,13 @@ public interface Phone {
      * Set boolean broadcastEmergencyCallStateChanges
      */
     public void setBroadcastEmergencyCallStateChanges(boolean broadcast);
+
+    /**
+     * Sets the transmit power with parameter to modem.
+     *
+     * @param parameter the parameter to be sent to modem, its form should be defined by OEM.
+     *
+     * @param result Callback message contains the information of SUCCESS/FAILURE
+     */
+    void setTransmitPower(String parameter, Message result);
 }

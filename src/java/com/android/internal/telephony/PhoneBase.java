@@ -2625,6 +2625,12 @@ public abstract class PhoneBase extends Handler implements Phone {
         mBroadcastEmergencyCallStateChanges = broadcast;
     }
 
+    // Inherited documentation suffices.
+    @Override
+    public void setTransmitPower(String parameter, Message result) {
+        mCi.setTransmitPower(parameter, result);
+    }
+
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
         pw.println("PhoneBase: subId=" + getSubId());
         pw.println(" mPhoneId=" + mPhoneId);
