@@ -624,4 +624,8 @@ class ImsPhoneCommandInterface extends BaseCommands implements CommandsInterface
     @Override
     public void getModemActivityInfo(Message result) {
     }
+
+    @Override
+    public void setTransmitPower(String parameter, Message result) {
+    }
 }

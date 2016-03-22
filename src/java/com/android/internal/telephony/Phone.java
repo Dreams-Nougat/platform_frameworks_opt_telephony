@@ -2098,4 +2098,13 @@ public interface Phone {
      * Returns the modem activity information
      */
     public void getModemActivityInfo(Message response);
+
+    /**
+     * Sets the transmit power with parameter to modem.
+     *
+     * @param parameter the parameter to be sent to modem, its form should be defined by OEM.
+     *
+     * @param result Callback message contains the information of SUCCESS/FAILURE
+     */
+    void setTransmitPower(String parameter, Message result);
 }
