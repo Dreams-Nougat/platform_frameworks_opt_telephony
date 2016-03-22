@@ -1350,4 +1350,9 @@ public class SimulatedCommandsVerifier implements CommandsInterface {
     public void getModemActivityInfo(Message result) {
 
     }
+
+    @Override
+    public void setTransmitPower(String parameter, Message result) {
+
+    }
 }

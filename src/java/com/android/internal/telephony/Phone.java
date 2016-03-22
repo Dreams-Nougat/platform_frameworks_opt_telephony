@@ -3245,6 +3245,17 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
     public abstract void sendEmergencyCallStateChange(boolean callActive);
 
     /**
+     * Sets the transmit power with parameter to modem.
+     *
+     * @param parameter the parameter to be sent to modem, its form should be defined by OEM.
+     *
+     * @param result Callback message contains the information of SUCCESS/FAILURE
+     */
+    public void setTransmitPower(String parameter, Message result) {
+        mCi.setTransmitPower(parameter, result);
+    }
+
+    /**
      * This function returns the parent phone of the current phone. It is applicable
      * only for IMS phone (function is overridden by ImsPhone). For others the phone
      * object itself is returned.

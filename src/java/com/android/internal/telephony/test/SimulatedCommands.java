@@ -2082,4 +2082,9 @@ public class SimulatedCommands extends BaseCommands
     public boolean isDataAllowed() {
         return mAllowed.get();
     }
+
+    @Override
+    public void setTransmitPower(String parameter, Message result) {
+        unimplemented(result);
+    }
 }
