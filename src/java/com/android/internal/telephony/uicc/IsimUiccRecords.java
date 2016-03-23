@@ -53,7 +53,7 @@ public final class IsimUiccRecords extends IccRecords implements IsimRecords {
 
     private static final int EVENT_APP_READY = 1;
     private static final int EVENT_ISIM_REFRESH = 31;
-    private static final int EVENT_AKA_AUTHENTICATE_DONE          = 90;
+    private static final int EVENT_AKA_AUTHENTICATE_DONE          = 91;
 
     // ISIM EF records (see 3GPP TS 31.103)
     private String mIsimImpi;               // IMS private user identity
