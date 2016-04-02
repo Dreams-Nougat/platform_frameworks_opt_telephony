@@ -3210,6 +3210,12 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 setCdmaSubscriptionSource(mCdmaSubscription, null);
                 setCellInfoListRate(Integer.MAX_VALUE, null);
                 notifyRegistrantsRilConnectionChanged(((int[])ret)[0]);
+                // When modem crashes, if user turns the screen off before RIL reconnects, screen
+                // state cannot be sent to modem. Resend the display state here so that modem has
+                // the correct state (to stop signal strength reporting, etc.)
+                if (mDefaultDisplay.getState() == Display.STATE_OFF) {
+                    sendScreenState(false);
+                }
                 break;
             }
             case RIL_UNSOL_CELL_INFO_LIST: {
