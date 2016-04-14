@@ -864,7 +864,7 @@ public class SIMRecords extends IccRecords {
                     break;
                 }
 
-                mIccId = IccUtils.bcdToString(data, 0, data.length);
+                mIccId = IccUtils.bcdToHexString(data, 0, data.length);
 
                 log("iccid: " + mIccId);
 
