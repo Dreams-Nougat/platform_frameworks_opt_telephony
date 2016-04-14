@@ -70,6 +70,7 @@ public class SubscriptionInfoUpdater extends Handler {
     private static final int EVENT_SIM_UNKNOWN = 7;
 
     private static final String ICCID_STRING_FOR_NO_SIM = "";
+    private static final String ICCID_STRING_FOR_NOT_WRITTEN = "-1";
     /**
      *  int[] sInsertSimState maintains all slots' SIM inserted status currently,
      *  it may contain 4 kinds of values:
@@ -265,6 +266,11 @@ public class SubscriptionInfoUpdater extends Handler {
                     mIccId[slotId] = ICCID_STRING_FOR_NO_SIM;
                     logd("Query IccId fail: " + ar.exception);
                 }
+                //Sometimes IccID is not written on the SIM, if we leave it empty
+                //caller would consider there is no SIM.
+                if (TextUtils.isEmpty(mIccId[slotId])) {
+                    mIccId[slotId] = ICCID_STRING_FOR_NOT_WRITTEN;
+                }
                 logd("sIccId[" + slotId + "] = " + mIccId[slotId]);
                 if (isAllIccIdQueryDone()) {
                     updateSubscriptionInfoByIccId();
@@ -370,6 +376,11 @@ public class SubscriptionInfoUpdater extends Handler {
         }
         mIccId[slotId] = records.getIccId();
 
+        //Sometimes IccID is not written on the SIM, if we leave it empty
+        //caller would consider there is no SIM.
+        if (TextUtils.isEmpty(mIccId[slotId])) {
+            mIccId[slotId] = ICCID_STRING_FOR_NOT_WRITTEN;
+        }
         if (isAllIccIdQueryDone()) {
             updateSubscriptionInfoByIccId();
         }
