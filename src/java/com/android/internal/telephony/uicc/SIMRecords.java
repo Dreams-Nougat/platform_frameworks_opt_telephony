@@ -1278,6 +1278,7 @@ public class SIMRecords extends IccRecords {
             case EF_FDN:
                 if (DBG) log("SIM Refresh called for EF_FDN");
                 mParentApp.queryFdn();
+                mAdnCache.reset();
                 break;
             case EF_MSISDN:
                 mRecordsToLoad++;
