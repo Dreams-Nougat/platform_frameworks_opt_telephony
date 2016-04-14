@@ -62,6 +62,33 @@ public class IccUtils {
     }
 
     /**
+     * Many fields in GSM SIM's are stored as nibble-swizzled BCD
+     *
+     * Assumes left-justified field that may be padded right with 0xf
+     * values.
+     *
+     * However, certain fields like IccId may include Hex digits.
+     */
+    public static String
+    bcdToHexString(byte[] data, int offset, int length) {
+        StringBuilder ret = new StringBuilder(length * 2);
+
+        for (int i = offset; i < offset + length; i++) {
+            int v;
+
+            v = data[i] & 0xf;
+            if (v > 0xf) continue;
+            ret.append(Integer.toHexString(v));
+
+            v = (data[i] >> 4) & 0xf;
+            if (v > 0xf) continue;
+            ret.append(Integer.toHexString(v));
+        }
+
+        return ret.toString();
+    }
+
+    /**
      * Decode cdma byte into String.
      */
     public static String
