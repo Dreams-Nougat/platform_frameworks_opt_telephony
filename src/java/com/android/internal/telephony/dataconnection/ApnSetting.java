@@ -506,6 +506,8 @@ public class ApnSetting {
                 mmsc.equals(other.mmsc) &&
                 mmsProxy.equals(other.mmsProxy) &&
                 port.equals(other.port) &&
+                user.equals(other.user) &&
+                password.equals(other.password) &&
                 authType == other.authType &&
                 Arrays.deepEquals(types, other.types) &&
                 protocol.equals(other.protocol) &&
