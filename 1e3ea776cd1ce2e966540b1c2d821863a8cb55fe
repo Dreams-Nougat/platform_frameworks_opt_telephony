@@ -17,3 +17,11 @@ UUID: 88656498_25503eda
 Bytes: 38
 Agree, that's a better place for this.
 
+3213
+Mon Apr 25 22:56:26 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 88656498_25503eda
+UUID: 88656498_856c8a95
+Bytes: 93
+Yifan, can you add a boolean parameter forceUpdate to updateScreenState() and call that here?
+
