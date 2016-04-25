@@ -9,3 +9,11 @@ UUID: 88656498_65eab654
 Bytes: 174
 There's already a function onRadioAvailable() that purports to handle recovery after a process crash and already calls updateScreenState(). Is that a better place to do this?
 
+3213
+Mon Apr 25 22:54:47 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 88656498_65eab654
+UUID: 88656498_25503eda
+Bytes: 38
+Agree, that's a better place for this.
+
