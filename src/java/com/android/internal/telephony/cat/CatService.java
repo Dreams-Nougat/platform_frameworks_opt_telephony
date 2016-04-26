@@ -125,7 +125,7 @@ public class CatService extends Handler implements AppInterface {
 
     private HandlerThread mHandlerThread;
     private int mSlotId;
-
+    private BipService mBipService = null;
     /* For multisim catservice should not be singleton */
     private CatService(CommandsInterface ci, UiccCardApplication ca, IccRecords ir,
             Context context, IccFileHandler fh, UiccCard ic, int slotId) {
@@ -147,7 +147,7 @@ public class CatService extends Handler implements AppInterface {
             return;
         }
         mMsgDecoder.start();
-
+        mBipService = BipService.getInstance(mContext, this, mSlotId, mCmdIf, fh);
         // Register ril events handling.
         mCmdIf.setOnCatSessionEnd(this, MSG_ID_SESSION_END, null);
         mCmdIf.setOnCatProactiveCmd(this, MSG_ID_PROACTIVE_COMMAND, null);
@@ -257,6 +257,9 @@ public class CatService extends Handler implements AppInterface {
             mHandlerThread.quit();
             mHandlerThread = null;
             removeCallbacksAndMessages(null);
+            if (null != mBipService) {
+                mBipService.dispose();
+            }
             if (sInstance != null) {
                 if (SubscriptionManager.isValidSlotId(mSlotId)) {
                     sInstance[mSlotId] = null;
@@ -397,6 +400,7 @@ public class CatService extends Handler implements AppInterface {
                 sendTerminalResponse(cmdParams.mCmdDet,resultCode, false, 0, null);
                 break;
             case SET_UP_EVENT_LIST:
+                mBipService.setSetupEventList(cmdMsg);
                 if (isSupportedSetupEventCommand(cmdMsg)) {
                     sendTerminalResponse(cmdParams.mCmdDet, ResultCode.OK, false, 0, null);
                 } else {

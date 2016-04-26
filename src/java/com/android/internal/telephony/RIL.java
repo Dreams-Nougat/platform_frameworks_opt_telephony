@@ -2849,6 +2849,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_ON_SS: ret =  responseSsData(p); break;
             case RIL_UNSOL_STK_CC_ALPHA_NOTIFY: ret =  responseString(p); break;
             case RIL_UNSOL_LCEDATA_RECV: ret = responseLceData(p); break;
+            case RIL_UNSOL_STK_BIP_PROACTIVE_COMMAND: ret = responseString(p); break;
 
             default:
                 throw new RuntimeException("Unrecognized unsol response: " + response);
@@ -3276,6 +3277,14 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
                 if (mLceInfoRegistrant != null) {
                     mLceInfoRegistrant.notifyRegistrant(new AsyncResult(null, ret, null));
+                }
+                break;
+            case RIL_UNSOL_STK_BIP_PROACTIVE_COMMAND:
+                if (RILJ_LOGD) unsljLogRet(response, ret);
+
+                if (mBipProCmdRegistrant != null) {
+                    mBipProCmdRegistrant.notifyRegistrant(
+                    new AsyncResult(null, ret, null));
                 }
                 break;
         }
@@ -4252,6 +4261,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_ON_SS: return "UNSOL_ON_SS";
             case RIL_UNSOL_STK_CC_ALPHA_NOTIFY: return "UNSOL_STK_CC_ALPHA_NOTIFY";
             case RIL_UNSOL_LCEDATA_RECV: return "UNSOL_LCE_INFO_RECV";
+            case RIL_UNSOL_STK_BIP_PROACTIVE_COMMAND: return "UNSOL_STK_BIP_PROACTIVE_COMMAND";
             default: return "<unknown response>";
         }
     }

@@ -94,7 +94,7 @@ public abstract class BaseCommands implements CommandsInterface {
     protected Registrant mCatCcAlphaRegistrant;
     protected Registrant mSsRegistrant;
     protected Registrant mLceInfoRegistrant;
-
+    protected Registrant mBipProCmdRegistrant;
     // Preferred network type received from PhoneFactory.
     // This is used when establishing a connection to the
     // vendor ril so it starts up in the correct mode.
@@ -420,6 +420,19 @@ public abstract class BaseCommands implements CommandsInterface {
         if (mCatProCmdRegistrant != null && mCatProCmdRegistrant.getHandler() == h) {
             mCatProCmdRegistrant.clear();
             mCatProCmdRegistrant = null;
+        }
+    }
+
+    @Override
+    public void setOnBipProactiveCmd(Handler h, int what, Object obj) {
+        mBipProCmdRegistrant = new Registrant(h, what, obj);
+    }
+
+    @Override
+    public void unSetOnBipProactiveCmd(Handler h) {
+        if (mBipProCmdRegistrant != null && mBipProCmdRegistrant.getHandler() == h) {
+            mBipProCmdRegistrant.clear();
+            mBipProCmdRegistrant = null;
         }
     }
 

@@ -391,6 +391,17 @@ public interface CommandsInterface {
     void unSetOnCatProactiveCmd(Handler h);
 
     /**
+     * Sets the handler for Proactive Commands for CAT.
+     * Unlike the register* methods, there's only one notification handler
+     *
+     * @param h Handler for notification message.
+     * @param what User-defined message code.
+     * @param obj User object.
+     */
+    void setOnBipProactiveCmd(Handler h, int what, Object obj);
+    void unSetOnBipProactiveCmd(Handler h);
+
+    /**
      * Sets the handler for Event Notifications for CAT.
      * Unlike the register* methods, there's only one notification handler
      *

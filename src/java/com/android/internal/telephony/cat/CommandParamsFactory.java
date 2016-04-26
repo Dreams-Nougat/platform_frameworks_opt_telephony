@@ -26,6 +26,10 @@ import com.android.internal.telephony.uicc.IccFileHandler;
 import java.util.Iterator;
 import java.util.List;
 import static com.android.internal.telephony.cat.CatCmdMessage.
+                   SetupEventListConstants.CHANNEL_STATUS_EVENT;
+import static com.android.internal.telephony.cat.CatCmdMessage.
+                   SetupEventListConstants.DATA_AVAILABLE_EVENT;
+import static com.android.internal.telephony.cat.CatCmdMessage.
                    SetupEventListConstants.USER_ACTIVITY_EVENT;
 import static com.android.internal.telephony.cat.CatCmdMessage.
                    SetupEventListConstants.IDLE_SCREEN_AVAILABLE_EVENT;
@@ -763,6 +767,8 @@ class CommandParamsFactory extends Handler {
                         case LANGUAGE_SELECTION_EVENT:
                         case BROWSER_TERMINATION_EVENT:
                         case BROWSING_STATUS_EVENT:
+                        case DATA_AVAILABLE_EVENT:
+                        case CHANNEL_STATUS_EVENT:
                             eventList[i] = eventValue;
                             i++;
                             break;
