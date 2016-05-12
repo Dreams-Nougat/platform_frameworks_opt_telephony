@@ -25,3 +25,16 @@ UUID: 88656498_856c8a95
 Bytes: 93
 Yifan, can you add a boolean parameter forceUpdate to updateScreenState() and call that here?
 
+3213
+Thu May 12 07:58:57 2016 +0000
+Author: Yifan Bai <1099423@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 88656498_856c8a95
+UUID: 3753fe28_268456e6
+Bytes: 822
+Hi Amit,
+
+Thanks for your reply. I understand what you mean. But I think calling updateScreenState(boolean forceUpdate#true) here is not very appropriate.
+Firstly, this problem only happens when modem resets and before RIL is reconnected user turns off the screen. The screen off message cannot be sent to modem because RIL is killed and not reconnected yet. Modem would keep reporting signal strength and this would increase power consumption. It is not necessary to send screen on to modem because after modem resets it would always report signal strength until receive RIL sends screen off.
+Secondly, if I add a parameter boolean forceUpdate to updateScreenState(), we need to modify three other calls on updateScreenState() to updateScreenState(false), it is not what we want.
+Please tell me what do you think, thanks!
+
