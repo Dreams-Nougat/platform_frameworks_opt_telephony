@@ -38,3 +38,13 @@ Firstly, this problem only happens when modem resets and before RIL is reconnect
 Secondly, if I add a parameter boolean forceUpdate to updateScreenState(), we need to modify three other calls on updateScreenState() to updateScreenState(false), it is not what we want.
 Please tell me what do you think, thanks!
 
+3213
+Thu May 12 17:15:37 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 3753fe28_268456e6
+UUID: 924d985c_f0a2d90d
+Bytes: 458
+I agree, but updateScreenState() can have additional logic, for eg it checks mIsDevicePlugged as well. Will be good to keep that logic in one place. Btw, is the default state ON? What happens if the screen goes from OFF->ON during modem reset? Is it okay to not send that update to modem?
+
+If the default is ON, you can change the boolean to forceUpdateForOff (ideally it should be an enum but there's no use-case for forceUpdateForOn and forceUpdateForBoth)
+
