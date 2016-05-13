@@ -46,6 +46,7 @@ import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.os.SystemProperties;
 import android.os.UserHandle;
+import android.os.PersistableBundle;
 import android.provider.Settings;
 import android.provider.Telephony;
 import android.telephony.CellLocation;
@@ -60,6 +61,7 @@ import android.util.LocalLog;
 import android.util.Pair;
 import android.view.WindowManager;
 import android.telephony.Rlog;
+import android.telephony.CarrierConfigManager;
 
 import com.android.internal.telephony.cdma.CDMALTEPhone;
 import com.android.internal.telephony.Phone;
@@ -859,6 +861,16 @@ public final class DcTracker extends DcTrackerBase {
         boolean desiredPowerState = sst.getDesiredPowerState();
         boolean checkUserDataEnabled =
                     !(apnContext.getApnType().equals(PhoneConstants.APN_TYPE_IMS));
+
+        if (apnContext.getApnType().equals(PhoneConstants.APN_TYPE_MMS)) {
+            CarrierConfigManager configManager = (CarrierConfigManager)mPhone.getContext().
+                    getSystemService(Context.CARRIER_CONFIG_SERVICE);
+            PersistableBundle pb = configManager.getConfigForSubId(mPhone.getSubId());
+            if (pb != null) {
+                checkUserDataEnabled = checkUserDataEnabled &&
+                        !pb.getBoolean(CarrierConfigManager.KEY_ENABLE_MMS_WITH_MOBILE_DATA_OFF);
+            }
+        }
 
         if (apnContext.isConnectable() && (isEmergencyApn ||
                 (isDataAllowed(apnContext) &&
