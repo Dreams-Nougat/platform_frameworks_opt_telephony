@@ -3357,6 +3357,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         notification.index = p.readInt();
         notification.type = p.readInt();
         notification.number = p.readString();
+        String history = p.readString();
+        if (history != null && !history.isEmpty() ) {
+            notification.history = history.split("\r\n");
+        }
 
         return notification;
     }
