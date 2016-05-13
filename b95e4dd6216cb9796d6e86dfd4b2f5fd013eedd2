@@ -1,0 +1,18 @@
+Revision: b95e4dd6216cb9796d6e86dfd4b2f5fd013eedd2
+Patch-set: 5
+File: src/java/com/android/internal/telephony/RIL.java
+
+2263:67-2263:84
+Fri May 13 16:58:57 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 924d985c_19005d59
+Bytes: 52
+This should be mRadioScreenState == RADIO_SCREEN_OFF
+
+3217:16-3217:70
+Fri May 13 16:58:57 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 924d985c_d905f56c
+Bytes: 95
+You can get rid of this check. That's the point of adding the parameter to updateScreenState().
+
