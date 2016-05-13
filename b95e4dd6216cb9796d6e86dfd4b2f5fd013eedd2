@@ -16,3 +16,13 @@ UUID: 924d985c_d905f56c
 Bytes: 95
 You can get rid of this check. That's the point of adding the parameter to updateScreenState().
 
+3217:16-3217:70
+Fri May 13 17:17:15 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 924d985c_d905f56c
+UUID: 924d985c_595ca53a
+Bytes: 198
+Also isn't it a problem if the screen is ON but you missed that update?
+
+Perhaps the boolean should just be to force the sending regardless of the state?  I think that could simplify the logic alot.
+
