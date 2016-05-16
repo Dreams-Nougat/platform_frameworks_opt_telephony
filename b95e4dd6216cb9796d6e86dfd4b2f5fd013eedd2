@@ -36,3 +36,11 @@ Hi Robert,
 
 Yes, it is possible missing screen ON update. But it is not a problem, because after modem reset it will start reporting signal strength by default. It will not wait for screen on State. Do you think I need to simplify the logic? Thanks.
 
+3217:16-3217:70
+Mon May 16 08:04:38 2016 +0000
+Author: nharold <1060151@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 7767360f_98b59543
+UUID: 924d985c_ed982add
+Bytes: 163
+By explicitly sending screen state regardless of on/off we would avoid making any assumptions about the modem behavior on reset/boot, which seems preferable to me.
+
