@@ -26,3 +26,13 @@ Also isn't it a problem if the screen is ON but you missed that update?
 
 Perhaps the boolean should just be to force the sending regardless of the state?  I think that could simplify the logic alot.
 
+3217:16-3217:70
+Mon May 16 06:31:29 2016 +0000
+Author: Yifan Bai <1099423@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 924d985c_595ca53a
+UUID: 7767360f_98b59543
+Bytes: 249
+Hi Robert,
+
+Yes, it is possible missing screen ON update. But it is not a problem, because after modem reset it will start reporting signal strength by default. It will not wait for screen on State. Do you think I need to simplify the logic? Thanks.
+
