@@ -105,6 +105,14 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     private int mReasonDataDenied = -1;
     private int mNewReasonDataDenied = -1;
 
+    /*
+     * The resource ID of the rejection cause that is sent by network when the CS
+     * registration is rejected. It should be shown to the user as a
+     * notification.
+     */
+    private int mRejectResourceId;
+    private int mNewRejectResourceId;
+
     /**
      * GSM roaming status solely based on TS 27.007 7.2 CREG. Only used by
      * handlePollStateResult to store CREG roaming result.
@@ -163,10 +171,14 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     static final int CS_DISABLED = 1004;           // Access Control enables all voice/sms service
     static final int CS_NORMAL_ENABLED = 1005;     // Access Control blocks normal voice/sms service
     static final int CS_EMERGENCY_ENABLED = 1006;  // Access Control blocks emergency call service
+    static final int CS_REJECT_CAUSE_ENABLED = 2001;  // Notify MM rejection cause
+    static final int CS_REJECT_CAUSE_DISABLED = 2002; // Cancel MM rejection cause
 
     /** Notification id. */
     static final int PS_NOTIFICATION = 888;  // Id to update and cancel PS restricted
     static final int CS_NOTIFICATION = 999;  // Id to update and cancel CS restricted
+    static final int CS_REJECT_CAUSE_NOTIFICATION = 111; // Id to update and cancel the rejection
+                                                         // cause for CS registration
 
     private BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
         @Override
@@ -767,6 +779,18 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                     mNewSS.setState(regCodeToServiceState(regState));
                     mNewSS.setRilVoiceRadioTechnology(type);
 
+                    mNewRejectResourceId = 0;
+                    if (regState == ServiceState.RIL_REG_STATE_DENIED_EMERGENCY_CALL_ENABLED
+                            || regState == ServiceState.RIL_REG_STATE_DENIED) {
+                        if (states.length >= 14 && states[13] != null) {
+                            try {
+                                updateRejectResourceId(Integer.parseInt(states[13]));
+                            } catch (NumberFormatException ex) {
+                                loge( "error parsing rejCode: " + ex);
+                            }
+                        }
+                    }
+
                     boolean isVoiceCapable = mPhoneBase.getContext().getResources()
                             .getBoolean(com.android.internal.R.bool.config_voice_capable);
                     if ((regState == ServiceState.RIL_REG_STATE_DENIED_EMERGENCY_CALL_ENABLED
@@ -968,6 +992,35 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         }
     }
 
+    /*
+     * Update the resourceId for each rejection cause when CS registration is
+     * rejected.
+     *
+     * @param rejCode should be compatible with TS 24.008.
+     */
+    private void updateRejectResourceId(int rejCode) {
+        switch (rejCode) {
+            case 1:
+                // Authentication reject
+                mNewRejectResourceId = com.android.internal.R.string.mmcc_authentication_reject;
+                break;
+            case 2:
+                // IMSI unknown in HLR
+                mNewRejectResourceId = com.android.internal.R.string.mmcc_imsi_unknown_in_hlr;
+                break;
+            case 3:
+                // Illegal MS
+                mNewRejectResourceId = com.android.internal.R.string.mmcc_illegal_ms;
+                break;
+            case 6:
+                // Location area not allowed
+                mNewRejectResourceId = com.android.internal.R.string.mmcc_illegal_me;
+                break;
+            default:
+                return;
+        }
+    }
+
     private void setSignalStrengthDefaultValues() {
         mSignalStrength = new SignalStrength(true);
     }
@@ -1090,6 +1143,9 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         boolean hasDataRoamingOff = mSS.getDataRoaming() && !mNewSS.getDataRoaming();
 
         boolean hasLocationChanged = !mNewCellLoc.equals(mCellLoc);
+
+        boolean hasRejectCauseChanged = mRejectResourceId != mNewRejectResourceId;
+
         TelephonyManager tm =
                 (TelephonyManager) mPhone.getContext().getSystemService(Context.TELEPHONY_SERVICE);
 
@@ -1137,6 +1193,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
 
         mReasonDataDenied = mNewReasonDataDenied;
         mMaxDataCalls = mNewMaxDataCalls;
+        mRejectResourceId = mNewRejectResourceId;
 
         if (hasRilVoiceRadioTechnologyChanged) {
             updatePhoneObject();
@@ -1159,6 +1216,11 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                         mNitzUpdatedTime + " changing to false");
             }
             mNitzUpdatedTime = false;
+        }
+
+        if (hasRejectCauseChanged) {
+            setNotification(mRejectResourceId == 0 ? CS_REJECT_CAUSE_DISABLED
+                    : CS_REJECT_CAUSE_ENABLED);
         }
 
         if (hasChanged) {
@@ -1980,9 +2042,12 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
     }
 
     /**
-     * Post a notification to NotificationManager for restricted state
+     * Post a notification to NotificationManager for restricted state and
+     * rejection cause for cs registration
      *
-     * @param notifyType is one state of PS/CS_*_ENABLE/DISABLE
+     * @param notifyType is one state of
+     *            PS/CS_*_ENABLE/DISABLE/
+     *            CS_REJECT_CAUSE_ENABLED/CS_REJECT_CAUSE_DISABLED
      */
     private void setNotification(int notifyType) {
         if (DBG) log("setNotification: create notification " + notifyType);
@@ -2001,6 +2066,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         CharSequence details = "";
         CharSequence title = context.getText(com.android.internal.R.string.RestrictedChangedTitle);
         int notificationId = CS_NOTIFICATION;
+        int icon = com.android.internal.R.drawable.stat_sys_warning;
 
         switch (notifyType) {
         case PS_ENABLED:
@@ -2026,13 +2092,26 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         case CS_DISABLED:
             // do nothing and cancel the notification later
             break;
+        case CS_REJECT_CAUSE_ENABLED:
+            notificationId = CS_REJECT_CAUSE_NOTIFICATION;
+            icon = com.android.internal.R.drawable.stat_notify_mmcc_indication_icn;
+            title = Resources.getSystem().getString(mRejectResourceId);
+            details = null;
+            break;
+        case CS_REJECT_CAUSE_DISABLED:
+            notificationId = CS_REJECT_CAUSE_NOTIFICATION;
+            break;
         }
 
-        if (DBG) log("setNotification: put notification " + title + " / " +details);
+        if (DBG) {
+            log("setNotification, create notification, notifyType: " + notifyType
+                    + ", title: " + title + ", details: " + details);
+        }
+
         mNotification = new Notification.Builder(context)
                 .setWhen(System.currentTimeMillis())
                 .setAutoCancel(true)
-                .setSmallIcon(com.android.internal.R.drawable.stat_sys_warning)
+                .setSmallIcon(icon)
                 .setTicker(title)
                 .setColor(context.getResources().getColor(
                         com.android.internal.R.color.system_notification_accent_color))
@@ -2043,7 +2122,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
         NotificationManager notificationManager = (NotificationManager)
             context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        if (notifyType == PS_DISABLED || notifyType == CS_DISABLED) {
+        if (notifyType == PS_DISABLED || notifyType == CS_DISABLED
+                || notifyType == CS_REJECT_CAUSE_DISABLED) {
             // cancel previous post notification
             notificationManager.cancel(notificationId);
         } else {
