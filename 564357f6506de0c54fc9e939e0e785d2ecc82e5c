@@ -1,0 +1,11 @@
+Revision: 564357f6506de0c54fc9e939e0e785d2ecc82e5c
+Patch-set: 1
+File: src/java/com/android/internal/telephony/SubscriptionController.java
+
+334
+Wed May 18 20:46:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 37f21ea8_5f7a34df
+Bytes: 124
+Why is this needed? getActiveSubscriptionInfoList(), which I believe should be used to get active SPNs, already does a sort.
+
