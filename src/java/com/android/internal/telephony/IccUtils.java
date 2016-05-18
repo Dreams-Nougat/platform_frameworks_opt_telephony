@@ -260,7 +260,49 @@ public class IccUtils {
         } catch (NotFoundException e) {
             // Ignore Exception and defaultCharset is set to a empty string.
         }
-        return GsmAlphabet.gsm8BitUnpackedToString(data, offset, length, defaultCharset.trim());
+        String str = getGsm8BitString(data, offset, length, defaultCharset.trim());
+        if (str == null) {
+                // ADN identifier use the SMS default 7 bit coded alphabet with bit 8 set to 0.
+                // However, sometimes there is no bit 8, in this situation ADN cannot be decoded.
+                // Therefore, try to decode with 7 bit. 
+                getGsm7BitString(data, offset, length);
+        }
+        return str;
+    }
+
+    private static String getGsm8BitString(byte[] data, int offset, int length,
+            String characterset) {
+        String gsm8Bit = null;
+        try {
+            gsm8Bit = GsmAlphabet.gsm8BitUnpackedToString(data, offset, length,
+                    characterset);
+        } catch (StringIndexOutOfBoundsException e) {
+            gsm8Bit = null;
+            Rlog.e(LOG_TAG, "getGsm8BitString exceptions happens here!", e);
+        }
+        return gsm8Bit;
+    }
+
+    private static String getGsm7BitString(byte[] data, int offset, int length) {
+        if(length <= 0){
+            return null;
+        }
+        String gsm7Bit = null;
+        int index = length;
+        for (int i = 0; i < length; i++) {
+            if (data[i] == -1) {
+                index = i;
+                break;
+            }
+        }
+        Rlog.d(LOG_TAG, "getGsm7BitString index=" + index);
+        try {
+            gsm7Bit = GsmAlphabet.gsm7BitPackedToString(data, offset, (index*8)/7);
+        } catch (StringIndexOutOfBoundsException e) {
+            gsm7Bit = null;
+            Rlog.e(LOG_TAG, "getGsm7BitString exception happens here!", e);
+        }
+        return gsm7Bit;
     }
 
     static int
