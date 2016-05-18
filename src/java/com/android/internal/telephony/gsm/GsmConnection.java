@@ -204,6 +204,11 @@ public class GsmConnection extends Connection {
     }
 
     @Override
+    public String getOrigDialString(){
+        return mDialString;
+    }
+
+    @Override
     public GsmCall getCall() {
         return mParent;
     }
