@@ -331,7 +331,7 @@ public class SubscriptionController extends ISub.Stub {
         }
         ArrayList<SubscriptionInfo> subList = null;
         Cursor cursor = mContext.getContentResolver().query(SubscriptionManager.CONTENT_URI,
-                null, selection, selectionArgs, null);
+                null, selection, selectionArgs, "sim_id");
         try {
             if (cursor != null) {
                 while (cursor.moveToNext()) {
