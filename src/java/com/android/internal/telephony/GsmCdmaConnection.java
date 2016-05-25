@@ -481,6 +481,9 @@ public class GsmCdmaConnection extends Connection {
             case CallFailCause.CDMA_ACCESS_BLOCKED:
                 return DisconnectCause.CDMA_ACCESS_BLOCKED;
 
+            case CallFailCause.NO_ANSWER_FROM_USER:
+                return DisconnectCause.TIMED_OUT;
+
             case CallFailCause.ERROR_UNSPECIFIED:
             case CallFailCause.NORMAL_CLEARING:
             default:

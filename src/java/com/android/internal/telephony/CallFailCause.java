@@ -35,6 +35,9 @@ public interface CallFailCause {
     // Busy Tone
     int USER_BUSY           = 17;
 
+    // User alerting, no answer
+    int NO_ANSWER_FROM_USER = 19;
+
     // No Tone
     int NUMBER_CHANGED      = 22;
     int STATUS_ENQUIRY      = 30;
