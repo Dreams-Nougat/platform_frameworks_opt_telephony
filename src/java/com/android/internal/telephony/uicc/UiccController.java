@@ -127,6 +127,8 @@ public class UiccController extends Handler {
             } else {
                 mCis[i].registerForOn(this, EVENT_ICC_STATUS_CHANGED, index);
             }
+            sendMessage(obtainMessage(EVENT_ICC_STATUS_CHANGED,
+                    new AsyncResult(index, null, null)));
             mCis[i].registerForNotAvailable(this, EVENT_RADIO_UNAVAILABLE, index);
             mCis[i].registerForIccRefresh(this, EVENT_SIM_REFRESH, index);
         }
