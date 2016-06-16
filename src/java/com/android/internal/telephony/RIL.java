@@ -3770,6 +3770,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 riljLogv("Incoming UUS : NOT present!");
             }
 
+            dc.codec = p.readString(); // Could be NULL
+
             // Make sure there's a leading + on addresses with a TOA of 145
             dc.number = PhoneNumberUtils.stringFromStringAndTOA(dc.number, dc.TOA);
 
