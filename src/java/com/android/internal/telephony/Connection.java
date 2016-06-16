@@ -184,6 +184,7 @@ public abstract class Connection {
     public Call.State mPreHandoverState = Call.State.IDLE;
     private Bundle mExtras;
     private int mPhoneType;
+    public String mCodec; // MAY BE NULL!!!
 
     protected Connection(int phoneType) {
         mPhoneType = phoneType;
