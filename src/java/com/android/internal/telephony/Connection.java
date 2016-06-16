@@ -130,6 +130,7 @@ public abstract class Connection {
     private android.telecom.Connection.VideoProvider mVideoProvider;
     public Call.State mPreHandoverState = Call.State.IDLE;
     private Bundle mExtras;
+    public String mCodec; // MAY BE NULL!!!
 
     /* Instance Methods */
 
