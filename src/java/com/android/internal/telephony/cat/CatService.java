@@ -16,15 +16,19 @@
 
 package com.android.internal.telephony.cat;
 
+import android.app.ActivityManagerNative;
+import android.app.IActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.res.Configuration;
 import android.content.res.Resources.NotFoundException;
 import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
@@ -450,6 +454,18 @@ public class CatService extends Handler implements AppInterface {
                     ((CallSetupParams) cmdParams).mConfirmMsg.text = message.toString();
                 }
                 break;
+            case LANGUAGE_NOTIFICATION:
+                String language = ((LanguageParams) cmdParams).mLanguage;
+                ResultCode result = ResultCode.OK;
+                if (language != null && language.length() > 0) {
+                    try {
+                        changeLanguage(language);
+                    } catch (RemoteException e) {
+                        result = ResultCode.TERMINAL_CRNTLY_UNABLE_TO_PROCESS;
+                    }
+                }
+                sendTerminalResponse(cmdParams.mCmdDet, result, false, 0, null);
+                return;
             case OPEN_CHANNEL:
             case CLOSE_CHANNEL:
             case RECEIVE_DATA:
@@ -1116,5 +1132,14 @@ public class CatService extends Handler implements AppInterface {
             // Card moved to PRESENT STATE.
             mCmdIf.reportStkServiceIsRunning(null);
         }
+    }
+
+    private void changeLanguage(String language) throws RemoteException {
+        IActivityManager am = ActivityManagerNative.getDefault();
+        Configuration config = am.getConfiguration();
+        Locale loc = new Locale(language);
+        config.locale = loc;
+        config.userSetLocale = true;
+        am.updateConfiguration(config);
     }
 }
