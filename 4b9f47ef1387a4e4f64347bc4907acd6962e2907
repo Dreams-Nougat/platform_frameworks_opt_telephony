@@ -1,0 +1,11 @@
+Revision: 4b9f47ef1387a4e4f64347bc4907acd6962e2907
+Patch-set: 1
+File: src/java/com/android/internal/telephony/dataconnection/DcTracker.java
+
+871:41-871:79
+Mon Jul 04 01:15:59 2016 +0000
+Author: Toshiya Ikenaga <1097598@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 3dbbeaf3_d8c60d0b
+Bytes: 272
+Please let us know the gerrit which includes this CarrierConfig implementation because this gerrit solely is not contributable due to lack of CarrierConfig part implementation. Must contribute this gerrit accompanied by the CarrierConfig part which this gerrit depends on.
+
