@@ -9,3 +9,11 @@ UUID: fa979800_996b4ca0
 Bytes: 89
 READY or PUK_REQUIRED? updateExternalState() sets the state to PUK_REQUIRED in this case.
 
+10:51-10:56
+Tue Jul 12 02:17:16 2016 +0000
+Author: Toshiya Ikenaga <1097598@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: fa979800_996b4ca0
+UUID: 1a80ec12_a7eb4aaa
+Bytes: 88
+PUK_REQUIRED is correct. I have modified the commit message in new patch-set. Thank you.
+
