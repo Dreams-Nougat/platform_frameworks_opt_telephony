@@ -475,17 +475,30 @@ public class ApnSetting {
         return false;
     }
 
-    public boolean isMetered(Context context, int subId, boolean isRoaming ) {
-        for (String type : types) {
+    public static boolean isMetered(Context context, String[] apnTypes,
+            int subId, boolean isRoaming) {
+        for (String type : apnTypes) {
+            if (DBG) Rlog.d(LOG_TAG, "isMetered: apnType = " + type + ", isRoaming: " + isRoaming);
             // If one of the APN type is metered, then this APN setting is metered.
             if (isMeteredApnType(type, context, subId, isRoaming)) {
-                if (DBG) Rlog.d(LOG_TAG, "Metered. APN = " + toString() +
-                        "isRoaming: " + isRoaming);
+                if (DBG) Rlog.d(LOG_TAG, "isMetered: Metered.");
                 return true;
             }
         }
-        if (DBG) Rlog.d(LOG_TAG, "Not metered. APN = " + toString() + "isRoaming: " + isRoaming);
+        if (DBG) Rlog.d(LOG_TAG, "isMetered: Not metered. isRoaming: " + isRoaming);
         return false;
+    }
+
+    public boolean isMetered(Context context, int subId, boolean isRoaming) {
+        boolean metered = isMetered(context, types, subId, isRoaming);
+        if (metered) {
+            if (DBG) Rlog.d(LOG_TAG, "isMetered: Metered. APN = " + toString()
+                    + "isRoaming: " + isRoaming);
+        } else {
+            if (DBG) Rlog.d(LOG_TAG, "isMetered: Not metered. APN = " + toString()
+                    + "isRoaming: " + isRoaming);
+        }
+        return metered;
     }
 
     // TODO - if we have this function we should also have hashCode.

@@ -16,6 +16,8 @@
 
 package com.android.internal.telephony.dataconnection;
 
+import com.android.internal.telephony.Phone;
+import com.android.internal.telephony.dataconnection.DataConnection.AllowedApnTypesParams;
 import com.android.internal.telephony.dataconnection.DataConnection.ConnectionParams;
 import com.android.internal.telephony.dataconnection.DataConnection.DisconnectParams;
 import com.android.internal.util.AsyncChannel;
@@ -59,7 +61,10 @@ public class DcAsyncChannel extends AsyncChannel {
     public static final int REQ_RESET = BASE + 12;
     public static final int RSP_RESET = BASE + 13;
 
-    private static final int CMD_TO_STRING_COUNT = RSP_RESET - BASE + 1;
+    public static final int REQ_REFRESH_NETWORK_CAPABILITIES = BASE + 14;
+    public static final int RSP_REFRESH_NETWORK_CAPABILITIES = BASE + 15;
+
+    private static final int CMD_TO_STRING_COUNT = RSP_REFRESH_NETWORK_CAPABILITIES - BASE + 1;
     private static String[] sCmdToString = new String[CMD_TO_STRING_COUNT];
     static {
         sCmdToString[REQ_IS_INACTIVE - BASE] = "REQ_IS_INACTIVE";
@@ -78,6 +83,8 @@ public class DcAsyncChannel extends AsyncChannel {
         sCmdToString[RSP_GET_NETWORK_CAPABILITIES - BASE] = "RSP_GET_NETWORK_CAPABILITIES";
         sCmdToString[REQ_RESET - BASE] = "REQ_RESET";
         sCmdToString[RSP_RESET - BASE] = "RSP_RESET";
+        sCmdToString[REQ_REFRESH_NETWORK_CAPABILITIES - BASE] = "REQ_REFRESH_NETWORK_CAPABILITIES";
+        sCmdToString[RSP_REFRESH_NETWORK_CAPABILITIES - BASE] = "RSP_REFRESH_NETWORK_CAPABILITIES";
     }
 
     // Convert cmd to string or null if unknown
@@ -348,6 +355,55 @@ public class DcAsyncChannel extends AsyncChannel {
     }
 
     /**
+     * Refresh NetworkCapabilities due to specified reason.
+     *
+     * @param allowedApnTypes the allowed apn types calculated by DcTracker
+     * @param reason the specified reason triggered this action
+     *
+     * Response {@link #rspRefreshNetworkCapabilities}
+     */
+    public void refreshNetworkCapabilities(String[] allowedApnTypes, String reason) {
+        sendMessage(REQ_REFRESH_NETWORK_CAPABILITIES,
+                new AllowedApnTypesParams(allowedApnTypes, reason));
+        if (DBG) log("refreshNetworkCapabilities");
+    }
+
+    /**
+     * Evaluate EVENT_REFRESH_NETWORK_CAPABILITIES
+     *
+     * @param response
+     * @return {@code true} if NetworkCapabilities is changed
+     */
+    public boolean rspRefreshNetworkCapabilities(Message response) {
+        boolean retVal = response.arg1 == 1;
+        if (DBG) log("rspRefreshNetworkCapabilities=" + retVal);
+        return retVal;
+    }
+
+    /**
+     * Refresh NetworkCapabilities due to specified reason synchronously.
+     *
+     * @return {@code true} if NetworkCapabilities is changed
+     */
+    public boolean refreshNetworkCapabilitiesSync(String[] allowedApnTypes, String reason) {
+        boolean value;
+        if (isCallerOnDifferentThread()) {
+            Message response = sendMessageSynchronously(REQ_REFRESH_NETWORK_CAPABILITIES,
+                    new AllowedApnTypesParams(allowedApnTypes, reason));
+            if ((response != null) && (response.what == RSP_REFRESH_NETWORK_CAPABILITIES)) {
+                value = rspRefreshNetworkCapabilities(response);
+            } else {
+                log("refreshNetworkCapabilitiesSync error response=" + response);
+                value = false;
+            }
+        } else {
+            value = mDc.refreshNetworkCapabilities(
+                    new AllowedApnTypesParams(allowedApnTypes, reason));
+        }
+        return value;
+    }
+
+    /**
      * Response RSP_RESET when complete
      */
     public void reqReset() {
@@ -367,13 +423,16 @@ public class DcAsyncChannel extends AsyncChannel {
      *        AsyncResult.result = FailCause and AsyncResult.exception = Exception().
      */
     public void bringUp(ApnContext apnContext, int profileId, int rilRadioTechnology,
-                        Message onCompletedMsg, int connectionGeneration) {
+                        Message onCompletedMsg, int connectionGeneration,
+                        String[] allowedApnTypes) {
         if (DBG) {
             log("bringUp: apnContext=" + apnContext + " onCompletedMsg=" + onCompletedMsg);
         }
         sendMessage(DataConnection.EVENT_CONNECT,
                 new ConnectionParams(apnContext, profileId, rilRadioTechnology, onCompletedMsg,
-                        connectionGeneration));
+                        connectionGeneration,
+                        new AllowedApnTypesParams(allowedApnTypes,
+                                Phone.REASON_DATA_BRING_UP)));
     }
 
     /**

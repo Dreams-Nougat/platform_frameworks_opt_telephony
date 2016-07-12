@@ -56,6 +56,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.net.InetAddress;
 import java.util.Collection;
@@ -103,14 +104,17 @@ public class DataConnection extends StateMachine {
         int mRilRat;
         Message mOnCompletedMsg;
         final int mConnectionGeneration;
+        AllowedApnTypesParams mAllowedApnTypesParams;
 
         ConnectionParams(ApnContext apnContext, int profileId,
-                int rilRadioTechnology, Message onCompletedMsg, int connectionGeneration) {
+                int rilRadioTechnology, Message onCompletedMsg, int connectionGeneration,
+                AllowedApnTypesParams allowedApnTypesParams) {
             mApnContext = apnContext;
             mProfileId = profileId;
             mRilRat = rilRadioTechnology;
             mOnCompletedMsg = onCompletedMsg;
             mConnectionGeneration = connectionGeneration;
+            mAllowedApnTypesParams = allowedApnTypesParams;
         }
 
         @Override
@@ -118,7 +122,8 @@ public class DataConnection extends StateMachine {
             return "{mTag=" + mTag + " mApnContext=" + mApnContext
                     + " mProfileId=" + mProfileId
                     + " mRat=" + mRilRat
-                    + " mOnCompletedMsg=" + msgToString(mOnCompletedMsg) + "}";
+                    + " mOnCompletedMsg=" + msgToString(mOnCompletedMsg)
+                    + " mAllowedApnTypesParams = "+ mAllowedApnTypesParams + "}";
         }
     }
 
@@ -142,6 +147,57 @@ public class DataConnection extends StateMachine {
             return "{mTag=" + mTag + " mApnContext=" + mApnContext
                     + " mReason=" + mReason
                     + " mOnCompletedMsg=" + msgToString(mOnCompletedMsg) + "}";
+        }
+    }
+
+    /**
+     * This class contains APN types which are allowed to establish connection and the reason to
+     * cause the change of allowed APN types.
+     *
+     * ApnSetting can contain both metered type and non-metered type simultaneously.
+     * If we allow connection for all APN types in ApnSetting when one of them is requested,
+     * undesirable network access can occur. For example, issue occurs when all the conditions
+     * below are met.
+     *  - User data setting is disabled.
+     *  - APN type 'mms' is non-metered.
+     *  - APN type 'default' is metered.
+     *  - Upper layer {@link #requestNetwork} with {@link NetworkRequest} which contains
+     *    {@link NetworkCapabilities#NET_CAPABILITY_MMS}. That is, user sends a mms.
+     * In this case, {@link NetworkCapabilities#NET_CAPABILITY_INTERNET} is notified to
+     * ConnectivityService and upper layer can reach internet unintentionally. To avoid this issue,
+     * AllowedApnTypesParams are calculated by DcTracker and passed to DataConnection so that
+     * DataConnection#makeNetworkCapabilities can calculate NetworkCapabilities correctly.
+     */
+    public static class AllowedApnTypesParams {
+        String[] mAllowedApnTypes;
+        String mReason;
+
+        AllowedApnTypesParams(String[] allowedApnTypes, String reason) {
+            mAllowedApnTypes = allowedApnTypes;
+            mReason = reason;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null) return false;
+            if (o instanceof AllowedApnTypesParams == false) return false;
+            return (toString().equals(o.toString()));
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("{mAllowedApnTypes=");
+            if (mAllowedApnTypes != null && mAllowedApnTypes.length > 0) {
+                for (int i = 0; i < mAllowedApnTypes.length; i++) {
+                    sb.append(mAllowedApnTypes[i]);
+                    if (i < mAllowedApnTypes.length - 1) {
+                        sb.append(" | ");
+                    }
+                }
+            }
+            sb.append(", ").append("mReason=").append(mReason).append("}");
+            return sb.toString();
         }
     }
 
@@ -825,12 +881,37 @@ public class DataConnection extends StateMachine {
         mLinkProperties.setTcpBufferSizes(sizes);
     }
 
+    /**
+     * Refresh NetworkCapabilities and notify to ConnectivityService.
+     *
+     * @param allowedApnTypesParams the allowed apn types parameters, including allowed apn types
+     *                              and the reason triggered this action
+     * @return {@code true} if NetworkCapabilities is changed
+     */
+    public boolean refreshNetworkCapabilities(AllowedApnTypesParams allowedApnTypesParams) {
+        boolean changed = false;
+        if (mConnectionParams != null && !Objects.equals(
+                mConnectionParams.mAllowedApnTypesParams, allowedApnTypesParams)) {
+            mConnectionParams.mAllowedApnTypesParams = allowedApnTypesParams;
+            if (getCurrentState() == mActiveState && mNetworkAgent != null) {
+                mNetworkAgent.sendNetworkCapabilities(makeNetworkCapabilities());
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
     private NetworkCapabilities makeNetworkCapabilities() {
         NetworkCapabilities result = new NetworkCapabilities();
         result.addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR);
 
         if (mApnSetting != null) {
-            for (String type : mApnSetting.types) {
+            String[] allowedApnTypes = mConnectionParams != null
+                    && mConnectionParams.mAllowedApnTypesParams != null
+                    && mConnectionParams.mAllowedApnTypesParams.mAllowedApnTypes != null
+                            ? mConnectionParams.mAllowedApnTypesParams.mAllowedApnTypes
+                            : mApnSetting.types;
+            for (String type : allowedApnTypes) {
                 switch (type) {
                     case PhoneConstants.APN_TYPE_ALL: {
                         result.addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
@@ -887,7 +968,7 @@ public class DataConnection extends StateMachine {
 
             // If none of the APN types associated with this APN setting is metered,
             // then we apply NOT_METERED capability to the network.
-            if (!mApnSetting.isMetered(mPhone.getContext(), mPhone.getSubId(),
+            if (!mApnSetting.isMetered(mPhone.getContext(), allowedApnTypes, mPhone.getSubId(),
                     mPhone.getServiceState().getDataRoaming())) {
                 result.addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED);
             }
@@ -1171,7 +1252,13 @@ public class DataConnection extends StateMachine {
                 case EVENT_DATA_CONNECTION_ROAM_OFF:
                     mNetworkInfo.setRoaming(false);
                     break;
-
+                case DcAsyncChannel.REQ_REFRESH_NETWORK_CAPABILITIES:
+                    AllowedApnTypesParams allowedApnTypesParams = (AllowedApnTypesParams) msg.obj;
+                    boolean changed = refreshNetworkCapabilities(allowedApnTypesParams);
+                    if (VDBG) log("REQ_REFRESH_NETWORK_CAPABILITIES  changed=" + changed);
+                    mAc.replyToMessage(msg, DcAsyncChannel.RSP_REFRESH_NETWORK_CAPABILITIES,
+                            changed ? 1 : 0);
+                    break;
                 default:
                     if (DBG) {
                         log("DcDefaultState: shouldn't happen but ignore msg.what="

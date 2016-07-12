@@ -905,6 +905,11 @@ public class DcTracker extends Handler {
                     Settings.Global.putInt(mResolver, Settings.Global.MOBILE_DATA + phoneSubId,
                             enabled ? 1 : 0);
                 }
+
+                refreshNetworkCapabilities(mUserDataEnabled
+                        ? Phone.REASON_DATA_ENABLED
+                        : Phone.REASON_DATA_SPECIFIC_DISABLED);
+
                 if (getDataOnRoamingEnabled() == false &&
                         mPhone.getServiceState().getDataRoaming() == true) {
                     if (enabled) {
@@ -1717,8 +1722,7 @@ public class DcTracker extends Handler {
             if (specificDisable) {
                 // Use ApnSetting to decide metered or non-metered.
                 // Tear down all metered data connections.
-                ApnSetting apnSetting = apnContext.getApnSetting();
-                if (apnSetting != null && apnSetting.isMetered(mPhone.getContext(),
+                if (ApnSetting.isMeteredApnType(apnContext.getApnType(), mPhone.getContext(),
                         mPhone.getSubId(), mPhone.getServiceState().getDataRoaming())) {
                     if (DBG) log("clean up metered ApnContext Type: " + apnContext.getApnType());
                     apnContext.setReason(reason);
@@ -2150,12 +2154,13 @@ public class DcTracker extends Handler {
         apnContext.setDataConnectionAc(dcac);
         apnContext.setApnSetting(apnSetting);
         apnContext.setState(DctConstants.State.CONNECTING);
+        String[] allowedApnTypes = calcDataAllowedApnTypes(apnSetting.types);
         mPhone.notifyDataConnection(apnContext.getReason(), apnContext.getApnType());
 
         Message msg = obtainMessage();
         msg.what = DctConstants.EVENT_DATA_SETUP_COMPLETE;
         msg.obj = new Pair<ApnContext, Integer>(apnContext, generation);
-        dcac.bringUp(apnContext, profileId, radioTech, msg, generation);
+        dcac.bringUp(apnContext, profileId, radioTech, msg, generation, allowedApnTypes);
 
         if (DBG) log("setupData: initing!");
         return true;
@@ -2755,21 +2760,41 @@ public class DcTracker extends Handler {
     private void onRoamingOff() {
         if (DBG) log("onRoamingOff");
 
-        if (!mUserDataEnabled) return;
+        refreshNetworkCapabilities(Phone.REASON_ROAMING_OFF);
+
+        boolean isAnyNonMeteredApnContextConnectable = isAnyNonMeteredApnContextConnectable();
+        if (DBG) log("onRoamingOff: isAnyNonMeteredApnContextConnectable="
+                + isAnyNonMeteredApnContextConnectable);
+
+        if (!mUserDataEnabled && !isAnyNonMeteredApnContextConnectable) {
+            if (DBG) log("onRoamingOff: data not enabled by user"
+                    + " and no any non-metered ApnContext is connectable");
+            return;
+        }
 
         if (getDataOnRoamingEnabled() == false) {
             notifyOffApnsOfAvailability(Phone.REASON_ROAMING_OFF);
             setupDataOnConnectableApns(Phone.REASON_ROAMING_OFF);
         } else {
             notifyDataConnection(Phone.REASON_ROAMING_OFF);
+            if (isAnyNonMeteredApnContextConnectable) {
+                setupDataOnConnectableApns(Phone.REASON_ROAMING_OFF);
+            }
         }
     }
 
     private void onRoamingOn() {
         if (DBG) log("onRoamingOn");
 
-        if (!mUserDataEnabled) {
-            if (DBG) log("data not enabled by user");
+        refreshNetworkCapabilities(Phone.REASON_ROAMING_ON);
+
+        boolean isAnyNonMeteredApnContextConnectable = isAnyNonMeteredApnContextConnectable();
+        if (DBG) log("onRoamingOn: isAnyNonMeteredApnContextConnectable="
+                + isAnyNonMeteredApnContextConnectable);
+
+        if (!mUserDataEnabled && !isAnyNonMeteredApnContextConnectable) {
+            if (DBG) log("onRoamingOn: data not enabled by user"
+                    + " and no any non-metered ApnContext is connectable");
             return;
         }
 
@@ -2787,6 +2812,9 @@ public class DcTracker extends Handler {
             if (DBG) log("onRoamingOn: Tear down data connection on roaming.");
             cleanUpAllConnections(true, Phone.REASON_ROAMING_ON);
             notifyOffApnsOfAvailability(Phone.REASON_ROAMING_ON);
+            if (isAnyNonMeteredApnContextConnectable) {
+                setupDataOnConnectableApns(Phone.REASON_ROAMING_ON);
+            }
         }
     }
 
@@ -4879,4 +4907,96 @@ public class DcTracker extends Handler {
         }
     }
 
+    /*
+     * Calculate apn types allowed to establish connection.
+     *
+     * @param apnTypes the apn types to be calculated
+     * @return the allowed apn types
+     */
+    private String[] calcDataAllowedApnTypes(String[] apnTypes) {
+        ArrayList<String> list = new ArrayList<String>();
+        if (apnTypes != null && apnTypes.length > 0) {
+            for (String apnType : apnTypes) {
+                // If data connection was set up for non-metered apn type ONLY.
+                // The capability of metered apn type should be removed.
+                // Otherwise, device can reach metered network such as internet unintentionally.
+                if (isDataAllowedForApnType(apnType)) {
+                    list.add(apnType);
+                }
+            }
+        }
+        return (String[]) list.toArray(new String[0]);
+    }
+
+    /*
+     * Check whether data connection for specific APN type is allowed.
+     * NOTE: code logic here is referred to {#trySetupData}.
+     *
+     * @param apnType the specific apnType to be checked
+     * @return {@code true} means data for the specified apn type is allowed,
+     *         {@code false} otherwise.
+     */
+    private boolean isDataAllowedForApnType(String apnType) {
+        boolean allowed = false;
+        final ServiceStateTracker sst = mPhone.getServiceStateTracker();
+
+        // set to false if apn type is non-metered.
+        boolean checkUserDataEnabled =
+                (ApnSetting.isMeteredApnType(apnType, mPhone.getContext(),
+                        mPhone.getSubId(), mPhone.getServiceState().getDataRoaming()));
+
+        DataAllowFailReason failureReason = new DataAllowFailReason();
+
+        // allow data if currently in roaming service, roaming setting disabled
+        // and requested apn type is non-metered for roaming.
+        boolean isDataAllowed = isDataAllowed(failureReason) ||
+                (failureReason.isFailForSingleReason(DataAllowFailReasonType.ROAMING_DISABLED) &&
+                !(ApnSetting.isMeteredApnType(apnType, mPhone.getContext(),
+                mPhone.getSubId(), mPhone.getServiceState().getDataRoaming())));
+
+        if (isDataAllowed && isDataEnabled(checkUserDataEnabled)) {
+            allowed = true;
+        }
+        if (DBG) log("isDataAllowedForApnType: apnType=" + apnType + ", allowed=" + allowed);
+        return allowed;
+    }
+
+    /*
+     * Check whether there is any non-metered ApnContext is connectable
+     * Below conditions should be met:
+     *  (1) ApnContext is Enabled, that is telephony FWK receives specifed network request
+     *  (2) Current ApnContext is connectable
+     */
+    private boolean isAnyNonMeteredApnContextConnectable() {
+        for (ApnContext apnCtx : mApnContexts.values()) {
+            if (apnCtx.isConnectable() && isDataAllowedForApnType(apnCtx.getApnType())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /*
+     * Notify DataConnection to refresh network capabilities
+     */
+    private void refreshNetworkCapabilities(String reason) {
+        boolean changed = false;
+        for (ApnContext apnCtx : mApnContexts.values()) {
+            DcAsyncChannel dcac = apnCtx.getDcAc();
+            if (dcac != null) {
+                ApnSetting apnSetting = dcac.getApnSettingSync();
+                if (apnSetting != null) {
+                    if (DBG)  log("refreshNetworkCapabilities for apnCtx:" + apnCtx
+                            + " due to " + reason);
+                    apnCtx.requestLog("refreshNetworkCapabilities due to " + reason);
+                    changed |= dcac.refreshNetworkCapabilitiesSync(
+                            calcDataAllowedApnTypes(apnSetting.types), reason);
+                }
+            }
+        }
+        if (changed) {
+            if (DBG)  log("refreshNetworkCapabilities trigger notifyDataConnection");
+            notifyDataConnection(reason);
+        }
+    }
 }

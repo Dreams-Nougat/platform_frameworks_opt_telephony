@@ -86,6 +86,7 @@ public interface PhoneInternalInterface {
     /**
      * Optional reasons for disconnect and connect
      */
+    static final String REASON_DATA_BRING_UP = "dataBringUp";
     static final String REASON_ROAMING_ON = "roamingOn";
     static final String REASON_ROAMING_OFF = "roamingOff";
     static final String REASON_DATA_DISABLED = "dataDisabled";
