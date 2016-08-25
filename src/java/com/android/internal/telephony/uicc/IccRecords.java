@@ -176,6 +176,15 @@ public abstract class IccRecords extends Handler implements IccConstants {
      */
     public void dispose() {
         mDestroyed.set(true);
+
+        // It is possible that there is another thread waiting for the response
+        // to requestIccSimAuthentication() in getIccSimChallengeResponse().
+        // A pseudo error response is made here to avoid the deadlock.
+        auth_rsp = new IccIoResult(0x6F, 0, (byte[]) null);
+        synchronized (mLock) {
+            mLock.notifyAll();
+        }
+
         mParentApp = null;
         mFh = null;
         mCi = null;
