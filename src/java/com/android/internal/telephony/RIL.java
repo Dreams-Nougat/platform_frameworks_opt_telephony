@@ -36,6 +36,7 @@ import android.net.LocalSocketAddress;
 import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.HwBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Parcel;
@@ -57,8 +58,11 @@ import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.telephony.ModemActivityInfo;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
+
+import android.hardware.radio.V1_0.*;
 
 import com.android.internal.telephony.gsm.SmsBroadcastConfigInfo;
 import com.android.internal.telephony.gsm.SsData;
@@ -718,6 +722,184 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         this(context, preferredNetworkType, cdmaSubscription, null);
     }
 
+    class RadioResponse extends IRadioResponse.Stub {
+        public void iccCardStatusResponse(RadioResponseInfo responseInfo, CardStatus cardStatus) {
+            Log.d(RILJ_LOG_TAG, "iccCardStatusResponse: serial " + responseInfo.serial +
+                    " cardStatus.cardState " + cardStatus.cardState);
+            RILRequest rr = findAndRemoveRequestFromList(responseInfo.serial);
+
+            Object ret = null;
+            if (rr.mResult != null) {
+                Log.d(RILJ_LOG_TAG, "iccCardStatusResponse: rr.mResult != null");
+                ret = responseIccCardStatus(cardStatus);
+                AsyncResult.forMessage(rr.mResult, ret, null);
+                rr.mResult.sendToTarget();
+            } else {
+                Log.d(RILJ_LOG_TAG, "iccCardStatusResponse: rr.mResult == null");
+            }
+
+            decrementWakeLock(rr);
+            rr.release();
+        }
+
+        public void supplyIccPinForAppResponse(RadioResponseInfo var1, int var2) {}
+
+        public void supplyIccPukForAppResponse(RadioResponseInfo var1, int var2) {}
+
+        public void supplyIccPin2ForAppResponse(RadioResponseInfo var1, int var2) {}
+
+        public void supplyIccPuk2ForAppResponse(RadioResponseInfo var1, int var2) {}
+
+        public void changeIccPinForAppResponse(RadioResponseInfo var1, int var2) {}
+
+        public void changeIccPin2ForAppResponse(RadioResponseInfo var1, int var2) {}
+
+        public void supplyNetworkDepersonalizationResponse(RadioResponseInfo var1, int var2) {}
+
+        public void getCurrentCallsResponse(RadioResponseInfo var1, ArrayList<android.hardware.radio.V1_0.Call> var2) {}
+
+        public void dialResponse(RadioResponseInfo var1) {}
+
+        public void getIMSIForAppResponse(RadioResponseInfo var1, String var2) {}
+
+        public void hangupConnectionResponse(RadioResponseInfo var1) {}
+
+        public void hangupWaitingOrBackgroundResponse(RadioResponseInfo var1) {}
+
+        public void hangupForegroundResumeBackgroundResponse(RadioResponseInfo var1) {}
+
+        public void switchWaitingOrHoldingAndActiveResponse(RadioResponseInfo var1) {}
+
+        public void conferenceResponse(RadioResponseInfo var1) {}
+
+        public void rejectCallResponse(RadioResponseInfo var1) {}
+
+        public void getLastCallFailCauseResponse(RadioResponseInfo var1, int var2) {}
+
+        public void getSignalStrengthResponse(RadioResponseInfo var1, android.hardware.radio.V1_0.SignalStrength var2) {}
+
+        public void getVoiceRegistrationStateResponse(RadioResponseInfo var1, VoiceRegStateResult var2) {}
+
+        public void getDataRegistrationStateResponse(RadioResponseInfo var1, DataRegStateResult var2) {}
+
+        public void getOperatorResponse(RadioResponseInfo var1, String var2, String var3, String var4) {}
+
+        public void setRadioPowerResponse(RadioResponseInfo var1) {}
+
+        public void sendDtmfResponse(RadioResponseInfo var1) {}
+
+        public void sendSmsResponse(RadioResponseInfo var1, SendSmsResult var2) {}
+
+        public void sendSMSExpectMoreResponse(RadioResponseInfo var1, SendSmsResult var2) {}
+
+        public void setupDataCallResponse(RadioResponseInfo var1, SetupDataCallResult var2) {}
+
+        public void iccIOForApp(RadioResponseInfo var1, android.hardware.radio.V1_0.IccIoResult var2) {}
+
+        public void sendUssdResponse(RadioResponseInfo var1) {}
+
+        public void cancelPendingUssdResponse(RadioResponseInfo var1) {}
+
+        public void getClirResponse(RadioResponseInfo var1, int var2, int var3) {}
+
+        public void setClirResponse(RadioResponseInfo var1) {}
+
+        public void getCallForwardStatusResponse(RadioResponseInfo var1, ArrayList<android.hardware.radio.V1_0.CallForwardInfo> var2) {}
+
+        public void setCallForwardResponse(RadioResponseInfo var1) {}
+
+        public void getCallWaitingResponse(RadioResponseInfo var1, boolean var2, int var3) {}
+
+        public void setCallWaitingResponse(RadioResponseInfo var1) {}
+
+        public void acknowledgeLastIncomingGsmSmsResponse(RadioResponseInfo var1) {}
+
+        public void acceptCallResponse(RadioResponseInfo var1) {}
+
+        public void deactivateDataCallResponse(RadioResponseInfo var1) {}
+
+        public void getFacilityLockForAppResponse(RadioResponseInfo var1, int var2) {}
+
+        public void setFacilityLockForAppResponse(RadioResponseInfo var1, int var2) {}
+
+        public void setBarringPasswordResponse(RadioResponseInfo var1) {}
+
+        public void getNetworkSelectionModeResponse(RadioResponseInfo var1, boolean var2) {}
+
+        public void setNetworkSelectionModeAutomaticResponse(RadioResponseInfo var1) {}
+
+        public void setNetworkSelectionModeManualResponse(RadioResponseInfo var1) {}
+
+        public void getAvailableNetworksResponse(RadioResponseInfo var1, ArrayList<android.hardware.radio.V1_0.OperatorInfo> var2) {}
+
+        public void startDtmfResponse(RadioResponseInfo var1) {}
+
+        public void stopDtmfResponse(RadioResponseInfo var1) {}
+
+        public void getBasebandVersionResponse(RadioResponseInfo var1, String var2) {}
+
+        public void separateConnectionResponse(RadioResponseInfo var1) {}
+
+        public void setMuteResponse(RadioResponseInfo var1) {}
+
+        public void getMuteResponse(RadioResponseInfo var1, boolean var2) {}
+
+        public void getClipResponse(RadioResponseInfo var1, int var2) {}
+
+        public void getDataCallListResponse(RadioResponseInfo var1, ArrayList<SetupDataCallResult> var2) {}
+
+        public void sendOemRilRequestRawResponse(RadioResponseInfo var1, ArrayList<Byte> var2) {}
+
+        public void sendOemRilRequestStringsResponse(RadioResponseInfo var1, ArrayList<String> var2) {}
+
+        public void sendScreenStateResponse(RadioResponseInfo var1) {}
+
+        public void setSuppServiceNotificationsResponse(RadioResponseInfo var1) {}
+
+        public void writeSmsToSimResponse(RadioResponseInfo var1, int var2) {}
+
+        public void deleteSmsOnSimResponse(RadioResponseInfo var1) {}
+
+        public void setBandModeResponse(RadioResponseInfo var1) {}
+
+        public void getAvailableBandModesResponse(RadioResponseInfo var1, ArrayList<Integer> var2) {}
+
+        public void sendEnvelopeResponse(RadioResponseInfo var1, String var2) {}
+
+        public void sendTerminalResponseToSimResponse(RadioResponseInfo var1) {}
+    }
+
+    class RadioIndication extends IRadioIndication.Stub {
+        public void radioStateChanged(int radioState) {
+            Log.d(RILJ_LOG_TAG, "radioStateChanged");
+            RadioState newState = getRadioStateFromInt(radioState);
+            if (RILJ_LOGD) unsljLogMore(radioState, newState.toString());
+
+            switchToRadioState(newState);
+        }
+    }
+    RadioResponse mRadioResponse;
+    RadioIndication mRadioIndication;
+
+    private IRadio getRadioProxy() {
+        IRadio radioProxy = null;
+        try {
+            radioProxy = IRadio.getService("ril_service" + (mInstanceId == null ? 0 : mInstanceId));
+            if (radioProxy != null) {
+                Log.d(RILJ_LOG_TAG, "getRadioProxy: radioProxy != null;" +
+                        "calling setResponseFunctions()");
+                // todo(b/31632518): should not need to be called every time
+                radioProxy.setResponseFunctions(mInstanceId, mRadioResponse, mRadioIndication);
+                Log.d(RILJ_LOG_TAG, "getRadioProxy: setResponseFunctions() done");
+            } else {
+                Log.d(RILJ_LOG_TAG, "getRadioProxy: radioProxy == null");
+            }
+        } catch (Exception e) {
+            Log.d(RILJ_LOG_TAG, "getRadioProxy: exception " + e.toString());
+        }
+        return radioProxy;
+    }
+
     public RIL(Context context, int preferredNetworkType,
             int cdmaSubscription, Integer instanceId) {
         super(context);
@@ -731,6 +913,15 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         mPreferredNetworkType = preferredNetworkType;
         mPhoneType = RILConstants.NO_PHONE;
         mInstanceId = instanceId;
+
+        Log.d(RILJ_LOG_TAG, "RIL: creating mRadioResponse on initialization");
+        mRadioResponse = new RadioResponse();
+        Log.d(RILJ_LOG_TAG, "RIL: mRadioResponse created");
+        Log.d(RILJ_LOG_TAG, "RIL: creating mRadioIndication on initialization");
+        mRadioIndication = new RadioIndication();
+        Log.d(RILJ_LOG_TAG, "RIL: mRadioIndication created");
+        // set radio callback
+        getRadioProxy();
 
         mEventLog = new TelephonyEventLog(mInstanceId);
         PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
@@ -820,7 +1011,23 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
-        send(rr);
+        IRadio radioProxy = getRadioProxy();
+        if (radioProxy != null) {
+            acquireWakeLock(rr, FOR_WAKELOCK);
+            synchronized (mRequestList) {
+                mRequestList.append(rr.mSerial, rr);
+            }
+            try {
+                radioProxy.getIccCardStatus(mInstanceId, rr.mSerial);
+            } catch (Exception e) {
+                riljLog("getIccCardStatus: exception " + e);
+                rr.onError(RADIO_NOT_AVAILABLE, null);
+                rr.release();
+            }
+        } else {
+            rr.onError(RADIO_NOT_AVAILABLE, null);
+            rr.release();
+        }
     }
 
     public void setUiccSubscription(int slotId, int appIndex, int subId,
@@ -2411,18 +2618,16 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         updateScreenState(false);
    }
 
-    private RadioState getRadioStateFromInt(int stateInt) {
+    private RadioState getRadioStateFromInt(int radioState) {
         RadioState state;
 
-        /* RIL_RadioState ril.h */
-        switch(stateInt) {
-            case 0: state = RadioState.RADIO_OFF; break;
-            case 1: state = RadioState.RADIO_UNAVAILABLE; break;
-            case 10: state = RadioState.RADIO_ON; break;
+        switch(radioState) {
+            case android.hardware.radio.V1_0.RadioState.OFF: state = RadioState.RADIO_OFF; break;
+            case android.hardware.radio.V1_0.RadioState.UNAVAILABLE: state = RadioState.RADIO_UNAVAILABLE; break;
+            case android.hardware.radio.V1_0.RadioState.ON: state = RadioState.RADIO_ON; break;
 
             default:
-                throw new RuntimeException(
-                            "Unrecognized RIL_RadioState: " + stateInt);
+                throw new RuntimeException("Unrecognized RadioState: " + radioState);
         }
         return state;
     }
@@ -2612,6 +2817,9 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             }
         }
 
+        if (rr != null) {
+        }
+
         return rr;
     }
 
@@ -2657,7 +2865,6 @@ public final class RIL extends BaseCommands implements CommandsInterface {
  | egrep "^ *{RIL_" \
  | sed -re 's/\{([^,]+),[^,]+,([^}]+).+/case \1: ret = \2(p); break;/'
              */
-            case RIL_REQUEST_GET_SIM_STATUS: ret =  responseIccCardStatus(p); break;
             case RIL_REQUEST_ENTER_SIM_PIN: ret =  responseInts(p); break;
             case RIL_REQUEST_ENTER_SIM_PUK: ret =  responseInts(p); break;
             case RIL_REQUEST_ENTER_SIM_PIN2: ret =  responseInts(p); break;
@@ -3077,13 +3284,6 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         }
 
         switch(response) {
-            case RIL_UNSOL_RESPONSE_RADIO_STATE_CHANGED:
-                /* has bonus radio state int */
-                RadioState newState = getRadioStateFromInt(p.readInt());
-                if (RILJ_LOGD) unsljLogMore(response, newState.toString());
-
-                switchToRadioState(newState);
-            break;
             case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED:
                 if (RILJ_LOGD) unsljLog(response);
 
@@ -3678,16 +3878,16 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     }
 
     private Object
-    responseIccCardStatus(Parcel p) {
+    responseIccCardStatus(CardStatus cartStatus) {
         IccCardApplicationStatus appStatus;
 
         IccCardStatus cardStatus = new IccCardStatus();
-        cardStatus.setCardState(p.readInt());
-        cardStatus.setUniversalPinState(p.readInt());
-        cardStatus.mGsmUmtsSubscriptionAppIndex = p.readInt();
-        cardStatus.mCdmaSubscriptionAppIndex = p.readInt();
-        cardStatus.mImsSubscriptionAppIndex = p.readInt();
-        int numApplications = p.readInt();
+        cardStatus.setCardState(cartStatus.cardState);
+        cardStatus.setUniversalPinState(cartStatus.universalPinState);
+        cardStatus.mGsmUmtsSubscriptionAppIndex = cartStatus.gsmUmtsSubscriptionAppIndex;
+        cardStatus.mCdmaSubscriptionAppIndex = cartStatus.cdmaSubscriptionAppIndex;
+        cardStatus.mImsSubscriptionAppIndex = cartStatus.imsSubscriptionAppIndex;
+        int numApplications = cartStatus.numApplications;
 
         // limit to maximum allowed applications
         if (numApplications > IccCardStatus.CARD_MAX_APPS) {
@@ -3695,17 +3895,19 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         }
         cardStatus.mApplications = new IccCardApplicationStatus[numApplications];
         for (int i = 0 ; i < numApplications ; i++) {
+            AppStatus rilAppStatus = cartStatus.applications[i];
             appStatus = new IccCardApplicationStatus();
-            appStatus.app_type       = appStatus.AppTypeFromRILInt(p.readInt());
-            appStatus.app_state      = appStatus.AppStateFromRILInt(p.readInt());
-            appStatus.perso_substate = appStatus.PersoSubstateFromRILInt(p.readInt());
-            appStatus.aid            = p.readString();
-            appStatus.app_label      = p.readString();
-            appStatus.pin1_replaced  = p.readInt();
-            appStatus.pin1           = appStatus.PinStateFromRILInt(p.readInt());
-            appStatus.pin2           = appStatus.PinStateFromRILInt(p.readInt());
+            appStatus.app_type       = appStatus.AppTypeFromRILInt(rilAppStatus.appType);
+            appStatus.app_state      = appStatus.AppStateFromRILInt(rilAppStatus.appState);
+            appStatus.perso_substate = appStatus.PersoSubstateFromRILInt(rilAppStatus.persoSubstate);
+            appStatus.aid            = rilAppStatus.aidPtr;
+            appStatus.app_label      = rilAppStatus.appLabelPtr;
+            appStatus.pin1_replaced  = rilAppStatus.pin1Replaced;
+            appStatus.pin1           = appStatus.PinStateFromRILInt(rilAppStatus.pin1);
+            appStatus.pin2           = appStatus.PinStateFromRILInt(rilAppStatus.pin2);
             cardStatus.mApplications[i] = appStatus;
         }
+        Log.d(RILJ_LOG_TAG, "responseIccCardStatus: from HIDL: " + cardStatus);
         return cardStatus;
     }
 
