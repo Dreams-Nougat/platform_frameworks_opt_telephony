@@ -36,6 +36,7 @@ import android.net.LocalSocketAddress;
 import android.os.AsyncResult;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.HwBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Parcel;
@@ -59,6 +60,8 @@ import android.telephony.ModemActivityInfo;
 import android.text.TextUtils;
 import android.util.SparseArray;
 import android.view.Display;
+
+import android.hardware.radio.V1_0.*;
 
 import com.android.internal.telephony.gsm.SmsBroadcastConfigInfo;
 import com.android.internal.telephony.gsm.SsData;
@@ -424,8 +427,12 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
                         s.getOutputStream().write(dataLength);
                         s.getOutputStream().write(data);
+                        if (msg.what == EVENT_SEND_ACK) {
+                            rr.release();
+                            return;
+                        }
                     } catch (IOException ex) {
-                        Rlog.e(RILJ_LOG_TAG, "IOException", ex);
+                        riljLoge("IOException ", ex);
                         req = findAndRemoveRequestFromList(rr.mSerial);
                         // make sure this request has not already been handled,
                         // eg, if RILReceiver cleared the list.
@@ -433,9 +440,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                             rr.onError(RADIO_NOT_AVAILABLE, null);
                             decrementWakeLock(rr);
                             rr.release();
+                            return;
                         }
                     } catch (RuntimeException exc) {
-                        Rlog.e(RILJ_LOG_TAG, "Uncaught exception ", exc);
+                        riljLoge("Uncaught exception ", exc);
                         req = findAndRemoveRequestFromList(rr.mSerial);
                         // make sure this request has not already been handled,
                         // eg, if RILReceiver cleared the list.
@@ -443,6 +451,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                             rr.onError(GENERIC_FAILURE, null);
                             decrementWakeLock(rr);
                             rr.release();
+                            return;
                         }
                     }
 
@@ -630,14 +639,11 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                     // or after the 8th time
 
                     if (retryCount == 8) {
-                        Rlog.e (RILJ_LOG_TAG,
-                            "Couldn't find '" + rilSocket
-                            + "' socket after " + retryCount
-                            + " times, continuing to retry silently");
+                        riljLoge("Couldn't find '" + rilSocket + "' socket after " + retryCount +
+                                " times, continuing to retry silently");
                     } else if (retryCount >= 0 && retryCount < 8) {
-                        Rlog.i (RILJ_LOG_TAG,
-                            "Couldn't find '" + rilSocket
-                            + "' socket; retrying after timeout");
+                        Rlog.i (RILJ_LOG_TAG, "Couldn't find '" + rilSocket +
+                                "' socket; retrying after timeout");
                     }
 
                     try {
@@ -682,8 +688,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                     Rlog.i(RILJ_LOG_TAG, "'" + rilSocket + "' socket closed",
                           ex);
                 } catch (Throwable tr) {
-                    Rlog.e(RILJ_LOG_TAG, "Uncaught exception read length=" + length +
-                        "Exception:" + tr.toString());
+                    riljLoge("Uncaught exception read length=" + length + "Exception:" +
+                            tr.toString());
                 }
 
                 Rlog.i(RILJ_LOG_TAG, "(" + mInstanceId + ") Disconnected from '" + rilSocket
@@ -718,6 +724,532 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         this(context, preferredNetworkType, cdmaSubscription, null);
     }
 
+    class RadioResponse extends IRadioResponse.Stub {
+        private RILRequest processResponse(RadioResponseInfo responseInfo) {
+            int serial = responseInfo.serial;
+            int error = responseInfo.error;
+            int type = responseInfo.type;
+
+            RILRequest rr;
+
+            if (type == RadioResponseType.SOLICITED_ACK) {
+                synchronized (mRequestList) {
+                    rr = mRequestList.get(serial);
+                }
+                if (rr == null) {
+                    Rlog.w(RILJ_LOG_TAG, "processResponse: Unexpected solicited ack response! " +
+                            "sn: " + serial);
+                } else {
+                    decrementWakeLock(rr);
+                    if (RILJ_LOGD) {
+                        riljLog(rr.serialString() + " Ack < " + requestToString(rr.mRequest));
+                    }
+                }
+            } else {
+                rr = findAndRemoveRequestFromList(serial);
+
+                if (rr == null) {
+                    Rlog.w(RILJ_LOG_TAG, "processResponse: Unexpected response! sn: " + serial +
+                            " error: " + error);
+                    return null;
+                }
+
+                if (type == RadioResponseType.SOLICITED_ACK_EXP) {
+                    Message msg;
+                    // todo: use IRadio.sendAck() instead when it's available
+                    RILRequest response = RILRequest.obtain(RIL_RESPONSE_ACKNOWLEDGEMENT, null);
+                    msg = mSender.obtainMessage(EVENT_SEND_ACK, response);
+                    acquireWakeLock(rr, FOR_ACK_WAKELOCK);
+                    msg.sendToTarget();
+                    if (RILJ_LOGD) {
+                        riljLog("Response received for " + rr.serialString() + " " +
+                                requestToString(rr.mRequest) + " Sending ack to ril.cpp");
+                    }
+                }
+            }
+
+            return rr;
+        }
+
+        void processResponseDone(RILRequest rr, RadioResponseInfo responseInfo, Object ret) {
+            mEventLog.writeOnRilSolicitedResponse(rr.mSerial, responseInfo.error, rr.mRequest, ret);
+            if (rr != null) {
+                if (responseInfo.type == RadioResponseType.SOLICITED) {
+                    decrementWakeLock(rr);
+                }
+                rr.release();
+            }
+        }
+
+        void sendMessageResponse(Message msg, Object ret) {
+            if (msg != null) {
+                AsyncResult.forMessage(msg, ret, null);
+                msg.sendToTarget();
+            }
+        }
+
+        public void iccCardStatusResponse(RadioResponseInfo responseInfo, CardStatus cardStatus) {
+            riljLog("iccCardStatusResponse: serial " + responseInfo.serial +
+                    " cardStatus.cardState " + cardStatus.cardState);
+            RILRequest rr = processResponse(responseInfo);
+
+            if (rr != null) {
+                Object ret = null;
+                if (responseInfo.error == 0) {
+                    riljLog("iccCardStatusResponse: rr.mResult != null");
+                    ret = responseIccCardStatus(cardStatus);
+                    sendMessageResponse(rr.mResult, ret);
+                }
+                processResponseDone(rr, responseInfo, ret);
+            } else {
+                riljLog("iccCardStatusResponse: rr == null");
+            }
+        }
+
+        public void supplyIccPinForAppResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void supplyIccPukForAppResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void supplyIccPin2ForAppResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void supplyIccPuk2ForAppResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void changeIccPinForAppResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void changeIccPin2ForAppResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void supplyNetworkDepersonalizationResponse(RadioResponseInfo responseInfo,
+                                                           int var2) {}
+
+        public void getCurrentCallsResponse(RadioResponseInfo responseInfo,
+                                            ArrayList<android.hardware.radio.V1_0.Call> var2) {}
+
+        public void dialResponse(RadioResponseInfo responseInfo) {}
+
+        public void getIMSIForAppResponse(RadioResponseInfo responseInfo, String var2) {}
+
+        public void hangupConnectionResponse(RadioResponseInfo responseInfo) {}
+
+        public void hangupWaitingOrBackgroundResponse(RadioResponseInfo responseInfo) {}
+
+        public void hangupForegroundResumeBackgroundResponse(RadioResponseInfo responseInfo) {}
+
+        public void switchWaitingOrHoldingAndActiveResponse(RadioResponseInfo responseInfo) {}
+
+        public void conferenceResponse(RadioResponseInfo responseInfo) {}
+
+        public void rejectCallResponse(RadioResponseInfo responseInfo) {}
+
+        public void getLastCallFailCauseResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void getSignalStrengthResponse(RadioResponseInfo responseInfo,
+                                              android.hardware.radio.V1_0.SignalStrength var2) {}
+
+        public void getVoiceRegistrationStateResponse(RadioResponseInfo responseInfo,
+                                                      VoiceRegStateResult var2) {}
+
+        public void getDataRegistrationStateResponse(RadioResponseInfo responseInfo,
+                                                     DataRegStateResult var2) {}
+
+        public void getOperatorResponse(RadioResponseInfo responseInfo,
+                                        String var2,
+                                        String var3,
+                                        String var4) {}
+
+        public void setRadioPowerResponse(RadioResponseInfo responseInfo) {}
+
+        public void sendDtmfResponse(RadioResponseInfo responseInfo) {}
+
+        public void sendSmsResponse(RadioResponseInfo responseInfo,
+                                    SendSmsResult var2) {}
+
+        public void sendSMSExpectMoreResponse(RadioResponseInfo responseInfo,
+                                              SendSmsResult var2) {}
+
+        public void setupDataCallResponse(RadioResponseInfo responseInfo,
+                                          SetupDataCallResult var2) {}
+
+        public void iccIOForApp(RadioResponseInfo responseInfo,
+                                android.hardware.radio.V1_0.IccIoResult var2) {}
+
+        public void sendUssdResponse(RadioResponseInfo responseInfo) {}
+
+        public void cancelPendingUssdResponse(RadioResponseInfo responseInfo) {}
+
+        public void getClirResponse(RadioResponseInfo responseInfo, int var2, int var3) {}
+
+        public void setClirResponse(RadioResponseInfo responseInfo) {}
+
+        public void getCallForwardStatusResponse(
+                RadioResponseInfo responseInfo,
+                ArrayList<android.hardware.radio.V1_0.CallForwardInfo> var2) {}
+
+        public void setCallForwardResponse(RadioResponseInfo responseInfo) {}
+
+        public void getCallWaitingResponse(RadioResponseInfo responseInfo,
+                                           boolean var2,
+                                           int var3) {}
+
+        public void setCallWaitingResponse(RadioResponseInfo responseInfo) {}
+
+        public void acknowledgeLastIncomingGsmSmsResponse(RadioResponseInfo responseInfo) {}
+
+        public void acceptCallResponse(RadioResponseInfo responseInfo) {}
+
+        public void deactivateDataCallResponse(RadioResponseInfo responseInfo) {}
+
+        public void getFacilityLockForAppResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void setFacilityLockForAppResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void setBarringPasswordResponse(RadioResponseInfo responseInfo) {}
+
+        public void getNetworkSelectionModeResponse(RadioResponseInfo responseInfo, boolean var2) {}
+
+        public void setNetworkSelectionModeAutomaticResponse(RadioResponseInfo responseInfo) {}
+
+        public void setNetworkSelectionModeManualResponse(RadioResponseInfo responseInfo) {}
+
+        public void getAvailableNetworksResponse(
+                RadioResponseInfo responseInfo,
+                ArrayList<android.hardware.radio.V1_0.OperatorInfo> var2) {}
+
+        public void startDtmfResponse(RadioResponseInfo responseInfo) {}
+
+        public void stopDtmfResponse(RadioResponseInfo responseInfo) {}
+
+        public void getBasebandVersionResponse(RadioResponseInfo responseInfo, String var2) {}
+
+        public void separateConnectionResponse(RadioResponseInfo responseInfo) {}
+
+        public void setMuteResponse(RadioResponseInfo responseInfo) {}
+
+        public void getMuteResponse(RadioResponseInfo responseInfo, boolean var2) {}
+
+        public void getClipResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void getDataCallListResponse(RadioResponseInfo responseInfo,
+                                            ArrayList<SetupDataCallResult> var2) {}
+
+        public void sendOemRilRequestRawResponse(RadioResponseInfo responseInfo,
+                                                 ArrayList<Byte> var2) {}
+
+        public void sendOemRilRequestStringsResponse(RadioResponseInfo responseInfo,
+                                                     ArrayList<String> var2) {}
+
+        public void sendScreenStateResponse(RadioResponseInfo responseInfo) {}
+
+        public void setSuppServiceNotificationsResponse(RadioResponseInfo responseInfo) {}
+
+        public void writeSmsToSimResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void deleteSmsOnSimResponse(RadioResponseInfo responseInfo) {}
+
+        public void setBandModeResponse(RadioResponseInfo responseInfo) {}
+
+        public void getAvailableBandModesResponse(RadioResponseInfo responseInfo,
+                                                  ArrayList<Integer> var2) {}
+
+        public void sendEnvelopeResponse(RadioResponseInfo responseInfo, String var2) {}
+
+        public void sendTerminalResponseToSimResponse(RadioResponseInfo responseInfo) {}
+
+        public void handleStkCallSetupRequestFromSimResponse(RadioResponseInfo responseInfo) {}
+
+        public void explicitCallTransferResponse(RadioResponseInfo responseInfo) {}
+
+        public void setPreferredNetworkTypeResponse(RadioResponseInfo responseInfo) {}
+
+        public void getPreferredNetworkTypeResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void getNeighboringCidsResponse(RadioResponseInfo responseInfo,
+                                               NeighboringCell var2) {}
+
+        public void setLocationUpdatesResponse(RadioResponseInfo responseInfo) {}
+
+        public void setCdmaSubscriptionSourceResponse(RadioResponseInfo responseInfo) {}
+
+        public void setCdmaRoamingPreferenceResponse(RadioResponseInfo responseInfo) {}
+
+        public void getCdmaRoamingPreferenceResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void setTTYModeResponse(RadioResponseInfo responseInfo) {}
+
+        public void getTTYModeResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void setPreferredVoicePrivacyResponse(RadioResponseInfo responseInfo) {}
+
+        public void getPreferredVoicePrivacyResponse(RadioResponseInfo responseInfo,
+                                                     boolean var2) {}
+
+        public void sendCDMAFeatureCodeResponse(RadioResponseInfo responseInfo) {}
+
+        public void sendBurstDtmfResponse(RadioResponseInfo responseInfo) {}
+
+        public void sendCdmaSmsResponse(RadioResponseInfo responseInfo, SendSmsResult var2) {}
+
+        public void acknowledgeLastIncomingCdmaSmsResponse(RadioResponseInfo responseInfo) {}
+
+        public void getGsmBroadcastConfigResponse(RadioResponseInfo responseInfo,
+                                                  GsmBroadcastSmsConfigInfo var2) {}
+
+        public void setGsmBroadcastConfigResponse(RadioResponseInfo responseInfo) {}
+
+        public void setGsmBroadcastActivationResponse(RadioResponseInfo responseInfo) {}
+
+        public void getCdmaBroadcastConfigResponse(RadioResponseInfo responseInfo,
+                                                   CdmaBroadcastSmsConfigInfo var2) {}
+
+        public void setCdmaBroadcastConfigResponse(RadioResponseInfo responseInfo) {}
+
+        public void setCdmaBroadcastActivationResponse(RadioResponseInfo responseInfo) {}
+
+        public void getCDMASubscriptionResponse(RadioResponseInfo responseInfo,
+                                                String var2,
+                                                String var3,
+                                                String var4,
+                                                String var5,
+                                                String var6) {}
+
+        public void writeSmsToRuimResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void deleteSmsOnRuimResponse(RadioResponseInfo responseInfo) {}
+
+        public void getDeviceIdentityResponse(RadioResponseInfo responseInfo,
+                                              String var2,
+                                              String var3,
+                                              String var4,
+                                              String var5) {}
+
+        public void exitEmergencyCallbackModeResponse(RadioResponseInfo responseInfo) {}
+
+        public void getSmscAddressResponse(RadioResponseInfo responseInfo, String var2) {}
+
+        public void setSmscAddressResponse(RadioResponseInfo responseInfo) {}
+
+        public void reportSmsMemoryStatusResponse(RadioResponseInfo responseInfo) {}
+
+        public void getCdmaSubscriptionSourceResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void requestIsimAuthenticationResponse(RadioResponseInfo responseInfo, String var2) {}
+
+        public void acknowledgeIncomingGsmSmsWithPduResponse(RadioResponseInfo responseInfo) {}
+
+        public void sendEnvelopeWithStatusResponse(RadioResponseInfo responseInfo,
+                                                   android.hardware.radio.V1_0.IccIoResult var2) {}
+
+        public void getVoiceRadioTechnologyResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void getCellInfoListResponse(RadioResponseInfo responseInfo,
+                                            ArrayList<android.hardware.radio.V1_0.CellInfo> var2) {}
+
+        public void setCellInfoListRateResponse(RadioResponseInfo responseInfo) {}
+
+        public void setInitialAttachApnResponse(RadioResponseInfo responseInfo) {}
+
+        public void getImsRegistrationStateResponse(RadioResponseInfo responseInfo,
+                                                    boolean var2,
+                                                    int var3) {}
+
+        public void sendImsSmsResponse(RadioResponseInfo responseInfo, SendSmsResult var2) {}
+
+        public void iccTransmitApduBasicChannelResponse(
+                RadioResponseInfo responseInfo,
+                android.hardware.radio.V1_0.IccIoResult var2) {}
+
+        public void iccOpenLogicalChannelResponse(RadioResponseInfo responseInfo,
+                                                  int var2,
+                                                  ArrayList<Byte> var3) {}
+
+        public void iccCloseLogicalChannelResponse(RadioResponseInfo responseInfo) {}
+
+        public void iccTransmitApduLogicalChannelResponse(
+                RadioResponseInfo responseInfo,
+                android.hardware.radio.V1_0.IccIoResult var2) {}
+
+        public void nvReadItemResponse(RadioResponseInfo responseInfo, String var2) {}
+
+        public void nvWriteItemResponse(RadioResponseInfo responseInfo) {}
+
+        public void nvWriteCdmaPrlResponse(RadioResponseInfo responseInfo) {}
+
+        public void nvResetConfigResponse(RadioResponseInfo responseInfo) {}
+
+        public void setUiccSubscriptionResponse(RadioResponseInfo responseInfo) {}
+
+        public void setDataAllowedResponse(RadioResponseInfo responseInfo) {}
+
+        public void getHardwareConfigResponse(
+                RadioResponseInfo responseInfo,
+                ArrayList<android.hardware.radio.V1_0.HardwareConfig> var2) {}
+
+        public void requestIccSimAuthenticationResponse(
+                RadioResponseInfo responseInfo,
+                android.hardware.radio.V1_0.IccIoResult var2) {}
+
+        public void setDataProfileResponse(RadioResponseInfo responseInfo) {}
+
+        public void requestShutdownResponse(RadioResponseInfo responseInfo) {}
+
+        public void getRadioCapabilityResponse(RadioResponseInfo responseInfo,
+                                               android.hardware.radio.V1_0.RadioCapability var2) {}
+
+        public void setRadioCapabilityResponse(RadioResponseInfo responseInfo,
+                                               android.hardware.radio.V1_0.RadioCapability var2) {}
+
+        public void startLceServiceResponse(RadioResponseInfo responseInfo, LceStatusInfo var2) {}
+
+        public void stopLceServiceResponse(RadioResponseInfo responseInfo, LceStatusInfo var2) {}
+
+        public void pullLceDataResponse(RadioResponseInfo responseInfo, LceDataInfo var2) {}
+
+        public void getModemActivityInfoResponse(RadioResponseInfo responseInfo,
+                                                 ActivityStatsInfo var2) {}
+
+        public void setAllowedCarriersResponse(RadioResponseInfo responseInfo, int var2) {}
+
+        public void getAllowedCarriersResponse(RadioResponseInfo responseInfo,
+                                               boolean var2,
+                                               CarrierRestrictions var3) {}
+    }
+
+    class RadioIndication extends IRadioIndication.Stub {
+        private void processIndication(int indicationType) {
+            if (indicationType == RadioIndicationType.UNSOLICITED_ACK_EXP) {
+                // todo: use IRadio.sendAck() instead when it's available
+                Message msg;
+                RILRequest rr = RILRequest.obtain(RIL_RESPONSE_ACKNOWLEDGEMENT, null);
+                msg = mSender.obtainMessage(EVENT_SEND_ACK, rr);
+                acquireWakeLock(rr, FOR_ACK_WAKELOCK);
+                msg.sendToTarget();
+                if (RILJ_LOGD) {
+                    riljLog("Unsol response received; Sending ack to ril.cpp");
+                }
+            }
+        }
+
+        public void radioStateChanged(int indicationType, int radioState) {
+            processIndication(indicationType);
+            RadioState newState = getRadioStateFromInt(radioState);
+            riljLog("radioStateChanged: " + newState.toString());
+            switchToRadioState(newState);
+        }
+
+        public void callStateChanged(int var1) {}
+
+        public void voiceNetworkStateChanged(int var1) {}
+
+        public void newSms(int var1, ArrayList<Byte> var2) {}
+
+        public void newSmsStatusReport(int var1, ArrayList<Byte> var2) {}
+
+        public void newSmsOnSim(int var1) {}
+
+        public void onUssd(int var1, int var2) {}
+
+        public void nitzTimeReceived(int var1, String var2, long var3) {}
+
+        public void currentSignalStrength(int var1,
+                                          android.hardware.radio.V1_0.SignalStrength var2) {}
+
+        public void dataCallListChanged(int var1, ArrayList<SetupDataCallResult> var2) {}
+
+        public void suppSvcNotify(int var1, SuppSvcNotification var2) {}
+
+        public void stkSessionEnd(int var1) {}
+
+        public void stkProactiveCommand(int var1, ArrayList<Byte> var2) {}
+
+        public void stkEventNotify(int var1, ArrayList<Byte> var2) {}
+
+        public void stkCallSetup(int var1, long var2) {}
+
+        public void simSmsStorageFull(int var1) {}
+
+        public void simRefresh(int var1, SimRefreshResult var2) {}
+
+        public void callRing(int var1, boolean var2, CdmaSignalInfoRecord var3) {}
+
+        public void simStatusChanged(int var1) {}
+
+        public void cdmaNewSms(int var1, CdmaSmsMessage var2) {}
+
+        public void newBroadcastSms(int var1, ArrayList<Byte> var2) {}
+
+        public void cdmaRuimSmsStorageFull(int var1) {}
+
+        public void restrictedStateChanged(int var1, int var2) {}
+
+        public void enterEmergencyCallbackMode(int var1) {}
+
+        public void cdmaCallWaiting(int var1, CdmaCallWaiting var2) {}
+
+        public void cdmaOtaProvisionStatus(int var1, int var2) {}
+
+        public void cdmaInfoRec(int var1,
+                                android.hardware.radio.V1_0.CdmaInformationRecords var2) {}
+
+        public void oemHookRaw(int var1, ArrayList<Byte> var2) {}
+
+        public void indicateRingbackTone(int var1, boolean var2) {}
+
+        public void resendIncallMute(int var1) {}
+
+        public void cdmaSubscriptionSourceChanged(int var1, int var2) {}
+
+        public void cdmaPrlChanged(int var1, int var2) {}
+
+        public void exitEmergencyCallbackMode(int var1) {}
+
+        public void rilConnected(int var1) {}
+
+        public void voiceRadioTechChanged(int var1, int var2) {}
+
+        public void cellInfoList(int var1, ArrayList<android.hardware.radio.V1_0.CellInfo> var2) {}
+
+        public void imsNetworkStateChanged(int var1) {}
+
+        public void subscriptionStatusChanged(int var1, boolean var2) {}
+
+        public void srvccStateNotify(int var1, int var2) {}
+
+        public void hardwareConfigChanged(
+                int var1,
+                ArrayList<android.hardware.radio.V1_0.HardwareConfig> var2) {}
+
+        public void radioCapabilityIndication(int var1,
+                                              android.hardware.radio.V1_0.RadioCapability var2) {}
+
+        public void onSupplementaryServiceIndication(int var1, StkCcUnsolSsResult var2) {}
+
+        public void stkCallControlAlphaNotify(int var1, String var2) {}
+
+        public void lceData(int var1, LceDataInfo var2) {}
+
+        public void pcoData(int var1, PcoDataInfo var2) {}
+
+        public void modemReset(int var1, String var2) {}
+    }
+    RadioResponse mRadioResponse;
+    RadioIndication mRadioIndication;
+
+    private IRadio getRadioProxy() {
+        IRadio radioProxy = null;
+        try {
+            radioProxy = IRadio.getService(SOCKET_NAME_RIL[mInstanceId == null ? 0 : mInstanceId]);
+            if (radioProxy != null) {
+                riljLog("getRadioProxy: radioProxy != null; calling setResponseFunctions()");
+                // todo(b/31632518): should not need to be called every time
+                radioProxy.setResponseFunctions(mRadioResponse, mRadioIndication);
+            } else {
+                riljLoge("getRadioProxy: radioProxy == null");
+            }
+        } catch (Exception e) {
+            riljLoge("getRadioProxy: exception", e);
+        }
+        return radioProxy;
+    }
+
     public RIL(Context context, int preferredNetworkType,
             int cdmaSubscription, Integer instanceId) {
         super(context);
@@ -731,6 +1263,12 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         mPreferredNetworkType = preferredNetworkType;
         mPhoneType = RILConstants.NO_PHONE;
         mInstanceId = instanceId;
+
+        riljLog("RIL: creating mRadioResponse on initialization");
+        mRadioResponse = new RadioResponse();
+        mRadioIndication = new RadioIndication();
+        // set radio callback; needed to set RadioIndication callback
+        getRadioProxy();
 
         mEventLog = new TelephonyEventLog(mInstanceId);
         PowerManager pm = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
@@ -811,16 +1349,35 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         }
     }
 
+    private void addRequest(RILRequest rr) {
+        acquireWakeLock(rr, FOR_WAKELOCK);
+        synchronized (mRequestList) {
+            mRequestList.append(rr.mSerial, rr);
+        }
+    }
+
     @Override
     public void
     getIccCardStatus(Message result) {
-        //Note: This RIL request has not been renamed to ICC,
-        //       but this request is also valid for SIM and RUIM
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_SIM_STATUS, result);
 
         if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
 
-        send(rr);
+        IRadio radioProxy = getRadioProxy();
+        if (radioProxy != null) {
+            addRequest(rr);
+            try {
+                radioProxy.getIccCardStatus(rr.mSerial);
+            } catch (Exception e) {
+                riljLoge("getIccCardStatus", e);
+                rr.onError(RADIO_NOT_AVAILABLE, null);
+                decrementWakeLock(rr);
+                rr.release();
+            }
+        } else {
+            rr.onError(RADIO_NOT_AVAILABLE, null);
+            rr.release();
+        }
     }
 
     public void setUiccSubscription(int slotId, int appIndex, int subId,
@@ -2411,18 +2968,21 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         updateScreenState(false);
    }
 
-    private RadioState getRadioStateFromInt(int stateInt) {
+    private RadioState getRadioStateFromInt(int radioState) {
         RadioState state;
 
-        /* RIL_RadioState ril.h */
-        switch(stateInt) {
-            case 0: state = RadioState.RADIO_OFF; break;
-            case 1: state = RadioState.RADIO_UNAVAILABLE; break;
-            case 10: state = RadioState.RADIO_ON; break;
-
+        switch(radioState) {
+            case android.hardware.radio.V1_0.RadioState.OFF:
+                state = RadioState.RADIO_OFF;
+                break;
+            case android.hardware.radio.V1_0.RadioState.UNAVAILABLE:
+                state = RadioState.RADIO_UNAVAILABLE;
+                break;
+            case android.hardware.radio.V1_0.RadioState.ON:
+                state = RadioState.RADIO_ON;
+                break;
             default:
-                throw new RuntimeException(
-                            "Unrecognized RIL_RadioState: " + stateInt);
+                throw new RuntimeException("Unrecognized RadioState: " + radioState);
         }
         return state;
     }
@@ -2554,6 +3114,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                     decrementWakeLock(rr);
                 }
                 rr.release();
+                return;
             }
         } else if (type == RESPONSE_SOLICITED_ACK) {
             int serial;
@@ -2643,7 +3204,6 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 riljLog("Response received for " + rr.serialString() + " " +
                         requestToString(rr.mRequest) + " Sending ack to ril.cpp");
             }
-            response.release();
         }
 
 
@@ -2657,7 +3217,6 @@ public final class RIL extends BaseCommands implements CommandsInterface {
  | egrep "^ *{RIL_" \
  | sed -re 's/\{([^,]+),[^,]+,([^}]+).+/case \1: ret = \2(p); break;/'
              */
-            case RIL_REQUEST_GET_SIM_STATUS: ret =  responseIccCardStatus(p); break;
             case RIL_REQUEST_ENTER_SIM_PIN: ret =  responseInts(p); break;
             case RIL_REQUEST_ENTER_SIM_PUK: ret =  responseInts(p); break;
             case RIL_REQUEST_ENTER_SIM_PIN2: ret =  responseInts(p); break;
@@ -3011,7 +3570,6 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 riljLog("Unsol response received for " + responseToString(response) +
                         " Sending ack to ril.cpp");
             }
-            rr.release();
         }
 
         try {switch(response) {
@@ -3071,19 +3629,12 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 throw new RuntimeException("Unrecognized unsol response: " + response);
             //break; (implied)
         }} catch (Throwable tr) {
-            Rlog.e(RILJ_LOG_TAG, "Exception processing unsol response: " + response +
-                "Exception:" + tr.toString());
+            riljLoge("Exception processing unsol response: " + response + "Exception:" +
+                    tr.toString());
             return;
         }
 
         switch(response) {
-            case RIL_UNSOL_RESPONSE_RADIO_STATE_CHANGED:
-                /* has bonus radio state int */
-                RadioState newState = getRadioStateFromInt(p.readInt());
-                if (RILJ_LOGD) unsljLogMore(response, newState.toString());
-
-                switchToRadioState(newState);
-            break;
             case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED:
                 if (RILJ_LOGD) unsljLog(response);
 
@@ -3352,7 +3903,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 try {
                     listInfoRecs = (ArrayList<CdmaInformationRecords>)ret;
                 } catch (ClassCastException e) {
-                    Rlog.e(RILJ_LOG_TAG, "Unexpected exception casting to listInfoRecs", e);
+                    riljLoge("Unexpected exception casting to listInfoRecs", e);
                     break;
                 }
 
@@ -3678,16 +4229,16 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     }
 
     private Object
-    responseIccCardStatus(Parcel p) {
+    responseIccCardStatus(CardStatus cartStatus) {
         IccCardApplicationStatus appStatus;
 
         IccCardStatus cardStatus = new IccCardStatus();
-        cardStatus.setCardState(p.readInt());
-        cardStatus.setUniversalPinState(p.readInt());
-        cardStatus.mGsmUmtsSubscriptionAppIndex = p.readInt();
-        cardStatus.mCdmaSubscriptionAppIndex = p.readInt();
-        cardStatus.mImsSubscriptionAppIndex = p.readInt();
-        int numApplications = p.readInt();
+        cardStatus.setCardState(cartStatus.cardState);
+        cardStatus.setUniversalPinState(cartStatus.universalPinState);
+        cardStatus.mGsmUmtsSubscriptionAppIndex = cartStatus.gsmUmtsSubscriptionAppIndex;
+        cardStatus.mCdmaSubscriptionAppIndex = cartStatus.cdmaSubscriptionAppIndex;
+        cardStatus.mImsSubscriptionAppIndex = cartStatus.imsSubscriptionAppIndex;
+        int numApplications = cartStatus.numApplications;
 
         // limit to maximum allowed applications
         if (numApplications > IccCardStatus.CARD_MAX_APPS) {
@@ -3695,17 +4246,20 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         }
         cardStatus.mApplications = new IccCardApplicationStatus[numApplications];
         for (int i = 0 ; i < numApplications ; i++) {
+            AppStatus rilAppStatus = cartStatus.applications[i];
             appStatus = new IccCardApplicationStatus();
-            appStatus.app_type       = appStatus.AppTypeFromRILInt(p.readInt());
-            appStatus.app_state      = appStatus.AppStateFromRILInt(p.readInt());
-            appStatus.perso_substate = appStatus.PersoSubstateFromRILInt(p.readInt());
-            appStatus.aid            = p.readString();
-            appStatus.app_label      = p.readString();
-            appStatus.pin1_replaced  = p.readInt();
-            appStatus.pin1           = appStatus.PinStateFromRILInt(p.readInt());
-            appStatus.pin2           = appStatus.PinStateFromRILInt(p.readInt());
+            appStatus.app_type       = appStatus.AppTypeFromRILInt(rilAppStatus.appType);
+            appStatus.app_state      = appStatus.AppStateFromRILInt(rilAppStatus.appState);
+            appStatus.perso_substate = appStatus.PersoSubstateFromRILInt(
+                    rilAppStatus.persoSubstate);
+            appStatus.aid            = rilAppStatus.aidPtr;
+            appStatus.app_label      = rilAppStatus.appLabelPtr;
+            appStatus.pin1_replaced  = rilAppStatus.pin1Replaced;
+            appStatus.pin1           = appStatus.PinStateFromRILInt(rilAppStatus.pin1);
+            appStatus.pin2           = appStatus.PinStateFromRILInt(rilAppStatus.pin2);
             cardStatus.mApplications[i] = appStatus;
         }
+        riljLog("responseIccCardStatus: from HIDL: " + cardStatus);
         return cardStatus;
     }
 
@@ -4491,6 +5045,16 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     private void riljLog(String msg) {
         Rlog.d(RILJ_LOG_TAG, msg
                 + (mInstanceId != null ? (" [SUB" + mInstanceId + "]") : ""));
+    }
+
+    private void riljLoge(String msg) {
+        Rlog.e(RILJ_LOG_TAG, msg
+                + (mInstanceId != null ? (" [SUB" + mInstanceId + "]") : ""));
+    }
+
+    private void riljLoge(String msg, Exception e) {
+        Rlog.e(RILJ_LOG_TAG, msg
+                + (mInstanceId != null ? (" [SUB" + mInstanceId + "]") : ""), e);
     }
 
     private void riljLogv(String msg) {
