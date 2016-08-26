@@ -1,0 +1,11 @@
+Revision: e25e8bc078eda3c3d6731d7e5c74332e788a7c44
+Patch-set: 1
+File: src/java/com/android/internal/telephony/uicc/IccRecords.java
+
+183
+Fri Aug 26 20:39:26 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: c5b2fe10_2296eae4
+Bytes: 142
+Change this to null instead and add auth_rsp != null check in getIccSimChallengeResponse(). That function can return null if auth_rsp is null.
+
