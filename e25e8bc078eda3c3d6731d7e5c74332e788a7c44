@@ -9,3 +9,11 @@ UUID: c5b2fe10_2296eae4
 Bytes: 142
 Change this to null instead and add auth_rsp != null check in getIccSimChallengeResponse(). That function can return null if auth_rsp is null.
 
+183
+Mon Aug 29 03:45:48 2016 +0000
+Author: Yoshiaki NAKA <1115438@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: c5b2fe10_2296eae4
+UUID: 4589ae76_90507466
+Bytes: 69
+Sure. I will upload the next patch set to follow your review comment.
+
