@@ -311,7 +311,7 @@ public class UiccPkcs15 extends Handler {
             TLV tlvCert = new TLV(TAG_ASN_OCTET_STRING);
             try {
                 acCondition = tlvCondition.parse(acCondition, false);
-                tlvCert.parse(tlvCondition.getValue(), true);
+                tlvCert.parse(tlvCondition.getValue(), false);
                 if (!tlvCert.getValue().isEmpty()) {
                     mRules.add(tlvCert.getValue());
                 }
