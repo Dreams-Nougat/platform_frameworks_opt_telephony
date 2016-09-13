@@ -4230,8 +4230,14 @@ public class ServiceStateTracker extends Handler {
                     // which MM/IMSI detaching request needs. Without this detaching, network can
                     // not release the network resources previously attached.
                     // So we are avoiding data detaching on these networks.
-                    String[] networkNotClearData = mPhone.getContext().getResources()
-                            .getStringArray(com.android.internal.R.array.networks_not_clear_data);
+                    String[] networkNotClearData = null;
+                    CarrierConfigManager configLoader = (CarrierConfigManager)
+                            mPhone.getContext().getSystemService(Context.CARRIER_CONFIG_SERVICE);
+                    PersistableBundle b = configLoader.getConfig();
+                    if (b != null) {
+                        networkNotClearData = b.getStringArray(
+                                CarrierConfigManager.KEY_NETWORKS_NOT_CLEAR_DATA_STRINGS);
+                    }
                     String currentNetwork = mSS.getOperatorNumeric();
                     if ((networkNotClearData != null) && (currentNetwork != null)) {
                         for (int i = 0; i < networkNotClearData.length; i++) {
