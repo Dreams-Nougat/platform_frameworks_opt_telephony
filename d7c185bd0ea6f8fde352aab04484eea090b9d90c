@@ -1,0 +1,11 @@
+Revision: d7c185bd0ea6f8fde352aab04484eea090b9d90c
+Patch-set: 1
+File: src/java/com/android/internal/telephony/ServiceStateTracker.java
+
+4236:19-4236:67
+Tue Sep 13 18:19:22 2016 +0000
+Author: Chen Xu <1121193@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6b712657_49890124
+Bytes: 94
+better to add a check if configLoader != null in case CARRIER_CONFIG_SERVICE is not available.
+
