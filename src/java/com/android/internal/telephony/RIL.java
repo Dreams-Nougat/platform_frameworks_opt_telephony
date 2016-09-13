@@ -1581,6 +1581,57 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         send(rr);
     }
 
+    private void
+    constructCdmaWriteSmsToRuimRilRequest(RILRequest rr, byte[] pdu) {
+        int address_nbr_of_digits;
+        int subaddr_nbr_of_digits;
+        int bearerDataLength;
+        ByteArrayInputStream bais = new ByteArrayInputStream(pdu);
+        DataInputStream dis = new DataInputStream(bais);
+
+        try {
+            rr.mParcel.writeInt(dis.readInt()); //teleServiceId
+            rr.mParcel.writeByte((byte) dis.readInt()); //servicePresent
+            rr.mParcel.writeInt(dis.readInt()); //serviceCategory
+            rr.mParcel.writeInt(dis.read()); //address_digit_mode
+            rr.mParcel.writeInt(dis.read()); //address_nbr_mode
+            rr.mParcel.writeInt(dis.read()); //address_ton
+            rr.mParcel.writeInt(dis.read()); //address_nbr_plan
+            address_nbr_of_digits = (byte) dis.read();
+            rr.mParcel.writeByte((byte) address_nbr_of_digits);
+            for(int i=0; i < address_nbr_of_digits; i++) {
+                rr.mParcel.writeByte(dis.readByte()); // address_orig_bytes[i]
+            }
+            rr.mParcel.writeInt(dis.read()); //subaddressType
+            rr.mParcel.writeByte((byte) dis.read()); //subaddr_odd
+            subaddr_nbr_of_digits = (byte) dis.read();
+            rr.mParcel.writeByte((byte) subaddr_nbr_of_digits);
+            for (int i=0; i < subaddr_nbr_of_digits; i++) {
+                rr.mParcel.writeByte(dis.readByte()); //subaddr_orig_bytes[i]
+            }
+
+            bearerDataLength = dis.read();
+            rr.mParcel.writeInt(bearerDataLength);
+            for (int i=0; i < bearerDataLength; i++) {
+                rr.mParcel.writeByte(dis.readByte()); //bearerData[i]
+            }
+        } catch (IOException ex) {
+            if (RILJ_LOGD) riljLog("writeSmsToRuim: conversion from input stream to object failed: "
+                    + ex);
+        } finally {
+            try {
+                if (bais != null) {
+                    bais.close();
+                }
+                if (dis != null) {
+                    dis.close();
+                }
+            } catch (IOException ex) {
+                if (RILJ_LOGD) riljLog("writeSmsToRuim: close input stream failed: " + ex);
+            }
+        }
+    }
+
     @Override
     public void writeSmsToRuim(int status, String pdu, Message response) {
         status = translateStatus(status);
@@ -1589,7 +1640,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                 response);
 
         rr.mParcel.writeInt(status);
-        rr.mParcel.writeString(pdu);
+        constructCdmaWriteSmsToRuimRilRequest(rr, IccUtils.hexStringToBytes(pdu));
 
         if (RILJ_LOGV) riljLog(rr.serialString() + "> "
                 + requestToString(rr.mRequest)
