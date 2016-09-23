@@ -9,3 +9,11 @@ UUID: f076e782_64da94de
 Bytes: 59
 How about adding isAnyCsRestricted to RestrictedState.java?
 
+3545:0-3545:88
+Fri Sep 23 23:56:26 2016 +0000
+Author: Toshiya Ikenaga <1097598@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: f076e782_64da94de
+UUID: 853c8bc1_312490b3
+Bytes: 4
+Done
+
