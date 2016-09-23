@@ -1,0 +1,11 @@
+Revision: 6283c122065c957a28282da7fdc796e0cee7e100
+Patch-set: 1
+File: src/java/com/android/internal/telephony/ServiceStateTracker.java
+
+3545:0-3545:88
+Fri Sep 23 00:55:39 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: f076e782_64da94de
+Bytes: 59
+How about adding isAnyCsRestricted to RestrictedState.java?
+
