@@ -44,3 +44,12 @@ These are the expected behaviors.
 I will abandon this if my understanding is correct.
 Thanks for your review.
 
+313:15-314:62
+Thu Sep 29 17:22:16 2016 +0000
+Author: Chen Xu <1121193@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 42f44941_ffafff94
+UUID: c5a5a31c_972b5a30
+Bytes: 93
+exactly, configuration 1) is already supported.
+code #314 mandates bad configurations of ACCF
+
