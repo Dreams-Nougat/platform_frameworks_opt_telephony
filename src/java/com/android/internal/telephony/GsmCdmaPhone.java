@@ -2639,6 +2639,9 @@ public class GsmCdmaPhone extends Phone {
             r.registerForRecordsLoaded(this, EVENT_SIM_RECORDS_LOADED, null);
         } else {
             r.registerForRecordsLoaded(this, EVENT_RUIM_RECORDS_LOADED, null);
+            if (isPhoneTypeCdmaLte()) {
+              r.registerForRecordsLoaded(this, EVENT_SIM_RECORDS
+            }
         }
     }
 
