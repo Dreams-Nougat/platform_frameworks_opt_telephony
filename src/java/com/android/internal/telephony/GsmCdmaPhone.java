@@ -1991,7 +1991,7 @@ public class GsmCdmaPhone extends Phone {
                 String[] respId = (String[])ar.result;
                 mImei = respId[0];
                 mImeiSv = respId[1];
-                mEsn  =  respId[2];
+                amEsn  =  respId[2];
                 mMeid =  respId[3];
             }
             break;
@@ -2009,6 +2009,7 @@ public class GsmCdmaPhone extends Phone {
             case EVENT_RUIM_RECORDS_LOADED:
                 logd("Event EVENT_RUIM_RECORDS_LOADED Received");
                 updateCurrentCarrierInProvider();
+                mSimRecordsLoadedRegistrants.notifyRegistrants();
                 break;
 
             case EVENT_RADIO_ON:
