@@ -12,3 +12,35 @@ what is the data passed in? is that a nested TLV data structure?
 tlvCert.parse(tlvCondition.getValue, true) will only append one cert (per condition) to mRules.
 2) is that a good configuration to allow multiple certs per condition, if yes, then the proper change would requires a nested while loop as well
 
+313:15-314:62
+Thu Sep 29 13:41:25 2016 +0000
+Author: Yoshiaki NAKA <1115438@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: c5a5a31c_1ef82c62
+UUID: 42f44941_ffafff94
+Bytes: 1065
+Apologies for my incorrect understanding.
+My curernt understanding is;
+
+1.) The present code supports multiple DeviceAppIDs already
+
+Three certification hashes are stored to mRules if ACCF contains the following data.
+
+  30 16 04 14 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11 11
+  30 16 04 14 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22
+  30 16 04 14 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33 33
+
+2.) AccessRule must not be in ACCF for Android Carrier Privileges
+
+The following data is DeviceAppID + AccessRules.
+
+  30 35 04 14 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22 22
+  A0 1D A0 16 A1 14 04 08 80 F2 00 00 FF FF FF FF 04 08 80 CA 00 00 FF FF 00 00 A1 03 80 01 00
+
+tlvCert.parse(tlvCondition.getValue(), true) throws IllegalArgumentException
+because AccessRules remain after parsing DeviceAppID,
+so mRules.add() is never called in this case even if there is one correct DeviceAppID in ACCF.
+
+These are the expected behaviors.
+I will abandon this if my understanding is correct.
+Thanks for your review.
+
