@@ -1,0 +1,11 @@
+Revision: 7e4b9cd4df8ba943a784c95b0c5b34b2957ffbb8
+Patch-set: 2
+File: src/java/com/android/internal/telephony/GsmCdmaPhone.java
+
+2642:12-2642:39
+Fri Sep 30 18:21:18 2016 +0000
+Author: Jack Yu <1081638@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 826561f7_665a4728
+Bytes: 35
+Maybe adding comment to explain why
+
