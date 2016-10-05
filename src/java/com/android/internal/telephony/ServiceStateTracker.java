@@ -2101,6 +2101,7 @@ public class ServiceStateTracker extends Handler {
             if (mSS.getVoiceRegState() == ServiceState.STATE_OUT_OF_SERVICE
                     || mSS.getVoiceRegState() == ServiceState.STATE_EMERGENCY_ONLY) {
                 showPlmn = true;
+                rule &= SIMRecords.SPN_RULE_SHOW_PLMN;
                 if (mEmergencyOnly) {
                     // No service but emergency call allowed
                     plmn = Resources.getSystem().
