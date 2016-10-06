@@ -1062,10 +1062,8 @@ public class GsmCdmaPhone extends Phone {
         boolean isEmergency = PhoneNumberUtils.isEmergencyNumber(dialString);
         Phone imsPhone = mImsPhone;
 
-        CarrierConfigManager configManager =
-                (CarrierConfigManager) mContext.getSystemService(Context.CARRIER_CONFIG_SERVICE);
-        boolean alwaysTryImsForEmergencyCarrierConfig = configManager.getConfigForSubId(getSubId())
-                .getBoolean(CarrierConfigManager.KEY_CARRIER_USE_IMS_FIRST_FOR_EMERGENCY_BOOL);
+        boolean alwaysTryImsForEmergencyCarrierConfig = CarrierConfigManager.getBoolean(
+                CarrierConfigManager.KEY_CARRIER_USE_IMS_FIRST_FOR_EMERGENCY_BOOL, mContext);
 
         boolean imsUseEnabled = isImsUseEnabled()
                  && imsPhone != null
