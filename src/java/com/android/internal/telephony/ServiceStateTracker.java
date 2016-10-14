@@ -229,8 +229,8 @@ public class ServiceStateTracker extends Handler {
         "gn", // Guinea
         "gw", // Guinea Bissau
         "ie", // Ireland
-        "lr", // Liberia
         "is", // Iceland
+        "lr", // Liberia
         "ma", // Morocco
         "ml", // Mali
         "mr", // Mauritania
