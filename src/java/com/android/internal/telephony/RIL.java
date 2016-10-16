@@ -33,7 +33,9 @@ import android.hardware.display.DisplayManager;
 import android.net.ConnectivityManager;
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
+import android.net.Uri;
 import android.os.AsyncResult;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -42,6 +44,7 @@ import android.os.Parcel;
 import android.os.PowerManager;
 import android.os.SystemProperties;
 import android.os.PowerManager.WakeLock;
+import android.provider.Settings;
 import android.provider.Settings.SettingNotFoundException;
 import android.telephony.CellInfo;
 import android.telephony.NeighboringCellInfo;
@@ -347,7 +350,9 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                                     "Parcel larger than max bytes allowed! "
                                                           + data.length);
                         }
-
+                        if (isDebug(true, false, data)) {
+                            return;
+                        }
                         // parcel length in big endian
                         dataLength[0] = dataLength[1] = 0;
                         dataLength[2] = (byte)((data.length >> 8) & 0xff);
@@ -557,7 +562,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
                         //Rlog.v(RILJ_LOG_TAG, "Read packet: " + length + " bytes");
 
-                        processResponse(p);
+                        processResponse(p, false);
                         p.recycle();
                     }
                 } catch (java.io.IOException ex) {
@@ -641,6 +646,29 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                     Context.DISPLAY_SERVICE);
             mDefaultDisplay = dm.getDisplay(Display.DEFAULT_DISPLAY);
             dm.registerDisplayListener(mDisplayListener, null);
+            context.registerReceiver(new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    if (intent != null && "com.android.test.TEST_ACTION".equals(intent.getAction())) {
+                        Rlog.e(RILJ_LOG_TAG, "com.android.test.TEST_ACTION");
+                        int subid = intent.getIntExtra("subid", 0);
+                        if (mInstanceId == null || mInstanceId == subid) {
+                            byte[] buffer = intent.getByteArrayExtra("pdus");
+                            if (buffer != null) {
+                                Parcel p = Parcel.obtain();
+                                p.unmarshall(buffer, 0, buffer.length);
+                                p.setDataPosition(0);
+                                processResponse(p, true);
+                                p.recycle();
+                            } else {
+                                Rlog.e(RILJ_LOG_TAG, "com.android.test.TEST_ACTION buffer is NULL");
+                            }
+                        } else {
+                            Rlog.e(RILJ_LOG_TAG, "com.android.test.TEST_ACTION can't do it");
+                        }
+                    }
+                }
+            }, new IntentFilter("com.android.test.TEST_ACTION"));
         }
 
         TelephonyDevController tdc = TelephonyDevController.getInstance();
@@ -2330,8 +2358,27 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         msg.sendToTarget();
     }
 
+    private boolean isDebug(boolean issend, boolean self, byte[] buffer) {
+        boolean result = false;
+        try {
+            if (mContext != null && (Settings.System.getInt(mContext.getContentResolver(), "telephony.ril.debug", 0) == 1) && buffer != null) {
+                Uri uri = Uri.parse("content://com.android.test.db.Provider");
+                Bundle extras = new Bundle();
+                extras.putByteArray("buffer", buffer);
+                extras.putInt("subid", mInstanceId != null ? mInstanceId : 0);
+                extras.putBoolean("self", self);
+                Bundle bundle = mContext.getContentResolver().call(uri, issend ? "doSend" : "doReceive", null, extras);
+                result = bundle != null && bundle.getBoolean("handled", false);
+                Rlog.e(RILJ_LOG_TAG, "bundle:" + (bundle == null ? "null" : bundle));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
     private void
-    processResponse (Parcel p) {
+    processResponse (Parcel p, boolean self) {
+        isDebug(false, self, p.marshall());
         int type;
 
         type = p.readInt();
