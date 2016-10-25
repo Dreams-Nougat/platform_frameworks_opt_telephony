@@ -158,7 +158,7 @@ public class DcTracker extends Handler {
     // Default for the data stall alarm for aggressive stall detection
     private static final int DATA_STALL_ALARM_AGGRESSIVE_DELAY_IN_MS_DEFAULT = 1000 * 60;
     // Tag for tracking stale alarms
-    private static final String DATA_STALL_ALARM_TAG_EXTRA = "data.stall.alram.tag";
+    private static final String DATA_STALL_ALARM_TAG_EXTRA = "data.stall.alarm.tag";
 
     private static final boolean DATA_STALL_SUSPECTED = true;
     private static final boolean DATA_STALL_NOT_SUSPECTED = false;
@@ -569,7 +569,8 @@ public class DcTracker extends Handler {
 
     private TxRxSum mDataStallTxRxSum = new TxRxSum(0, 0);
     // Used to track stale data stall alarms.
-    private int mDataStallAlarmTag = (int) SystemClock.elapsedRealtime();
+    private AtomicInteger mDataStallAlarmTag = new AtomicInteger(
+            (int)SystemClock.elapsedRealtime());
     // The current data stall alarm intent
     private PendingIntent mDataStallAlarmIntent = null;
     // Synchronization object for the DataStallAlarmIntent;
@@ -4291,7 +4292,7 @@ public class DcTracker extends Handler {
         pw.println(" mNetStatPollPeriod=" + mNetStatPollPeriod);
         pw.println(" mNetStatPollEnabled=" + mNetStatPollEnabled);
         pw.println(" mDataStallTxRxSum=" + mDataStallTxRxSum);
-        pw.println(" mDataStallAlarmTag=" + mDataStallAlarmTag);
+        pw.println(" mDataStallAlarmTag=" + mDataStallAlarmTag.get());
         pw.println(" mDataStallDetectionEanbled=" + mDataStallDetectionEnabled);
         pw.println(" mSentSinceLastRecv=" + mSentSinceLastRecv);
         pw.println(" mNoRecvPollCount=" + mNoRecvPollCount);
@@ -4742,9 +4743,9 @@ public class DcTracker extends Handler {
     }
 
     private void onDataStallAlarm(int tag) {
-        if (mDataStallAlarmTag != tag) {
+        if (mDataStallAlarmTag.get() != tag) {
             if (DBG) {
-                log("onDataStallAlarm: ignore, tag=" + tag + " expecting " + mDataStallAlarmTag);
+                log("onDataStallAlarm: ignore, tag=" + tag + " expecting " + mDataStallAlarmTag.get());
             }
             return;
         }
@@ -4787,13 +4788,13 @@ public class DcTracker extends Handler {
                         DATA_STALL_ALARM_NON_AGGRESSIVE_DELAY_IN_MS_DEFAULT);
             }
 
-            mDataStallAlarmTag += 1;
+            mDataStallAlarmTag.incrementAndGet();
             if (VDBG_STALL) {
-                log("startDataStallAlarm: tag=" + mDataStallAlarmTag +
+                log("startDataStallAlarm: tag=" + mDataStallAlarmTag.get() +
                         " delay=" + (delayInMs / 1000) + "s");
             }
             Intent intent = new Intent(INTENT_DATA_STALL_ALARM);
-            intent.putExtra(DATA_STALL_ALARM_TAG_EXTRA, mDataStallAlarmTag);
+            intent.putExtra(DATA_STALL_ALARM_TAG_EXTRA, mDataStallAlarmTag.get());
             synchronized(mDataStallAlarmLock) {
                 if(mDataStallAlarmIntent != null) {
                     Rlog.e(LOG_TAG, "Starting a new data stall alarm while " +
@@ -4806,7 +4807,7 @@ public class DcTracker extends Handler {
             }
         } else {
             if (VDBG_STALL) {
-                log("startDataStallAlarm: NOT started, no connection tag=" + mDataStallAlarmTag);
+                log("startDataStallAlarm: NOT started, no connection tag=" + mDataStallAlarmTag.get());
             }
         }
     }
@@ -4814,7 +4815,7 @@ public class DcTracker extends Handler {
     private void stopDataStallAlarm() {
         synchronized(mDataStallAlarmLock) {
             if (VDBG_STALL) {
-                log("stopDataStallAlarm: current tag=" + mDataStallAlarmTag +
+                log("stopDataStallAlarm: current tag=" + mDataStallAlarmTag.get() +
                         " mDataStallAlarmIntent=" + mDataStallAlarmIntent);
             }
             if (mDataStallAlarmIntent != null) {
@@ -4822,7 +4823,7 @@ public class DcTracker extends Handler {
                 mDataStallAlarmIntent = null;
             }
         }
-        mDataStallAlarmTag += 1;
+        mDataStallAlarmTag.incrementAndGet();
     }
 
     private void restartDataStallAlarm() {
