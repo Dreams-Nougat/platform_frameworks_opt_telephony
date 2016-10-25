@@ -572,6 +572,8 @@ public class DcTracker extends Handler {
     private int mDataStallAlarmTag = (int) SystemClock.elapsedRealtime();
     // The current data stall alarm intent
     private PendingIntent mDataStallAlarmIntent = null;
+    // Synchronization object for the DataStallAlarmIntent;
+    private final Object mDataStallAlarmLock = new Object();
     // Number of packets sent since the last received packet
     private long mSentSinceLastRecv;
     // Controls when a simple recovery attempt it to be tried
@@ -4792,10 +4794,15 @@ public class DcTracker extends Handler {
             }
             Intent intent = new Intent(INTENT_DATA_STALL_ALARM);
             intent.putExtra(DATA_STALL_ALARM_TAG_EXTRA, mDataStallAlarmTag);
-            mDataStallAlarmIntent = PendingIntent.getBroadcast(mPhone.getContext(), 0, intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT);
-            mAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    SystemClock.elapsedRealtime() + delayInMs, mDataStallAlarmIntent);
+            synchronized(mDataStallAlarmLock) {
+                if(mDataStallAlarmIntent != null) {
+                    Rlog.e(LOG_TAG, "Starting a new data stall alarm before previous is finished!");
+                }
+                mDataStallAlarmIntent = PendingIntent.getBroadcast(mPhone.getContext(), 0, intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT);
+                mAlarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                        SystemClock.elapsedRealtime() + delayInMs, mDataStallAlarmIntent);
+            }
         } else {
             if (VDBG_STALL) {
                 log("startDataStallAlarm: NOT started, no connection tag=" + mDataStallAlarmTag);
@@ -4804,14 +4811,20 @@ public class DcTracker extends Handler {
     }
 
     private void stopDataStallAlarm() {
-        if (VDBG_STALL) {
-            log("stopDataStallAlarm: current tag=" + mDataStallAlarmTag +
-                    " mDataStallAlarmIntent=" + mDataStallAlarmIntent);
-        }
-        mDataStallAlarmTag += 1;
-        if (mDataStallAlarmIntent != null) {
-            mAlarmManager.cancel(mDataStallAlarmIntent);
-            mDataStallAlarmIntent = null;
+        synchronized(mDataStallAlarmLock) {
+            if(mDataStallAlarmIntent == null) {
+                Rlog.e(LOG_TAG, "Attempting to stop a non-existent data stall alarm!");
+                return;
+            }
+            if (VDBG_STALL) {
+                log("stopDataStallAlarm: current tag=" + mDataStallAlarmTag +
+                        " mDataStallAlarmIntent=" + mDataStallAlarmIntent);
+            }
+            mDataStallAlarmTag += 1;
+            if (mDataStallAlarmIntent != null) {
+                mAlarmManager.cancel(mDataStallAlarmIntent);
+                mDataStallAlarmIntent = null;
+            }
         }
     }
 
