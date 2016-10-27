@@ -498,18 +498,18 @@ public class ApnSetting {
 
         ApnSetting other = (ApnSetting) o;
 
-        return carrier.equals(other.carrier) &&
+        return TextUtils.equals(carrier, other.carrier) &&
                 id == other.id &&
-                numeric.equals(other.numeric) &&
-                apn.equals(other.apn) &&
-                proxy.equals(other.proxy) &&
-                mmsc.equals(other.mmsc) &&
-                mmsProxy.equals(other.mmsProxy) &&
-                port.equals(other.port) &&
+                TextUtils.equals(numeric, other.numeric) &&
+                TextUtils.equals(apn, other.apn) &&
+                TextUtils.equals(proxy, other.proxy) &&
+                TextUtils.equals(mmsc, other.mmsc) &&
+                TextUtils.equals(mmsProxy, other.mmsProxy) &&
+                TextUtils.equals(port, other.port) &&
                 authType == other.authType &&
                 Arrays.deepEquals(types, other.types) &&
-                protocol.equals(other.protocol) &&
-                roamingProtocol.equals(other.roamingProtocol) &&
+                TextUtils.equals(protocol, other.protocol) &&
+                TextUtils.equals(roamingProtocol, other.roamingProtocol) &&
                 carrierEnabled == other.carrierEnabled &&
                 bearer == other.bearer &&
                 bearerBitmask == other.bearerBitmask &&
@@ -519,7 +519,7 @@ public class ApnSetting {
                 waitTime == other.waitTime &&
                 maxConnsTime == other.maxConnsTime &&
                 mtu == other.mtu &&
-                mvnoType.equals(other.mvnoType) &&
-                mvnoMatchData.equals(other.mvnoMatchData);
+                TextUtils.equals(mvnoType, other.mvnoType) &&
+                TextUtils.equals(mvnoMatchData, other.mvnoMatchData);
     }
 }
