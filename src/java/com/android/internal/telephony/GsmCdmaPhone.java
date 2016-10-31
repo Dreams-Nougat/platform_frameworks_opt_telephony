@@ -1132,6 +1132,17 @@ public class GsmCdmaPhone extends Phone {
         }
     }
 
+    private boolean isImsEnabledOverCdma() {
+        return isPhoneTypeCdmaLte()
+                && isImsUseEnabled()
+                && mImsPhone != null
+                && (mImsPhone.getServiceState().getState() == ServiceState.STATE_IN_SERVICE);
+    }
+
+    private boolean isMmiCodeSupported() {
+        return isPhoneTypeGsm() || isImsEnabledOverCdma();
+    }
+
     @Override
     protected Connection dialInternal(String dialString, UUSInfo uusInfo, int videoState,
                                       Bundle intentExtras)
@@ -1140,7 +1151,7 @@ public class GsmCdmaPhone extends Phone {
         // Need to make sure dialString gets parsed properly
         String newDialString = PhoneNumberUtils.stripSeparators(dialString);
 
-        if (isPhoneTypeGsm()) {
+        if (isMmiCodeSupported()) {
             // handle in-call MMI first if applicable
             if (handleInCallMmiCommands(newDialString)) {
                 return null;
@@ -1199,13 +1210,13 @@ public class GsmCdmaPhone extends Phone {
 
     @Override
     public void sendUssdResponse(String ussdMessge) {
-        if (isPhoneTypeGsm()) {
+        if (isMmiCodeSupported()) {
             GsmMmiCode mmi = GsmMmiCode.newFromUssdUserInput(ussdMessge, this, mUiccApplication.get());
             mPendingMMIs.add(mmi);
             mMmiRegistrants.notifyRegistrants(new AsyncResult(null, mmi, null));
             mmi.sendUssd(ussdMessge);
         } else {
-            loge("sendUssdResponse: not possible in CDMA");
+            loge("sendUssdResponse: not possible in CDMA without IMS.");
         }
     }
 
@@ -1847,8 +1858,8 @@ public class GsmCdmaPhone extends Phone {
          * The exception is cancellation of an incoming USSD-REQUEST, which is
          * not on the list.
          */
-        if (mPendingMMIs.remove(mmi) || (isPhoneTypeGsm() && (mmi.isUssdRequest() ||
-                ((GsmMmiCode)mmi).isSsInfo()))) {
+        if (mPendingMMIs.remove(mmi) || (isMmiCodeSupported()
+                && (mmi.isUssdRequest() || ((GsmMmiCode)mmi).isSsInfo()))) {
             mMmiCompleteRegistrants.notifyRegistrants(new AsyncResult(null, mmi, null));
         }
     }
@@ -1860,8 +1871,8 @@ public class GsmCdmaPhone extends Phone {
 
     /** ussdMode is one of CommandsInterface.USSD_MODE_* */
     private void onIncomingUSSD (int ussdMode, String ussdMessage) {
-        if (!isPhoneTypeGsm()) {
-            loge("onIncomingUSSD: not expected on GSM");
+        if (!isMmiCodeSupported()) {
+            loge("onIncomingUSSD: not expected on CDMA without IMS.");
         }
         boolean isUssdError;
         boolean isUssdRequest;
@@ -1952,7 +1963,7 @@ public class GsmCdmaPhone extends Phone {
     }
 
     private void handleRadioOffOrNotAvailable() {
-        if (isPhoneTypeGsm()) {
+        if (isMmiCodeSupported()) {
             // Some MMI requests (eg USSD) are not completed
             // within the course of a CommandsInterface request
             // If the radio shuts off or resets while one of these
