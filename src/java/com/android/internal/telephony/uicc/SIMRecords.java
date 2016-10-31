@@ -166,6 +166,9 @@ public class SIMRecords extends IccRecords {
     private static final int EVENT_GET_CSP_CPHS_DONE = 33 + SIM_RECORD_EVENT_BASE;
     private static final int EVENT_GET_GID1_DONE = 34 + SIM_RECORD_EVENT_BASE;
     private static final int EVENT_GET_GID2_DONE = 36 + SIM_RECORD_EVENT_BASE;
+    private static final int EVENT_GET_PLMN_W_ACT_DONE = 37 + SIM_RECORD_EVENT_BASE;
+    private static final int EVENT_GET_OPLMN_W_ACT_DONE = 38 + SIM_RECORD_EVENT_BASE;
+    private static final int EVENT_GET_HPLMN_W_ACT_DONE = 39 + SIM_RECORD_EVENT_BASE;
 
     // TODO: Possibly move these to IccRecords.java
     private static final int SYSTEM_EVENT_BASE = 0x100;
@@ -271,6 +274,9 @@ public class SIMRecords extends IccRecords {
         mPnnHomeName = null;
         mGid1 = null;
         mGid2 = null;
+        mPlmnActRecords = null;
+        mOplmnActRecords = null;
+        mHplmnActRecords = null;
 
         mAdnCache.reset();
 
@@ -1250,7 +1256,51 @@ public class SIMRecords extends IccRecords {
 
                 break;
 
+            case EVENT_GET_PLMN_W_ACT_DONE:
+                isRecordLoadResponse = true;
+                ar = (AsyncResult)msg.obj;
+                data =(byte[])ar.result;
+
+                if (ar.exception != null) {
+                    loge("Exception in get User PLMN with Access Tech Records: " + ar.exception);
+                    break;
+                } else {
+                    log("Received a PlmnActRecord, raw=" + IccUtils.bytesToHexString(data));
+                    mPlmnActRecords = PlmnActRecord.getRecords(data);
+                    log("PlmnActRecords="+PlmnActRecord.toString(mPlmnActRecords));
+                }
+                break;
+            case EVENT_GET_OPLMN_W_ACT_DONE:
+                isRecordLoadResponse = true;
+                ar = (AsyncResult)msg.obj;
+                data =(byte[])ar.result;
+
+                if (ar.exception != null) {
+                    loge("Exception in get Operator PLMN with Access Tech Records: " + ar.exception);
+                    break;
+                } else {
+                    log("Received a PlmnActRecord, raw=" + IccUtils.bytesToHexString(data));
+                    mOplmnActRecords = PlmnActRecord.getRecords(data);
+                    log("OplmnActRecord="+PlmnActRecord.toString(mOplmnActRecords));
+                }
+                break;
+            case EVENT_GET_HPLMN_W_ACT_DONE:
+                isRecordLoadResponse = true;
+                ar = (AsyncResult)msg.obj;
+                data =(byte[])ar.result;
+
+                if (ar.exception != null) {
+                    loge("Exception in get Home PLMN with Access Tech Record: " + ar.exception);
+                    break;
+                } else {
+                    log("Received a PlmnActRecord, raw=" + IccUtils.bytesToHexString(data));
+                    mHplmnActRecords = PlmnActRecord.getRecords(data);
+                    log("HplmnActRecord="+PlmnActRecord.toString(mHplmnActRecords));
+                }
+                break;
+
             case EVENT_CARRIER_CONFIG_CHANGED:
+                isRecordLoadResponse = false;
                 handleCarrierNameOverride();
                 break;
 
@@ -1643,6 +1693,15 @@ public class SIMRecords extends IccRecords {
         mFh.loadEFTransparent(EF_GID2, obtainMessage(EVENT_GET_GID2_DONE));
         mRecordsToLoad++;
 
+        mFh.loadEFTransparent(EF_PLMN_W_ACT, obtainMessage(EVENT_GET_PLMN_W_ACT_DONE));
+        mRecordsToLoad++;
+
+        mFh.loadEFTransparent(EF_OPLMN_W_ACT, obtainMessage(EVENT_GET_OPLMN_W_ACT_DONE));
+        mRecordsToLoad++;
+
+        mFh.loadEFTransparent(EF_HPLMN_W_ACT, obtainMessage(EVENT_GET_HPLMN_W_ACT_DONE));
+        mRecordsToLoad++;
+
         loadEfLiAndEfPl();
 
         // XXX should seek instead of examining them all
@@ -2013,6 +2072,9 @@ public class SIMRecords extends IccRecords {
         pw.println(" mSpdiNetworks[]=" + mSpdiNetworks);
         pw.println(" mPnnHomeName=" + mPnnHomeName);
         pw.println(" mUsimServiceTable=" + mUsimServiceTable);
+        pw.println(" mPlmnActRecords=" + PlmnActRecord.toString(mPlmnActRecords));
+        pw.println(" mOplmnActRecords=" + PlmnActRecord.toString(mOplmnActRecords));
+        pw.println(" mHplmnActRecords=" + PlmnActRecord.toString(mHplmnActRecords));
         pw.println(" mGid1=" + mGid1);
         pw.println(" mGid2=" + mGid2);
         pw.flush();
