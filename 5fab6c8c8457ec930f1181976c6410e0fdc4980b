@@ -1,0 +1,39 @@
+Revision: 5fab6c8c8457ec930f1181976c6410e0fdc4980b
+Patch-set: 4
+File: src/java/com/android/internal/telephony/ServiceStateTracker.java
+
+2225:30-2225:50
+Mon Oct 31 22:28:50 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: c6e77223_522e74a9
+Bytes: 28
+should this also check both?
+
+2626:71-2626:91
+Mon Oct 31 22:28:50 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: c6e77223_f243285f
+Bytes: 33
+should this similarly check both?
+
+2848:71-2848:91
+Mon Oct 31 22:28:50 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: c6e77223_d248247e
+Bytes: 5
+ditto
+
+3071:37-3071:57
+Mon Oct 31 22:28:50 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: c6e77223_92429c58
+Bytes: 5
+ditto
+
+3110:71-3110:91
+Mon Oct 31 22:28:50 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: c6e77223_5255540b
+Bytes: 5
+ditto
+
