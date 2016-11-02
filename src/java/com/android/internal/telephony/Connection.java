@@ -178,6 +178,7 @@ public abstract class Connection {
     private int mVideoState;
     private int mConnectionCapabilities;
     private boolean mIsWifi;
+    private boolean mAudioModeIsVoip;
     private int mAudioQuality;
     private int mCallSubstate;
     private android.telecom.Connection.VideoProvider mVideoProvider;
@@ -668,6 +669,15 @@ public abstract class Connection {
     }
 
     /**
+     * Returns whether the connection uses voip audio mode
+     *
+     * @return {@code True} if the connection uses voip audio mode
+     */
+    public boolean getAudioModeIsVoip() {
+        return mAudioModeIsVoip;
+    }
+
+    /**
      * Returns the {@link android.telecom.Connection.VideoProvider} for the connection.
      *
      * @return The {@link android.telecom.Connection.VideoProvider}.
@@ -735,6 +745,15 @@ public abstract class Connection {
         for (Listener l : mListeners) {
             l.onWifiChanged(mIsWifi);
         }
+    }
+
+    /**
+     * Sets whether audio mode to voip for the connection
+     *
+     * @param isVoip {@code True} if voip audio mode is being used.
+     */
+    public void setAudioModeIsVoip(boolean isVoip) {
+        mAudioModeIsVoip = isVoip;
     }
 
     /**
@@ -891,4 +910,5 @@ public abstract class Connection {
                 .append(" post dial state: " + getPostDialState());
         return str.toString();
     }
+
 }
