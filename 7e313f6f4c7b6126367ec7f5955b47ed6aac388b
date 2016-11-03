@@ -1,0 +1,11 @@
+Revision: 7e313f6f4c7b6126367ec7f5955b47ed6aac388b
+Patch-set: 4
+File: src/java/com/android/internal/telephony/uicc/IccRecords.java
+
+331:8-331:12
+Thu Nov 03 22:19:13 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 4bfd4b26_051931e8
+Bytes: 70
+Make the method abstract instead, like some of the other methods here.
+

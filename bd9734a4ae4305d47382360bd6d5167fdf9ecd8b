@@ -1,0 +1,11 @@
+Revision: bd9734a4ae4305d47382360bd6d5167fdf9ecd8b
+Base-for-patch-set: 4
+File: src/java/com/android/internal/telephony/uicc/IccRecords.java
+
+344
+Thu Nov 03 22:19:13 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 4bfd4b26_e5252524
+Bytes: 75
+Leave a generic description of the method here, if not SimRecords specific.
+
