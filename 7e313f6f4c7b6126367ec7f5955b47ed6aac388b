@@ -9,3 +9,11 @@ UUID: 4bfd4b26_051931e8
 Bytes: 70
 Make the method abstract instead, like some of the other methods here.
 
+331:8-331:12
+Fri Nov 04 02:17:10 2016 +0000
+Author: nharold <1060151@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 4bfd4b26_051931e8
+UUID: 4bfd4b26_08170808
+Bytes: 246
+If I make the method abstract then I have to put a dummy "don't do this" into the RUIM and IsimUiccRecords. Even though this shouldn't be posting a message back, is this possibly the code that's intended for RUIM (and the comment might be wrong)?
+
