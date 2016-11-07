@@ -21,3 +21,13 @@ The current change is a reference for only the USSD over CDMA-IMS scenario (not 
 
 The change is an reference (using USSD as an example) on how all MMI codes - supplementary service (UT), and USSD - can be handled over CDMA-IMS scenarios. For the full CDMA-IMS functionality, more refactoring will be required in AOSP to route the MMI codes over ImsPhone -> ImsPhoneMmiCode
 
+1087:16-1087:27
+Mon Nov 07 03:36:26 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b05834c_3fcdb31c
+UUID: 0b78b3b0_ee19633a
+Bytes: 208
+Looking at the code it looks like support for ImsPhone -> ImsPhoneMmiCode is present. Do you know why it doesn't work?
+
+If that works, should USSD also follow that code path rather than this reference change?
+
