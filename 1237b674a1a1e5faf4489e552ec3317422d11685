@@ -9,3 +9,11 @@ UUID: 0b78b3b0_ce87c72d
 Bytes: 56
 Is this comment valid? I don't see this in GsmCdmaPhone.
 
+2058:19-2058:47
+Mon Nov 07 19:42:42 2016 +0000
+Author: Jordan Liu <1121198@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 0b78b3b0_ce87c72d
+UUID: 6bd84f3b_a290a067
+Bytes: 216
+It's at 617 within this change and 623 pre-change. https://cs.corp.google.com/android/frameworks/opt/telephony/src/java/com/android/internal/telephony/GsmCdmaPhone.java?type=cs&q=gsmcdmaphone&sq=package:android&l=623
+
