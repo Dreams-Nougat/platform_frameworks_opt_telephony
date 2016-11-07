@@ -1,0 +1,11 @@
+Revision: 1237b674a1a1e5faf4489e552ec3317422d11685
+Patch-set: 3
+File: src/java/com/android/internal/telephony/Phone.java
+
+2058:19-2058:47
+Mon Nov 07 03:26:30 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 0b78b3b0_ce87c72d
+Bytes: 56
+Is this comment valid? I don't see this in GsmCdmaPhone.
+
