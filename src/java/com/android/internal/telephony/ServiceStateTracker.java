@@ -1468,6 +1468,20 @@ public class ServiceStateTracker extends Handler {
             if (err == CommandException.Error.RADIO_NOT_AVAILABLE) {
                 // Radio has crashed or turned off
                 cancelPollState();
+                if (mCi.getRadioState() != CommandsInterface.RadioState.RADIO_ON) {
+                    if (mCi.getRadioState() == CommandsInterface.RadioState.RADIO_UNAVAILABLE) {
+                        mNewSS.setStateOutOfService();
+                    } else {
+                        mNewSS.setStateOff();
+                    }
+                    mNewCellLoc.setStateInvalid();
+                    setSignalStrengthDefaultValues();
+                    mGotCountryCode = false;
+                    mNitzUpdatedTime = false;
+                    pollStateDone();
+                    loge("handlePollStateResult Err pollStateDone to notify RADIO_NOT_AVAILABLE");
+                }
+
                 return;
             }
 
