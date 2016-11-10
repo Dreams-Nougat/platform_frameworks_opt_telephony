@@ -1,0 +1,97 @@
+Revision: 583c9078112345b4e9c36d7e7e64e5d724ea1c05
+Patch-set: 5
+File: src/java/com/android/internal/telephony/RIL.java
+
+726:20-726:41
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_17a6b3fc
+Bytes: 217
+we should probably put common code in separate function. I assume we will have more common code in this function when we consider "type" of response and do things similar to what is currently done in processResponse()
+
+727:12-727:17
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_17c3132a
+Bytes: 85
+we can keep it consistent with logging used at other places in the file using riljLog
+
+999:20-999:37
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_bf9f8396
+Bytes: 180
+1) Parameters would change now as my hidl CL is merged.
+2) This function would also have a common function which does things which are done at the beginning of processUnsolicited()
+
+1002:27-1002:39
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_25994460
+Bytes: 74
+This needs to be modified as we don't have any ril command as first param.
+
+1019:16-1019:82
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_850110b6
+Bytes: 6
+delete
+
+1021:20-1021:21
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_052be04c
+Bytes: 1
+e
+
+1024:16-1024:17
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_4521e864
+Bytes: 1
+e
+
+1045:8-1046:80
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_456fa8a9
+Bytes: 71
+I guess this was for debugging purpose and we don't need all log lines.
+
+1133:4-1133:21
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_65fe6cc0
+Bytes: 171
+It would be nice to have common code in this function to be added to separate function so that we don't have to repeat it for all the functions. For eg: Line 1140 to 1145.
+
+1144:16-1144:52
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_a55d3401
+Bytes: 53
+Also
+rr.mStartTimeMs = SystemClock.elapsedRealtime();
+
+1151:16-1151:29
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_e5f25cef
+Bytes: 26
+decrement wakelock as well
+
+2752:76-2752:113
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_3f34f30a
+Bytes: 9
+new line.
+
+2946:8-2947:9
+Thu Nov 10 01:22:31 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8b89037a_ff2d0bc7
+Bytes: 8
+delete ?
+
