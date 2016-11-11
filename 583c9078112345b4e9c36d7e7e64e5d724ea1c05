@@ -9,12 +9,28 @@ UUID: 8b89037a_17a6b3fc
 Bytes: 217
 we should probably put common code in separate function. I assume we will have more common code in this function when we consider "type" of response and do things similar to what is currently done in processResponse()
 
+726:20-726:41
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_17a6b3fc
+UUID: 0bc273c7_64d60a53
+Bytes: 4
+Done
+
 727:12-727:17
 Thu Nov 10 01:22:31 2016 +0000
 Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 8b89037a_17c3132a
 Bytes: 85
 we can keep it consistent with logging used at other places in the file using riljLog
+
+727:12-727:17
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_17c3132a
+UUID: 0bc273c7_a4a002e2
+Bytes: 4
+Done
 
 999:20-999:37
 Thu Nov 10 01:22:31 2016 +0000
@@ -24,12 +40,28 @@ Bytes: 180
 1) Parameters would change now as my hidl CL is merged.
 2) This function would also have a common function which does things which are done at the beginning of processUnsolicited()
 
+999:20-999:37
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_bf9f8396
+UUID: 0bc273c7_c4f1bee9
+Bytes: 4
+Done
+
 1002:27-1002:39
 Thu Nov 10 01:22:31 2016 +0000
 Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 8b89037a_25994460
 Bytes: 74
 This needs to be modified as we don't have any ril command as first param.
+
+1002:27-1002:39
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_25994460
+UUID: 0bc273c7_24e7f22e
+Bytes: 4
+Done
 
 1019:16-1019:82
 Thu Nov 10 01:22:31 2016 +0000
@@ -38,12 +70,28 @@ UUID: 8b89037a_850110b6
 Bytes: 6
 delete
 
+1019:16-1019:82
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_850110b6
+UUID: 0bc273c7_e45dda00
+Bytes: 4
+Done
+
 1021:20-1021:21
 Thu Nov 10 01:22:31 2016 +0000
 Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 8b89037a_052be04c
 Bytes: 1
 e
+
+1021:20-1021:21
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_052be04c
+UUID: 0bc273c7_c4625ec6
+Bytes: 4
+Done
 
 1024:16-1024:17
 Thu Nov 10 01:22:31 2016 +0000
@@ -52,6 +100,14 @@ UUID: 8b89037a_4521e864
 Bytes: 1
 e
 
+1024:16-1024:17
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_4521e864
+UUID: 0bc273c7_246892a3
+Bytes: 4
+Done
+
 1045:8-1046:80
 Thu Nov 10 01:22:31 2016 +0000
 Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -59,12 +115,28 @@ UUID: 8b89037a_456fa8a9
 Bytes: 71
 I guess this was for debugging purpose and we don't need all log lines.
 
+1045:8-1046:80
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_456fa8a9
+UUID: 0bc273c7_2491b26b
+Bytes: 4
+Done
+
 1133:4-1133:21
 Thu Nov 10 01:22:31 2016 +0000
 Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 8b89037a_65fe6cc0
 Bytes: 171
 It would be nice to have common code in this function to be added to separate function so that we don't have to repeat it for all the functions. For eg: Line 1140 to 1145.
+
+1133:4-1133:21
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_65fe6cc0
+UUID: 0bc273c7_443aee88
+Bytes: 4
+Done
 
 1144:16-1144:52
 Thu Nov 10 01:22:31 2016 +0000
@@ -74,12 +146,28 @@ Bytes: 53
 Also
 rr.mStartTimeMs = SystemClock.elapsedRealtime();
 
+1144:16-1144:52
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_a55d3401
+UUID: 0bc273c7_e4d2fa18
+Bytes: 71
+That's only on internal. Will have to add that when merging internally.
+
 1151:16-1151:29
 Thu Nov 10 01:22:31 2016 +0000
 Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 8b89037a_e5f25cef
 Bytes: 26
 decrement wakelock as well
+
+1151:16-1151:29
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_e5f25cef
+UUID: 0bc273c7_6499ea5f
+Bytes: 4
+Done
 
 2752:76-2752:113
 Thu Nov 10 01:22:31 2016 +0000
@@ -88,10 +176,26 @@ UUID: 8b89037a_3f34f30a
 Bytes: 9
 new line.
 
+2752:76-2752:113
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_3f34f30a
+UUID: 0bc273c7_a76be463
+Bytes: 4
+Done
+
 2946:8-2947:9
 Thu Nov 10 01:22:31 2016 +0000
 Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 8b89037a_ff2d0bc7
 Bytes: 8
 delete ?
+
+2946:8-2947:9
+Fri Nov 11 03:03:56 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8b89037a_ff2d0bc7
+UUID: 0bc273c7_44966e31
+Bytes: 4
+Done
 
