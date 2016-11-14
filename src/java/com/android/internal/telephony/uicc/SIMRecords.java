@@ -174,6 +174,9 @@ public class SIMRecords extends IccRecords {
     private static final int EVENT_GET_EHPLMN_DONE = 40 + SIM_RECORD_EVENT_BASE;
     private static final int EVENT_GET_FPLMN_DONE = 41 + SIM_RECORD_EVENT_BASE;
 
+
+    private static final int EVENT_GET_FPLMN_SYNC_DONE = 42 + SIM_RECORD_EVENT_BASE;
+
     // TODO: Possibly move these to IccRecords.java
     private static final int SYSTEM_EVENT_BASE = 0x100;
     private static final int EVENT_CARRIER_CONFIG_CHANGED = 1 + SYSTEM_EVENT_BASE;
@@ -1333,6 +1336,18 @@ public class SIMRecords extends IccRecords {
                 handleCarrierNameOverride();
                 break;
 
+            case EVENT_GET_FPLMN_SYNC_DONE:
+                ar = (AsyncResult)msg.obj;
+                data =(byte[])ar.result;
+                if (ar.exception != null || data == null) {
+                    loge("Failed getting Forbidden PLMNs: " + ar.exception);
+                    break;
+                }
+                mFplmns = parseBcdPlmnList(data, "Forbidden");
+
+                msg.notify();
+                break;
+
             default:
                 super.handleMessage(msg);   // IccRecords handles generic record load responses
 
@@ -1624,6 +1639,19 @@ public class SIMRecords extends IccRecords {
             mVoiceMailNum = mVmConfig.getVoiceMailNumber(spn);
             mVoiceMailTag = mVmConfig.getVoiceMailTag(spn);
         }
+    }
+
+    public String[] getForbiddenPlmns() {
+        Message result = obtainMessage(EVENT_GET_FPLMN_SYNC_DONE);
+        mFh.loadEFTransparent(EF_FPLMN, result);
+        try {
+            result.wait(1000);
+        } catch (InterruptedException e) {
+            loge ("No forbidden PLMN List Preferred");
+            return null;
+        }
+
+        return mFplmns;
     }
 
     @Override

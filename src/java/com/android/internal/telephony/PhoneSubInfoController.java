@@ -29,6 +29,7 @@ import android.telephony.SubscriptionManager;
 import android.telephony.Rlog;
 
 import com.android.internal.telephony.uicc.IsimRecords;
+import com.android.internal.telephony.uicc.SIMRecords;
 import com.android.internal.telephony.uicc.UiccCard;
 import com.android.internal.telephony.uicc.UiccCardApplication;
 
@@ -36,6 +37,8 @@ import static android.Manifest.permission.CALL_PRIVILEGED;
 import static android.Manifest.permission.READ_PHONE_STATE;
 import static android.Manifest.permission.READ_PRIVILEGED_PHONE_STATE;
 import static android.Manifest.permission.READ_SMS;
+import static android.telephony.TelephonyManager.APPTYPE_SIM;
+import static android.telephony.TelephonyManager.APPTYPE_USIM;
 import static android.telephony.TelephonyManager.CARRIER_PRIVILEGE_STATUS_HAS_ACCESS;
 
 public class PhoneSubInfoController extends IPhoneSubInfo.Stub {
@@ -374,6 +377,38 @@ public class PhoneSubInfoController extends IPhoneSubInfo.Stub {
         } else {
             return null;
         }
+    }
+
+    public String[] getForbiddenPlmns(int subId, int appType) throws RemoteException {
+        Phone phone = getPhone(subId);
+        if(phone == null) {
+            loge("getForbiddenPlmnList(): no phone for subId");
+        }
+        mContext.enforceCallingOrSelfPermission(READ_PRIVILEGED_PHONE_STATE,
+                "Requires READ_PRIVILEGED_PHONE_STATE");
+
+        UiccCard uiccCard = phone.getUiccCard();
+        if (uiccCard == null) {
+            loge("getForbiddenPlmnList() UiccCard is null");
+            return null;
+        }
+
+        if (appType != APPTYPE_USIM && appType != APPTYPE_SIM) {
+            loge("getForbiddenPlmnList(): App Type must be USIM or SIM");
+            return null;
+        }
+
+        UiccCardApplication uiccApp = uiccCard.getApplicationByType(appType);
+        if (uiccApp == null) {
+            loge("getForbiddenPlmnList() no app with specified type -- " +
+                    appType);
+            return null;
+        } else {
+            loge("getForbiddenPlmnList() found app " + uiccApp.getAid()
+                    + " specified type -- " + appType);
+        }
+
+        return ((SIMRecords)uiccApp.getIccRecords()).getForbiddenPlmns();
     }
 
     public String getIccSimChallengeResponse(int subId, int appType, int authType, String data)
