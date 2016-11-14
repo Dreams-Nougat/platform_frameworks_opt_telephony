@@ -44,6 +44,7 @@ import android.telephony.RadioAccessFamily;
 import android.telephony.Rlog;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
+import android.telephony.SimActivationState;
 import android.telephony.SubscriptionManager;
 import android.telephony.VoLteServiceState;
 import android.text.TextUtils;
@@ -1516,6 +1517,35 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
         return null;
     }
 
+    public SimActivationTracker getSimActivationTracker() {
+        return null;
+    }
+
+    /**
+     * Update voice activation state
+     */
+    public boolean setVoiceActivationState(int state) {
+        SimActivationTracker tracker = getSimActivationTracker();
+        if (tracker != null) {
+            return tracker.setVoiceActivationState(state);
+        } else {
+            Rlog.e(LOG_TAG, "no SAT instance");
+            return false;
+        }
+    }
+    /**
+     * Update data activation state
+     */
+    public boolean setDataActivationState(int state) {
+        SimActivationTracker tracker = getSimActivationTracker();
+        if (tracker != null) {
+            return tracker.setDataActivationState(state);
+        } else {
+            Rlog.e(LOG_TAG, "no SAT instance");
+            return false;
+        }
+    }
+
     /**
      * Update voice mail count related fields and notify listeners
      */
@@ -2023,6 +2053,10 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
 
     public void notifyOtaspChanged(int otaspMode) {
         mNotifier.notifyOtaspChanged(this, otaspMode);
+    }
+
+    public void notifySimActivationStateChanged(SimActivationState state) {
+        mNotifier.notifySimActivationStateChanged(this, state);
     }
 
     public void notifySignalStrength() {
@@ -3341,6 +3375,17 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
         if (getCallTracker() != null) {
             try {
                 getCallTracker().dump(fd, pw, args);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            pw.flush();
+            pw.println("++++++++++++++++++++++++++++++++");
+        }
+
+        if (getSimActivationTracker() != null) {
+            try {
+                getSimActivationTracker().dump(fd, pw, args);
             } catch (Exception e) {
                 e.printStackTrace();
             }

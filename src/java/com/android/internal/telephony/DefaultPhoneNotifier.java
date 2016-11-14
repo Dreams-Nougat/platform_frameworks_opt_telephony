@@ -23,18 +23,12 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.telephony.CellInfo;
 import android.telephony.Rlog;
+import android.telephony.SimActivationState;
 import android.telephony.VoLteServiceState;
 import android.telephony.ServiceState;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.telephony.PreciseCallState;
-import android.telephony.DisconnectCause;
-
-import com.android.internal.telephony.Call;
-import com.android.internal.telephony.CallManager;
-import com.android.internal.telephony.Phone;
-import com.android.internal.telephony.ITelephonyRegistry;
-import com.android.internal.telephony.PhoneConstants;
 
 import java.util.List;
 
@@ -288,6 +282,17 @@ public class DefaultPhoneNotifier implements PhoneNotifier {
         // FIXME: subID
         try {
             mRegistry.notifyVoLteServiceStateChanged(lteState);
+        } catch (RemoteException ex) {
+            // system process is dead
+        }
+    }
+
+    @Override
+    public void notifySimActivationStateChanged(
+            Phone sender, SimActivationState activationState) {
+        try {
+            mRegistry.notifySimActivationStateChangedForPhoneId(sender.getPhoneId(),
+                    sender.getSubId(), activationState);
         } catch (RemoteException ex) {
             // system process is dead
         }
