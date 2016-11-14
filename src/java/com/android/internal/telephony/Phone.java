@@ -45,6 +45,7 @@ import android.telephony.Rlog;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
 import android.telephony.SubscriptionManager;
+import android.telephony.TelephonyManager;
 import android.telephony.VoLteServiceState;
 import android.text.TextUtils;
 
@@ -226,6 +227,7 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
     private int mCallRingContinueToken;
     private int mCallRingDelay;
     private boolean mIsVoiceCapable = true;
+    private SimActivationTracker mSimActivationTracker;
 
     // Keep track of whether or not the phone is in Emergency Callback Mode for Phone and
     // subclasses
@@ -496,6 +498,7 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
         mSmsUsageMonitor = mTelephonyComponentFactory.makeSmsUsageMonitor(context);
         mUiccController = UiccController.getInstance();
         mUiccController.registerForIccChanged(this, EVENT_ICC_CHANGED, null);
+        mSimActivationTracker = mTelephonyComponentFactory.makeSimActivationTracker(this);
         if (getPhoneType() != PhoneConstants.PHONE_TYPE_SIP) {
             mCi.registerForSrvccStateChanged(this, EVENT_SRVCC_STATE_CHANGED, null);
         }
@@ -1516,6 +1519,60 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
         return null;
     }
 
+    public SimActivationTracker getSimActivationTracker() {
+        return mSimActivationTracker;
+    }
+
+    /**
+     * Update voice activation state
+     */
+    public boolean setVoiceActivationState(String state) {
+        SimActivationTracker tracker = getSimActivationTracker();
+        if (tracker != null) {
+            return tracker.setVoiceActivationState(state);
+        } else {
+            Rlog.e(LOG_TAG, "no SAT instance");
+            return false;
+        }
+    }
+    /**
+     * Update data activation state
+     */
+    public boolean setDataActivationState(String state) {
+        SimActivationTracker tracker = getSimActivationTracker();
+        if (tracker != null) {
+            return tracker.setDataActivationState(state);
+        } else {
+            Rlog.e(LOG_TAG, "no SAT instance");
+            return false;
+        }
+    }
+
+    /**
+     * Returns voice activation state
+     */
+    public String getVoiceActivationState() {
+        SimActivationTracker tracker = getSimActivationTracker();
+        if (tracker != null) {
+            return tracker.getVoiceActivationState();
+        } else {
+            Rlog.e(LOG_TAG, "no SAT instance");
+            return TelephonyManager.SIM_ACTIVATION_STATE_UNKNOWN;
+        }
+    }
+    /**
+     * Returns data activation state
+     */
+    public String getDataActivationState() {
+        SimActivationTracker tracker = getSimActivationTracker();
+        if (tracker != null) {
+            return tracker.getDataActivationState();
+        } else {
+            Rlog.e(LOG_TAG, "no SAT instance");
+            return TelephonyManager.SIM_ACTIVATION_STATE_UNKNOWN;
+        }
+    }
+
     /**
      * Update voice mail count related fields and notify listeners
      */
@@ -2023,6 +2080,14 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
 
     public void notifyOtaspChanged(int otaspMode) {
         mNotifier.notifyOtaspChanged(this, otaspMode);
+    }
+
+    public void notifyVoiceActivationStateChanged(String state) {
+        mNotifier.notifyVoiceActivationStateChanged(this, state);
+    }
+
+    public void notifyDataActivationStateChanged(String state) {
+        mNotifier.notifyDataActivationStateChanged(this, state);
     }
 
     public void notifySignalStrength() {
@@ -3341,6 +3406,17 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
         if (getCallTracker() != null) {
             try {
                 getCallTracker().dump(fd, pw, args);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            pw.flush();
+            pw.println("++++++++++++++++++++++++++++++++");
+        }
+
+        if (mSimActivationTracker != null) {
+            try {
+                mSimActivationTracker.dump(fd, pw, args);
             } catch (Exception e) {
                 e.printStackTrace();
             }
