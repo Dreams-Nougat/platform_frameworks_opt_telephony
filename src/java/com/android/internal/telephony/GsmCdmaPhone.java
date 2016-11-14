@@ -150,6 +150,7 @@ public class GsmCdmaPhone extends Phone {
     private IsimUiccRecords mIsimUiccRecords;
     public GsmCdmaCallTracker mCT;
     public ServiceStateTracker mSST;
+    public SimActivationTracker mSAT;
     private ArrayList <MmiCode> mPendingMMIs = new ArrayList<MmiCode>();
     private IccPhoneBookInterfaceManager mIccPhoneBookIntManager;
 
@@ -201,6 +202,7 @@ public class GsmCdmaPhone extends Phone {
         initOnce(ci);
         initRatSpecific(precisePhoneType);
         mSST = mTelephonyComponentFactory.makeServiceStateTracker(this, this.mCi);
+        mSAT = mTelephonyComponentFactory.makeSimActivationTracker(this);
         // DcTracker uses SST so needs to be created after it is instantiated
         mDcTracker = mTelephonyComponentFactory.makeDcTracker(this);
         mSST.registerForNetworkAttached(this, EVENT_REGISTERED_TO_NETWORK, null);
@@ -452,6 +454,11 @@ public class GsmCdmaPhone extends Phone {
     @Override
     public ServiceStateTracker getServiceStateTracker() {
         return mSST;
+    }
+
+    @Override
+    public SimActivationTracker getSimActivationTracker() {
+        return mSAT;
     }
 
     @Override
@@ -3123,6 +3130,7 @@ public class GsmCdmaPhone extends Phone {
         pw.println(" mPrecisePhoneType=" + mPrecisePhoneType);
         pw.println(" mCT=" + mCT);
         pw.println(" mSST=" + mSST);
+        pw.println(" mSAT=" + mSAT);
         pw.println(" mPendingMMIs=" + mPendingMMIs);
         pw.println(" mIccPhoneBookIntManager=" + mIccPhoneBookIntManager);
         if (VDBG) pw.println(" mImei=" + mImei);
