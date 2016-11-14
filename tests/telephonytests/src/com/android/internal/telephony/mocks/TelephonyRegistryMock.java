@@ -25,6 +25,7 @@ import android.os.UserHandle;
 import android.telephony.CellInfo;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
+import android.telephony.SimActivationState;
 import android.telephony.SubscriptionManager;
 import android.telephony.VoLteServiceState;
 import com.android.internal.telephony.IPhoneStateListener;
@@ -309,6 +310,12 @@ public class TelephonyRegistryMock extends ITelephonyRegistry.Stub {
 
     @Override
     public void notifyCarrierNetworkChange(boolean active) {
+        throw new RuntimeException("Not implemented");
+    }
+
+    @Override
+    public void notifySimActivationStateChangedForPhoneId(int phoneId, int subId,
+                                                          SimActivationState state) {
         throw new RuntimeException("Not implemented");
     }
 }

@@ -17,6 +17,7 @@
 package com.android.internal.telephony;
 
 import android.telephony.CellInfo;
+import android.telephony.SimActivationState;
 import android.telephony.VoLteServiceState;
 
 import java.util.List;
@@ -58,6 +59,8 @@ public interface PhoneNotifier {
             String apn, String failCause);
 
     public void notifyVoLteServiceStateChanged(Phone sender, VoLteServiceState lteState);
+
+    public void notifySimActivationStateChanged(Phone sender, SimActivationState activationState);
 
     public void notifyOemHookRawEventForSubscriber(int subId, byte[] rawData);
 }
