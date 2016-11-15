@@ -1,0 +1,18 @@
+Revision: 983192651fdd444e59e27393eb9d7dec13819954
+Patch-set: 7
+File: src/java/com/android/internal/telephony/RIL.java
+
+762:20-762:39
+Tue Nov 15 18:57:27 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 30b088be_e184fd2c
+Bytes: 72
+we should not release here. Its released when EVENT_SEND_ACK is handled.
+
+1123:15-1123:29
+Tue Nov 15 18:57:27 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 30b088be_41a631a6
+Bytes: 13
+same as above
+
