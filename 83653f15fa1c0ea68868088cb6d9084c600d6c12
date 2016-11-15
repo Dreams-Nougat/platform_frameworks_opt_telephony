@@ -39,6 +39,14 @@ UUID: 2b8e57b3_d758719e
 Bytes: 219
 Instead of this, we should directly have a new api which would be associated with  RIL command RIL_RESPONSE_ACKNOLEDGEMENT. (Currently we don't have this RIL command in Iradio.hal & that's the only one which is missing)
 
+1097:15-1100:35
+Tue Nov 15 17:38:42 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2b8e57b3_d758719e
+UUID: 30b088be_a6e93b3a
+Bytes: 12
+Added a todo
+
 1248:5-1248:24
 Mon Nov 14 18:35:03 2016 +0000
 Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
