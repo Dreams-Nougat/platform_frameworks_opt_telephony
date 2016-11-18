@@ -18,6 +18,21 @@ Bytes: 154
 This is same handling as processSolicited().
 EVENT_SEND_ACK handling calls release() only in case of exception. That should be fixed separately from this.
 
+762:20-762:39
+Fri Nov 18 02:42:35 2016 +0000
+Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 30ca486f_96804194
+UUID: 30ca486f_f687b52e
+Bytes: 568
+It releases RilRequest object for EVENT_SEND_ACK every time. see line 477 in ril.java.
+If we release it here then there is a possibility of race condition leading to crash. 
+1) resposne.release gets called
+2) Released RilRequest object is reused by calling Obtain()
+3) EVENT_SEND_ACK is handled making rr.mParcel = null
+4) Context is switched back to obtain function leading to crash while accessing mParcel.
+
+Actually I have already merged CL for new hal api for sending ack. You can just call that function directly here and in that case we can eliminate above code.
+
 1123:15-1123:29
 Tue Nov 15 18:57:27 2016 +0000
 Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
