@@ -9,10 +9,27 @@ UUID: 30b088be_e184fd2c
 Bytes: 72
 we should not release here. Its released when EVENT_SEND_ACK is handled.
 
+762:20-762:39
+Fri Nov 18 02:13:41 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 30b088be_e184fd2c
+UUID: 30ca486f_96804194
+Bytes: 154
+This is same handling as processSolicited().
+EVENT_SEND_ACK handling calls release() only in case of exception. That should be fixed separately from this.
+
 1123:15-1123:29
 Tue Nov 15 18:57:27 2016 +0000
 Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 30b088be_41a631a6
 Bytes: 13
 same as above
+
+1123:15-1123:29
+Fri Nov 18 02:13:41 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 30b088be_41a631a6
+UUID: 30ca486f_b6645d3b
+Bytes: 4
+Same
 
