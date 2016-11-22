@@ -1,0 +1,127 @@
+Revision: 82a724563a97e9ee48e34a968e9a6f27e66c8230
+Patch-set: 9
+File: src/java/com/android/internal/telephony/RIL.java
+
+430:40-430:54
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_eb5c799e
+Bytes: 21
+A comment may be nice
+
+431:31-431:38
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_eba2394a
+Bytes: 22
+was this a bug before?
+
+432:28-432:34
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_4b01e569
+Bytes: 11
+why return?
+
+443:28-443:34
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_2b04b17a
+Bytes: 11
+why return?
+
+454:28-454:34
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_0bfbed59
+Bytes: 11
+why return?
+
+727:0-727:53
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_8bedbd47
+Bytes: 22
+move to separate file?
+
+728:27-728:42
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_c61decde
+Bytes: 78
+comment what this function is responsible for, ditto processResponseDone below
+
+768:16-768:17
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_71e858f7
+Bytes: 204
+error check for unexpected types?
+
+Are SOLICITED, SOLICITED_ACK and SOLICITED_ACK_EXP all still ok?  Might be nice to have an else comment explaining how the SOLICITED is handled and why it's a noop here.
+
+774:8-774:12
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_e60ef0aa
+Bytes: 8
+private?
+
+784:8-784:12
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_26ce2846
+Bytes: 8
+private?
+
+884:16-884:33
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_06e524c0
+Bytes: 134
+is this the preferred format?  I'd put this on the line above and just 8-indent overflow, but I don't know if this has been discussed.
+
+1116:10-1116:25
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_ab7201c1
+Bytes: 14
+separate file?
+
+1128:12-1128:13
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_4b36c5fa
+Bytes: 56
+else?  Silently failing if the type is unexpected is bad
+
+1135:12-1135:30
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_0b6e8dde
+Bytes: 67
+setRadioState and remove the pointless switchToRadioState function?
+
+1271:8-1271:21
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_ebbeb908
+Bytes: 31
+recovery if vendor RIL crashes?
+
+2971:48-2971:58
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_cbcdf5c4
+Bytes: 218
+I think it was better before - we're going to *get* radioState from this int, so the int can't be the radioState.
+
+Maybe getRadioStateFromHardwareRadioState?  Can we just make the two line up so there's no translation/
+
+3117:16-3117:22
+Tue Nov 22 23:13:13 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 50197c0d_0b7f6d55
+Bytes: 174
+why?  There's a strong philosophy for single return statements that you're violating here for no reason.  also, inconsistently - why not on line 3109 too?  and 3129 and 3134?
+
