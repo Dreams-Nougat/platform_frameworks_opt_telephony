@@ -33,6 +33,14 @@ If we release it here then there is a possibility of race condition leading to c
 
 Actually I have already merged CL for new hal api for sending ack. You can just call that function directly here and in that case we can eliminate above code.
 
+762:20-762:39
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 30ca486f_f687b52e
+UUID: b010f8cf_aac3efef
+Bytes: 42
+Done. Picked the fix from internal master.
+
 1123:15-1123:29
 Tue Nov 15 18:57:27 2016 +0000
 Author: Sanket Padawe <1061212@85c56323-6fa9-3386-8a01-6480fb634889>
