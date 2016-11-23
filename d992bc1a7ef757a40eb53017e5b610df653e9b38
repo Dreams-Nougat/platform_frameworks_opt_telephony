@@ -9,3 +9,12 @@ UUID: 50197c0d_2b883140
 Bytes: 6
 a bug?
 
+2646:21-2646:28
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_2b883140
+UUID: 50197c0d_8067d7cd
+Bytes: 170
+yes, fix is already present on internal master. Included it here since affected code was being touched.
+https://googleplex-android-review.git.corp.google.com/#/c/1076741/
+

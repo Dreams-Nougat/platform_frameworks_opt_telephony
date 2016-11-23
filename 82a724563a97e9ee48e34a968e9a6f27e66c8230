@@ -9,12 +9,28 @@ UUID: 50197c0d_eb5c799e
 Bytes: 21
 A comment may be nice
 
+430:40-430:54
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_eb5c799e
+UUID: 50197c0d_007ae765
+Bytes: 52
+This is part of the fix picked from internal master.
+
 431:31-431:38
 Tue Nov 22 23:13:13 2016 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 50197c0d_eba2394a
 Bytes: 22
 was this a bug before?
+
+431:31-431:38
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_eba2394a
+UUID: 50197c0d_207feb55
+Bytes: 52
+This is part of the fix picked from internal master.
 
 432:28-432:34
 Tue Nov 22 23:13:13 2016 +0000
@@ -23,12 +39,28 @@ UUID: 50197c0d_4b01e569
 Bytes: 11
 why return?
 
+432:28-432:34
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_4b01e569
+UUID: 50197c0d_c0738f8d
+Bytes: 52
+This is part of the fix picked from internal master.
+
 443:28-443:34
 Tue Nov 22 23:13:13 2016 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 50197c0d_2b04b17a
 Bytes: 11
 why return?
+
+443:28-443:34
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_2b04b17a
+UUID: 50197c0d_e078136c
+Bytes: 52
+This is part of the fix picked from internal master.
 
 454:28-454:34
 Tue Nov 22 23:13:13 2016 +0000
@@ -37,6 +69,14 @@ UUID: 50197c0d_0bfbed59
 Bytes: 11
 why return?
 
+454:28-454:34
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_0bfbed59
+UUID: 50197c0d_808ef74d
+Bytes: 52
+This is part of the fix picked from internal master.
+
 727:0-727:53
 Tue Nov 22 23:13:13 2016 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -44,12 +84,28 @@ UUID: 50197c0d_8bedbd47
 Bytes: 22
 move to separate file?
 
+727:0-727:53
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_8bedbd47
+UUID: 50197c0d_03a671f6
+Bytes: 217
+I can try to do that towards the end of review. However this uses some local classes and RIL member variables so may not be trivial, but if you feel its a must to for better maintainability will make changes for that.
+
 728:27-728:42
 Tue Nov 22 23:13:13 2016 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 50197c0d_c61decde
 Bytes: 78
 comment what this function is responsible for, ditto processResponseDone below
+
+728:27-728:42
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_c61decde
+UUID: 50197c0d_03b991b0
+Bytes: 4
+Done
 
 768:16-768:17
 Tue Nov 22 23:13:13 2016 +0000
@@ -60,12 +116,28 @@ error check for unexpected types?
 
 Are SOLICITED, SOLICITED_ACK and SOLICITED_ACK_EXP all still ok?  Might be nice to have an else comment explaining how the SOLICITED is handled and why it's a noop here.
 
+768:16-768:17
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_71e858f7
+UUID: 50197c0d_23129540
+Bytes: 4
+Done
+
 774:8-774:12
 Tue Nov 22 23:13:13 2016 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 50197c0d_e60ef0aa
 Bytes: 8
 private?
+
+774:8-774:12
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_e60ef0aa
+UUID: 50197c0d_e3c7bd31
+Bytes: 4
+Done
 
 784:8-784:12
 Tue Nov 22 23:13:13 2016 +0000
@@ -74,12 +146,28 @@ UUID: 50197c0d_26ce2846
 Bytes: 8
 private?
 
+784:8-784:12
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_26ce2846
+UUID: 50197c0d_83ada168
+Bytes: 4
+Done
+
 884:16-884:33
 Tue Nov 22 23:13:13 2016 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 50197c0d_06e524c0
 Bytes: 134
 is this the preferred format?  I'd put this on the line above and just 8-indent overflow, but I don't know if this has been discussed.
+
+884:16-884:33
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_06e524c0
+UUID: 50197c0d_03e0b1b0
+Bytes: 268
+Hasn't been discussed. This is our code so whatever convention we follow should apply here. I went with the editor default; can change it. However this makes it different from other multi parameter ones. Let me know if you think I should change the other ones as well.
 
 1116:10-1116:25
 Tue Nov 22 23:13:13 2016 +0000
@@ -95,6 +183,14 @@ UUID: 50197c0d_4b36c5fa
 Bytes: 56
 else?  Silently failing if the type is unexpected is bad
 
+1128:12-1128:13
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_4b36c5fa
+UUID: 50197c0d_83092151
+Bytes: 50
+Not really failing; nothing to do for other types.
+
 1135:12-1135:30
 Tue Nov 22 23:13:13 2016 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
@@ -102,12 +198,28 @@ UUID: 50197c0d_0b6e8dde
 Bytes: 67
 setRadioState and remove the pointless switchToRadioState function?
 
+1135:12-1135:30
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_0b6e8dde
+UUID: 50197c0d_83f04121
+Bytes: 4
+Done
+
 1271:8-1271:21
 Tue Nov 22 23:13:13 2016 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 50197c0d_ebbeb908
 Bytes: 31
 recovery if vendor RIL crashes?
+
+1271:8-1271:21
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_ebbeb908
+UUID: 50197c0d_63e72d64
+Bytes: 102
+There's no recover for it now. Needs support from treble; added a comment in getRadioProxy() for that.
 
 2971:48-2971:58
 Tue Nov 22 23:13:13 2016 +0000
@@ -118,10 +230,26 @@ I think it was better before - we're going to *get* radioState from this int, so
 
 Maybe getRadioStateFromHardwareRadioState?  Can we just make the two line up so there's no translation/
 
+2971:48-2971:58
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_cbcdf5c4
+UUID: 50197c0d_036991d6
+Bytes: 89
+I guess a translation will be needed regardless since its from an int to java enum class.
+
 3117:16-3117:22
 Tue Nov 22 23:13:13 2016 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 50197c0d_0b7f6d55
 Bytes: 174
 why?  There's a strong philosophy for single return statements that you're violating here for no reason.  also, inconsistently - why not on line 3109 too?  and 3129 and 3134?
+
+3117:16-3117:22
+Wed Nov 23 01:53:17 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 50197c0d_0b7f6d55
+UUID: 50197c0d_0390b19e
+Bytes: 64
+Again, not my change. Part of fix that was submitted on mr1-dev.
 
