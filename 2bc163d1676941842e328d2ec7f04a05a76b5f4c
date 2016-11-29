@@ -1,0 +1,11 @@
+Revision: 2bc163d1676941842e328d2ec7f04a05a76b5f4c
+Patch-set: 11
+File: src/java/com/android/internal/telephony/RIL.java
+
+735:32-735:42
+Tue Nov 29 10:17:06 2016 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: ed1b7768_5ad035b7
+Bytes: 93
+Not finding the getService on IRadio.hal. Could you tell me where to find the latest changes?
+
