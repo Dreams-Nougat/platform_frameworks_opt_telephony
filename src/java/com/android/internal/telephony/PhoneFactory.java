@@ -157,6 +157,8 @@ public class PhoneFactory {
                 // call getInstance()
                 sUiccController = UiccController.make(context, sCommandsInterfaces);
 
+                final SmsSecurityService smsSecurityService = new SmsSecurityService(context);
+                ServiceManager.addService(SmsSecurityService.SERVICE_NAME, smsSecurityService);
                 for (int i = 0; i < numPhones; i++) {
                     Phone phone = null;
                     int phoneType = TelephonyManager.getPhoneType(networkModes[i]);
@@ -172,7 +174,7 @@ public class PhoneFactory {
                                 TelephonyComponentFactory.getInstance());
                     }
                     Rlog.i(LOG_TAG, "Creating Phone with type = " + phoneType + " sub = " + i);
-
+                    phone.setSmsSecurityService(smsSecurityService);
                     sPhones[i] = phone;
                 }
 

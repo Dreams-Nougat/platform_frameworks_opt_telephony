@@ -333,6 +333,8 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
 
     private boolean mUnitTestMode;
 
+    protected SmsSecurityService mSmsSecurityService;
+
     public IccRecords getIccRecords() {
         return mIccRecords.get();
     }
@@ -3436,5 +3438,9 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
             pw.flush();
             pw.println("++++++++++++++++++++++++++++++++");
         }
+    }
+
+    public void setSmsSecurityService(SmsSecurityService securityService) {
+        this.mSmsSecurityService = securityService;
     }
 }

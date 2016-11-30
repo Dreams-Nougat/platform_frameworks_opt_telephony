@@ -65,6 +65,7 @@ import android.widget.TextView;
 
 import com.android.internal.R;
 import com.android.internal.telephony.GsmAlphabet.TextEncodingDetails;
+import com.android.internal.telephony.SmsSecurityService.SmsSecurityServiceCallback;
 import com.android.internal.telephony.uicc.UiccCard;
 import com.android.internal.telephony.uicc.UiccController;
 
@@ -996,7 +997,23 @@ public abstract class SMSDispatcher extends Handler {
                 return;
             }
 
-            sendSms(tracker);
+            final SmsSecurityServiceCallback callback = new SmsSecurityServiceCallback() {
+                @Override
+                public void onAuthorizationResult(final boolean accepted) {
+                    if (accepted) {
+                        sendSms(tracker);
+                    } else {
+                        tracker.onFailed(mContext, RESULT_ERROR_GENERIC_FAILURE,
+                                SmsSecurityService.ERROR_CODE_BLOCKED);
+                    }
+                }
+            };
+            final boolean requested = mPhone.mSmsSecurityService.requestAuthorization(
+                    tracker.mAppInfo, tracker.mDestAddress, tracker.mFullMessageText,
+                    callback, this);
+            if (!requested) {
+                sendSms(tracker);
+            }
         }
 
         if (PhoneNumberUtils.isLocalEmergencyNumber(mContext, tracker.mDestAddress)) {
