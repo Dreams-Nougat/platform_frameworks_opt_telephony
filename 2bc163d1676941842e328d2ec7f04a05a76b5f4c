@@ -18,3 +18,11 @@ Bytes: 67
 Which device are you trying this on?
 + smoreland to help with this.
 
+735:32-735:42
+Wed Nov 30 02:12:37 2016 +0000
+Author: Legler Wu <1039969@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 702a0062_8f89670f
+UUID: ed1b7768_faba6107
+Bytes: 183
+We don't try on this patch currently just code review. I assume there is a "getService" interface on IRadio.hal but can't find on latest master. Could you provide more information me?
+
