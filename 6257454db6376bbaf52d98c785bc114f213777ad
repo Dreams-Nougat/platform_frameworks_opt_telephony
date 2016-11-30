@@ -1,0 +1,11 @@
+Revision: 6257454db6376bbaf52d98c785bc114f213777ad
+Patch-set: 12
+File: src/java/com/android/internal/telephony/RIL.java
+
+2556:4-2556:8
+Wed Nov 30 19:17:11 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 702a0062_cbe7cc61
+Bytes: 7
+private
+
