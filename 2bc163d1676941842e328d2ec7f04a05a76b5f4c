@@ -9,3 +9,12 @@ UUID: ed1b7768_5ad035b7
 Bytes: 93
 Not finding the getService on IRadio.hal. Could you tell me where to find the latest changes?
 
+735:32-735:42
+Wed Nov 30 01:22:55 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ed1b7768_5ad035b7
+UUID: 702a0062_8f89670f
+Bytes: 67
+Which device are you trying this on?
++ smoreland to help with this.
+
