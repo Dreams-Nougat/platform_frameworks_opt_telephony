@@ -26,3 +26,11 @@ UUID: ed1b7768_faba6107
 Bytes: 183
 We don't try on this patch currently just code review. I assume there is a "getService" interface on IRadio.hal but can't find on latest master. Could you provide more information me?
 
+735:32-735:42
+Wed Nov 30 02:16:40 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: ed1b7768_faba6107
+UUID: 702a0062_c12df305
+Bytes: 74
+It's not in the hal; it's in IRadio interface auto-generated from the hal.
+
