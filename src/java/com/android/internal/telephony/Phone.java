@@ -1903,9 +1903,8 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
      * Query the list of band mode supported by RF.
      *
      * @param response is callback message
-     *        ((AsyncResult)response.obj).result  is an int[] where int[0] is
-     *        the size of the array and the rest of each element representing
-     *        one available BM_*_BAND
+     *        ((AsyncResult)response.obj).result  is an int[] with every
+     *        element representing one available BM_*_BAND
      */
     public void queryAvailableBandMode(Message response) {
         mCi.queryAvailableBandMode(response);
