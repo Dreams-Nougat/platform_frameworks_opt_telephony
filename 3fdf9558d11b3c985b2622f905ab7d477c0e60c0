@@ -1,0 +1,20 @@
+Revision: 3fdf9558d11b3c985b2622f905ab7d477c0e60c0
+Patch-set: 26
+File: src/java/com/android/internal/telephony/uicc/PlmnActRecord.java
+
+28
+Fri Dec 02 01:26:54 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8d5f5b58_27cf5942
+Bytes: 15
+Why Parcelable?
+
+File: src/java/com/android/internal/telephony/uicc/SIMRecords.java
+
+1319
+Fri Dec 02 01:26:54 2016 +0000
+Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 8d5f5b58_080a2f00
+Bytes: 67
+Why 'else' in above 3 cases but no else here? Keep them consistent?
+
