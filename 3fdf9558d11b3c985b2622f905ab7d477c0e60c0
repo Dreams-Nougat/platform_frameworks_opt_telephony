@@ -9,6 +9,14 @@ UUID: 8d5f5b58_27cf5942
 Bytes: 15
 Why Parcelable?
 
+28
+Fri Dec 02 01:31:20 2016 +0000
+Author: nharold <1060151@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8d5f5b58_27cf5942
+UUID: 8d5f5b58_a766c963
+Bytes: 209
+I could have added the parcelable support in a future CL, but records of this type will be queried via TelephonyManager. If you prefer I can defer adding the parcelable support until I add the methods to poll.
+
 File: src/java/com/android/internal/telephony/uicc/SIMRecords.java
 
 1319
@@ -17,4 +25,12 @@ Author: Amit Mahajan <1054648@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 8d5f5b58_080a2f00
 Bytes: 67
 Why 'else' in above 3 cases but no else here? Keep them consistent?
+
+1319
+Fri Dec 02 01:31:20 2016 +0000
+Author: nharold <1060151@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 8d5f5b58_080a2f00
+UUID: 8d5f5b58_e738c131
+Bytes: 4
+done
 
