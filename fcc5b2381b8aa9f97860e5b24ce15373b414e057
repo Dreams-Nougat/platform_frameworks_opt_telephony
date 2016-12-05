@@ -9,12 +9,28 @@ UUID: 2ddbcf69_48eda3d2
 Bytes: 76
 I think we should spell this out - it's new and nobody will know what it is.
 
+153:32-153:36
+Mon Dec 05 23:09:44 2016 +0000
+Author: Chen Xu <1121193@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2ddbcf69_48eda3d2
+UUID: 2ddbcf69_bc8d63c3
+Bytes: 4
+Done
+
 460:0-460:59
 Sat Dec 03 04:49:04 2016 +0000
 Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 2ddbcf69_28ea57bc
 Bytes: 80
 either make it private (mSAT) or get rid of this accessor - doing both is silly.
+
+460:0-460:59
+Mon Dec 05 23:09:44 2016 +0000
+Author: Chen Xu <1121193@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2ddbcf69_28ea57bc
+UUID: 2ddbcf69_9c8aa7a8
+Bytes: 4
+Done
 
 File: src/java/com/android/internal/telephony/Phone.java
 
@@ -25,6 +41,14 @@ UUID: 2ddbcf69_2385d8ef
 Bytes: 79
 should the mSAT get promoted to this level rather than needing the null checks?
 
+1520:11-1520:31
+Mon Dec 05 23:09:44 2016 +0000
+Author: Chen Xu <1121193@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2ddbcf69_2385d8ef
+UUID: 2ddbcf69_5c843f9b
+Bytes: 4
+Done
+
 File: src/java/com/android/internal/telephony/SimActivationTracker.java
 
 44:12-44:24
@@ -33,4 +57,12 @@ Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
 UUID: 2ddbcf69_83224c16
 Bytes: 118
 can this be Phone?  It's best to use the base classes.  If you need to know it's a GsmCdmaPhone we should look at why.
+
+44:12-44:24
+Mon Dec 05 23:09:44 2016 +0000
+Author: Chen Xu <1121193@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 2ddbcf69_83224c16
+UUID: 2ddbcf69_3c46139c
+Bytes: 4
+Done
 
