@@ -218,6 +218,8 @@ public class ImsPhoneCallTracker extends CallTracker implements ImsPullCall {
     private boolean pendingCallInEcm = false;
     private boolean mSwitchingFgAndBgCalls = false;
     private ImsCall mCallExpectedToResume = null;
+    private boolean mSwitchingFgAndWaitingCalls = false;
+    private ImsCall mCallExpectedToAccept = null;
     private boolean mAllowEmergencyVideoCalls = false;
 
     //***** Events
@@ -607,20 +609,20 @@ public class ImsPhoneCallTracker extends CallTracker implements ImsPullCall {
 
             // Swap the ImsCalls pointed to by the foreground and background ImsPhoneCalls.
             // If hold or resume later fails, we will swap them back.
-            mSwitchingFgAndBgCalls = true;
             mCallExpectedToResume = mBackgroundCall.getImsCall();
             mForegroundCall.switchWith(mBackgroundCall);
+            mSwitchingFgAndBgCalls = (mCallExpectedToResume != null);
+
+            if (!mSwitchingFgAndBgCalls && mRingingCall.getState() == ImsPhoneCall.State.WAITING) {
+                mCallExpectedToAccept = mRingingCall.getImsCall();
+                mSwitchingFgAndWaitingCalls = (mCallExpectedToAccept != null);
+            }
 
             // Hold the foreground call; once the foreground call is held, the background call will
             // be resumed.
             try {
                 imsCall.hold();
                 mEventLog.writeOnImsCallHold(imsCall.getSession());
-
-                // If there is no background call to resume, then don't expect there to be a switch.
-                if (mCallExpectedToResume == null) {
-                    mSwitchingFgAndBgCalls = false;
-                }
             } catch (ImsException e) {
                 mForegroundCall.switchWith(mBackgroundCall);
                 throw new CallStateException(e.getMessage());
@@ -1213,6 +1215,11 @@ public class ImsPhoneCallTracker extends CallTracker implements ImsPullCall {
         public void onCallStarted(ImsCall imsCall) {
             if (DBG) log("onCallStarted");
 
+            if (mSwitchingFgAndWaitingCalls) {
+                mSwitchingFgAndWaitingCalls = false;
+                mCallExpectedToAccept = null;
+            }
+
             mPendingMO = null;
             processCallStateChange(imsCall, ImsPhoneCall.State.ACTIVE,
                     DisconnectCause.NOT_DISCONNECTED);
@@ -1329,6 +1336,25 @@ public class ImsPhoneCallTracker extends CallTracker implements ImsPullCall {
                     mSwitchingFgAndBgCalls = false;
                     mCallExpectedToResume = null;
                 }
+            } else if (mSwitchingFgAndWaitingCalls) {
+                if (DBG) {
+                    log("onCallTerminated: Call terminated in the midst of Switching " +
+                            "Fg and Waiting calls.");
+                }
+
+                if (imsCall == mCallExpectedToAccept) {
+                    if (DBG) {
+                        log("onCallTerminated: switching " + mForegroundCall + " with "
+                                + mBackgroundCall);
+                    }
+                    mForegroundCall.switchWith(mBackgroundCall);
+                }
+
+                if (mForegroundCall.getState() == ImsPhoneCall.State.HOLDING) {
+                    sendEmptyMessage(EVENT_RESUME_BACKGROUND);
+                    mSwitchingFgAndWaitingCalls = false;
+                    mCallExpectedToAccept = null;
+                }
             }
         }
 
@@ -1371,14 +1397,17 @@ public class ImsPhoneCallTracker extends CallTracker implements ImsPullCall {
                         // This may happen if there is no BG call and we are holding a call so that
                         // we can dial another one.
                         mSwitchingFgAndBgCalls = false;
+                        mSwitchingFgAndWaitingCalls = false;
                     }
-                } else if (oldState == ImsPhoneCall.State.IDLE && mSwitchingFgAndBgCalls) {
+                } else if (oldState == ImsPhoneCall.State.IDLE && (mSwitchingFgAndBgCalls||mSwitchingFgAndWaitingCalls)) {
                     // The other call terminated in the midst of a switch before this call was held,
                     // so resume the foreground call back to ACTIVE state since the switch failed.
                     if (mForegroundCall.getState() == ImsPhoneCall.State.HOLDING) {
                         sendEmptyMessage(EVENT_RESUME_BACKGROUND);
                         mSwitchingFgAndBgCalls = false;
                         mCallExpectedToResume = null;
+                        mSwitchingFgAndWaitingCalls = false;
+                        mCallExpectedToAccept = null;
                     }
                 }
             }
