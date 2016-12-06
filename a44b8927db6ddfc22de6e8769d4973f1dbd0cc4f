@@ -1,0 +1,25 @@
+Revision: a44b8927db6ddfc22de6e8769d4973f1dbd0cc4f
+Patch-set: 4
+File: src/java/com/android/internal/telephony/SimActivationTracker.java
+
+52:18-52:36
+Tue Dec 06 03:08:44 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2ddbcf69_62e0700c
+Bytes: 211
+just track the state and then you can make one of these to send out and publish the result.  The SimActivatationState can be final (like a string). and you don't have to make atomic or worry about making copies.
+
+73:20-73:48
+Tue Dec 06 03:08:44 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2ddbcf69_a5a9c25a
+Bytes: 38
+already inside setDataActivationState?
+
+81:17-81:45
+Tue Dec 06 03:08:44 2016 +0000
+Author: Robert Greenwalt <1002609@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 2ddbcf69_45e1feb5
+Bytes: 83
+if only done in one place (setDataActivationState) don't bother with util functions
+
