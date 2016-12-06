@@ -28,6 +28,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -494,5 +495,55 @@ public class ApnSettingTest extends TelephonyTest {
                 new String[]{PhoneConstants.APN_TYPE_IA, PhoneConstants.APN_TYPE_DUN}).
                 isMetered(mContext, 4, isRoaming));
 
+    }
+
+    private void modifyAndCheckEquals(ApnSetting base, String fieldName, Object value)
+            throws Exception {
+        Field f = ApnSetting.class.getDeclaredField(fieldName);
+        f.setAccessible(true);
+        ApnSetting test = new ApnSetting(base);
+        f.set(test, value);
+        assertFalse(f.getName(), test.equals(base));
+    }
+
+    @Test
+    @SmallTest
+    public void testequals() throws Exception {
+        final Integer dummyInt = Integer.MAX_VALUE;
+        final Boolean dummyBool = Boolean.FALSE;
+        final String dummyStr = "dummy";
+        final String[] dummyStrArr = {"mms", "default"};
+
+        // base apn
+        ApnSetting baseApn = new ApnSetting(-1, "12345", "Name", "apn", "",
+                 "", "", "", "", "", "", 0, new String[]{"mms"}, "IPV6",
+                "IP", true, 14, 0, 0, true, 0, 0, 0, 0, "spn", "testspn");
+
+        modifyAndCheckEquals(baseApn, "carrier", dummyStr);
+        modifyAndCheckEquals(baseApn, "id", dummyInt);
+        modifyAndCheckEquals(baseApn, "numeric", dummyStr);
+        modifyAndCheckEquals(baseApn, "apn", dummyStr);
+        modifyAndCheckEquals(baseApn, "proxy", dummyStr);
+        modifyAndCheckEquals(baseApn, "mmsc", dummyStr);
+        modifyAndCheckEquals(baseApn, "mmsProxy", dummyStr);
+        modifyAndCheckEquals(baseApn, "mmsPort", dummyStr);
+        modifyAndCheckEquals(baseApn, "port", dummyStr);
+        modifyAndCheckEquals(baseApn, "user", dummyStr);
+        modifyAndCheckEquals(baseApn, "password", dummyStr);
+        modifyAndCheckEquals(baseApn, "authType", dummyInt);
+        modifyAndCheckEquals(baseApn, "types", dummyStrArr);
+        modifyAndCheckEquals(baseApn, "protocol", dummyStr);
+        modifyAndCheckEquals(baseApn, "roamingProtocol", dummyStr);
+        modifyAndCheckEquals(baseApn, "carrierEnabled", dummyBool);
+        modifyAndCheckEquals(baseApn, "bearer", dummyInt);
+        modifyAndCheckEquals(baseApn, "bearerBitmask", dummyInt);
+        modifyAndCheckEquals(baseApn, "profileId", dummyInt);
+        modifyAndCheckEquals(baseApn, "modemCognitive", dummyBool);
+        modifyAndCheckEquals(baseApn, "maxConns", dummyInt);
+        modifyAndCheckEquals(baseApn, "waitTime", dummyInt);
+        modifyAndCheckEquals(baseApn, "maxConnsTime", dummyInt);
+        modifyAndCheckEquals(baseApn, "mtu", dummyInt);
+        modifyAndCheckEquals(baseApn, "mvnoType", dummyStr);
+        modifyAndCheckEquals(baseApn, "mvnoMatchData", dummyStr);
     }
 }
