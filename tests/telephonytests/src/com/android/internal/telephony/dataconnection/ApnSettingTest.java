@@ -28,7 +28,10 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import static junit.framework.Assert.assertFalse;
@@ -494,5 +497,34 @@ public class ApnSettingTest extends TelephonyTest {
                 new String[]{PhoneConstants.APN_TYPE_IA, PhoneConstants.APN_TYPE_DUN}).
                 isMetered(mContext, 4, isRoaming));
 
+    }
+
+    @Test
+    @SmallTest
+    public void testequals() throws Exception {
+        HashMap<String, Object> dummyMap = new HashMap<>();
+        dummyMap.put("int", Integer.MAX_VALUE);
+        dummyMap.put("boolean", Boolean.FALSE);
+        dummyMap.put("java.lang.String", "dummy");
+        dummyMap.put("[Ljava.lang.String;", new String[] {"mms", "default"});
+
+        // base apn
+        ApnSetting baseApn = new ApnSetting(-1, "12345", "Name", "apn", "",
+                 "", "", "", "", "", "", 0, new String[]{"mms"}, "IPV6",
+                "IP", true, 14, 0, 0, true, 0, 0, 0, 0, "spn", "testspn");
+        Field[] fields = ApnSetting.class.getDeclaredFields();
+        for (Field f : fields) {
+            int modifiers = f.getModifiers();
+            if (Modifier.isStatic(modifiers) || !Modifier.isFinal(modifiers)) {
+                continue;
+            }
+            Object value = dummyMap.get(f.getType().getName());
+            if (value != null) {
+                f.setAccessible(true);
+                ApnSetting testApn = new ApnSetting(baseApn);
+                f.set(testApn, value);
+                assertFalse(f.getName() + " is NOT checked", testApn.equals(baseApn));
+            }
+        }
     }
 }
