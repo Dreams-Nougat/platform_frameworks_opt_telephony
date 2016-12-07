@@ -187,6 +187,8 @@ public class DataConnection extends StateMachine {
     static final int EVENT_BW_REFRESH_RESPONSE = BASE + 14;
     static final int EVENT_DATA_CONNECTION_VOICE_CALL_STARTED = BASE + 15;
     static final int EVENT_DATA_CONNECTION_VOICE_CALL_ENDED = BASE + 16;
+    static final int EVENT_START_NATT_KEEPALIVE = BASE + 17;
+    static final int EVENT_STOP_NATT_KEEPALIVE = BASE + 18;
 
     private static final int CMD_TO_STRING_COUNT =
             EVENT_DATA_CONNECTION_VOICE_CALL_ENDED - BASE + 1;
@@ -1755,6 +1757,17 @@ public class DataConnection extends StateMachine {
                     retVal = HANDLED;
                     break;
                 }
+
+                case EVENT_START_NATT_KEEPALIVE:
+                    int status = mPhone.startNattKeepalive();
+                    retVal = HANDLED;
+                break;
+
+                case EVENT_STOP_NATT_KEEPALIVE:
+                    int status = mPhone.stopNattKeepalive();
+                    retVal = HANDLED;
+                break;
+
                 default:
                     if (VDBG) {
                         log("DcActiveState not handled msg.what=" + getWhatToString(msg.what));
@@ -1909,6 +1922,18 @@ public class DataConnection extends StateMachine {
                         redirectUrl);
                 msg.sendToTarget();
             }
+        }
+
+        @Override
+        protected void startPacketKeepalive(Message msg) {
+            DataConnection.this.sendMessage(
+                    DataConnection.this.obtainMessage(EVENT_START_NATT_KEEPALIVE));
+        }
+
+        @Override
+        protected void stopPacketKeepalive(Message msg) {
+            DataConnection.this.sendMessage(
+                    DataConnection.this.obtainMessage(EVENT_STOP_NATT_KEEPALIVE));
         }
     }
 

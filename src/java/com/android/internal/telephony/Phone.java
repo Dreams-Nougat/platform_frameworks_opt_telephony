@@ -64,6 +64,8 @@ import com.android.internal.telephony.uicc.UiccCardApplication;
 import com.android.internal.telephony.uicc.UiccController;
 import com.android.internal.telephony.uicc.UsimServiceTable;
 
+import com.android.server.connectivity.KeepalivePacketData;
+
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -2772,6 +2774,14 @@ public abstract class Phone extends Handler implements PhoneInternalInterface {
     public void notifyPreciseDataConnectionFailed(String reason, String apnType, String apn,
             String failCause) {
         mNotifier.notifyPreciseDataConnectionFailed(this, reason, apnType, apn, failCause);
+    }
+
+    public int startNattKeepalive(int slot, KeepalivePacketData packetData, int intervalSeconds) {
+        return 0;
+    }
+
+    public int startNattKeepalive(int slot, KeepalivePacketData packetData, int intervalSeconds) {
+        return 0;
     }
 
     /**
