@@ -130,6 +130,9 @@ public abstract class InboundSmsHandler extends StateMachine {
     public static final String SELECT_BY_REFERENCE = "address=? AND reference_number=? AND " +
             "count=? AND deleted=0";
 
+    /** Maximum number of system apps that can register as CarrierSmsFilters */
+    private static final int MAX_NUM_SYSTEM_SMS_FILTERS = 2;
+
     /** New SMS received as an AsyncResult. */
     public static final int EVENT_NEW_SMS = 1;
 
@@ -945,13 +948,16 @@ public abstract class InboundSmsHandler extends StateMachine {
         List<String> systemPackages =
                 getSystemAppForIntent(new Intent(CarrierMessagingService.SERVICE_INTERFACE));
 
-        if (systemPackages != null && systemPackages.size() == 1) {
-            log("Found system package.");
-            CarrierSmsFilter smsFilter = new CarrierSmsFilter(pdus, destPort,
-                    tracker.getFormat(), resultReceiver);
-            CarrierSmsFilterCallback smsFilterCallback = new CarrierSmsFilterCallback(smsFilter,
-                    userUnlocked);
-            smsFilter.filterSms(systemPackages.get(0), smsFilterCallback);
+        if (systemPackages != null && systemPackages.size() > 0
+                && systemPackages.size() < MAX_NUM_SYSTEM_SMS_FILTERS) {
+            for (String smsFilterPackage : systemPackages) {
+                log("Found system CarrierMessagingService package: " + smsFilterPackage);
+                CarrierSmsFilter smsFilter = new CarrierSmsFilter(pdus, destPort,
+                        tracker.getFormat(), resultReceiver);
+                CarrierSmsFilterCallback smsFilterCallback = new CarrierSmsFilterCallback(smsFilter,
+                        userUnlocked);
+                smsFilter.filterSms(smsFilterPackage, smsFilterCallback);
+            }
             return true;
         }
         logv("Unable to find carrier package: " + carrierPackages
