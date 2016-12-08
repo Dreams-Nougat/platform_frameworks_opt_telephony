@@ -1,0 +1,11 @@
+Revision: 2243b8610662a4001ec61bb253bf3cf315d1fd05
+Patch-set: 3
+File: tests/telephonytests/src/com/android/internal/telephony/dataconnection/ApnSettingTest.java
+
+522:0-547:65
+Thu Dec 08 22:32:40 2016 +0000
+Author: Jack Yu <1081638@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 6d14e7d4_00165133
+Bytes: 223
+This can only check the existing fields. We want to catch a case that if one day someone add a new field but forget to add it into equals(). Maybe you can use reflection's getDeclaredFields() to populate all 'final' fields.
+
