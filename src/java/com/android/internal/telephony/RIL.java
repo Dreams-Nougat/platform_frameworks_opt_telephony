@@ -16,14 +16,9 @@
 
 package com.android.internal.telephony;
 
-import static com.android.internal.telephony.RILConstants.*;
 import static android.telephony.TelephonyManager.NETWORK_TYPE_UNKNOWN;
-import static android.telephony.TelephonyManager.NETWORK_TYPE_EDGE;
-import static android.telephony.TelephonyManager.NETWORK_TYPE_GPRS;
-import static android.telephony.TelephonyManager.NETWORK_TYPE_UMTS;
-import static android.telephony.TelephonyManager.NETWORK_TYPE_HSDPA;
-import static android.telephony.TelephonyManager.NETWORK_TYPE_HSUPA;
-import static android.telephony.TelephonyManager.NETWORK_TYPE_HSPA;
+
+import static com.android.internal.telephony.RILConstants.*;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -34,18 +29,18 @@ import android.net.ConnectivityManager;
 import android.net.LocalSocket;
 import android.net.LocalSocketAddress;
 import android.os.AsyncResult;
+import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Parcel;
 import android.os.PowerManager;
-import android.os.BatteryManager;
-import android.os.SystemProperties;
 import android.os.PowerManager.WakeLock;
 import android.os.SystemClock;
-import android.provider.Settings.SettingNotFoundException;
+import android.os.SystemProperties;
 import android.telephony.CellInfo;
+import android.telephony.ModemActivityInfo;
 import android.telephony.NeighboringCellInfo;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.RadioAccessFamily;
@@ -55,11 +50,17 @@ import android.telephony.SmsManager;
 import android.telephony.SmsMessage;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
-import android.telephony.ModemActivityInfo;
 import android.text.TextUtils;
 import android.util.SparseArray;
 import android.view.Display;
 
+import com.android.internal.telephony.cdma.CdmaCallWaitingNotification;
+import com.android.internal.telephony.cdma.CdmaInformationRecords;
+import com.android.internal.telephony.cdma.CdmaSmsBroadcastConfigInfo;
+import com.android.internal.telephony.dataconnection.ApnSetting;
+import com.android.internal.telephony.dataconnection.DataCallResponse;
+import com.android.internal.telephony.dataconnection.DataProfile;
+import com.android.internal.telephony.dataconnection.DcFailCause;
 import com.android.internal.telephony.gsm.SmsBroadcastConfigInfo;
 import com.android.internal.telephony.gsm.SsData;
 import com.android.internal.telephony.gsm.SuppServiceNotification;
@@ -68,15 +69,6 @@ import com.android.internal.telephony.uicc.IccCardStatus;
 import com.android.internal.telephony.uicc.IccIoResult;
 import com.android.internal.telephony.uicc.IccRefreshResponse;
 import com.android.internal.telephony.uicc.IccUtils;
-import com.android.internal.telephony.cdma.CdmaCallWaitingNotification;
-import com.android.internal.telephony.cdma.CdmaInformationRecords;
-import com.android.internal.telephony.cdma.CdmaSmsBroadcastConfigInfo;
-import com.android.internal.telephony.dataconnection.DcFailCause;
-import com.android.internal.telephony.dataconnection.DataCallResponse;
-import com.android.internal.telephony.dataconnection.DataProfile;
-import com.android.internal.telephony.RadioCapability;
-import com.android.internal.telephony.TelephonyDevController;
-import com.android.internal.telephony.HardwareConfig;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -87,9 +79,9 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.Random;
 
 /**
  * {@hide}
@@ -1619,30 +1611,47 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     }
 
     @Override
-    public void
-    setupDataCall(int radioTechnology, int profile, String apn,
-            String user, String password, int authType, String protocol,
-            Message result) {
+    public void setupDataCall(int radioTechnology, int profile, int authType, ApnSetting apnSetting,
+                              boolean allowRoaming, Message result) {
         RILRequest rr
                 = RILRequest.obtain(RIL_REQUEST_SETUP_DATA_CALL, result);
 
-        rr.mParcel.writeInt(7);
+        rr.mParcel.writeInt(22);
 
         rr.mParcel.writeString(Integer.toString(radioTechnology + 2));
         rr.mParcel.writeString(Integer.toString(profile));
-        rr.mParcel.writeString(apn);
-        rr.mParcel.writeString(user);
-        rr.mParcel.writeString(password);
+        // apn types replaces the profile id since v15.
+        rr.mParcel.writeString(Integer.toString(apnSetting.typesBitmask));
+        rr.mParcel.writeString(apnSetting.apn);
+        rr.mParcel.writeString(apnSetting.user);
+        rr.mParcel.writeString(apnSetting.password);
         rr.mParcel.writeString(Integer.toString(authType));
-        rr.mParcel.writeString(protocol);
+        rr.mParcel.writeString(apnSetting.protocol);
 
-        if (RILJ_LOGD) riljLog(rr.serialString() + "> "
-                + requestToString(rr.mRequest) + " " + radioTechnology + " "
-                + profile + " " + apn + " " + user + " "
-                + password + " " + authType + " " + protocol);
+        // the followings are added since v15.
+        rr.mParcel.writeString(apnSetting.proxy);
+        rr.mParcel.writeString(apnSetting.port);
+        rr.mParcel.writeString(apnSetting.mmsProxy);
+        rr.mParcel.writeString(apnSetting.mmsPort);
+        rr.mParcel.writeString(apnSetting.roamingProtocol);
+        rr.mParcel.writeString(Integer.toString(apnSetting.bearerBitmask));
+        rr.mParcel.writeString(apnSetting.modemCognitive ? "1" : "0");
+        rr.mParcel.writeString(Integer.toString(apnSetting.maxConns));
+        rr.mParcel.writeString(Integer.toString(apnSetting.waitTime));
+        rr.mParcel.writeString(Integer.toString(apnSetting.maxConnsTime));
+        rr.mParcel.writeString(Integer.toString(apnSetting.mtu));
+        rr.mParcel.writeString(apnSetting.mvnoType);
+        rr.mParcel.writeString(apnSetting.mvnoMatchData);
+        rr.mParcel.writeString(allowRoaming ? "1" : "0");
 
-        mEventLog.writeRilSetupDataCall(rr.mSerial, radioTechnology, profile, apn,
-                user, password, authType, protocol);
+        if (RILJ_LOGD) {
+            riljLog(rr.serialString() + "> " + requestToString(rr.mRequest) + "," + "profile="
+                    + profile + ",authType=" + authType + ",allowRoaming=" + allowRoaming + ","
+                    + apnSetting);
+        }
+
+        mEventLog.writeRilSetupDataCall(rr.mSerial, radioTechnology, profile, apnSetting.apn,
+                apnSetting.user, apnSetting.password, authType, apnSetting.protocol);
 
         send(rr);
     }
@@ -4806,25 +4815,48 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         send(rr);
     }
 
-    public void setInitialAttachApn(String apn, String protocol, int authType, String username,
-            String password, Message result) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setInitialAttachApn(ApnSetting apnSetting, Message result) {
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_SET_INITIAL_ATTACH_APN, result);
 
         if (RILJ_LOGD) riljLog("Set RIL_REQUEST_SET_INITIAL_ATTACH_APN");
 
-        rr.mParcel.writeString(apn);
-        rr.mParcel.writeString(protocol);
-        rr.mParcel.writeInt(authType);
-        rr.mParcel.writeString(username);
-        rr.mParcel.writeString(password);
+        rr.mParcel.writeString(apnSetting.apn);
+        rr.mParcel.writeString(apnSetting.protocol);
+        rr.mParcel.writeInt(apnSetting.authType);
+        rr.mParcel.writeString(apnSetting.user);
+        rr.mParcel.writeString(apnSetting.password);
 
-        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
-                + ", apn:" + apn + ", protocol:" + protocol + ", authType:" + authType
-                + ", username:" + username + ", password:" + password);
+        // The followings are added since v15.
+        rr.mParcel.writeInt(apnSetting.typesBitmask);
+        rr.mParcel.writeString(apnSetting.proxy);
+        rr.mParcel.writeString(apnSetting.port);
+        rr.mParcel.writeString(apnSetting.mmsProxy);
+        rr.mParcel.writeString(apnSetting.mmsPort);
+        rr.mParcel.writeString(apnSetting.roamingProtocol);
+        rr.mParcel.writeInt(apnSetting.bearerBitmask);
+        rr.mParcel.writeInt(apnSetting.modemCognitive ? 1 : 0);
+        rr.mParcel.writeInt(apnSetting.maxConns);
+        rr.mParcel.writeInt(apnSetting.waitTime);
+        rr.mParcel.writeInt(apnSetting.maxConnsTime);
+        rr.mParcel.writeInt(apnSetting.mtu);
+        rr.mParcel.writeString(apnSetting.mvnoType);
+        rr.mParcel.writeString(apnSetting.mvnoMatchData);
+
+        if (RILJ_LOGD) {
+            riljLog(rr.serialString() + "> " + requestToString(rr.mRequest) + apnSetting);
+        }
 
         send(rr);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void setDataProfile(DataProfile[] dps, Message result) {
         if (RILJ_LOGD) riljLog("Set RIL_REQUEST_SET_DATA_PROFILE");
 
@@ -5062,9 +5094,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         send(rr);
     }
 
-    /**
-    * @hide
-    */
+    @Override
     public void getModemActivityInfo(Message response) {
         RILRequest rr = RILRequest.obtain(RIL_REQUEST_GET_ACTIVITY_INFO, response);
         if (RILJ_LOGD) {

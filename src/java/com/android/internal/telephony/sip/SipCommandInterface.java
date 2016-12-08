@@ -24,6 +24,7 @@ import com.android.internal.telephony.BaseCommands;
 import com.android.internal.telephony.CommandsInterface;
 import com.android.internal.telephony.UUSInfo;
 import com.android.internal.telephony.cdma.CdmaSmsBroadcastConfigInfo;
+import com.android.internal.telephony.dataconnection.ApnSetting;
 import com.android.internal.telephony.dataconnection.DataProfile;
 import com.android.internal.telephony.gsm.SmsBroadcastConfigInfo;
 
@@ -256,9 +257,9 @@ class SipCommandInterface extends BaseCommands implements CommandsInterface {
     }
 
     @Override
-    public void setupDataCall(int radioTechnology, int profile,
-            String apn, String user, String password, int authType,
-            String protocol, Message result) {
+    public void setupDataCall(int radioTechnology, int profile, int authType, ApnSetting apnSetting,
+                              boolean allowRoaming, Message result) {
+
     }
 
     @Override
@@ -561,8 +562,7 @@ class SipCommandInterface extends BaseCommands implements CommandsInterface {
     }
 
     @Override
-    public void setInitialAttachApn(String apn, String protocol, int authType, String username,
-            String password, Message result) {
+    public void setInitialAttachApn(ApnSetting apnSetting, Message result) {
     }
 
     @Override

@@ -51,11 +51,35 @@ public class DataProfile {
     public final int waitTime;
     //true to enable the profile, false to disable
     public final boolean enabled;
-
+    //supported APN types bitmask. See RIL_ApnTypes for the value of each bit.
+    public final int supportedTypesBitmask;
+    //the proxy address
+    public final String proxy;
+    //the port of the proxy
+    public final String port;
+    //the MMS proxy address
+    public final String mmsProxy;
+    //the port of MMS proxy
+    public final String mmsPort;
+    //one of the PDP_type values in TS 27.007 section 10.1.1 used on roaming network.
+    //For example, "IP", "IPV6", "IPV4V6", or "PPP".
+    public final String roamingProtocol;
+    //The bearer bitmask. See RIL_RadioAccessFamily for the value of each bit.
+    public final int bearerBitmask;
+    //maximum transmission unit (MTU) size in bytes
+    public final int mtu;
+    //the MVNO type: possible values are "imsi", "gid", "spn"
+    public final String mvnoType;
+    //MVNO match data. For example, SPN: A MOBILE, BEN NL, ...
+    //IMSI: 302720x94, 2060188, ...
+    //GID: 4E, 33, ...
+    public final String mvnoMatchData;
 
     DataProfile(int profileId, String apn, String protocol, int authType,
             String user, String password, int type, int maxConnsTime, int maxConns,
-            int waitTime, boolean enabled) {
+            int waitTime, boolean enabled, int supportedTypesBitmask, String proxy, String port,
+            String mmsProxy, String mmsPort, String roamingProtocol, int bearerBitmask, int mtu,
+            String mvnoType, String mvnoMatchData) {
 
         this.profileId = profileId;
         this.apn = apn;
@@ -68,14 +92,28 @@ public class DataProfile {
         this.maxConns = maxConns;
         this.waitTime = waitTime;
         this.enabled = enabled;
+
+        // The followings are added since v15.
+        this.supportedTypesBitmask = supportedTypesBitmask;
+        this.proxy = proxy;
+        this.port = port;
+        this.mmsProxy = mmsProxy;
+        this.mmsPort = mmsPort;
+        this.roamingProtocol = roamingProtocol;
+        this.bearerBitmask = bearerBitmask;
+        this.mtu = mtu;
+        this.mvnoType = mvnoType;
+        this.mvnoMatchData = mvnoMatchData;
     }
 
-    public DataProfile(ApnSetting apn, boolean isRoaming) {
-        this(apn.profileId, apn.apn, isRoaming? apn.roamingProtocol : apn.protocol,
+    public DataProfile(ApnSetting apn) {
+        this(apn.profileId, apn.apn, apn.protocol,
                 apn.authType, apn.user, apn.password, apn.bearerBitmask == 0
                         ? TYPE_COMMON : (ServiceState.bearerBitmapHasCdma(apn.bearerBitmask)
                         ? TYPE_3GPP2 : TYPE_3GPP),
-                apn.maxConnsTime, apn.maxConns, apn.waitTime, apn.carrierEnabled);
+                apn.maxConnsTime, apn.maxConns, apn.waitTime, apn.carrierEnabled, apn.typesBitmask,
+                apn.proxy, apn.port, apn.mmsProxy, apn.mmsPort, apn.roamingProtocol,
+                apn.bearerBitmask, apn.mtu, apn.mvnoType, apn.mvnoMatchData);
     }
 
     public static Parcel toParcel(Parcel pc, DataProfile[] dps) {
@@ -97,6 +135,16 @@ public class DataProfile {
             pc.writeInt(dps[i].maxConns);
             pc.writeInt(dps[i].waitTime);
             pc.writeInt(dps[i].enabled ? 1 : 0);
+            pc.writeInt(dps[i].supportedTypesBitmask);
+            pc.writeString(dps[i].proxy);
+            pc.writeString(dps[i].port);
+            pc.writeString(dps[i].mmsProxy);
+            pc.writeString(dps[i].mmsPort);
+            pc.writeString(dps[i].roamingProtocol);
+            pc.writeInt(dps[i].bearerBitmask);
+            pc.writeInt(dps[i].mtu);
+            pc.writeString(dps[i].mvnoType);
+            pc.writeString(dps[i].mvnoMatchData);
         }
         return pc;
     }
@@ -105,12 +153,14 @@ public class DataProfile {
     public String toString() {
         return "DataProfile " + profileId + "/" + apn + "/" + protocol + "/" + authType
                 + "/" + user + "/" + password + "/" + type + "/" + maxConnsTime
-                + "/" + maxConns + "/" + waitTime + "/" + enabled;
+                + "/" + maxConns + "/" + waitTime + "/" + enabled + "/" + supportedTypesBitmask
+                + "/" + proxy + "/" + port + "/" + mmsProxy + "/" + mmsPort + "/" + roamingProtocol
+                + "/" + bearerBitmask + "/" + mtu + "/" + mvnoType + "/" + mvnoMatchData;
     }
 
     @Override
     public boolean equals(Object o) {
         if (o instanceof DataProfile == false) return false;
-        return (toString().equals(o.toString()));
+        return (o == this || toString().equals(o.toString()));
     }
 }
