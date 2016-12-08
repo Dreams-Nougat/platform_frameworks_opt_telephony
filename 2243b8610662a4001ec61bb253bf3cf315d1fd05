@@ -9,3 +9,11 @@ UUID: 6d14e7d4_00165133
 Bytes: 223
 This can only check the existing fields. We want to catch a case that if one day someone add a new field but forget to add it into equals(). Maybe you can use reflection's getDeclaredFields() to populate all 'final' fields.
 
+522:0-547:65
+Thu Dec 08 23:20:29 2016 +0000
+Author: Toshiya Ikenaga <1097598@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 6d14e7d4_00165133
+UUID: cd6cf3ba_b3bcf89f
+Bytes: 54
+Thanks for your review. I understand and will try fix.
+
