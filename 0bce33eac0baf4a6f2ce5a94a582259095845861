@@ -11,3 +11,11 @@ If a boolean field in ApnSetting is initialized as false, then you won't be able
 
 Maybe for integer you just add 1, and for boolean you just toggle it.
 
+507:32-507:47
+Fri Dec 09 20:04:58 2016 +0000
+Author: Toshiya Ikenaga <1097598@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 9a3cf3c1_3a77c079
+UUID: cd6cf3ba_b395d891
+Bytes: 58
+Thanks for review. Will try fix according to your comment.
+
