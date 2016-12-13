@@ -1,0 +1,11 @@
+Revision: a9e0db9873034c686670b326ce092c87eab93fa2
+Patch-set: 1
+File: src/java/com/android/internal/telephony/GsmCdmaPhone.java
+
+1862:11-1862:12
+Tue Dec 13 20:59:46 2016 +0000
+Author: Hall Liu <1087703@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 9a3cf3c1_707af227
+Bytes: 12
+excess space
+
