@@ -9,3 +9,12 @@ UUID: 5a7fdbe6_5556a7ea
 Bytes: 34
 using "dummy1", "dummy2" is safer.
 
+509:60-509:76
+Wed Dec 14 23:01:33 2016 +0000
+Author: Toshiya Ikenaga <1097598@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: 5a7fdbe6_5556a7ea
+UUID: dadd8b5f_4b512524
+Bytes: 359
+Hi Jack, thanks for your comment. These values are actually used for "types" in ApnSetting object which is used as test base and those values are compared to dummyStringArr defined in line 507. Therefore, I think it is safe if they are different each other. Please kindly let me know if I miss your point. 
+If there is no problem, could you put +2 and submit?
+
