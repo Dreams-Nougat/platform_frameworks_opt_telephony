@@ -1,0 +1,11 @@
+Revision: f9dd30c89f32186a07a40817b783a29c2f6dbb66
+Patch-set: 5
+File: tests/telephonytests/src/com/android/internal/telephony/dataconnection/ApnSettingTest.java
+
+509:60-509:76
+Wed Dec 14 22:25:47 2016 +0000
+Author: Jack Yu <1081638@85c56323-6fa9-3386-8a01-6480fb634889>
+UUID: 5a7fdbe6_5556a7ea
+Bytes: 34
+using "dummy1", "dummy2" is safer.
+
