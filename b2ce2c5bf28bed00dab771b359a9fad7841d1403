@@ -1,0 +1,10 @@
+Autosubmit+1: Jack Yu <jackyu@google.com>
+Presubmit-Verified+1: Treehugger Robot <treehugger-gerrit@google.com>
+Code-Review+1: Toshiya Ikenaga <Toshiya.Ikenaga@sonymobile.com>
+Code-Review+2: Jack Yu <jackyu@google.com>
+Verified+1: Jack Yu <jackyu@google.com>
+Submitted-by: Treehugger Robot <treehugger-gerrit@google.com>
+Submitted-at: Thu, 15 Dec 2016 20:15:51 +0000
+Reviewed-on: https://android-review.googlesource.com/307783
+Project: platform/frameworks/opt/telephony
+Branch: refs/heads/master
