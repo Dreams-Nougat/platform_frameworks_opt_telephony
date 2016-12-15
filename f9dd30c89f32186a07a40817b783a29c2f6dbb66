@@ -18,3 +18,11 @@ Bytes: 359
 Hi Jack, thanks for your comment. These values are actually used for "types" in ApnSetting object which is used as test base and those values are compared to dummyStringArr defined in line 507. Therefore, I think it is safe if they are different each other. Please kindly let me know if I miss your point. 
 If there is no problem, could you put +2 and submit?
 
+509:60-509:76
+Thu Dec 15 08:01:53 2016 +0000
+Author: Jack Yu <1081638@85c56323-6fa9-3386-8a01-6480fb634889>
+Parent: dadd8b5f_4b512524
+UUID: 5a7fdbe6_a83f85c7
+Bytes: 17
+Yes you are right
+
