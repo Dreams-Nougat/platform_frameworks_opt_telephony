@@ -1,0 +1,8 @@
+Presubmit-Verified+1: Treehugger Robot <treehugger-gerrit@google.com>
+Code-Review+2: Chen Xu <fionaxu@google.com>
+Verified+1: Aurimas Liutikas <aurimas@google.com>
+Submitted-by: Aurimas Liutikas <aurimas@google.com>
+Submitted-at: Fri, 16 Dec 2016 17:02:12 +0000
+Reviewed-on: https://android-review.googlesource.com/315007
+Project: platform/frameworks/opt/telephony
+Branch: refs/heads/master
