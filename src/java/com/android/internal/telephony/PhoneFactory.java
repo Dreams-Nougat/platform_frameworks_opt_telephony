@@ -247,12 +247,14 @@ public class PhoneFactory {
         }
     }
 
-    private static <T> T instantiateCustomRIL(
-                      String sRILClassname, Context context, int networkMode, int cdmaSubscription, Integer instanceId)
-                      throws Exception {
+    private static <T> T instantiateCustomRIL(String sRILClassname, Context context,
+                                        int networkMode, int cdmaSubscription, Integer instanceId)
+                                        throws Exception {
         Class<?> clazz = Class.forName("com.android.internal.telephony." + sRILClassname);
-        Constructor<?> constructor = clazz.getConstructor(Context.class, int.class, int.class, Integer.class);
-        return (T) clazz.cast(constructor.newInstance(context, networkMode, cdmaSubscription, instanceId));
+        Constructor<?> constructor = clazz.getConstructor(
+                                            Context.class, int.class, int.class, Integer.class);
+        return (T) clazz.cast(constructor.newInstance(
+                                            context, networkMode, cdmaSubscription, instanceId));
     }
 
     public static Phone getDefaultPhone() {
